@@ -114,8 +114,7 @@ export default async function SalesPage({
                   return (
                     <tr
                       key={record.id}
-                      className="hover:bg-gray-50 cursor-pointer"
-                      onClick={() => {}}
+                      className="hover:bg-gray-50"
                     >
                       <td className="px-4 py-3 text-sm font-medium text-gray-900">
                         <Link href={`/sales/${record.id}`} className="hover:text-amber-700">
