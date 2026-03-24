@@ -8,6 +8,10 @@ type Props = {
   initialWeights: PredictionWeight[];
 };
 
+function formatWeightValue(value: number): string {
+  return `${value > 0 ? "+" : ""}${value}`;
+}
+
 type EditState = {
   id: string;
   factorKey: string;
@@ -188,8 +192,8 @@ export default function WeightsManager({ initialWeights }: Props) {
               ) : (
                 <tr key={w.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3 text-sm font-mono text-gray-900">{w.factorKey}</td>
-                  <td className="px-4 py-3 text-sm text-right font-medium text-gray-900">
-                    {w.weightValue > 0 ? "+" : ""}{w.weightValue}
+                   <td className="px-4 py-3 text-sm text-right font-medium text-gray-900">
+                    {formatWeightValue(w.weightValue)}
                   </td>
                   <td className="px-4 py-3 text-center">
                     <span className={`inline-block w-2 h-2 rounded-full ${w.isActive ? "bg-green-500" : "bg-gray-300"}`} />

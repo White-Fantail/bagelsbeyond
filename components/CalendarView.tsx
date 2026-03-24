@@ -82,11 +82,15 @@ export default function CalendarView({ year, month, records }: Props) {
             <div
               key={idx}
               onClick={() => record && router.push(`/sales/${record.id}`)}
+              role={record ? "button" : undefined}
+              tabIndex={record ? 0 : undefined}
+              onKeyDown={record ? (e) => { if (e.key === "Enter" || e.key === " ") router.push(`/sales/${record.id}`); } : undefined}
+              aria-label={record ? `${year}년 ${month}월 ${day}일 기록 보기` : undefined}
               className={`min-h-[80px] p-2 border-b border-r border-gray-100 ${
                 day === null
                   ? "bg-gray-50"
                   : record
-                  ? "hover:bg-amber-50 cursor-pointer"
+                  ? "hover:bg-amber-50 cursor-pointer focus:outline-none focus:ring-2 focus:ring-amber-400"
                   : "hover:bg-gray-50"
               }`}
             >

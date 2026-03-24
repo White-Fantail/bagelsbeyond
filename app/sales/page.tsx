@@ -21,8 +21,16 @@ async function getSalesData(searchParams: SearchParams): Promise<DailyRecord[]> 
         OR: keyword
           ? [
               { notes: { contains: keyword, mode: "insensitive" } },
-              { externalFactor: { localEventName: { contains: keyword, mode: "insensitive" } } },
-              { externalFactor: { holidayName: { contains: keyword, mode: "insensitive" } } },
+              {
+                externalFactor: {
+                  is: { localEventName: { contains: keyword, mode: "insensitive" } },
+                },
+              },
+              {
+                externalFactor: {
+                  is: { holidayName: { contains: keyword, mode: "insensitive" } },
+                },
+              },
             ]
           : undefined,
       },
