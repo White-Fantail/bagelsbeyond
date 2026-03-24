@@ -81,8 +81,13 @@ export default function CalendarView({ year, month, records }: Props) {
           return (
             <div
               key={idx}
+              onClick={() => record && router.push(`/sales/${record.id}`)}
               className={`min-h-[80px] p-2 border-b border-r border-gray-100 ${
-                day === null ? "bg-gray-50" : "hover:bg-amber-50"
+                day === null
+                  ? "bg-gray-50"
+                  : record
+                  ? "hover:bg-amber-50 cursor-pointer"
+                  : "hover:bg-gray-50"
               }`}
             >
               {day !== null && (

@@ -34,3 +34,11 @@ export const settingsSchema = z.object({
 });
 
 export type SettingsSchema = z.infer<typeof settingsSchema>;
+
+export const weightSchema = z.object({
+  factorKey: z.string().min(1, "키를 입력해주세요"),
+  weightValue: z.coerce.number(),
+  isActive: z.boolean().default(true),
+  description: z.string().optional(),
+});
+export type WeightSchema = z.infer<typeof weightSchema>;
