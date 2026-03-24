@@ -6,7 +6,13 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { salesFormSchema, type SalesFormSchema } from "@/lib/validations";
 
-export default function SalesForm() {
+export default function SalesForm({
+  initialData,
+  recordId,
+}: {
+  initialData?: SalesFormSchema;
+  recordId?: string;
+}) {
   const router = useRouter();
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
@@ -17,7 +23,7 @@ export default function SalesForm() {
     formState: { errors },
   } = useForm<SalesFormSchema>({
     resolver: zodResolver(salesFormSchema) as Resolver<SalesFormSchema>,
-    defaultValues: {
+    defaultValues: initialData ?? {
       date: new Date().toISOString().split("T")[0],
       bagelsBaked: 0,
       bagelsLeft: 0,
@@ -33,8 +39,10 @@ export default function SalesForm() {
     setStatus("loading");
     setErrorMessage("");
     try {
-      const res = await fetch("/api/sales", {
-        method: "POST",
+      const url = recordId ? `/api/sales/${recordId}` : "/api/sales";
+      const method = recordId ? "PUT" : "POST";
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
@@ -43,7 +51,13 @@ export default function SalesForm() {
         throw new Error(err.message || "저장에 실패했습니다");
       }
       setStatus("success");
-      setTimeout(() => router.push("/sales"), 1500);
+      setTimeout(() => {
+        if (recordId) {
+          router.push(`/sales/${recordId}`);
+        } else {
+          router.push("/sales");
+        }
+      }, 1500);
     } catch (e) {
       setStatus("error");
       setErrorMessage(e instanceof Error ? e.message : "저장에 실패했습니다");

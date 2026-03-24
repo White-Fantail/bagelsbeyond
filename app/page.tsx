@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { getTotalSales, getSoldBagels, formatCurrency, formatDate } from "@/lib/utils";
+import { getWasteRate, getChannelRatios } from "@/lib/analytics";
+import type { DailyRecord } from "@/types";
 
 async function getDashboardData() {
   try {
-    const recentRecords = await prisma.dailyRecord.findMany({
+    const recentRecords: DailyRecord[] = await prisma.dailyRecord.findMany({
       orderBy: { date: "desc" },
       take: 7,
     });
@@ -23,19 +25,28 @@ async function getDashboardData() {
       0
     );
 
-    return { recentRecords, latestRecord, avgDailySales, totalBagelsSold };
+    const avgWasteRate =
+      recentRecords.length > 0
+        ? recentRecords.reduce((sum, r) => sum + getWasteRate(r), 0) / recentRecords.length
+        : 0;
+
+    const latestChannelRatios = latestRecord ? getChannelRatios(latestRecord) : null;
+
+    return { recentRecords, latestRecord, avgDailySales, totalBagelsSold, avgWasteRate, latestChannelRatios };
   } catch {
     return {
       recentRecords: [],
       latestRecord: null,
       avgDailySales: 0,
       totalBagelsSold: 0,
+      avgWasteRate: 0,
+      latestChannelRatios: null,
     };
   }
 }
 
 export default async function DashboardPage() {
-  const { recentRecords, latestRecord, avgDailySales, totalBagelsSold } =
+  const { recentRecords, latestRecord, avgDailySales, totalBagelsSold, avgWasteRate, latestChannelRatios } =
     await getDashboardData();
 
   return (
@@ -46,7 +57,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <StatCard
           title="최근 7일 총매출"
           value={formatCurrency(
@@ -65,6 +76,11 @@ export default async function DashboardPage() {
           sub="최근 7일"
         />
         <StatCard
+          title="최근 7일 평균 폐기율"
+          value={`${(avgWasteRate * 100).toFixed(1)}%`}
+          sub="베이글 폐기율"
+        />
+        <StatCard
           title="최근 기록일"
           value={latestRecord ? formatDate(latestRecord.date) : "-"}
           sub={
@@ -73,6 +89,33 @@ export default async function DashboardPage() {
               : "기록 없음"
           }
         />
+        {latestChannelRatios && (
+          <div className="bg-white rounded-lg border border-gray-200 p-5">
+            <p className="text-sm text-gray-500 mb-2">최근 기록 채널 비중</p>
+            <div className="flex flex-wrap gap-1">
+              {latestChannelRatios.store > 0 && (
+                <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs">
+                  매장 {latestChannelRatios.store.toFixed(1)}%
+                </span>
+              )}
+              {latestChannelRatios.uber > 0 && (
+                <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs">
+                  우버 {latestChannelRatios.uber.toFixed(1)}%
+                </span>
+              )}
+              {latestChannelRatios.doordash > 0 && (
+                <span className="px-2 py-0.5 bg-red-100 text-red-700 rounded text-xs">
+                  도어대쉬 {latestChannelRatios.doordash.toFixed(1)}%
+                </span>
+              )}
+              {latestChannelRatios.other > 0 && (
+                <span className="px-2 py-0.5 bg-gray-100 text-gray-700 rounded text-xs">
+                  기타 {latestChannelRatios.other.toFixed(1)}%
+                </span>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Quick Actions */}
@@ -90,7 +133,7 @@ export default async function DashboardPage() {
       {recentRecords.length > 0 && (
         <div>
           <h2 className="text-lg font-semibold text-gray-900 mb-3">
-            최근 7일 매출 요약
+            최근 매출 요약
           </h2>
           <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
             <table className="min-w-full divide-y divide-gray-200">
@@ -103,9 +146,13 @@ export default async function DashboardPage() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {recentRecords.map((record) => (
-                  <tr key={record.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 text-sm text-gray-900">{formatDate(record.date)}</td>
+                {recentRecords.slice(0, 5).map((record) => (
+                  <tr key={record.id} className="hover:bg-gray-50 cursor-pointer">
+                    <td className="px-4 py-3 text-sm text-gray-900">
+                      <Link href={`/sales/${record.id}`} className="hover:text-amber-700">
+                        {formatDate(record.date)}
+                      </Link>
+                    </td>
                     <td className="px-4 py-3 text-sm text-gray-900 text-right">{formatCurrency(getTotalSales(record))}</td>
                     <td className="px-4 py-3 text-sm text-gray-900 text-right">{getSoldBagels(record)}개</td>
                     <td className="px-4 py-3 text-sm text-gray-900 text-right">{record.bagelsLeft}개</td>

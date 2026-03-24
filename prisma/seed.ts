@@ -24,12 +24,17 @@ async function main() {
     { factorKey: "weather_rain", weightValue: -0.15, description: "비 오는 날 매출 감소" },
     { factorKey: "weather_hot", weightValue: -0.05, description: "더운 날 매출 소폭 감소" },
     { factorKey: "monday", weightValue: -0.1, description: "월요일 매출 감소" },
+    { factorKey: "tuesday", weightValue: -0.05, description: "화요일 매출 소폭 감소" },
+    { factorKey: "wednesday", weightValue: 0.0, description: "수요일 기준" },
+    { factorKey: "thursday", weightValue: 0.05, description: "목요일 매출 소폭 증가" },
     { factorKey: "friday", weightValue: 0.1, description: "금요일 매출 증가" },
     { factorKey: "saturday", weightValue: 0.2, description: "토요일 매출 증가" },
     { factorKey: "sunday", weightValue: 0.15, description: "일요일 매출 증가" },
     { factorKey: "holiday", weightValue: 0.3, description: "공휴일 매출 증가" },
     { factorKey: "local_event", weightValue: 0.2, description: "지역 이벤트 매출 증가" },
     { factorKey: "school_holiday", weightValue: 0.1, description: "방학 기간 매출 소폭 증가" },
+    { factorKey: "nz_news", weightValue: -0.05, description: "부정적 뉴질랜드 뉴스 영향" },
+    { factorKey: "world_news", weightValue: -0.03, description: "부정적 국제 뉴스 영향" },
   ];
 
   for (const w of weights) {
