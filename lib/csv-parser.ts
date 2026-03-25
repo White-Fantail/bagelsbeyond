@@ -126,10 +126,6 @@ export function validateParsedRow(row: ParsedCsvRow): string[] {
     errors.push("구운 베이글 수량은 0 이상이어야 합니다");
   }
 
-  if (row.parsedBagelsLeft !== null && row.parsedBagelsLeft !== undefined && row.parsedBagelsLeft < 0) {
-    errors.push("남은 베이글 수량은 0 이상이어야 합니다");
-  }
-
   const salesFields = [
     { key: "storeSales", label: "매장 매출", value: row.parsedStoreSales },
     { key: "uberSales", label: "우버 매출", value: row.parsedUberSales },
@@ -169,12 +165,20 @@ export function parseCsvContent(csvText: string): ParsedCsvRow[] {
     const rowNumber = i;
     const parsedDate = safeParseDate(raw["date"]);
     const parsedBagelsBaked = safeParseInt(raw["bagelsBaked"]);
-    const parsedBagelsLeft = safeParseInt(raw["bagelsLeft"]);
+    let parsedBagelsLeft = safeParseInt(raw["bagelsLeft"]);
     const parsedStoreSales = safeParseFloat(raw["storeSales"]);
     const parsedUberSales = safeParseFloat(raw["uberSales"]);
     const parsedDoordashSales = safeParseFloat(raw["doordashSales"]);
     const parsedOtherSales = safeParseFloat(raw["otherSales"]);
-    const parsedNotes = raw["notes"] || null;
+    let parsedNotes = raw["notes"] || null;
+
+    // 남은 베이글 수량이 음수인 경우(전날 재고 사용 등) 0으로 보정하고 메모에 기록
+    if (parsedBagelsLeft !== null && parsedBagelsLeft < 0) {
+      const originalValue = parsedBagelsLeft;
+      parsedBagelsLeft = 0;
+      const adjustmentNote = `남은 베이글 수량이 음수(${originalValue})로 기록되어 0으로 처리됨`;
+      parsedNotes = parsedNotes ? `${parsedNotes} / ${adjustmentNote}` : adjustmentNote;
+    }
 
     const row: ParsedCsvRow = {
       rowNumber,
