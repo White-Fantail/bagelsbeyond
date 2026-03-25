@@ -37,6 +37,11 @@ export default async function AdminPage() {
         <h2 className="font-semibold text-gray-900">관리자 전용 메뉴</h2>
         <ul className="space-y-2 text-sm">
           <li>
+            <Link href="/admin/users" className="text-amber-600 hover:underline">
+              → 사용자 관리 (권한·활성 상태 변경)
+            </Link>
+          </li>
+          <li>
             <Link href="/analytics" className="text-amber-600 hover:underline">
               → 전체 매출 분석 (ADMIN 전용)
             </Link>
