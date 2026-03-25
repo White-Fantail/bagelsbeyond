@@ -2,7 +2,7 @@
 CREATE SCHEMA IF NOT EXISTS "public";
 
 -- CreateTable
-CREATE TABLE "daily_records" (
+CREATE TABLE IF NOT EXISTS "daily_records" (
     "id" TEXT NOT NULL,
     "date" TIMESTAMP(3) NOT NULL,
     "bagelsBaked" INTEGER NOT NULL,
@@ -19,7 +19,7 @@ CREATE TABLE "daily_records" (
 );
 
 -- CreateTable
-CREATE TABLE "daily_external_factors" (
+CREATE TABLE IF NOT EXISTS "daily_external_factors" (
     "id" TEXT NOT NULL,
     "dailyRecordId" TEXT NOT NULL,
     "weatherSummary" TEXT,
@@ -37,7 +37,7 @@ CREATE TABLE "daily_external_factors" (
 );
 
 -- CreateTable
-CREATE TABLE "prediction_weights" (
+CREATE TABLE IF NOT EXISTS "prediction_weights" (
     "id" TEXT NOT NULL,
     "factorKey" TEXT NOT NULL,
     "weightValue" DOUBLE PRECISION NOT NULL,
@@ -48,7 +48,7 @@ CREATE TABLE "prediction_weights" (
 );
 
 -- CreateTable
-CREATE TABLE "app_settings" (
+CREATE TABLE IF NOT EXISTS "app_settings" (
     "id" TEXT NOT NULL,
     "shopName" TEXT NOT NULL DEFAULT 'Bagels Beyond',
     "defaultTargetWasteRatio" DOUBLE PRECISION NOT NULL DEFAULT 0.05,
@@ -60,7 +60,7 @@ CREATE TABLE "app_settings" (
 );
 
 -- CreateTable
-CREATE TABLE "sales_predictions" (
+CREATE TABLE IF NOT EXISTS "sales_predictions" (
     "id" TEXT NOT NULL,
     "targetDate" TIMESTAMP(3) NOT NULL,
     "predictedSales" DOUBLE PRECISION NOT NULL,
@@ -77,7 +77,7 @@ CREATE TABLE "sales_predictions" (
 );
 
 -- CreateTable
-CREATE TABLE "prediction_factor_snapshots" (
+CREATE TABLE IF NOT EXISTS "prediction_factor_snapshots" (
     "id" TEXT NOT NULL,
     "salesPredictionId" TEXT NOT NULL,
     "factorKey" TEXT NOT NULL,
@@ -91,7 +91,7 @@ CREATE TABLE "prediction_factor_snapshots" (
 );
 
 -- CreateTable
-CREATE TABLE "import_jobs" (
+CREATE TABLE IF NOT EXISTS "import_jobs" (
     "id" TEXT NOT NULL,
     "fileName" TEXT NOT NULL,
     "status" TEXT NOT NULL DEFAULT 'pending',
@@ -106,7 +106,7 @@ CREATE TABLE "import_jobs" (
 );
 
 -- CreateTable
-CREATE TABLE "import_rows" (
+CREATE TABLE IF NOT EXISTS "import_rows" (
     "id" TEXT NOT NULL,
     "jobId" TEXT NOT NULL,
     "rowNumber" INTEGER NOT NULL,
@@ -129,25 +129,34 @@ CREATE TABLE "import_rows" (
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "daily_records_date_key" ON "daily_records"("date");
+CREATE UNIQUE INDEX IF NOT EXISTS "daily_records_date_key" ON "daily_records"("date");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "daily_external_factors_dailyRecordId_key" ON "daily_external_factors"("dailyRecordId");
+CREATE UNIQUE INDEX IF NOT EXISTS "daily_external_factors_dailyRecordId_key" ON "daily_external_factors"("dailyRecordId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "prediction_weights_factorKey_key" ON "prediction_weights"("factorKey");
+CREATE UNIQUE INDEX IF NOT EXISTS "prediction_weights_factorKey_key" ON "prediction_weights"("factorKey");
 
 -- CreateIndex
-CREATE INDEX "sales_predictions_targetDate_idx" ON "sales_predictions"("targetDate");
+CREATE INDEX IF NOT EXISTS "sales_predictions_targetDate_idx" ON "sales_predictions"("targetDate");
 
 -- CreateIndex
-CREATE INDEX "import_rows_jobId_idx" ON "import_rows"("jobId");
+CREATE INDEX IF NOT EXISTS "import_rows_jobId_idx" ON "import_rows"("jobId");
 
 -- AddForeignKey
-ALTER TABLE "daily_external_factors" ADD CONSTRAINT "daily_external_factors_dailyRecordId_fkey" FOREIGN KEY ("dailyRecordId") REFERENCES "daily_records"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$ BEGIN
+  ALTER TABLE "daily_external_factors" ADD CONSTRAINT "daily_external_factors_dailyRecordId_fkey" FOREIGN KEY ("dailyRecordId") REFERENCES "daily_records"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- AddForeignKey
-ALTER TABLE "prediction_factor_snapshots" ADD CONSTRAINT "prediction_factor_snapshots_salesPredictionId_fkey" FOREIGN KEY ("salesPredictionId") REFERENCES "sales_predictions"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$ BEGIN
+  ALTER TABLE "prediction_factor_snapshots" ADD CONSTRAINT "prediction_factor_snapshots_salesPredictionId_fkey" FOREIGN KEY ("salesPredictionId") REFERENCES "sales_predictions"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- AddForeignKey
-ALTER TABLE "import_rows" ADD CONSTRAINT "import_rows_jobId_fkey" FOREIGN KEY ("jobId") REFERENCES "import_jobs"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$ BEGIN
+  ALTER TABLE "import_rows" ADD CONSTRAINT "import_rows_jobId_fkey" FOREIGN KEY ("jobId") REFERENCES "import_jobs"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
