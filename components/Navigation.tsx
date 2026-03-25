@@ -7,6 +7,7 @@ import { useState, useEffect } from "react";
 const navItems = [
   { href: "/", label: "대시보드" },
   { href: "/sales", label: "매출 목록" },
+  { href: "/analytics", label: "분석" },
   { href: "/calendar", label: "달력" },
   { href: "/predictions", label: "예측" },
   { href: "/predictions/performance", label: "성과" },
