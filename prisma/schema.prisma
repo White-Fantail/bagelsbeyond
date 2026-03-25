@@ -101,40 +101,43 @@ model PredictionFactorSnapshot {
   @@map("prediction_factor_snapshots")
 }
 
-model OcrImportJob {
-  id             String   @id @default(cuid())
-  sourceFileName String
-  sourceFileUrl  String?
-  status         String   @default("pending")
-  rawText        String?
-  parsedJson     String?
-  errorMessage   String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+model ImportJob {
+  id           String   @id @default(cuid())
+  fileName     String
+  status       String   @default("pending") // pending, validating, ready, imported, failed
+  totalRows    Int      @default(0)
+  successRows  Int      @default(0)
+  failedRows   Int      @default(0)
+  errorMessage String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  items OcrImportItem[]
+  rows ImportRow[]
 
-  @@map("ocr_import_jobs")
+  @@map("import_jobs")
 }
 
-model OcrImportItem {
-  id                   String   @id @default(cuid())
+model ImportRow {
+  id                   String    @id @default(cuid())
   jobId                String
-  detectedDate         DateTime?
-  extractedBagelsBaked Int?
-  extractedBagelsLeft  Int?
-  extractedStoreSales  Float?
-  extractedUberSales   Float?
-  extractedDoordashSales Float?
-  extractedOtherSales  Float?
-  extractedNotes       String?
-  confidenceScore      Float?
-  reviewStatus         String   @default("pending")
+  rowNumber            Int
+  rawJson              String
+  parsedDate           DateTime?
+  parsedBagelsBaked    Int?
+  parsedBagelsLeft     Int?
+  parsedStoreSales     Float?
+  parsedUberSales      Float?
+  parsedDoordashSales  Float?
+  parsedOtherSales     Float?
+  parsedNotes          String?
+  status               String    @default("pending") // pending, valid, invalid, imported, skipped
+  validationErrors     String?
   linkedDailyRecordId  String?
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
 
-  job OcrImportJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  job ImportJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
 
-  @@map("ocr_import_items")
+  @@index([jobId])
+  @@map("import_rows")
 }
