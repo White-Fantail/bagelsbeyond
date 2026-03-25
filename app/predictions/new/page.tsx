@@ -34,7 +34,11 @@ export default function NewPredictionPage() {
   } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
-      targetDate: new Date().toISOString().split("T")[0],
+      targetDate: (() => {
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        return tomorrow.toISOString().split("T")[0];
+      })(),
       schoolHoliday: false,
     },
   });

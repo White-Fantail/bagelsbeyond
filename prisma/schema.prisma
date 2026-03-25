@@ -75,8 +75,15 @@ model SalesPrediction {
   recommendedBagelsToBake  Int
   predictedLeftovers       Int
   confidenceScore          Float?
-  method                   String   @default("rule_based_v1")
+  method                   String   @default("rule_based_v2")
   notes                    String?
+  // Extended fields for advanced prediction
+  projectedWasteRate       Float?
+  projectedSellThroughRate Float?
+  baselineSales            Float?
+  baselineBagelsSold       Int?
+  adjustmentSummary        String?
+  explanationJson          String?
   createdAt                DateTime @default(now())
   updatedAt                DateTime @updatedAt
 

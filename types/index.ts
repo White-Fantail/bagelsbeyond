@@ -55,9 +55,26 @@ export type SalesPrediction = {
   confidenceScore?: number | null;
   method: string;
   notes?: string | null;
+  // Extended fields
+  projectedWasteRate?: number | null;
+  projectedSellThroughRate?: number | null;
+  baselineSales?: number | null;
+  baselineBagelsSold?: number | null;
+  adjustmentSummary?: string | null;
+  explanationJson?: string | null;
   createdAt: Date;
   updatedAt: Date;
   factorSnapshots?: PredictionFactorSnapshot[];
+};
+
+export type PredictionExplanationItem = {
+  type: "baseline" | "weekday" | "weather" | "holiday" | "event" | "school" | "news" | "production" | "info";
+  text: string;
+};
+
+export type PredictionExplanation = {
+  items: PredictionExplanationItem[];
+  summary: string;
 };
 
 export type PredictionFactorSnapshot = {
