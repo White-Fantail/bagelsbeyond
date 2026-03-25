@@ -4,7 +4,7 @@ import { Role } from "@/app/generated/prisma/enums";
 
 // ── Route groups ──────────────────────────────────────────────────────────────
 
-const PUBLIC_ROUTES = ["/login"];
+const PUBLIC_ROUTES = ["/login", "/signup"];
 const ADMIN_ROUTES = ["/admin"];
 const STAFF_ROUTES = ["/staff"];
 const ACCOUNT_ROUTES = ["/account"];
