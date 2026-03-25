@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
+import { getImportJobById } from "@/lib/services/importService";
 
 export async function GET(
   _req: NextRequest,
@@ -7,10 +7,7 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const job = await prisma.ocrImportJob.findUnique({
-      where: { id },
-      include: { items: true },
-    });
+    const job = await getImportJobById(id);
 
     if (!job) {
       return NextResponse.json({ message: "가져오기 작업을 찾을 수 없습니다" }, { status: 404 });

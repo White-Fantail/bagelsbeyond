@@ -38,7 +38,11 @@ async function getDashboardData() {
       orderBy: { targetDate: "desc" },
     });
 
-    return { recentRecords, latestRecord, avgDailySales, totalBagelsSold, avgWasteRate, latestChannelRatios, latestPrediction };
+    const latestImportJob = await prisma.importJob.findFirst({
+      orderBy: { createdAt: "desc" },
+    });
+
+    return { recentRecords, latestRecord, avgDailySales, totalBagelsSold, avgWasteRate, latestChannelRatios, latestPrediction, latestImportJob };
   } catch {
     return {
       recentRecords: [],
@@ -48,12 +52,13 @@ async function getDashboardData() {
       avgWasteRate: 0,
       latestChannelRatios: null,
       latestPrediction: null,
+      latestImportJob: null,
     };
   }
 }
 
 export default async function DashboardPage() {
-  const { recentRecords, latestRecord, avgDailySales, totalBagelsSold, avgWasteRate, latestChannelRatios, latestPrediction } =
+  const { recentRecords, latestRecord, avgDailySales, totalBagelsSold, avgWasteRate, latestChannelRatios, latestPrediction, latestImportJob } =
     await getDashboardData();
 
   return (
@@ -134,7 +139,8 @@ export default async function DashboardPage() {
           <QuickAction href="/calendar" label="달력 보기" icon="📅" />
           <QuickAction href="/settings" label="설정" icon="⚙️" />
           <QuickAction href="/predictions/new" label="새 예측 만들기" icon="🔮" />
-          <QuickAction href="/imports/new" label="OCR 가져오기" icon="📷" />
+          <QuickAction href="/imports/new" label="CSV 가져오기" icon="📂" />
+          <QuickAction href="/imports" label="가져오기 목록" icon="📋" />
         </div>
       </div>
 
@@ -169,6 +175,43 @@ export default async function DashboardPage() {
               <span className="text-gray-300">|</span>
               <Link href="/predictions" className="text-sm text-blue-600 hover:underline">
                 전체 예측 목록
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Recent Import Job */}
+      {latestImportJob && (
+        <div>
+          <h2 className="text-lg font-semibold text-gray-900 mb-3">최근 CSV 가져오기</h2>
+          <div className="bg-white rounded-lg border border-purple-200 p-5">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-900">{latestImportJob.fileName}</p>
+                <p className="text-sm text-gray-500 mt-1">
+                  총 {latestImportJob.totalRows}행 · 성공 {latestImportJob.successRows} · 실패 {latestImportJob.failedRows}
+                </p>
+              </div>
+              <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                latestImportJob.status === "imported" ? "bg-purple-100 text-purple-700"
+                : latestImportJob.status === "ready" ? "bg-green-100 text-green-700"
+                : latestImportJob.status === "failed" ? "bg-red-100 text-red-700"
+                : "bg-gray-100 text-gray-700"
+              }`}>
+                {latestImportJob.status === "imported" ? "임포트됨"
+                  : latestImportJob.status === "ready" ? "준비완료"
+                  : latestImportJob.status === "failed" ? "실패"
+                  : latestImportJob.status}
+              </span>
+            </div>
+            <div className="mt-3 flex gap-2">
+              <Link href={`/imports/${latestImportJob.id}`} className="text-sm text-purple-600 hover:underline">
+                상세 보기 →
+              </Link>
+              <span className="text-gray-300">|</span>
+              <Link href="/imports" className="text-sm text-purple-600 hover:underline">
+                전체 목록
               </Link>
             </div>
           </div>

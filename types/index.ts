@@ -71,32 +71,34 @@ export type PredictionFactorSnapshot = {
   createdAt: Date;
 };
 
-export type OcrImportJob = {
+export type ImportJob = {
   id: string;
-  sourceFileName: string;
-  sourceFileUrl?: string | null;
+  fileName: string;
   status: string;
-  rawText?: string | null;
-  parsedJson?: string | null;
+  totalRows: number;
+  successRows: number;
+  failedRows: number;
   errorMessage?: string | null;
   createdAt: Date;
   updatedAt: Date;
-  items?: OcrImportItem[];
+  rows?: ImportRow[];
 };
 
-export type OcrImportItem = {
+export type ImportRow = {
   id: string;
   jobId: string;
-  detectedDate?: Date | null;
-  extractedBagelsBaked?: number | null;
-  extractedBagelsLeft?: number | null;
-  extractedStoreSales?: number | null;
-  extractedUberSales?: number | null;
-  extractedDoordashSales?: number | null;
-  extractedOtherSales?: number | null;
-  extractedNotes?: string | null;
-  confidenceScore?: number | null;
-  reviewStatus: string;
+  rowNumber: number;
+  rawJson: string;
+  parsedDate?: Date | null;
+  parsedBagelsBaked?: number | null;
+  parsedBagelsLeft?: number | null;
+  parsedStoreSales?: number | null;
+  parsedUberSales?: number | null;
+  parsedDoordashSales?: number | null;
+  parsedOtherSales?: number | null;
+  parsedNotes?: string | null;
+  status: string;
+  validationErrors?: string | null;
   linkedDailyRecordId?: string | null;
   createdAt: Date;
   updatedAt: Date;
