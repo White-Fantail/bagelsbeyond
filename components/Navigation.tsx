@@ -8,6 +8,7 @@ const navItems = [
   { href: "/sales", label: "매출 목록" },
   { href: "/calendar", label: "달력" },
   { href: "/predictions", label: "예측" },
+  { href: "/predictions/performance", label: "성과" },
   { href: "/imports", label: "가져오기" },
   { href: "/weights", label: "가중치" },
   { href: "/settings", label: "설정" },
@@ -32,7 +33,7 @@ export default function Navigation() {
                 key={item.href}
                 href={item.href}
                 className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  pathname === item.href
+                  pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href))
                     ? "bg-amber-100 text-amber-700"
                     : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                 }`}

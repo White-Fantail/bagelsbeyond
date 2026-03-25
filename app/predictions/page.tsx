@@ -3,12 +3,13 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { formatCurrency, formatDate } from "@/lib/utils";
+import type { SalesPrediction } from "@/types";
 
-async function getPredictions() {
+async function getPredictions(): Promise<SalesPrediction[]> {
   try {
-    return await prisma.salesPrediction.findMany({
+    return (await prisma.salesPrediction.findMany({
       orderBy: { targetDate: "desc" },
-    });
+    })) as SalesPrediction[];
   } catch {
     return [];
   }
@@ -16,6 +17,7 @@ async function getPredictions() {
 
 const METHOD_LABELS: Record<string, string> = {
   rule_based_v1: "규칙 기반 v1",
+  rule_based_v2: "규칙 기반 v2",
   weighted_v1: "가중치 기반 v1",
   manual: "수동 입력",
 };
@@ -30,12 +32,20 @@ export default async function PredictionsPage() {
           <h1 className="text-2xl font-bold text-gray-900">예측 목록</h1>
           <p className="text-gray-500 mt-1">매출 예측 결과 ({predictions.length}건)</p>
         </div>
-        <Link
-          href="/predictions/new"
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium"
-        >
-          + 새 예측 만들기
-        </Link>
+        <div className="flex gap-2">
+          <Link
+            href="/predictions/performance"
+            className="px-3 py-1.5 text-sm border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
+          >
+            📊 성과 보기
+          </Link>
+          <Link
+            href="/predictions/new"
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium"
+          >
+            + 새 예측 만들기
+          </Link>
+        </div>
       </div>
 
       {predictions.length === 0 ? (

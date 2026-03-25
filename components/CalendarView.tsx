@@ -2,21 +2,27 @@
 
 import { useRouter } from "next/navigation";
 import { getTotalSales, formatCurrency } from "@/lib/utils";
-import type { DailyRecord } from "@/types";
+import type { DailyRecord, SalesPrediction } from "@/types";
 
 type Props = {
   year: number;
   month: number;
   records: DailyRecord[];
+  predictions?: SalesPrediction[];
 };
 
-export default function CalendarView({ year, month, records }: Props) {
+export default function CalendarView({ year, month, records, predictions = [] }: Props) {
   const router = useRouter();
 
   const recordMap = new Map(
     records.map((r) => [new Date(r.date).getDate(), r])
   );
 
+  const predictionMap = new Map(
+    predictions.map((p) => [new Date(p.targetDate).getDate(), p])
+  );
+
+  const today = new Date();
   const firstDay = new Date(year, month - 1, 1).getDay();
   const daysInMonth = new Date(year, month, 0).getDate();
 
@@ -36,22 +42,23 @@ export default function CalendarView({ year, month, records }: Props) {
     ...Array(firstDay).fill(null),
     ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
   ];
-
   while (cells.length % 7 !== 0) cells.push(null);
+
+  const handleDayClick = (day: number, record: DailyRecord | undefined, prediction: SalesPrediction | undefined) => {
+    if (record) {
+      router.push(`/sales/${record.id}`);
+    } else if (prediction) {
+      router.push(`/predictions/${prediction.id}`);
+    }
+  };
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-        <button onClick={prevMonth} className="p-2 hover:bg-gray-100 rounded-md text-gray-600">
-          ←
-        </button>
-        <h2 className="text-lg font-semibold text-gray-900">
-          {year}년 {month}월
-        </h2>
-        <button onClick={nextMonth} className="p-2 hover:bg-gray-100 rounded-md text-gray-600">
-          →
-        </button>
+        <button onClick={prevMonth} className="p-2 hover:bg-gray-100 rounded-md text-gray-600">←</button>
+        <h2 className="text-lg font-semibold text-gray-900">{year}년 {month}월</h2>
+        <button onClick={nextMonth} className="p-2 hover:bg-gray-100 rounded-md text-gray-600">→</button>
       </div>
 
       {/* Day labels */}
@@ -59,9 +66,7 @@ export default function CalendarView({ year, month, records }: Props) {
         {dayLabels.map((d, i) => (
           <div
             key={d}
-            className={`py-2 text-center text-xs font-medium ${
-              i === 0 ? "text-red-500" : i === 6 ? "text-blue-500" : "text-gray-500"
-            }`}
+            className={`py-2 text-center text-xs font-medium ${i === 0 ? "text-red-500" : i === 6 ? "text-blue-500" : "text-gray-500"}`}
           >
             {d}
           </div>
@@ -71,33 +76,59 @@ export default function CalendarView({ year, month, records }: Props) {
       {/* Calendar grid */}
       <div className="grid grid-cols-7">
         {cells.map((day, idx) => {
-          const record = day ? recordMap.get(day) : null;
+          const record = day ? recordMap.get(day) : undefined;
+          const prediction = day ? predictionMap.get(day) : undefined;
+          const hasBoth = !!(record && prediction);
+          const hasRecord = !!record;
+          const hasPrediction = !!(prediction && !record);
+
           const isToday =
             day !== null &&
-            new Date().getFullYear() === year &&
-            new Date().getMonth() + 1 === month &&
-            new Date().getDate() === day;
+            today.getFullYear() === year &&
+            today.getMonth() + 1 === month &&
+            today.getDate() === day;
+
+          const isFuture =
+            day !== null &&
+            new Date(year, month - 1, day) > today;
+
+          const isClickable = !!(record || prediction);
+
+          let bgClass = "";
+          if (hasBoth) bgClass = "hover:bg-purple-50";
+          else if (hasRecord) bgClass = "hover:bg-amber-50";
+          else if (hasPrediction) bgClass = "hover:bg-blue-50";
+          else bgClass = "hover:bg-gray-50";
 
           return (
             <div
               key={idx}
-              onClick={() => record && router.push(`/sales/${record.id}`)}
-              role={record ? "button" : undefined}
-              tabIndex={record ? 0 : undefined}
-              onKeyDown={record ? (e) => { if (e.key === "Enter" || e.key === " ") router.push(`/sales/${record.id}`); } : undefined}
-              aria-label={record ? `${year}년 ${month}월 ${day}일 기록 보기` : undefined}
-              className={`min-h-[80px] p-2 border-b border-r border-gray-100 ${
-                day === null
-                  ? "bg-gray-50"
-                  : record
-                  ? "hover:bg-amber-50 cursor-pointer focus:outline-none focus:ring-2 focus:ring-amber-400"
-                  : "hover:bg-gray-50"
-              }`}
+              onClick={() => day && isClickable && handleDayClick(day, record, prediction)}
+              role={isClickable ? "button" : undefined}
+              tabIndex={isClickable ? 0 : undefined}
+              onKeyDown={
+                isClickable
+                  ? (e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        if (day) handleDayClick(day, record, prediction);
+                      }
+                    }
+                  : undefined
+              }
+              aria-label={
+                day
+                  ? `${year}년 ${month}월 ${day}일${record ? " 실적 있음" : ""}${prediction ? " 예측 있음" : ""}`
+                  : undefined
+              }
+              className={`min-h-[90px] p-1.5 border-b border-r border-gray-100 transition-colors ${
+                day === null ? "bg-gray-50" : isClickable ? `cursor-pointer focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-400 ${bgClass}` : bgClass
+              } ${isFuture ? "bg-slate-50" : ""}`}
             >
               {day !== null && (
                 <>
+                  {/* Day number */}
                   <div
-                    className={`text-sm font-medium mb-1 w-6 h-6 flex items-center justify-center rounded-full ${
+                    className={`text-xs font-medium mb-1 w-5 h-5 flex items-center justify-center rounded-full ${
                       isToday
                         ? "bg-amber-500 text-white"
                         : idx % 7 === 0
@@ -109,14 +140,44 @@ export default function CalendarView({ year, month, records }: Props) {
                   >
                     {day}
                   </div>
+
+                  {/* Status dot */}
+                  {(hasBoth || hasRecord || hasPrediction) && (
+                    <div className="flex gap-0.5 mb-1">
+                      {hasRecord && <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />}
+                      {hasPrediction && <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />}
+                      {hasBoth && <span className="w-1.5 h-1.5 rounded-full bg-purple-400" />}
+                    </div>
+                  )}
+
+                  {/* Actual record data */}
                   {record && (
-                    <div className="mt-1">
-                      <div className="text-xs font-medium text-amber-600">
+                    <div>
+                      <div className="text-[10px] font-semibold text-amber-700 leading-tight">
                         {formatCurrency(getTotalSales(record))}
                       </div>
-                      <div className="text-xs text-gray-400">
-                        🥯 {record.bagelsBaked - record.bagelsLeft}개
+                      <div className="text-[10px] text-gray-400">
+                        🥯{record.bagelsBaked - record.bagelsLeft}
                       </div>
+                    </div>
+                  )}
+
+                  {/* Prediction data (future or when no actual) */}
+                  {prediction && !record && (
+                    <div>
+                      <div className="text-[10px] font-semibold text-blue-600 leading-tight">
+                        ~{formatCurrency(prediction.predictedSales)}
+                      </div>
+                      <div className="text-[10px] text-blue-400">
+                        🔮{prediction.recommendedBagelsToBake}굽
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Both: show actual with prediction sub-text */}
+                  {hasBoth && (
+                    <div className="text-[10px] text-purple-500 mt-0.5">
+                      예측 있음
                     </div>
                   )}
                 </>
