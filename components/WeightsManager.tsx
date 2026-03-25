@@ -24,6 +24,10 @@ const GROUPS: { key: string; label: string; icon: string; prefix: string[] }[] =
   { key: "news", label: "뉴스", icon: "📰", prefix: ["nz_news", "world_news"] },
 ];
 
+function getGroupIcon(factorKey: string): string {
+  return GROUPS.find((g) => g.prefix.some((p) => factorKey === p || factorKey.startsWith(p)))?.icon ?? "•";
+}
+
 function getGroup(factorKey: string): string {
   for (const g of GROUPS) {
     if (g.prefix.some((p) => factorKey === p || factorKey.startsWith(p))) {
@@ -285,7 +289,7 @@ export default function WeightsManager({ initialWeights }: Props) {
                 <tr key={w.id} className={`hover:bg-gray-50 ${!w.isActive ? "opacity-50" : ""}`}>
                   <td className="px-4 py-3">
                     <span className="text-sm font-mono text-gray-800">{w.factorKey}</span>
-                    <span className="ml-1 text-xs text-gray-400">{GROUPS.find((g) => g.prefix.some((p) => w.factorKey === p || w.factorKey.startsWith(p)))?.icon ?? "•"}</span>
+                    <span className="ml-1 text-xs text-gray-400">{getGroupIcon(w.factorKey)}</span>
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-500 max-w-xs truncate">{w.description ?? "-"}</td>
                   <td className="px-4 py-3 text-center">

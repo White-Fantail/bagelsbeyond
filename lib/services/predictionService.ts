@@ -163,23 +163,20 @@ export function calculateBaselineMetrics(input: PredictionInput): BaselineMetric
   const blendedAvgSales = sameDayWeight * sameDayAvgSales + overallWeight * avgSales;
   const blendedAvgBagels = sameDayWeight * sameDayAvgBagels + overallWeight * avgBagelsSold;
 
-  // Waste rate: bagelsLeft / bagelsBaked
+  // Waste rate: bagelsLeft / bagelsBaked (skip records with invalid/zero baked count)
+  const validWasteRecords = recentRecords.filter((r) => safeNumber(r.bagelsBaked) > 0);
   const avgWasteRate =
-    recentRecords.length > 0
-      ? recentRecords.reduce((s, r) => {
-          const baked = safeNumber(r.bagelsBaked, 1);
-          return s + safeNumber(r.bagelsLeft) / Math.max(1, baked);
-        }, 0) / recentRecords.length
+    validWasteRecords.length > 0
+      ? validWasteRecords.reduce((s, r) => s + safeNumber(r.bagelsLeft) / safeNumber(r.bagelsBaked), 0) / validWasteRecords.length
       : 0.05;
 
-  // sold/baked ratio
+  // sold/baked ratio (skip records with invalid/zero baked count)
   const avgSoldToBakedRatio =
-    recentRecords.length > 0
-      ? recentRecords.reduce((s, r) => {
-          const baked = safeNumber(r.bagelsBaked, 1);
+    validWasteRecords.length > 0
+      ? validWasteRecords.reduce((s, r) => {
           const sold = getSold(r);
-          return s + sold / Math.max(1, baked);
-        }, 0) / recentRecords.length
+          return s + sold / safeNumber(r.bagelsBaked);
+        }, 0) / validWasteRecords.length
       : 0.95;
 
   return {
