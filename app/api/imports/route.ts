@@ -12,12 +12,17 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json() as { fileName: string; csvText: string };
-    const { fileName, csvText } = body;
+    const body = await req.json() as { fileName?: string; csvText?: string };
+    const { csvText } = body;
 
-    if (!fileName || !csvText) {
-      return NextResponse.json({ message: "파일명과 CSV 내용이 필요합니다" }, { status: 400 });
+    if (!csvText || !csvText.trim()) {
+      return NextResponse.json({ message: "CSV 내용이 필요합니다" }, { status: 400 });
     }
+
+    // Auto-generate a file name when only paste text is provided
+    const fileName =
+      body.fileName?.trim() ||
+      `paste_${new Date().toISOString().slice(0, 10)}.csv`;
 
     const job = await createImportJob({ fileName, csvText });
     return NextResponse.json(job, { status: 201 });
