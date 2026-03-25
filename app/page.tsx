@@ -77,28 +77,35 @@ async function getDashboardData() {
       include: { dailyRecord: { select: { date: true } } },
     });
 
-    // Task status summary
-    const taskStats = await prisma.scheduledTask.groupBy({
-      by: ["status"],
-      _count: { id: true },
-    });
-    const taskStatusMap: Record<string, number> = {};
-    for (const s of taskStats) taskStatusMap[s.status] = s._count.id;
+    // Task status summary — isolated so a missing migration doesn't break the whole dashboard
+    let taskStatusMap: Record<string, number> = {};
+    let recentTasks: Awaited<ReturnType<typeof prisma.scheduledTask.findMany>> = [];
+    let lastExternalFactorTask: Awaited<ReturnType<typeof prisma.scheduledTask.findFirst>> = null;
+    let lastPredictionTask: Awaited<ReturnType<typeof prisma.scheduledTask.findFirst>> = null;
+    try {
+      const taskStats = await prisma.scheduledTask.groupBy({
+        by: ["status"],
+        _count: { id: true },
+      });
+      for (const s of taskStats) taskStatusMap[s.status] = s._count.id;
 
-    const recentTasks = await prisma.scheduledTask.findMany({
-      orderBy: { createdAt: "desc" },
-      take: 5,
-    });
+      recentTasks = await prisma.scheduledTask.findMany({
+        orderBy: { createdAt: "desc" },
+        take: 5,
+      });
 
-    const lastExternalFactorTask = await prisma.scheduledTask.findFirst({
-      where: { taskType: "collect_external_factors", status: "success" },
-      orderBy: { finishedAt: "desc" },
-    });
+      lastExternalFactorTask = await prisma.scheduledTask.findFirst({
+        where: { taskType: "collect_external_factors", status: "success" },
+        orderBy: { finishedAt: "desc" },
+      });
 
-    const lastPredictionTask = await prisma.scheduledTask.findFirst({
-      where: { taskType: "generate_prediction", status: "success" },
-      orderBy: { finishedAt: "desc" },
-    });
+      lastPredictionTask = await prisma.scheduledTask.findFirst({
+        where: { taskType: "generate_prediction", status: "success" },
+        orderBy: { finishedAt: "desc" },
+      });
+    } catch {
+      // scheduled_tasks table may not exist yet — skip task data gracefully
+    }
 
     return {
       recentRecords,
