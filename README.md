@@ -120,9 +120,53 @@ projectedSellThroughRate = 1 - projectedWasteRate
 
 ## ⚙️ 환경 변수
 
-```env
-DATABASE_URL=postgresql://user:password@host:5432/beyond
+`.env.example`을 복사한 후 아래 표를 참고해 각 값을 채워주세요.
+
+```bash
+cp .env.example .env
 ```
+
+### 필수 변수
+
+| 변수명 | 예시 값 | 목적 | 발급 방법 |
+|--------|---------|------|-----------|
+| `DATABASE_URL` | `postgresql://postgres:postgres@localhost:5432/beyond_dev` | Prisma가 PostgreSQL에 연결하는 데 사용하는 DB 접속 URL | 로컬: 직접 PostgreSQL 설치 후 설정. 클라우드: [Supabase](https://supabase.com/), [Neon](https://neon.tech/), [Railway](https://railway.app/) 등에서 Connection String 복사 |
+
+### 뉴스 API (선택 — 없으면 뉴스 수집만 건너뜀)
+
+| 변수명 | 예시 값 | 목적 | 발급 방법 |
+|--------|---------|------|-----------|
+| `NEWS_API_KEY` | `abc123...` | NewsAPI.org에서 뉴스 헤드라인을 가져와 `DailyExternalFactor.nzNewsSummary` / `worldNewsSummary`에 저장 | [https://newsapi.org/](https://newsapi.org/) 에서 무료 계정 생성 → API 키 발급 (무료 플랜: 과거 1개월 이내 기사만 조회 가능) |
+
+### 기본 위치 설정 (선택 — 기본값: 뉴질랜드 크라이스트처치)
+
+앱 설정 페이지(`/settings`)에서도 변경 가능하며, 환경 변수가 있으면 서버 사이드 기본값으로 사용됩니다.
+
+| 변수명 | 기본값 | 목적 | 참고 |
+|--------|--------|------|------|
+| `DEFAULT_LATITUDE` | `-43.5321` | 날씨(Open-Meteo) API 호출에 사용할 기본 위도 | [Google Maps](https://maps.google.com) 또는 [latlong.net](https://www.latlong.net/)에서 좌표 확인 |
+| `DEFAULT_LONGITUDE` | `172.6362` | 날씨(Open-Meteo) API 호출에 사용할 기본 경도 | 위와 동일 |
+| `DEFAULT_TIMEZONE` | `Pacific/Auckland` | 날짜/시간 계산 및 날씨 조회 시 기준 타임존 | [IANA 타임존 목록](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) 참고 |
+| `DEFAULT_REGION` | `Canterbury` | 학교 방학(`RuleBasedSchoolHolidayProvider`) 및 이벤트 조회 시 기준 지역 | 뉴질랜드 지역명 사용 (예: `Canterbury`, `Auckland`, `Wellington`) |
+| `DEFAULT_COUNTRY_CODE` | `NZ` | Nager.at 공휴일 API 조회 시 사용할 국가 코드 | [ISO 3166-1 alpha-2](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2) 코드 (예: `NZ`, `AU`, `US`, `KR`) |
+
+### 프로바이더 모드 전환 (선택 — 테스트/개발용)
+
+각 변수를 `mock`으로 설정하면 외부 API 호출 없이 목(Mock) 데이터를 반환합니다.
+
+| 변수명 | 값 | 목적 |
+|--------|-----|------|
+| `WEATHER_PROVIDER` | `mock` | Open-Meteo 날씨 API 대신 Mock 반환 (항상 `null` 반환) |
+| `HOLIDAY_PROVIDER` | `mock` | Nager.at 공휴일 API 대신 Mock 반환 (NZ 주요 공휴일 정적 목록) |
+| `SCHOOL_HOLIDAY_PROVIDER` | `mock` | 학교 방학 룰 기반 계산 대신 Mock 반환 |
+| `EVENTS_PROVIDER` | `mock` | 이벤트 Placeholder 대신 Mock 반환 (빈 배열) |
+| `NEWS_PROVIDER` | `mock` | NewsAPI 대신 Mock 반환 (`null` — `NEWS_API_KEY` 미설정 시 자동으로 mock 동작) |
+
+### 미래 연동 예정 (현재 미사용)
+
+| 변수명 | 목적 | 참고 |
+|--------|------|------|
+| `EVENTFINDA_API_KEY` | Eventfinda NZ 이벤트 API 연동 시 사용 예정 | [https://www.eventfinda.co.nz/api/v2/](https://www.eventfinda.co.nz/api/v2/) — 현재 이벤트 프로바이더는 Placeholder로 항상 빈 배열 반환 |
 
 ---
 
@@ -134,7 +178,7 @@ npm install
 
 # 2. 환경변수 설정
 cp .env.example .env
-# DATABASE_URL 설정
+# .env 파일을 열어 DATABASE_URL 및 필요한 값 입력 (위 환경 변수 표 참고)
 
 # 3. DB 마이그레이션
 npx prisma migrate deploy
