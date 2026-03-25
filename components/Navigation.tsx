@@ -7,6 +7,8 @@ const navItems = [
   { href: "/", label: "대시보드" },
   { href: "/sales", label: "매출 목록" },
   { href: "/calendar", label: "달력" },
+  { href: "/predictions", label: "예측" },
+  { href: "/imports", label: "가져오기" },
   { href: "/weights", label: "가중치" },
   { href: "/settings", label: "설정" },
 ];

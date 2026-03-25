@@ -22,6 +22,15 @@
 - **분석 유틸**: `lib/analytics.ts`에 판매율·폐기율·채널 비중 등 계산 함수
 - **단위 테스트**: Vitest로 analytics 함수 테스트
 
+### Stage 3
+- **매출 예측**: 규칙 기반 예측 엔진 (`rule_based_v1`) — 요일, 날씨, 공휴일, 이벤트, 방학 가중치 적용
+- **예측 목록/상세**: 예측 결과 목록 및 요인별 기여도 상세 보기
+- **예측 vs 실제 비교**: 예측 정확도 확인 (오차율 포함)
+- **OCR 가져오기**: 과거 기록을 텍스트 형식으로 파싱하여 DailyRecord로 가져오기
+- **외부 데이터 프로바이더**: 날씨·공휴일·이벤트·뉴스 Mock 프로바이더 (실제 API 연동 준비)
+- **대시보드 예측 섹션**: 최근 예측 결과를 대시보드에서 바로 확인
+- **신규 DB 모델**: `SalesPrediction`, `PredictionFactorSnapshot`, `OcrImportJob`, `OcrImportItem`
+
 ## 기술 스택
 
 - **프레임워크**: Next.js 16 (App Router)
