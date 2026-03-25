@@ -83,26 +83,26 @@ export default function SalesForm({
           <input type="date" {...register("date")} className={inputClass(!!errors.date)} />
         </Field>
         <Field label="구운 베이글 수 *" error={errors.bagelsBaked?.message}>
-          <input type="number" min="0" {...register("bagelsBaked")} className={inputClass(!!errors.bagelsBaked)} />
+          <input type="number" min="0" {...register("bagelsBaked")} onFocus={(e) => e.target.select()} className={inputClass(!!errors.bagelsBaked)} />
         </Field>
         <Field label="남은 베이글 수 *" error={errors.bagelsLeft?.message}>
-          <input type="number" min="0" {...register("bagelsLeft")} className={inputClass(!!errors.bagelsLeft)} />
+          <input type="number" min="0" {...register("bagelsLeft")} onFocus={(e) => e.target.select()} className={inputClass(!!errors.bagelsLeft)} />
         </Field>
       </Section>
 
       {/* 매출 정보 */}
       <Section title="매출 정보 (NZD)">
         <Field label="매장 매출 *" error={errors.storeSales?.message}>
-          <input type="number" step="0.01" min="0" {...register("storeSales")} className={inputClass(!!errors.storeSales)} />
+          <input type="number" step="0.01" min="0" {...register("storeSales")} onFocus={(e) => e.target.select()} className={inputClass(!!errors.storeSales)} />
         </Field>
         <Field label="우버 매출 *" error={errors.uberSales?.message}>
-          <input type="number" step="0.01" min="0" {...register("uberSales")} className={inputClass(!!errors.uberSales)} />
+          <input type="number" step="0.01" min="0" {...register("uberSales")} onFocus={(e) => e.target.select()} className={inputClass(!!errors.uberSales)} />
         </Field>
         <Field label="도어대쉬 매출 *" error={errors.doordashSales?.message}>
-          <input type="number" step="0.01" min="0" {...register("doordashSales")} className={inputClass(!!errors.doordashSales)} />
+          <input type="number" step="0.01" min="0" {...register("doordashSales")} onFocus={(e) => e.target.select()} className={inputClass(!!errors.doordashSales)} />
         </Field>
         <Field label="기타 매출 *" error={errors.otherSales?.message}>
-          <input type="number" step="0.01" min="0" {...register("otherSales")} className={inputClass(!!errors.otherSales)} />
+          <input type="number" step="0.01" min="0" {...register("otherSales")} onFocus={(e) => e.target.select()} className={inputClass(!!errors.otherSales)} />
         </Field>
       </Section>
 
@@ -113,18 +113,18 @@ export default function SalesForm({
         </Field>
         <div className="grid grid-cols-2 gap-4">
           <Field label="최저 기온 (°C)" error={errors.minTemp?.message}>
-            <input type="number" step="0.1" {...register("minTemp")} className={inputClass(!!errors.minTemp)} />
+            <input type="number" step="0.1" {...register("minTemp")} onFocus={(e) => e.target.select()} className={inputClass(!!errors.minTemp)} />
           </Field>
           <Field label="최고 기온 (°C)" error={errors.maxTemp?.message}>
-            <input type="number" step="0.1" {...register("maxTemp")} className={inputClass(!!errors.maxTemp)} />
+            <input type="number" step="0.1" {...register("maxTemp")} onFocus={(e) => e.target.select()} className={inputClass(!!errors.maxTemp)} />
           </Field>
         </div>
         <div className="grid grid-cols-2 gap-4">
           <Field label="강수량 (mm)" error={errors.rainMm?.message}>
-            <input type="number" step="0.1" min="0" {...register("rainMm")} className={inputClass(!!errors.rainMm)} />
+            <input type="number" step="0.1" min="0" {...register("rainMm")} onFocus={(e) => e.target.select()} className={inputClass(!!errors.rainMm)} />
           </Field>
           <Field label="바람 (kph)" error={errors.windKph?.message}>
-            <input type="number" step="0.1" min="0" {...register("windKph")} className={inputClass(!!errors.windKph)} />
+            <input type="number" step="0.1" min="0" {...register("windKph")} onFocus={(e) => e.target.select()} className={inputClass(!!errors.windKph)} />
           </Field>
         </div>
         <Field label="공휴일명" error={errors.holidayName?.message}>
