@@ -169,16 +169,149 @@ npx prisma studio
 
 ---
 
+## 🤖 자동화 작업 / 스케줄링 시스템 (6단계)
+
+### 개요
+
+외부요인 수집과 예측 생성이 **자동으로 실행**되도록 `ScheduledTask` / `TaskLog` 기반의 백그라운드 작업 시스템이 구현되어 있습니다.
+
+### Task 상태 정의
+
+| 상태 | 설명 |
+|------|------|
+| `pending` | 대기 중 (아직 실행 안 됨) |
+| `running` | 현재 실행 중 |
+| `success` | 성공적으로 완료 |
+| `partial` | 일부 provider 실패 (데이터는 저장됨) |
+| `failed` | 전체 실패 |
+| `skipped` | 이미 데이터 존재하여 건너뜀 |
+
+### 외부요인 자동수집 흐름
+
+```
+scheduleExternalFactorCollection(date)
+    ↓ ScheduledTask 생성 (pending)
+runExternalFactorCollectionTask(taskId)
+    ↓ status → running
+    ↓ 모든 provider 동시 호출 (weather, holiday, schoolHoliday, events, news)
+    ↓ 부분 실패 → partial, 전체 실패 → failed, 모두 성공 → success
+    ↓ TaskLog 기록
+    ↓ DailyExternalFactor upsert
+```
+
+### 예측 자동생성 흐름
+
+```
+schedulePredictionGeneration(date)
+    ↓ ScheduledTask 생성 (pending)
+runPredictionGenerationTask(taskId)
+    ↓ status → running
+    ↓ 기존 예측 존재? → skipped
+    ↓ 외부요인 없으면 자동 수집 시도
+    ↓ buildPredictionInput() → calculateRuleBasedPrediction() → savePredictionResult()
+    ↓ TaskLog 기록
+    ↓ SalesPrediction 저장
+```
+
+### Import → External Factors → Prediction 자동 파이프라인
+
+CSV import 완료 시 자동으로 다음 파이프라인이 실행됩니다:
+
+```
+ImportJob (execute)
+    ↓ triggerPostImportTasks(importJobId)
+    ↓ import된 날짜 범위 계산
+    ↓ 각 날짜에 대해 scheduleExternalFactorCollection(date) 등록
+        ↓ [나중에 cron/manual 실행]
+        ↓ runExternalFactorCollectionTask()
+        ↓ 수집 완료 → ensurePredictionForDate(date)
+        ↓ runPredictionGenerationTask()
+```
+
+### API 엔드포인트
+
+| 경로 | 메서드 | 설명 |
+|------|--------|------|
+| `POST /api/cron/run` | POST/GET | cron trigger (action 파라미터로 제어) |
+| `GET /api/tasks` | GET | 작업 목록 조회 |
+| `POST /api/tasks` | POST | 새 작업 생성 (+ runNow 옵션) |
+| `GET /api/tasks/[id]` | GET | 작업 상세 + 로그 |
+| `POST /api/tasks/[id]/retry` | POST | 실패 작업 재시도 |
+
+#### /api/cron/run action 옵션
+
+```json
+{ "action": "run_pending" }           // 대기 중 작업 모두 실행
+{ "action": "ensure_external_factors" } // 오늘~모레 외부요인 수집
+{ "action": "schedule_tomorrow_prediction" } // 내일 예측 생성
+{ "action": "all" }                   // 위 세 가지 모두 실행
+```
+
+### cron / 외부 스케줄러 연결 방법
+
+#### 옵션 1: GitHub Actions
+
+```yaml
+# .github/workflows/cron.yml
+on:
+  schedule:
+    - cron: '0 20 * * *'  # 매일 오전 9시 NZT (UTC+13)
+jobs:
+  run-tasks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger cron endpoint
+        run: |
+          curl -X POST https://your-domain.com/api/cron/run \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json" \
+            -d '{"action":"all"}'
+```
+
+#### 옵션 2: AWS EventBridge / CloudWatch
+
+AWS Lambda 또는 EventBridge Scheduler를 사용해 매일 정해진 시간에 `/api/cron/run`을 POST 호출합니다.
+
+#### 옵션 3: Vercel Cron Jobs
+
+`vercel.json`에 cron 설정을 추가합니다:
+
+```json
+{
+  "crons": [
+    { "path": "/api/cron/run", "schedule": "0 20 * * *" }
+  ]
+}
+```
+
+#### 보안 설정
+
+`.env`에 `CRON_SECRET=your-random-secret`을 추가하면 인증되지 않은 요청을 거부합니다.
+
+```env
+CRON_SECRET=your-random-secret-here
+```
+
+### UI 페이지
+
+- **/** (대시보드): 작업 상태 요약, 최근 5개 작업, 빠른 액션 버튼
+- **/tasks**: 전체 작업 목록, 상태별 필터, 빠른 실행 버튼
+- **/tasks/[id]**: 작업 상세 정보, TaskLog 목록, 재시도 버튼
+
+---
+
 ## 🔮 향후 개선 아이디어
 
-- **자동 예측 생성**: cron job으로 매일 자정에 내일 예측 자동 생성
+- ~~**자동 예측 생성**: cron job으로 매일 자정에 내일 예측 자동 생성~~ ✅ 6단계에서 구현
 - **ML 모델 고도화**: 실제 과거 데이터 기반 회귀/시계열 모델
-- **외부 데이터 자동수집**: Weather API, 공공 공휴일 API cron 연동
+- ~~**외부 데이터 자동수집**: Weather API, 공공 공휴일 API cron 연동~~ ✅ 6단계에서 구현
 - **고급 리포트**: 월별/분기별 성과 리포트, 채널 분석
 - **알림**: 폐기율 경고, 예측 신뢰도 낮을 때 알림
 - **다중 매장**: 매장별 설정/가중치 분리
 - **모바일 앱**: React Native 또는 PWA
 - **자동 가중치 학습**: 예측 오차를 기반으로 가중치 점진 조정
+- **Task 큐**: Redis/BullMQ 기반 실제 비동기 작업 큐로 전환
+- **알림 연동**: Task 실패 시 Slack/Email 알림
 
 ---
 
@@ -186,28 +319,46 @@ npx prisma studio
 
 ```
 ├── app/
-│   ├── page.tsx                    # 운영 대시보드
+│   ├── page.tsx                    # 운영 대시보드 (작업 상태 포함)
 │   ├── calendar/                   # 달력 (실적 + 예측)
 │   ├── predictions/
 │   │   ├── page.tsx                # 예측 목록
 │   │   ├── new/                    # 새 예측 (내일 자동 제안)
 │   │   ├── [id]/                   # 예측 상세 + 근거 + 비교
 │   │   └── performance/            # 예측 성과 페이지
+│   ├── tasks/
+│   │   ├── page.tsx                # 자동화 작업 목록
+│   │   └── [id]/page.tsx           # 작업 상세 + TaskLog + 재시도
 │   ├── sales/                      # 매출 CRUD
 │   ├── imports/                    # CSV 임포트
 │   ├── weights/                    # 가중치 관리
 │   └── settings/                   # 앱 설정
+├── app/api/
+│   ├── cron/run/route.ts           # cron trigger 엔드포인트
+│   └── tasks/
+│       ├── route.ts                # 작업 목록/생성
+│       └── [id]/
+│           ├── route.ts            # 작업 상세
+│           └── retry/route.ts      # 재시도
 ├── lib/
-│   ├── services/predictionService.ts  # 예측 핵심 로직
-│   ├── prediction-utils.ts            # 예측 유틸 함수
-│   ├── analytics.ts                   # 분석 함수
-│   └── utils.ts                       # 공통 유틸
+│   ├── services/
+│   │   ├── predictionService.ts    # 예측 핵심 로직
+│   │   ├── externalFactorService.ts# 외부요인 수집
+│   │   ├── importService.ts        # CSV 임포트
+│   │   ├── taskService.ts          # Task 생명주기 관리
+│   │   └── schedulerService.ts     # 고수준 자동화 오케스트레이션
+│   ├── task-utils.ts               # Task 유틸 (날짜, 상태 표시 등)
+│   ├── prediction-utils.ts         # 예측 유틸 함수
+│   ├── analytics.ts                # 분석 함수
+│   └── utils.ts                    # 공통 유틸
 ├── components/
+│   ├── TaskActionButton.tsx        # 작업 실행 버튼 (client)
+│   ├── RetryTaskButton.tsx         # 재시도 버튼 (client)
 │   ├── CalendarView.tsx            # 달력 컴포넌트
 │   └── WeightsManager.tsx          # 가중치 관리 UI
 ├── prisma/
-│   ├── schema.prisma               # DB 스키마
-│   └── seed.ts                     # 샘플 데이터
+│   ├── schema.prisma               # DB 스키마 (ScheduledTask, TaskLog 포함)
+│   └── seed.ts                     # 샘플 데이터 (Task 샘플 포함)
 └── types/
-    └── index.ts                    # TypeScript 타입 정의
+    └── index.ts                    # TypeScript 타입 정의 (TaskStatus 등 포함)
 ```

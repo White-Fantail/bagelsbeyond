@@ -297,6 +297,107 @@ async function main() {
     });
   }
 
+  // ── ScheduledTask / TaskLog samples ────────────────────────────────────────
+  const existingTaskCount = await prisma.scheduledTask.count();
+  if (existingTaskCount === 0) {
+    const now = new Date();
+
+    // 1. Success: external factor collection (2 days ago)
+    const date2DaysAgo = new Date(today);
+    date2DaysAgo.setDate(today.getDate() - 2);
+    const t1 = await prisma.scheduledTask.create({
+      data: {
+        taskType: "collect_external_factors",
+        targetDate: date2DaysAgo,
+        status: "success",
+        startedAt: new Date(now.getTime() - 60_000),
+        finishedAt: new Date(now.getTime() - 59_000),
+        resultSummary: "대상: 1일 | 처리: 1일",
+        retryCount: 0,
+      },
+    });
+    await prisma.taskLog.createMany({
+      data: [
+        { scheduledTaskId: t1.id, message: `외부요인 수집 시작: ${date2DaysAgo.toISOString().split("T")[0]}`, level: "info" },
+        { scheduledTaskId: t1.id, message: "수집 완료: weather, holiday, schoolHoliday", level: "info" },
+      ],
+    });
+
+    // 2. Partial: external factor collection (yesterday) — news provider failed
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+    const t2 = await prisma.scheduledTask.create({
+      data: {
+        taskType: "collect_external_factors",
+        targetDate: yesterday,
+        status: "partial",
+        startedAt: new Date(now.getTime() - 30_000),
+        finishedAt: new Date(now.getTime() - 29_000),
+        resultSummary: "대상: 1일 | 처리: 1일 | 실패 provider: news",
+        retryCount: 0,
+      },
+    });
+    await prisma.taskLog.createMany({
+      data: [
+        { scheduledTaskId: t2.id, message: `외부요인 수집 시작: ${yesterday.toISOString().split("T")[0]}`, level: "info" },
+        { scheduledTaskId: t2.id, message: "News provider error: API 키가 설정되지 않았습니다", level: "warning" },
+        { scheduledTaskId: t2.id, message: "부분 성공: 1개 provider 실패", level: "warning" },
+      ],
+    });
+
+    // 3. Success: prediction generation (yesterday)
+    const t3 = await prisma.scheduledTask.create({
+      data: {
+        taskType: "generate_prediction",
+        targetDate: yesterday,
+        status: "success",
+        startedAt: new Date(now.getTime() - 20_000),
+        finishedAt: new Date(now.getTime() - 18_000),
+        resultSummary: "예측 생성 완료 | 예상매출: 342",
+        retryCount: 0,
+      },
+    });
+    await prisma.taskLog.createMany({
+      data: [
+        { scheduledTaskId: t3.id, message: `예측 생성 시작: ${yesterday.toISOString().split("T")[0]}`, level: "info" },
+        { scheduledTaskId: t3.id, message: "기존 외부요인 사용", level: "info" },
+        { scheduledTaskId: t3.id, message: "예측 생성 완료: 예상매출=342", level: "info" },
+      ],
+    });
+
+    // 4. Failed: prediction generation (3 days ago) — no data
+    const date3DaysAgo = new Date(today);
+    date3DaysAgo.setDate(today.getDate() - 3);
+    const t4 = await prisma.scheduledTask.create({
+      data: {
+        taskType: "generate_prediction",
+        targetDate: date3DaysAgo,
+        status: "failed",
+        startedAt: new Date(now.getTime() - 90_000),
+        finishedAt: new Date(now.getTime() - 89_500),
+        errorMessage: "데이터 부족: 최근 기록 없음",
+        resultSummary: "예측 실패",
+        retryCount: 1,
+      },
+    });
+    await prisma.taskLog.createMany({
+      data: [
+        { scheduledTaskId: t4.id, message: `예측 생성 시작: ${date3DaysAgo.toISOString().split("T")[0]}`, level: "info" },
+        { scheduledTaskId: t4.id, message: "예외 발생: 데이터 부족: 최근 기록 없음", level: "error" },
+      ],
+    });
+
+    // 5. Pending: tomorrow external factors
+    await prisma.scheduledTask.create({
+      data: {
+        taskType: "collect_external_factors",
+        targetDate: new Date(today.getTime() + 86400_000),
+        status: "pending",
+        retryCount: 0,
+      },
+    });
+  }
+
   console.log("✅ Seeding complete!");
 }
 

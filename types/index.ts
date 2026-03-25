@@ -135,6 +135,35 @@ export type ImportRow = {
   updatedAt: Date;
 };
 
+// ─── Scheduled Task & TaskLog ─────────────────────────────────────────────────
+
+export type TaskStatus = "pending" | "running" | "success" | "partial" | "failed" | "skipped";
+export type TaskType = "collect_external_factors" | "generate_prediction";
+export type TaskLogLevel = "info" | "warning" | "error";
+
+export type ScheduledTask = {
+  id: string;
+  taskType: TaskType;
+  targetDate?: Date | null;
+  status: TaskStatus;
+  startedAt?: Date | null;
+  finishedAt?: Date | null;
+  errorMessage?: string | null;
+  resultSummary?: string | null;
+  retryCount: number;
+  createdAt: Date;
+  updatedAt: Date;
+  logs?: TaskLog[];
+};
+
+export type TaskLog = {
+  id: string;
+  scheduledTaskId: string;
+  message: string;
+  level: TaskLogLevel;
+  createdAt: Date;
+};
+
 export type SalesFormData = {
   date: string;
   bagelsBaked: number;

@@ -163,3 +163,39 @@ model ImportRow {
   @@index([jobId])
   @@map("import_rows")
 }
+
+// ─── Background Task Management ───────────────────────────────────────────────
+
+model ScheduledTask {
+  id            String    @id @default(cuid())
+  taskType      String    // collect_external_factors | generate_prediction
+  targetDate    DateTime?
+  status        String    @default("pending") // pending | running | success | partial | failed | skipped
+  startedAt     DateTime?
+  finishedAt    DateTime?
+  errorMessage  String?
+  resultSummary String?
+  retryCount    Int       @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  logs          TaskLog[]
+
+  @@index([status])
+  @@index([taskType, targetDate])
+  @@index([targetDate])
+  @@map("scheduled_tasks")
+}
+
+model TaskLog {
+  id              String        @id @default(cuid())
+  scheduledTaskId String
+  message         String
+  level           String        @default("info") // info | warning | error
+  createdAt       DateTime      @default(now())
+
+  task            ScheduledTask @relation(fields: [scheduledTaskId], references: [id], onDelete: Cascade)
+
+  @@index([scheduledTaskId])
+  @@map("task_logs")
+}
