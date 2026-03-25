@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { salesFormSchema } from "@/lib/validations";
+import { Prisma } from "@/app/generated/prisma/client";
 
 export async function GET() {
   try {
@@ -66,10 +67,10 @@ export async function POST(req: NextRequest) {
           externalFactor: {
             create: {
               weatherSummary: weatherSummary || null,
-              minTemp: minTemp === "" ? null : (minTemp ?? null),
-              maxTemp: maxTemp === "" ? null : (maxTemp ?? null),
-              rainMm: rainMm === "" ? null : (rainMm ?? null),
-              windKph: windKph === "" ? null : (windKph ?? null),
+              minTemp: minTemp ?? null,
+              maxTemp: maxTemp ?? null,
+              rainMm: rainMm ?? null,
+              windKph: windKph ?? null,
               holidayName: holidayName || null,
               localEventName: localEventName || null,
               schoolHoliday: schoolHoliday ?? false,
@@ -85,6 +86,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(record, { status: 201 });
   } catch (_error) {
     console.error(_error);
+    if (_error instanceof Prisma.PrismaClientKnownRequestError && _error.code === "P2002") {
+      return NextResponse.json({ message: "이미 해당 날짜의 기록이 있습니다. 해당 날짜의 기록을 수정하려면 수정 페이지를 이용해주세요." }, { status: 409 });
+    }
     return NextResponse.json({ message: "저장에 실패했습니다" }, { status: 500 });
   }
 }
