@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { salesFormSchema } from "@/lib/validations";
 import { Prisma } from "@/app/generated/prisma/client";
+import { apiRequireStaffOrAdmin, isNextResponse } from "@/lib/auth/dal";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -22,6 +23,9 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
 }
 
 export async function PUT(req: NextRequest, { params }: RouteContext) {
+  const authResult = await apiRequireStaffOrAdmin();
+  if (isNextResponse(authResult)) return authResult;
+
   try {
     const { id } = await params;
     const body = await req.json();
@@ -105,6 +109,9 @@ export async function PUT(req: NextRequest, { params }: RouteContext) {
 }
 
 export async function DELETE(_req: NextRequest, { params }: RouteContext) {
+  const authResult = await apiRequireStaffOrAdmin();
+  if (isNextResponse(authResult)) return authResult;
+
   try {
     const { id } = await params;
     await prisma.dailyRecord.delete({ where: { id } });
