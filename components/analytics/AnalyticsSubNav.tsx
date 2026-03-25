@@ -13,7 +13,7 @@ export default function AnalyticsSubNav({ items }: Props) {
   const pathname = usePathname();
 
   const isActive = (href: string) =>
-    pathname === href || (href !== "/analytics" && pathname.startsWith(href));
+    pathname === href || pathname.startsWith(href + "/");
 
   return (
     <nav className="flex gap-1 flex-wrap" aria-label="분석 서브 네비게이션">

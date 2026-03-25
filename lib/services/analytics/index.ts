@@ -103,6 +103,10 @@ export type HolidayBreakdown = {
 
 // ─── Helper ──────────────────────────────────────────────────────────────────
 
+function recordTotalSales(r: RecordWithFactor): number {
+  return r.storeSales + r.uberSales + r.doordashSales + r.otherSales;
+}
+
 export function computePeriodSummary(
   records: RecordWithFactor[],
   startDate: Date,
@@ -110,9 +114,7 @@ export function computePeriodSummary(
 ): PeriodSummary {
   const count = records.length;
 
-  const totalSales = records.reduce(
-    (s, r) => s + r.storeSales + r.uberSales + r.doordashSales + r.otherSales,
-    0
+  const totalSales = records.reduce((s, r) => s + recordTotalSales(r), 0
   );
   const storeSales = records.reduce((s, r) => s + r.storeSales, 0);
   const uberSales = records.reduce((s, r) => s + r.uberSales, 0);
@@ -187,7 +189,7 @@ export async function getDailyAnalytics(
 
   return records.map((r) => {
     const ef = r.externalFactor;
-    const totalSales = r.storeSales + r.uberSales + r.doordashSales + r.otherSales;
+    const totalSales = recordTotalSales(r);
     const bagelsSold = r.bagelsBaked - r.bagelsLeft;
 
     return {
@@ -484,10 +486,7 @@ export async function getHolidayNameBreakdown(
 
   const result: HolidayBreakdown[] = [];
   for (const [holidayName, hrs] of holidayMap.entries()) {
-    const totalSales = hrs.reduce(
-      (s, r) => s + r.storeSales + r.uberSales + r.doordashSales + r.otherSales,
-      0
-    );
+    const totalSales = hrs.reduce((s, r) => s + recordTotalSales(r), 0);
     const totalBagelsSold = hrs.reduce((s, r) => s + (r.bagelsBaked - r.bagelsLeft), 0);
     const avgWasteRate =
       hrs.reduce((s, r) => s + safeDivide(r.bagelsLeft, r.bagelsBaked), 0) / hrs.length;
