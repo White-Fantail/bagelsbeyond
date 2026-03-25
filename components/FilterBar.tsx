@@ -36,7 +36,7 @@ export default function FilterBar() {
             type="date"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+            className="px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500"
           />
         </div>
         <div className="flex flex-col gap-1">
@@ -45,7 +45,7 @@ export default function FilterBar() {
             type="date"
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+            className="px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500"
           />
         </div>
         <div className="flex flex-col gap-1 flex-1 min-w-[160px]">
@@ -55,7 +55,7 @@ export default function FilterBar() {
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
             placeholder="메모, 이벤트, 공휴일 검색..."
-            className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+            className="px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500"
           />
         </div>
         <div className="flex gap-2">

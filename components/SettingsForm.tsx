@@ -73,7 +73,7 @@ export default function SettingsForm({ initialData }: Props) {
           <input
             type="text"
             {...register("shopName")}
-            className={`w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 ${
+            className={`w-full px-3 py-2 border rounded-md text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 ${
               errors.shopName ? "border-red-300 bg-red-50" : "border-gray-300"
             }`}
           />
@@ -90,7 +90,7 @@ export default function SettingsForm({ initialData }: Props) {
             min="0"
             max="1"
             {...register("defaultTargetWasteRatio")}
-            className={`w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 ${
+            className={`w-full px-3 py-2 border rounded-md text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 ${
               errors.defaultTargetWasteRatio ? "border-red-300 bg-red-50" : "border-gray-300"
             }`}
           />
@@ -107,7 +107,7 @@ export default function SettingsForm({ initialData }: Props) {
             step="0.01"
             min="1"
             {...register("defaultSafetyBuffer")}
-            className={`w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 ${
+            className={`w-full px-3 py-2 border rounded-md text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 ${
               errors.defaultSafetyBuffer ? "border-red-300 bg-red-50" : "border-gray-300"
             }`}
           />
@@ -128,7 +128,7 @@ export default function SettingsForm({ initialData }: Props) {
               type="text"
               {...register("defaultRegion")}
               placeholder="Canterbury"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500"
             />
             <p className="mt-1 text-xs text-gray-400">예: Canterbury, Auckland</p>
           </div>
@@ -139,7 +139,7 @@ export default function SettingsForm({ initialData }: Props) {
               type="text"
               {...register("defaultCity")}
               placeholder="Christchurch"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500"
             />
           </div>
 
@@ -149,7 +149,7 @@ export default function SettingsForm({ initialData }: Props) {
               type="text"
               {...register("defaultCountry")}
               placeholder="NZ"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500"
             />
             <p className="mt-1 text-xs text-gray-400">공휴일 조회에 사용됩니다 (예: NZ, AU)</p>
           </div>
@@ -160,7 +160,7 @@ export default function SettingsForm({ initialData }: Props) {
               type="text"
               {...register("defaultEventRegion")}
               placeholder="Christchurch"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500"
             />
           </div>
         </div>

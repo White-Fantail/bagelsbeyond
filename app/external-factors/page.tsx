@@ -134,7 +134,7 @@ function FilterForm({ from, to }: { from?: string; to?: string }) {
           type="date"
           name="from"
           defaultValue={from ?? ""}
-          className="px-3 py-1.5 border border-gray-300 rounded-md text-sm"
+          className="px-3 py-1.5 border border-gray-300 rounded-md text-sm text-gray-900 bg-white"
         />
       </div>
       <div>
@@ -143,7 +143,7 @@ function FilterForm({ from, to }: { from?: string; to?: string }) {
           type="date"
           name="to"
           defaultValue={to ?? ""}
-          className="px-3 py-1.5 border border-gray-300 rounded-md text-sm"
+          className="px-3 py-1.5 border border-gray-300 rounded-md text-sm text-gray-900 bg-white"
         />
       </div>
       <button
