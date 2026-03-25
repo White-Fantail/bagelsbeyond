@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { decrypt } from "@/lib/auth/session";
+import { decryptEdge } from "@/lib/auth/session-edge";
 import { Role } from "@/app/generated/prisma/enums";
 
 // ── Route groups ──────────────────────────────────────────────────────────────
@@ -35,7 +35,7 @@ export default async function proxy(req: NextRequest) {
 
   // Read session from cookie (optimistic check — no DB query here)
   const token = req.cookies.get("session")?.value;
-  const session = await decrypt(token);
+  const session = await decryptEdge(token);
 
   const isAuthenticated = !!session?.userId;
   const role = session?.role as Role | undefined;
