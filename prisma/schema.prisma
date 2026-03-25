@@ -27,7 +27,27 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
+  customerProfile CustomerProfile?
+
   @@map("users")
+}
+
+// ─── Customer Profile ─────────────────────────────────────────────────────────
+// 1:1 extension of User for CUSTOMER-specific data.
+// Designed to hold order/subscription/address data in future phases.
+
+model CustomerProfile {
+  id                   String   @id @default(cuid())
+  userId               String   @unique
+  phone                String?
+  preferredPickupNote  String?
+  marketingOptIn       Boolean  @default(false)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("customer_profiles")
 }
 
 model DailyRecord {
