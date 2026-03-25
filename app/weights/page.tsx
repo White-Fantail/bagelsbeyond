@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { prisma } from "@/lib/db";
 import PageHeader from "@/components/PageHeader";
 import WeightsManager from "@/components/WeightsManager";
