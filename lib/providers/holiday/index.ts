@@ -4,13 +4,63 @@ export type HolidayData = {
 };
 
 export interface HolidayProvider {
-  fetchHolidayByDate(date: Date): Promise<HolidayData | null>;
+  fetchHolidayByDate(date: Date, options?: HolidayProviderOptions): Promise<HolidayData | null>;
 }
 
-// TODO: Replace with real NZ public holiday API (e.g. https://date.nager.at/api/v3/PublicHolidays)
-// Set HOLIDAY_API_KEY in .env if needed
+export type HolidayProviderOptions = {
+  countryCode?: string;
+};
+
+// Nager.at public holiday API — free, no API key required
+// Docs: https://date.nager.at/swagger/index.html
+// TODO: Replace with a private API or data source if Nager.at is unavailable
+export class NagerHolidayProvider implements HolidayProvider {
+  private cache: Map<string, HolidayData | null> = new Map();
+
+  async fetchHolidayByDate(
+    date: Date,
+    options: HolidayProviderOptions = {}
+  ): Promise<HolidayData | null> {
+    const countryCode = options.countryCode ?? process.env.DEFAULT_COUNTRY_CODE ?? "NZ";
+    const year = date.getFullYear();
+    const cacheKey = `${countryCode}:${year}`;
+
+    if (!this.cache.has(cacheKey)) {
+      await this.loadYear(countryCode, year);
+    }
+
+    const dateStr = date.toISOString().split("T")[0];
+    return this.cache.get(`${cacheKey}:${dateStr}`) ?? null;
+  }
+
+  private async loadYear(countryCode: string, year: number): Promise<void> {
+    const cacheKey = `${countryCode}:${year}`;
+    try {
+      const res = await fetch(
+        `https://date.nager.at/api/v3/PublicHolidays/${year}/${countryCode}`,
+        { headers: { "Accept": "application/json" }, signal: AbortSignal.timeout(6000) }
+      );
+      if (!res.ok) {
+        this.cache.set(cacheKey, null);
+        return;
+      }
+      const holidays = await res.json() as Array<{ date: string; name: string; localName: string }>;
+      // Mark the year as loaded even if the list is empty
+      this.cache.set(cacheKey, null);
+      for (const h of holidays) {
+        this.cache.set(`${cacheKey}:${h.date}`, {
+          name: h.localName || h.name,
+          isPublicHoliday: true,
+        });
+      }
+    } catch {
+      this.cache.set(cacheKey, null);
+    }
+  }
+}
+
+// Fallback mock with a small static list of NZ public holidays
 export class MockHolidayProvider implements HolidayProvider {
-  // Known NZ public holidays (simplified static list)
   private static knownHolidays: Record<string, string> = {
     "01-01": "뉴이어 데이",
     "02-06": "와이탕이 데이",
@@ -27,4 +77,9 @@ export class MockHolidayProvider implements HolidayProvider {
   }
 }
 
-export const holidayProvider: HolidayProvider = new MockHolidayProvider();
+// Use real Nager.at provider by default; override with HOLIDAY_PROVIDER=mock for tests
+// TODO: Set HOLIDAY_API_KEY in .env if a future paid provider requires authentication
+export const holidayProvider: HolidayProvider =
+  process.env.HOLIDAY_PROVIDER === "mock"
+    ? new MockHolidayProvider()
+    : new NagerHolidayProvider();

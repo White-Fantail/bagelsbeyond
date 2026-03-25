@@ -79,10 +79,14 @@ export default function ImportDetailPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({}),
       });
-      const data = await res.json() as { processed: number; errors: string[] };
-      alert(`외부 데이터 수집 완료: ${data.processed}건 처리${data.errors.length > 0 ? `, ${data.errors.length}건 오류` : ""}`);
-    } catch {
-      alert("외부 데이터 수집에 실패했습니다");
+      const data = await res.json() as { totalDates?: number; processedDates?: number; failedDates?: number; errors?: string[]; message?: string };
+      if (!res.ok) throw new Error(data.message ?? "외부 데이터 수집에 실패했습니다");
+      const processed = data.processedDates ?? 0;
+      const failed = data.failedDates ?? 0;
+      const errors = data.errors ?? [];
+      alert(`외부 데이터 수집 완료: ${processed}건 처리${failed > 0 ? `, ${failed}건 실패` : ""}${errors.length > 0 ? `\n오류: ${errors.slice(0, 3).join("\n")}` : ""}`);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "외부 데이터 수집에 실패했습니다");
     } finally {
       setCollecting(false);
     }

@@ -24,12 +24,22 @@ async function main() {
       shopName: "Bagels Beyond",
       defaultTargetWasteRatio: 0.05,
       defaultSafetyBuffer: 1.1,
+      defaultRegion: "Canterbury",
+      defaultCity: "Christchurch",
+      defaultCountry: "NZ",
+      defaultEventRegion: "Christchurch",
+      autoCollectExternalData: true,
     },
     create: {
       id: "default",
       shopName: "Bagels Beyond",
       defaultTargetWasteRatio: 0.05,
       defaultSafetyBuffer: 1.1,
+      defaultRegion: "Canterbury",
+      defaultCity: "Christchurch",
+      defaultCountry: "NZ",
+      defaultEventRegion: "Christchurch",
+      autoCollectExternalData: true,
     },
   });
 
@@ -115,6 +125,7 @@ async function main() {
         notes: isHoliday ? "공휴일" : isEvent ? "지역 이벤트" : null,
         externalFactor: {
           create: {
+            date,
             weatherSummary: isRainy ? "비" : weatherOptions[rndInt(0, 4)],
             minTemp:   round2(rnd(8, 16)),
             maxTemp:   round2(rnd(16, 26)),
@@ -123,6 +134,10 @@ async function main() {
             holidayName:    isHoliday ? (i === 14 ? "Wellington Anniversary Day" : "Waitangi Day") : null,
             localEventName: isEvent ? "Wellington Night Market" : null,
             schoolHoliday:  i >= 7 && i <= 14,
+            sourceWeather:  "seed",
+            sourceHoliday:  "seed",
+            collectedAt:    date,
+            lastRefreshedAt: date,
           },
         },
       },
@@ -194,6 +209,38 @@ async function main() {
         },
       },
     });
+  }
+
+  // ── Standalone DailyExternalFactor for future dates (for prediction preview) ─
+  const futureDates = [1, 2, 3].map((n) => {
+    const d = new Date(today);
+    d.setDate(today.getDate() + n);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  });
+
+  const futureWeatherOptions = ["맑음", "구름 조금", "흐림"];
+  for (let fi = 0; fi < futureDates.length; fi++) {
+    const futureDate = futureDates[fi];
+    const existing = await prisma.dailyExternalFactor.findUnique({ where: { date: futureDate } });
+    if (!existing) {
+      await prisma.dailyExternalFactor.create({
+        data: {
+          date: futureDate,
+          weatherSummary: futureWeatherOptions[fi % 3],
+          minTemp: round2(rnd(10, 15)),
+          maxTemp: round2(rnd(17, 23)),
+          rainMm: 0,
+          windKph: round2(rnd(8, 18)),
+          holidayName: null,
+          schoolHoliday: false,
+          sourceWeather: "seed",
+          sourceHoliday: "seed",
+          collectedAt: today,
+          lastRefreshedAt: today,
+        },
+      });
+    }
   }
 
   // ── Sample ImportJob ────────────────────────────────────────────────────────

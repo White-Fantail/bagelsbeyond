@@ -31,6 +31,11 @@ export const settingsSchema = z.object({
   shopName: z.string().min(1, "상점 이름을 입력해주세요"),
   defaultTargetWasteRatio: z.coerce.number().min(0).max(1, "0~1 사이의 값을 입력해주세요"),
   defaultSafetyBuffer: z.coerce.number().min(1, "1 이상의 값을 입력해주세요"),
+  defaultRegion: z.string().optional(),
+  defaultCity: z.string().optional(),
+  defaultCountry: z.string().optional(),
+  defaultEventRegion: z.string().optional(),
+  autoCollectExternalData: z.boolean().optional(),
 });
 
 export type SettingsSchema = z.infer<typeof settingsSchema>;

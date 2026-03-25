@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { getTotalSales, getSoldBagels, getChannelBreakdown, formatCurrency, formatDate } from "@/lib/utils";
 import { getSellThroughRate, getWasteRate } from "@/lib/analytics";
 import DeleteRecordButton from "@/components/DeleteRecordButton";
+import RefreshExternalFactorButton from "@/components/RefreshExternalFactorButton";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -75,48 +76,80 @@ export default async function SalesDetailPage({ params }: Props) {
       </div>
 
       {/* External Factors */}
-      {record.externalFactor && (
-        <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-3">
-          <h2 className="text-base font-semibold text-gray-900 border-b border-gray-100 pb-2">외부 요인</h2>
-          <dl className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-            {record.externalFactor.weatherSummary && (
-              <InfoItem label="날씨" value={record.externalFactor.weatherSummary} />
-            )}
-            {record.externalFactor.minTemp != null && (
-              <InfoItem label="최저 기온" value={`${record.externalFactor.minTemp}°C`} />
-            )}
-            {record.externalFactor.maxTemp != null && (
-              <InfoItem label="최고 기온" value={`${record.externalFactor.maxTemp}°C`} />
-            )}
-            {record.externalFactor.rainMm != null && (
-              <InfoItem label="강수량" value={`${record.externalFactor.rainMm}mm`} />
-            )}
-            {record.externalFactor.windKph != null && (
-              <InfoItem label="바람" value={`${record.externalFactor.windKph}kph`} />
-            )}
-            {record.externalFactor.holidayName && (
-              <InfoItem label="공휴일" value={record.externalFactor.holidayName} />
-            )}
-            {record.externalFactor.localEventName && (
-              <InfoItem label="지역 이벤트" value={record.externalFactor.localEventName} />
-            )}
-            <InfoItem
-              label="학교 방학"
-              value={record.externalFactor.schoolHoliday ? "예" : "아니오"}
-            />
-            {record.externalFactor.nzNewsSummary && (
-              <div className="col-span-2 sm:col-span-3">
-                <InfoItem label="뉴질랜드 뉴스" value={record.externalFactor.nzNewsSummary} />
-              </div>
-            )}
-            {record.externalFactor.worldNewsSummary && (
-              <div className="col-span-2 sm:col-span-3">
-                <InfoItem label="국제 뉴스" value={record.externalFactor.worldNewsSummary} />
-              </div>
-            )}
-          </dl>
+      <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-3">
+        <div className="flex items-center justify-between border-b border-gray-100 pb-2">
+          <h2 className="text-base font-semibold text-gray-900">외부 요인</h2>
+          <RefreshExternalFactorButton recordId={id} />
         </div>
-      )}
+
+        {record.externalFactor ? (
+          <>
+            <dl className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+              {record.externalFactor.weatherSummary && (
+                <InfoItem label="날씨" value={record.externalFactor.weatherSummary} />
+              )}
+              {record.externalFactor.minTemp != null && (
+                <InfoItem label="최저 기온" value={`${record.externalFactor.minTemp}°C`} />
+              )}
+              {record.externalFactor.maxTemp != null && (
+                <InfoItem label="최고 기온" value={`${record.externalFactor.maxTemp}°C`} />
+              )}
+              {record.externalFactor.rainMm != null && (
+                <InfoItem label="강수량" value={`${record.externalFactor.rainMm}mm`} />
+              )}
+              {record.externalFactor.windKph != null && (
+                <InfoItem label="바람" value={`${record.externalFactor.windKph}kph`} />
+              )}
+              {record.externalFactor.holidayName && (
+                <InfoItem label="공휴일" value={record.externalFactor.holidayName} />
+              )}
+              {record.externalFactor.localEventName && (
+                <InfoItem label="지역 이벤트" value={record.externalFactor.localEventName} />
+              )}
+              <InfoItem
+                label="학교 방학"
+                value={record.externalFactor.schoolHoliday ? "예" : "아니오"}
+              />
+              {record.externalFactor.nzNewsSummary && (
+                <div className="col-span-2 sm:col-span-3">
+                  <InfoItem label="뉴질랜드 뉴스" value={record.externalFactor.nzNewsSummary} />
+                </div>
+              )}
+              {record.externalFactor.worldNewsSummary && (
+                <div className="col-span-2 sm:col-span-3">
+                  <InfoItem label="국제 뉴스" value={record.externalFactor.worldNewsSummary} />
+                </div>
+              )}
+            </dl>
+            {/* Source info */}
+            <div className="mt-2 pt-2 border-t border-gray-50 text-xs text-gray-400 flex flex-wrap gap-3">
+              {record.externalFactor.sourceWeather && (
+                <span>날씨: {record.externalFactor.sourceWeather}</span>
+              )}
+              {record.externalFactor.sourceHoliday && (
+                <span>공휴일: {record.externalFactor.sourceHoliday}</span>
+              )}
+              {record.externalFactor.collectedAt && (
+                <span>수집: {new Date(record.externalFactor.collectedAt).toLocaleString("ko-KR")}</span>
+              )}
+              {record.externalFactor.lastRefreshedAt && (
+                <span>갱신: {new Date(record.externalFactor.lastRefreshedAt).toLocaleString("ko-KR")}</span>
+              )}
+              <Link
+                href={`/external-factors/${record.date.toISOString().split("T")[0]}`}
+                className="text-amber-500 hover:underline"
+              >
+                외부 데이터 상세 →
+              </Link>
+            </div>
+          </>
+        ) : (
+          <div className="text-center py-6 text-gray-400 text-sm">
+            <p>이 날짜의 외부 데이터가 없습니다.</p>
+            <p className="mt-1">위 &quot;외부 데이터 수집&quot; 버튼을 눌러 데이터를 가져올 수 있습니다.</p>
+          </div>
+        )}
+      </div>
 
       {/* Derived Metrics */}
       <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-3">
