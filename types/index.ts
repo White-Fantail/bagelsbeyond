@@ -45,6 +45,63 @@ export type AppSetting = {
   updatedAt: Date;
 };
 
+export type SalesPrediction = {
+  id: string;
+  targetDate: Date;
+  predictedSales: number;
+  predictedBagelsSold: number;
+  recommendedBagelsToBake: number;
+  predictedLeftovers: number;
+  confidenceScore?: number | null;
+  method: string;
+  notes?: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  factorSnapshots?: PredictionFactorSnapshot[];
+};
+
+export type PredictionFactorSnapshot = {
+  id: string;
+  salesPredictionId: string;
+  factorKey: string;
+  factorLabel: string;
+  factorValue: string;
+  appliedWeight: number;
+  impactScore: number;
+  createdAt: Date;
+};
+
+export type OcrImportJob = {
+  id: string;
+  sourceFileName: string;
+  sourceFileUrl?: string | null;
+  status: string;
+  rawText?: string | null;
+  parsedJson?: string | null;
+  errorMessage?: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  items?: OcrImportItem[];
+};
+
+export type OcrImportItem = {
+  id: string;
+  jobId: string;
+  detectedDate?: Date | null;
+  extractedBagelsBaked?: number | null;
+  extractedBagelsLeft?: number | null;
+  extractedStoreSales?: number | null;
+  extractedUberSales?: number | null;
+  extractedDoordashSales?: number | null;
+  extractedOtherSales?: number | null;
+  extractedNotes?: string | null;
+  confidenceScore?: number | null;
+  reviewStatus: string;
+  linkedDailyRecordId?: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
 export type SalesFormData = {
   date: string;
   bagelsBaked: number;

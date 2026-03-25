@@ -80,7 +80,7 @@ export async function PUT(req: NextRequest, { params }: RouteContext) {
         notes: notes || null,
         externalFactor: {
           upsert: {
-            create: { ...externalData, dailyRecordId: id },
+            create: { ...externalData },
             update: externalData,
           },
         },

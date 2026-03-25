@@ -66,3 +66,75 @@ model AppSetting {
 
   @@map("app_settings")
 }
+
+model SalesPrediction {
+  id                       String   @id @default(cuid())
+  targetDate               DateTime
+  predictedSales           Float
+  predictedBagelsSold      Int
+  recommendedBagelsToBake  Int
+  predictedLeftovers       Int
+  confidenceScore          Float?
+  method                   String   @default("rule_based_v1")
+  notes                    String?
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+
+  factorSnapshots PredictionFactorSnapshot[]
+
+  @@index([targetDate])
+  @@map("sales_predictions")
+}
+
+model PredictionFactorSnapshot {
+  id                 String          @id @default(cuid())
+  salesPredictionId  String
+  factorKey          String
+  factorLabel        String
+  factorValue        String
+  appliedWeight      Float
+  impactScore        Float
+  createdAt          DateTime        @default(now())
+
+  salesPrediction    SalesPrediction @relation(fields: [salesPredictionId], references: [id], onDelete: Cascade)
+
+  @@map("prediction_factor_snapshots")
+}
+
+model OcrImportJob {
+  id             String   @id @default(cuid())
+  sourceFileName String
+  sourceFileUrl  String?
+  status         String   @default("pending")
+  rawText        String?
+  parsedJson     String?
+  errorMessage   String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  items OcrImportItem[]
+
+  @@map("ocr_import_jobs")
+}
+
+model OcrImportItem {
+  id                   String   @id @default(cuid())
+  jobId                String
+  detectedDate         DateTime?
+  extractedBagelsBaked Int?
+  extractedBagelsLeft  Int?
+  extractedStoreSales  Float?
+  extractedUberSales   Float?
+  extractedDoordashSales Float?
+  extractedOtherSales  Float?
+  extractedNotes       String?
+  confidenceScore      Float?
+  reviewStatus         String   @default("pending")
+  linkedDailyRecordId  String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  job OcrImportJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@map("ocr_import_items")
+}

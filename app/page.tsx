@@ -32,7 +32,11 @@ async function getDashboardData() {
 
     const latestChannelRatios = latestRecord ? getChannelRatios(latestRecord) : null;
 
-    return { recentRecords, latestRecord, avgDailySales, totalBagelsSold, avgWasteRate, latestChannelRatios };
+    const latestPrediction = await prisma.salesPrediction.findFirst({
+      orderBy: { targetDate: "desc" },
+    });
+
+    return { recentRecords, latestRecord, avgDailySales, totalBagelsSold, avgWasteRate, latestChannelRatios, latestPrediction };
   } catch {
     return {
       recentRecords: [],
@@ -41,12 +45,13 @@ async function getDashboardData() {
       totalBagelsSold: 0,
       avgWasteRate: 0,
       latestChannelRatios: null,
+      latestPrediction: null,
     };
   }
 }
 
 export default async function DashboardPage() {
-  const { recentRecords, latestRecord, avgDailySales, totalBagelsSold, avgWasteRate, latestChannelRatios } =
+  const { recentRecords, latestRecord, avgDailySales, totalBagelsSold, avgWasteRate, latestChannelRatios, latestPrediction } =
     await getDashboardData();
 
   return (
@@ -126,8 +131,47 @@ export default async function DashboardPage() {
           <QuickAction href="/sales" label="매출 목록" icon="📋" />
           <QuickAction href="/calendar" label="달력 보기" icon="📅" />
           <QuickAction href="/settings" label="설정" icon="⚙️" />
+          <QuickAction href="/predictions/new" label="새 예측 만들기" icon="🔮" />
+          <QuickAction href="/imports/new" label="OCR 가져오기" icon="📷" />
         </div>
       </div>
+
+      {/* Prediction Section */}
+      {latestPrediction && (
+        <div>
+          <h2 className="text-lg font-semibold text-gray-900 mb-3">최근 예측</h2>
+          <div className="bg-white rounded-lg border border-blue-200 p-5">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm text-gray-500">예측 대상일: {formatDate(latestPrediction.targetDate)}</p>
+                <p className="text-2xl font-bold text-gray-900 mt-1">{formatCurrency(latestPrediction.predictedSales)}</p>
+                <div className="flex gap-4 mt-2 text-sm text-gray-600">
+                  <span>예상 판매 {latestPrediction.predictedBagelsSold}개</span>
+                  <span>추천 생산 {latestPrediction.recommendedBagelsToBake}개</span>
+                </div>
+              </div>
+              {latestPrediction.confidenceScore != null && (
+                <div className="text-right">
+                  <p className="text-xs text-gray-500">신뢰도</p>
+                  <p className="text-lg font-bold text-blue-600">{latestPrediction.confidenceScore}%</p>
+                </div>
+              )}
+            </div>
+            <div className="mt-3 flex gap-2">
+              <Link
+                href={`/predictions/${latestPrediction.id}`}
+                className="text-sm text-blue-600 hover:underline"
+              >
+                상세 보기 →
+              </Link>
+              <span className="text-gray-300">|</span>
+              <Link href="/predictions" className="text-sm text-blue-600 hover:underline">
+                전체 예측 목록
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Recent Records */}
       {recentRecords.length > 0 && (

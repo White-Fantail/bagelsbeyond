@@ -87,6 +87,93 @@ async function main() {
     }
   }
 
+  // Sample SalesPredictions
+  const predictionDates = [
+    { daysAgo: 2, predictedSales: 450.0, predictedBagelsSold: 72, recommendedBagelsToBake: 80, predictedLeftovers: 8 },
+    { daysAgo: 1, predictedSales: 520.0, predictedBagelsSold: 83, recommendedBagelsToBake: 90, predictedLeftovers: 7 },
+    { daysAgo: -1, predictedSales: 480.0, predictedBagelsSold: 76, recommendedBagelsToBake: 85, predictedLeftovers: 9 },
+  ];
+
+  for (const pd of predictionDates) {
+    const targetDate = new Date(today);
+    targetDate.setDate(today.getDate() - pd.daysAgo);
+    targetDate.setHours(0, 0, 0, 0);
+
+    const existing = await prisma.salesPrediction.findFirst({ where: { targetDate } });
+    if (!existing) {
+      await prisma.salesPrediction.create({
+        data: {
+          targetDate,
+          predictedSales: pd.predictedSales,
+          predictedBagelsSold: pd.predictedBagelsSold,
+          recommendedBagelsToBake: pd.recommendedBagelsToBake,
+          predictedLeftovers: pd.predictedLeftovers,
+          confidenceScore: 65 + Math.floor(Math.random() * 25),
+          method: "rule_based_v1",
+          notes: "최근 7일 데이터 기준 | 같은 요일 데이터 참고 | 적용 요인 3개",
+          factorSnapshots: {
+            create: [
+              {
+                factorKey: "friday",
+                factorLabel: "요일 (friday)",
+                factorValue: "true",
+                appliedWeight: 0.1,
+                impactScore: 45.0,
+              },
+              {
+                factorKey: "weather_rain",
+                factorLabel: "비 (강수량)",
+                factorValue: "2.5mm",
+                appliedWeight: -0.15,
+                impactScore: -67.5,
+              },
+            ],
+          },
+        },
+      });
+    }
+  }
+
+  // Sample OcrImportJob
+  const existingJob = await prisma.ocrImportJob.findFirst();
+  if (!existingJob) {
+    await prisma.ocrImportJob.create({
+      data: {
+        sourceFileName: "calendar_jan_2024.jpg",
+        status: "completed",
+        rawText: `2024-01-15 baked=80 left=5 store=250.00 uber=80.00 doordash=50.00 other=10.00
+2024-01-16 baked=90 left=8 store=280.00 uber=90.00 doordash=60.00 other=15.00`,
+        parsedJson: "[]",
+        items: {
+          create: [
+            {
+              detectedDate: new Date("2024-01-15T00:00:00.000Z"),
+              extractedBagelsBaked: 80,
+              extractedBagelsLeft: 5,
+              extractedStoreSales: 250.0,
+              extractedUberSales: 80.0,
+              extractedDoordashSales: 50.0,
+              extractedOtherSales: 10.0,
+              confidenceScore: 0.85,
+              reviewStatus: "pending",
+            },
+            {
+              detectedDate: new Date("2024-01-16T00:00:00.000Z"),
+              extractedBagelsBaked: 90,
+              extractedBagelsLeft: 8,
+              extractedStoreSales: 280.0,
+              extractedUberSales: 90.0,
+              extractedDoordashSales: 60.0,
+              extractedOtherSales: 15.0,
+              confidenceScore: 0.80,
+              reviewStatus: "pending",
+            },
+          ],
+        },
+      },
+    });
+  }
+
   console.log("✅ Seeding complete!");
 }
 
