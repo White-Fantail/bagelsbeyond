@@ -239,14 +239,14 @@ export default function WeightsManager({ initialWeights }: Props) {
                     <input
                       value={editState.factorKey}
                       onChange={(e) => setEditState({ ...editState, factorKey: e.target.value })}
-                      className="w-full px-2 py-1 border border-gray-300 rounded text-sm font-mono"
+                      className="w-full px-2 py-1 border border-gray-300 rounded text-sm text-gray-900 bg-white font-mono"
                     />
                   </td>
                   <td className="px-4 py-2">
                     <input
                       value={editState.description}
                       onChange={(e) => setEditState({ ...editState, description: e.target.value })}
-                      className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                      className="w-full px-2 py-1 border border-gray-300 rounded text-sm text-gray-900 bg-white"
                     />
                   </td>
                   <td className="px-4 py-2" colSpan={2}>
@@ -257,7 +257,7 @@ export default function WeightsManager({ initialWeights }: Props) {
                       max="2"
                       value={editState.weightValue}
                       onChange={(e) => setEditState({ ...editState, weightValue: e.target.value })}
-                      className="w-24 px-2 py-1 border border-gray-300 rounded text-sm text-center mx-auto block"
+                      className="w-24 px-2 py-1 border border-gray-300 rounded text-sm text-gray-900 bg-white text-center mx-auto block"
                     />
                   </td>
                   <td className="px-4 py-2 text-center">
@@ -341,7 +341,7 @@ export default function WeightsManager({ initialWeights }: Props) {
               value={newForm.factorKey}
               onChange={(e) => setNewForm({ ...newForm, factorKey: e.target.value })}
               placeholder="factor_key"
-              className="px-3 py-2 border border-gray-300 rounded-md text-sm font-mono focus:outline-none focus:ring-2 focus:ring-amber-500 w-40"
+              className="px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white placeholder:text-gray-400 font-mono focus:outline-none focus:ring-2 focus:ring-amber-500 w-40"
             />
           </div>
           <div className="flex flex-col gap-1">
@@ -354,7 +354,7 @@ export default function WeightsManager({ initialWeights }: Props) {
                 max="2"
                 value={newForm.weightValue}
                 onChange={(e) => setNewForm({ ...newForm, weightValue: e.target.value })}
-                className="w-24 px-3 py-2 border border-gray-300 rounded-md text-sm text-center focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className="w-24 px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white text-center focus:outline-none focus:ring-2 focus:ring-amber-500"
               />
               <span className={`text-sm font-bold ${parseFloat(newForm.weightValue) > 0 ? "text-green-600" : parseFloat(newForm.weightValue) < 0 ? "text-red-600" : "text-gray-400"}`}>
                 {formatWeightPercent(parseFloat(newForm.weightValue) || 0)}
@@ -367,7 +367,7 @@ export default function WeightsManager({ initialWeights }: Props) {
               value={newForm.description}
               onChange={(e) => setNewForm({ ...newForm, description: e.target.value })}
               placeholder="요인 설명 (선택)"
-              className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+              className="px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500"
             />
           </div>
           <div className="flex items-center gap-2 pb-1">

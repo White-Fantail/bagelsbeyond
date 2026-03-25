@@ -24,3 +24,25 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Ensure all form inputs display value text with sufficient contrast */
+input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]),
+textarea,
+select {
+  color: #111827;
+  background-color: #ffffff;
+}
+
+input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"])::placeholder,
+textarea::placeholder {
+  color: #9ca3af;
+}
+
+/* Override browser autofill styles so filled values stay readable */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-text-fill-color: #111827;
+  -webkit-box-shadow: 0 0 0 30px #ffffff inset !important;
+}

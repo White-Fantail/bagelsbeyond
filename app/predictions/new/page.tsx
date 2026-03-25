@@ -116,7 +116,7 @@ export default function NewPredictionPage() {
             <input
               type="date"
               {...register("targetDate")}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             {errors.targetDate && (
               <p className="text-red-500 text-xs mt-1">{errors.targetDate.message}</p>
@@ -135,7 +135,7 @@ export default function NewPredictionPage() {
                 type="text"
                 {...register("weatherSummary")}
                 placeholder="예: 맑음, 흐림, 비"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
@@ -145,7 +145,7 @@ export default function NewPredictionPage() {
                 type="number"
                 step="0.1"
                 {...register("minTemp")}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
@@ -155,7 +155,7 @@ export default function NewPredictionPage() {
                 type="number"
                 step="0.1"
                 {...register("maxTemp")}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
@@ -166,7 +166,7 @@ export default function NewPredictionPage() {
                 step="0.1"
                 min="0"
                 {...register("rainMm")}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
@@ -177,7 +177,7 @@ export default function NewPredictionPage() {
                 step="0.1"
                 min="0"
                 {...register("windKph")}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
@@ -187,7 +187,7 @@ export default function NewPredictionPage() {
                 type="text"
                 {...register("holidayName")}
                 placeholder="예: 크리스마스"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
@@ -197,7 +197,7 @@ export default function NewPredictionPage() {
                 type="text"
                 {...register("localEventName")}
                 placeholder="예: 지역 마켓"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
@@ -218,7 +218,7 @@ export default function NewPredictionPage() {
                 {...register("nzNewsSummary")}
                 rows={2}
                 placeholder="주요 뉴질랜드 뉴스..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
@@ -228,7 +228,7 @@ export default function NewPredictionPage() {
                 {...register("worldNewsSummary")}
                 rows={2}
                 placeholder="주요 국제 뉴스..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
           </div>
