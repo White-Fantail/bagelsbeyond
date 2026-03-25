@@ -27,6 +27,7 @@ const ADMIN_ITEMS = [
   { href: "/analytics", label: "분석" },
   { href: "/weights", label: "가중치" },
   { href: "/settings", label: "설정" },
+  { href: "/admin/users", label: "사용자 관리" },
 ];
 
 function getNavItems(role?: Role | null) {

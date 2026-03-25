@@ -220,3 +220,24 @@ model TaskLog {
   @@index([scheduledTaskId])
   @@map("task_logs")
 }
+
+// ─── Admin Audit Log ──────────────────────────────────────────────────────────
+// Records admin actions on user accounts for auditability.
+// Extensible for future actions (e.g. password resets, invites).
+// Future extension: add a UI in /admin/audit-logs to view these records.
+// Future extension: lastLoginAt can be tracked by updating the User model on each login.
+
+model AdminActionLog {
+  id            String   @id @default(cuid())
+  adminUserId   String   // The ADMIN who performed the action
+  targetUserId  String   // The user whose account was affected
+  actionType    String   // CHANGE_ROLE | ACTIVATE_USER | DEACTIVATE_USER
+  previousValue String   // Previous role or isActive value (stringified)
+  newValue      String   // New role or isActive value (stringified)
+  createdAt     DateTime @default(now())
+
+  @@index([adminUserId])
+  @@index([targetUserId])
+  @@index([createdAt])
+  @@map("admin_action_logs")
+}
