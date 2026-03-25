@@ -52,7 +52,7 @@ export class OpenMeteoWeatherProvider implements WeatherProvider {
     today.setHours(0, 0, 0, 0);
     const isPast = date < today;
 
-    // TODO: Replace base URL if a private/self-hosted Open-Meteo instance is available
+    // TODO: Allow override via OPEN_METEO_BASE_URL env variable for self-hosted instances
     const baseUrl = isPast
       ? "https://archive-api.open-meteo.com/v1/archive"
       : "https://api.open-meteo.com/v1/forecast";

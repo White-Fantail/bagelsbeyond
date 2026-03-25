@@ -193,7 +193,7 @@ export async function upsertExternalFactorsByDate(
   const upsertData = {
     ...weatherData,
     ...holidayData,
-    ...{ schoolHoliday: schoolData.schoolHoliday ?? false },
+    schoolHoliday: schoolData.schoolHoliday ?? false,
     ...eventsData,
     ...newsData,
     dailyRecordId: linkedRecord?.id ?? null,

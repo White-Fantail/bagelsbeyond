@@ -146,7 +146,7 @@ export default async function SalesDetailPage({ params }: Props) {
         ) : (
           <div className="text-center py-6 text-gray-400 text-sm">
             <p>이 날짜의 외부 데이터가 없습니다.</p>
-            <p className="mt-1">위 &quot;외부 데이터 수집&quot; 버튼을 눌러 데이터를 가져올 수 있습니다.</p>
+            <p className="mt-1">위 &apos;외부 데이터 수집&apos; 버튼을 눌러 데이터를 가져올 수 있습니다.</p>
           </div>
         )}
       </div>

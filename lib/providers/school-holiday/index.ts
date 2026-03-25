@@ -12,10 +12,9 @@ export type SchoolHolidayOptions = {
   region?: string;
 };
 
-// NZ school term dates — approximate national schedule
+// Approximate NZ school term dates — 2024 to 2026
 // Source: Ministry of Education NZ — https://www.education.govt.nz/school/running-a-school/school-operations/school-term-and-holiday-dates/
-// TODO: Replace or supplement with a live data source (e.g. MOE API or scraped dataset) for precision
-// These dates are illustrative for 2024/2025; update annually or connect to a live source
+// TODO: Connect to a live MOE data source to avoid annual manual updates
 type TermPeriod = { year: number; termName: string; start: string; end: string };
 
 const NZ_SCHOOL_TERM_DATES: TermPeriod[] = [

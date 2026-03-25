@@ -103,7 +103,7 @@ export default async function ExternalFactorDetailPage({ params }: Props) {
         <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
           <p className="text-gray-400 text-4xl">📭</p>
           <p className="text-gray-600 mt-3 font-medium">이 날짜의 외부 데이터가 없습니다.</p>
-          <p className="text-gray-400 text-sm mt-1">위 &quot;외부 데이터 수집&quot; 버튼을 눌러 수집을 시작하세요.</p>
+          <p className="text-gray-400 text-sm mt-1">위 &apos;외부 데이터 수집&apos; 버튼을 눌러 수집을 시작하세요.</p>
         </div>
       )}
 
