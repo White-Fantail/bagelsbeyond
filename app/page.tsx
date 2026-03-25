@@ -6,6 +6,8 @@ import { getTotalSales, getSoldBagels, formatCurrency, formatDate } from "@/lib/
 import { getWasteRate } from "@/lib/analytics";
 import { comparePredictedVsActual } from "@/lib/prediction-utils";
 import { formatTaskStatus, formatTaskType, getTaskStatusColor } from "@/lib/task-utils";
+import { getPeriodComparison } from "@/lib/services/analytics";
+import { formatCurrencyNZD } from "@/lib/analytics-utils";
 import TaskActionButton from "@/components/TaskActionButton";
 import type { DailyRecord, SalesPrediction } from "@/types";
 
@@ -166,6 +168,24 @@ export default async function DashboardPage() {
   const tomorrowStr = tomorrow.toISOString().split("T")[0];
   const accuracyRate = comparableCount > 0 ? Math.round((accurateCount / comparableCount) * 100) : null;
 
+  // Analytics comparison data
+  const now = new Date();
+  now.setHours(23, 59, 59, 999);
+  const cur7Start = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  cur7Start.setHours(0, 0, 0, 0);
+  const prev7End = new Date(cur7Start.getTime() - 1);
+  const prev7Start = new Date(prev7End.getTime() - 7 * 24 * 60 * 60 * 1000);
+  prev7Start.setHours(0, 0, 0, 0);
+
+  const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+  const lastMonthEnd = new Date(thisMonthStart.getTime() - 1);
+  const lastMonthStart = new Date(lastMonthEnd.getFullYear(), lastMonthEnd.getMonth(), 1, 0, 0, 0, 0);
+
+  const [week7Comparison, monthComparison] = await Promise.all([
+    getPeriodComparison(cur7Start, now, prev7Start, prev7End).catch(() => null),
+    getPeriodComparison(thisMonthStart, now, lastMonthStart, lastMonthEnd).catch(() => null),
+  ]);
+
   return (
     <div className="space-y-8">
       <div>
@@ -276,6 +296,112 @@ export default async function DashboardPage() {
           </div>
         </div>
       )}
+
+      {/* Analytics Summary */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-lg font-semibold text-gray-900">📊 분석 요약</h2>
+          <Link href="/analytics" className="text-sm text-amber-600 hover:underline">
+            분석 상세 →
+          </Link>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* 7-day comparison */}
+          {week7Comparison && (
+            <div className="bg-white rounded-lg border border-gray-200 p-4">
+              <p className="text-xs font-medium text-gray-500 mb-3">최근 7일 vs 이전 7일</p>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">총 매출</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-semibold text-gray-900">
+                      {formatCurrencyNZD(week7Comparison.current.totalSales)}
+                    </span>
+                    <span
+                      className={`text-xs font-medium ${
+                        week7Comparison.salesChangePercent > 0
+                          ? "text-green-600"
+                          : week7Comparison.salesChangePercent < 0
+                          ? "text-red-600"
+                          : "text-gray-500"
+                      }`}
+                    >
+                      {week7Comparison.salesChangePercent > 0 ? "▲ +" : week7Comparison.salesChangePercent < 0 ? "▼ " : ""}
+                      {week7Comparison.salesChangePercent.toFixed(1)}%
+                    </span>
+                  </div>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">일평균 매출</span>
+                  <span className="text-sm font-medium text-gray-700">
+                    {formatCurrencyNZD(week7Comparison.current.averageDailySales)}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">평균 폐기율</span>
+                  <span
+                    className={`text-sm font-medium ${
+                      week7Comparison.current.wasteRate > 0.1 ? "text-red-600" : "text-green-600"
+                    }`}
+                  >
+                    {(week7Comparison.current.wasteRate * 100).toFixed(1)}%
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* This month vs last month */}
+          {monthComparison && (
+            <div className="bg-white rounded-lg border border-gray-200 p-4">
+              <p className="text-xs font-medium text-gray-500 mb-3">이번 달 vs 지난 달</p>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">이번 달 매출</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-semibold text-gray-900">
+                      {formatCurrencyNZD(monthComparison.current.totalSales)}
+                    </span>
+                    <span
+                      className={`text-xs font-medium ${
+                        monthComparison.salesChangePercent > 0
+                          ? "text-green-600"
+                          : monthComparison.salesChangePercent < 0
+                          ? "text-red-600"
+                          : "text-gray-500"
+                      }`}
+                    >
+                      {monthComparison.salesChangePercent > 0 ? "▲ +" : monthComparison.salesChangePercent < 0 ? "▼ " : ""}
+                      {monthComparison.salesChangePercent.toFixed(1)}%
+                    </span>
+                  </div>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">지난 달 매출</span>
+                  <span className="text-sm font-medium text-gray-500">
+                    {formatCurrencyNZD(monthComparison.previous.totalSales)}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">이번 달 기록</span>
+                  <span className="text-sm font-medium text-gray-700">
+                    {monthComparison.current.recordCount}일
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {!week7Comparison && !monthComparison && (
+          <div className="bg-gray-50 rounded-lg border border-gray-200 p-4 text-center text-sm text-gray-400">
+            분석 데이터가 없습니다.{" "}
+            <Link href="/sales/new" className="text-amber-600 hover:underline">
+              매출 입력하기 →
+            </Link>
+          </div>
+        )}
+      </div>
 
       {/* Quick Actions */}
       <div>

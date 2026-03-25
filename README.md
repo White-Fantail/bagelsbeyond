@@ -19,8 +19,15 @@
 - **예측 vs 실제 비교** — 매출/베이글/잔량 오차 계산, 정확도 라벨
 - **예측 성과 페이지** — 최근 30건 비교, 평균 오차율, 정확도 추이
 
+### 분석 리포트 (7단계)
+- **분석 대시보드** (`/analytics`) — 기간 선택, 요약 카드, 기간 비교, 미니 주별 바차트, 공휴일/방학 하이라이트
+- **일별 분석** (`/analytics/daily`) — 일별 매출/판매량/폐기율 바차트, 날짜별 외부요인 아이콘(🎌 공휴일/🌧️ 비/🎉 이벤트/🏫 방학)
+- **주별 분석** (`/analytics/weekly`) — 주별 집계표 + 바차트, 전주 대비 변화율, 최고/최저 주 강조
+- **월별 분석** (`/analytics/monthly`) — 월별 집계표 + 바차트, 전월 대비 변화율, 최고/최저 월 강조
+- **세그먼트 비교** (`/analytics/segments`) — 공휴일 vs 일반 / 학교방학 vs 일반 / 비오는날 vs 맑은날 / 이벤트일 vs 일반 비교 카드, 공휴일 이름별 상세
+
 ### UI/UX
-- **운영 대시보드** — 내일 예측 카드, 최근 실적 요약, 예측 정확도, 빠른 액션
+- **운영 대시보드** — 내일 예측 카드, 최근 실적 요약, 예측 정확도, 분석 요약(7일/월별 비교), 빠른 액션
 - **달력** — 실적(주황) / 예측(파랑) / 모두 있음(보라) 셀 구분
 - **가중치 관리** — 카테고리별 그룹화(요일/날씨/공휴일/이벤트/뉴스), 시각적 바 표시
 - **예측 상세** — 근거 설명, 요인별 영향, 실적과 비교
@@ -65,6 +72,24 @@ CSV 임포트 (/imports/new)
 예측 성과 (/predictions/performance)
   └→ 최근 30건 예측 + 실적 비교
   └→ 평균 절대 오차, 평균 오차율, 정확도율 요약
+
+분석 리포트 (/analytics/*)
+  └→ getDailyAnalytics(startDate, endDate)
+      ├→ DailyRecord + DailyExternalFactor 조회
+      └→ 일별 매출/판매량/폐기율/채널비중/외부요인 배열 반환
+  └→ getWeeklyAnalytics(startDate, endDate)
+      ├→ DailyRecord 조회 → 월요일 기준 주차별 그룹핑
+      └→ 주차별 PeriodSummary (총매출/평균/판매량/폐기율/채널) 배열 반환
+  └→ getMonthlyAnalytics(startDate, endDate)
+      ├→ DailyRecord 조회 → 연/월별 그룹핑
+      └→ 월별 PeriodSummary 배열 반환
+  └→ getPeriodComparison(currentStart, currentEnd, previousStart, previousEnd)
+      └→ 두 기간 PeriodSummary 비교 → 매출/판매량/폐기율/채널 변화율 반환
+  └→ getSegmentComparisons(startDate, endDate)
+      ├→ 공휴일 vs 비공휴일 (holidayName 존재 여부)
+      ├→ 학교방학 vs 일반 (schoolHoliday=true/false)
+      ├→ 비오는날 vs 맑은날 (rainMm > 0)
+      └→ 이벤트일 vs 일반 (localEventName 존재 여부)
 ```
 
 ---
@@ -213,6 +238,81 @@ npx prisma studio
 
 ---
 
+## 📊 분석 리포트 시스템 (7단계)
+
+### 분석 페이지 목록
+
+| 경로 | 설명 |
+|------|------|
+| `/analytics` | 분석 대시보드 — 기간 선택, 요약 카드, 기간 비교, 미니 차트 |
+| `/analytics/daily` | 일별 흐름 — 매출/판매량/폐기율 바차트 + 상세 표 |
+| `/analytics/weekly` | 주별 집계 — 전주 대비 변화율, 최고/최저 주 |
+| `/analytics/monthly` | 월별 집계 — 전월 대비 변화율, 최고/최저 월 |
+| `/analytics/segments` | 세그먼트 비교 — 공휴일/방학/비/이벤트 vs 일반 |
+
+### 기간 비교 기능
+
+**자동 비교**: 선택한 기간과 동일 길이의 직전 기간을 자동으로 계산해 비교합니다.
+- 최근 7일 → 그 전 7일 비교
+- 이번 달 → 지난달 비교
+- 임의 날짜 범위 → 동일 길이 직전 기간 비교
+
+**비교 지표**:
+- 총매출 변화 (금액 + %)
+- 평균 일매출 변화
+- 총 판매 베이글 수 변화
+- 폐기율 변화
+- 채널별 매출 비중 변화 (매장/Uber/DoorDash/기타)
+
+**UI**: ▲/▼ 방향 표시, 녹색/적색 색상, % 변화율 표시
+
+### 세그먼트 비교 분석
+
+`DailyExternalFactor` 데이터를 기반으로 아래 4가지 세그먼트를 비교합니다:
+
+| 세그먼트 | 기준 필드 | 설명 |
+|--------|----------|------|
+| 공휴일 vs 일반 | `holidayName` 존재 여부 | 공휴일 기간 매출 영향 |
+| 학교방학 vs 일반 | `schoolHoliday = true` | 방학 기간 가족 고객 영향 |
+| 비오는날 vs 맑은날 | `rainMm > 0` | 날씨 영향 분석 |
+| 이벤트일 vs 일반 | `localEventName` 존재 여부 | 지역 이벤트 영향 |
+
+각 세그먼트별로 평균 매출, 평균 판매량, 평균 폐기율, 채널 비중을 비교합니다.  
+공휴일 이름별(예: Christmas, Easter, Waitangi Day 등) 세부 분석도 제공합니다.
+
+### 분석 서비스 레이어
+
+`lib/services/analytics/index.ts` 에서 다음 함수를 제공합니다:
+
+```typescript
+getDailyAnalytics(startDate, endDate)       // 일별 상세 배열
+getWeeklyAnalytics(startDate, endDate)      // 주별 집계 배열
+getMonthlyAnalytics(startDate, endDate)     // 월별 집계 배열
+getPeriodSummary(startDate, endDate)        // 기간 요약 단일 객체
+getPeriodComparison(...)                    // 두 기간 비교 객체
+getHolidaySegmentComparison(...)            // 공휴일 세그먼트
+getSchoolHolidaySegmentComparison(...)      // 방학 세그먼트
+getRainSegmentComparison(...)               // 비/날씨 세그먼트
+getEventSegmentComparison(...)              // 이벤트 세그먼트
+getHolidayNameBreakdown(...)               // 공휴일 이름별 분석
+```
+
+### 분석 유틸 함수 (`lib/analytics-utils.ts`)
+
+```typescript
+formatCurrencyNZD(amount)              // NZD 통화 포맷
+formatPercentage(value, decimals)      // % 포맷
+getPercentageChange(current, previous) // 변화율 계산
+getTrendLabel(current, previous)       // "▲ +12.3%" 형태
+getTrendColorClass(...)                // 녹색/적색 Tailwind 클래스
+safeDivide(numerator, denominator)     // 0 나누기 안전 처리
+startOfWeek(date) / endOfWeek(date)    // 주 시작/끝 (월~일)
+startOfMonth(date) / endOfMonth(date)  // 월 시작/끝
+buildComparablePreviousPeriod(...)     // 직전 동일 길이 기간 계산
+```
+
+---
+
 ## 🤖 자동화 작업 / 스케줄링 시스템 (6단계)
 
 ### 개요
@@ -349,7 +449,7 @@ CRON_SECRET=your-random-secret-here
 - ~~**자동 예측 생성**: cron job으로 매일 자정에 내일 예측 자동 생성~~ ✅ 6단계에서 구현
 - **ML 모델 고도화**: 실제 과거 데이터 기반 회귀/시계열 모델
 - ~~**외부 데이터 자동수집**: Weather API, 공공 공휴일 API cron 연동~~ ✅ 6단계에서 구현
-- **고급 리포트**: 월별/분기별 성과 리포트, 채널 분석
+- ~~**고급 리포트**: 월별/분기별 성과 리포트, 채널 분석~~ ✅ 7단계에서 구현
 - **알림**: 폐기율 경고, 예측 신뢰도 낮을 때 알림
 - **다중 매장**: 매장별 설정/가중치 분리
 - **모바일 앱**: React Native 또는 PWA
@@ -363,7 +463,14 @@ CRON_SECRET=your-random-secret-here
 
 ```
 ├── app/
-│   ├── page.tsx                    # 운영 대시보드 (작업 상태 포함)
+│   ├── page.tsx                    # 운영 대시보드 (작업 상태 + 분석 요약 포함)
+│   ├── analytics/
+│   │   ├── layout.tsx              # 분석 레이아웃 (서브 네비게이션)
+│   │   ├── page.tsx                # 분석 대시보드 (기간 선택, 요약, 비교)
+│   │   ├── daily/page.tsx          # 일별 분석
+│   │   ├── weekly/page.tsx         # 주별 분석
+│   │   ├── monthly/page.tsx        # 월별 분석
+│   │   └── segments/page.tsx       # 세그먼트 비교
 │   ├── calendar/                   # 달력 (실적 + 예측)
 │   ├── predictions/
 │   │   ├── page.tsx                # 예측 목록
@@ -378,6 +485,12 @@ CRON_SECRET=your-random-secret-here
 │   ├── weights/                    # 가중치 관리
 │   └── settings/                   # 앱 설정
 ├── app/api/
+│   ├── analytics/
+│   │   ├── route.ts                # 기간 요약 + 비교
+│   │   ├── daily/route.ts          # 일별 분석 API
+│   │   ├── weekly/route.ts         # 주별 분석 API
+│   │   ├── monthly/route.ts        # 월별 분석 API
+│   │   └── segments/route.ts       # 세그먼트 비교 API
 │   ├── cron/run/route.ts           # cron trigger 엔드포인트
 │   └── tasks/
 │       ├── route.ts                # 작업 목록/생성
@@ -386,16 +499,25 @@ CRON_SECRET=your-random-secret-here
 │           └── retry/route.ts      # 재시도
 ├── lib/
 │   ├── services/
+│   │   ├── analytics/
+│   │   │   └── index.ts            # 분석 서비스 레이어 (집계, 비교, 세그먼트)
 │   │   ├── predictionService.ts    # 예측 핵심 로직
 │   │   ├── externalFactorService.ts# 외부요인 수집
 │   │   ├── importService.ts        # CSV 임포트
 │   │   ├── taskService.ts          # Task 생명주기 관리
 │   │   └── schedulerService.ts     # 고수준 자동화 오케스트레이션
+│   ├── analytics-utils.ts          # 분석 유틸 (포맷, 날짜, 변화율)
 │   ├── task-utils.ts               # Task 유틸 (날짜, 상태 표시 등)
 │   ├── prediction-utils.ts         # 예측 유틸 함수
-│   ├── analytics.ts                # 분석 함수
+│   ├── analytics.ts                # 기본 분석 함수
 │   └── utils.ts                    # 공통 유틸
 ├── components/
+│   ├── analytics/
+│   │   ├── AnalyticsSubNav.tsx     # 분석 서브 네비게이션 (client)
+│   │   ├── TrendBar.tsx            # CSS 비율 바 차트
+│   │   ├── ChannelBar.tsx          # 채널 비중 스택 바
+│   │   ├── ComparisonCard.tsx      # 세그먼트 비교 카드
+│   │   └── PeriodComparisonSection.tsx # 기간 비교 섹션
 │   ├── TaskActionButton.tsx        # 작업 실행 버튼 (client)
 │   ├── RetryTaskButton.tsx         # 재시도 버튼 (client)
 │   ├── CalendarView.tsx            # 달력 컴포넌트
