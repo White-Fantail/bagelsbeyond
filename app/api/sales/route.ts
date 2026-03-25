@@ -66,6 +66,7 @@ export async function POST(req: NextRequest) {
         ...(hasExternalFactor && {
           externalFactor: {
             create: {
+              date: new Date(date),
               weatherSummary: weatherSummary || null,
               minTemp: minTemp ?? null,
               maxTemp: maxTemp ?? null,

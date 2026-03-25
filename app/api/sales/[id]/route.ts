@@ -68,6 +68,11 @@ export async function PUT(req: NextRequest, { params }: RouteContext) {
       worldNewsSummary: worldNewsSummary || null,
     };
 
+    const dailyRecord = await prisma.dailyRecord.findUnique({ where: { id } });
+    if (!dailyRecord) {
+      return NextResponse.json({ message: "기록을 찾을 수 없습니다" }, { status: 404 });
+    }
+
     const record = await prisma.dailyRecord.update({
       where: { id },
       data: {
@@ -81,7 +86,7 @@ export async function PUT(req: NextRequest, { params }: RouteContext) {
         notes: notes || null,
         externalFactor: {
           upsert: {
-            create: { ...externalData },
+            create: { ...externalData, date: new Date(date) },
             update: externalData,
           },
         },
