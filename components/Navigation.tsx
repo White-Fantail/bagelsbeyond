@@ -12,6 +12,7 @@ const navItems = [
   { href: "/predictions/performance", label: "성과" },
   { href: "/imports", label: "가져오기" },
   { href: "/external-factors", label: "외부 데이터" },
+  { href: "/tasks", label: "자동화" },
   { href: "/weights", label: "가중치" },
   { href: "/settings", label: "설정" },
 ];

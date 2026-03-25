@@ -5,6 +5,8 @@ import { prisma } from "@/lib/db";
 import { getTotalSales, getSoldBagels, formatCurrency, formatDate } from "@/lib/utils";
 import { getWasteRate } from "@/lib/analytics";
 import { comparePredictedVsActual } from "@/lib/prediction-utils";
+import { formatTaskStatus, formatTaskType, getTaskStatusColor } from "@/lib/task-utils";
+import TaskActionButton from "@/components/TaskActionButton";
 import type { DailyRecord, SalesPrediction } from "@/types";
 
 async function getDashboardData() {
@@ -75,6 +77,29 @@ async function getDashboardData() {
       include: { dailyRecord: { select: { date: true } } },
     });
 
+    // Task status summary
+    const taskStats = await prisma.scheduledTask.groupBy({
+      by: ["status"],
+      _count: { id: true },
+    });
+    const taskStatusMap: Record<string, number> = {};
+    for (const s of taskStats) taskStatusMap[s.status] = s._count.id;
+
+    const recentTasks = await prisma.scheduledTask.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 5,
+    });
+
+    const lastExternalFactorTask = await prisma.scheduledTask.findFirst({
+      where: { taskType: "collect_external_factors", status: "success" },
+      orderBy: { finishedAt: "desc" },
+    });
+
+    const lastPredictionTask = await prisma.scheduledTask.findFirst({
+      where: { taskType: "generate_prediction", status: "success" },
+      orderBy: { finishedAt: "desc" },
+    });
+
     return {
       recentRecords,
       avgDailySales,
@@ -86,6 +111,10 @@ async function getDashboardData() {
       comparableCount,
       latestImportJob,
       latestExternalFactor,
+      taskStatusMap,
+      recentTasks,
+      lastExternalFactorTask,
+      lastPredictionTask,
     };
   } catch {
     return {
@@ -99,6 +128,10 @@ async function getDashboardData() {
       comparableCount: 0,
       latestImportJob: null,
       latestExternalFactor: null,
+      taskStatusMap: {},
+      recentTasks: [],
+      lastExternalFactorTask: null,
+      lastPredictionTask: null,
     };
   }
 }
@@ -115,6 +148,10 @@ export default async function DashboardPage() {
     comparableCount,
     latestImportJob,
     latestExternalFactor,
+    taskStatusMap,
+    recentTasks,
+    lastExternalFactorTask,
+    lastPredictionTask,
   } = await getDashboardData();
 
   const tomorrow = new Date();
@@ -322,6 +359,119 @@ export default async function DashboardPage() {
             </div>
           </div>
         )}
+      </div>
+
+      {/* Task Status Section */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-lg font-semibold text-gray-900">🤖 자동화 작업 현황</h2>
+          <Link href="/tasks" className="text-sm text-indigo-600 hover:underline">
+            전체 보기 →
+          </Link>
+        </div>
+
+        {/* Summary stats */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+          <div className="bg-white border border-gray-200 rounded-lg p-4 text-center">
+            <p className="text-xs text-gray-500">실패한 작업</p>
+            <p className={`text-2xl font-bold mt-1 ${(taskStatusMap.failed ?? 0) > 0 ? "text-red-600" : "text-gray-700"}`}>
+              {taskStatusMap.failed ?? 0}
+            </p>
+          </div>
+          <div className="bg-white border border-gray-200 rounded-lg p-4 text-center">
+            <p className="text-xs text-gray-500">진행 중</p>
+            <p className={`text-2xl font-bold mt-1 ${(taskStatusMap.running ?? 0) > 0 ? "text-blue-600" : "text-gray-700"}`}>
+              {taskStatusMap.running ?? 0}
+            </p>
+          </div>
+          <div className="bg-white border border-gray-200 rounded-lg p-4 text-center">
+            <p className="text-xs text-gray-500">대기 중</p>
+            <p className="text-2xl font-bold mt-1 text-gray-700">{taskStatusMap.pending ?? 0}</p>
+          </div>
+          <div className="bg-white border border-gray-200 rounded-lg p-4 text-center">
+            <p className="text-xs text-gray-500">성공</p>
+            <p className="text-2xl font-bold mt-1 text-green-600">{taskStatusMap.success ?? 0}</p>
+          </div>
+        </div>
+
+        {/* Last run times */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+          <div className="bg-white border border-gray-200 rounded-lg p-4">
+            <p className="text-xs text-gray-500 mb-1">마지막 외부요인 수집</p>
+            <p className="text-sm font-medium text-gray-800">
+              {lastExternalFactorTask?.finishedAt
+                ? new Date(lastExternalFactorTask.finishedAt).toLocaleString("ko-KR")
+                : "아직 없음"}
+            </p>
+          </div>
+          <div className="bg-white border border-gray-200 rounded-lg p-4">
+            <p className="text-xs text-gray-500 mb-1">마지막 예측 생성</p>
+            <p className="text-sm font-medium text-gray-800">
+              {lastPredictionTask?.finishedAt
+                ? new Date(lastPredictionTask.finishedAt).toLocaleString("ko-KR")
+                : "아직 없음"}
+            </p>
+          </div>
+        </div>
+
+        {/* Recent tasks list */}
+        {recentTasks.length > 0 && (
+          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+            <table className="min-w-full divide-y divide-gray-100 text-sm">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-2 text-left text-xs text-gray-500 font-medium">작업 유형</th>
+                  <th className="px-4 py-2 text-left text-xs text-gray-500 font-medium">대상 날짜</th>
+                  <th className="px-4 py-2 text-left text-xs text-gray-500 font-medium">상태</th>
+                  <th className="px-4 py-2 text-left text-xs text-gray-500 font-medium">생성일시</th>
+                  <th className="px-4 py-2 text-left text-xs text-gray-500 font-medium"></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {recentTasks.map((t) => (
+                  <tr key={t.id} className="hover:bg-gray-50">
+                    <td className="px-4 py-2 font-medium text-gray-800">{formatTaskType(t.taskType)}</td>
+                    <td className="px-4 py-2 text-gray-600">
+                      {t.targetDate ? new Date(t.targetDate).toLocaleDateString("ko-KR") : "-"}
+                    </td>
+                    <td className="px-4 py-2">
+                      <span className={`px-2 py-0.5 rounded text-xs font-medium ${getTaskStatusColor(t.status)}`}>
+                        {formatTaskStatus(t.status)}
+                      </span>
+                    </td>
+                    <td className="px-4 py-2 text-gray-500 text-xs">
+                      {new Date(t.createdAt).toLocaleString("ko-KR")}
+                    </td>
+                    <td className="px-4 py-2">
+                      <Link href={`/tasks/${t.id}`} className="text-xs text-indigo-600 hover:underline">
+                        상세
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* Quick actions for tasks */}
+        <div className="mt-3 flex flex-wrap gap-2">
+          <TaskActionButton
+            href="/api/cron/run"
+            label="▶ 외부요인 수집"
+            body={{ action: "ensure_external_factors" }}
+          />
+          <TaskActionButton
+            href="/api/cron/run"
+            label="🔮 내일 예측 생성"
+            body={{ action: "schedule_tomorrow_prediction" }}
+          />
+          <TaskActionButton
+            href="/api/cron/run"
+            label="⟳ 대기 작업 실행"
+            body={{ action: "run_pending" }}
+          />
+        </div>
       </div>
 
       {recentRecords.length === 0 && (
