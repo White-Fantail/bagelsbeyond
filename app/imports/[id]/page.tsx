@@ -21,11 +21,19 @@ const ROW_STATUS_LABELS: Record<string, { label: string; color: string }> = {
   skipped:  { label: "건너뜀",   color: "bg-gray-100 text-gray-700" },
 };
 
+type ExternalCollectResult = {
+  totalDates?: number;
+  processedDates?: number;
+  failedDates?: number;
+  errors?: string[];
+};
+
 type ImportResult = {
   successRows: number;
   failedRows: number;
   skippedRows: number;
   errors: { rowNumber: number; error: string }[];
+  externalCollect?: ExternalCollectResult;
 };
 
 export default function ImportDetailPage() {
@@ -38,6 +46,7 @@ export default function ImportDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const [overwrite, setOverwrite] = useState(false);
+  const [hasAutoCollected, setHasAutoCollected] = useState(false);
 
   const fetchJob = () =>
     fetch(`/api/imports/${id}`)
@@ -62,7 +71,27 @@ export default function ImportDetailPage() {
       });
       const data = await res.json() as ImportResult & { message?: string };
       if (!res.ok) throw new Error(data.message ?? "임포트에 실패했습니다");
-      setImportResult(data);
+
+      // Auto-trigger external factor collection for imported dates
+      let externalCollect: ExternalCollectResult | undefined;
+      if (data.successRows > 0) {
+        setCollecting(true);
+        try {
+          const extRes = await fetch(`/api/imports/${id}/collect-external`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({}),
+          });
+          externalCollect = await extRes.json() as ExternalCollectResult;
+          setHasAutoCollected(true);
+        } catch (err) {
+          externalCollect = { errors: [err instanceof Error ? err.message : "외부 데이터 수집 중 오류 발생"] };
+        } finally {
+          setCollecting(false);
+        }
+      }
+
+      setImportResult({ ...data, externalCollect });
       await fetchJob();
     } catch (err) {
       setError(err instanceof Error ? err.message : "오류가 발생했습니다");
@@ -155,6 +184,28 @@ export default function ImportDetailPage() {
               ))}
             </ul>
           )}
+          {importResult.externalCollect && (
+            <div className="mt-2 pt-2 border-t border-green-200 text-xs text-blue-700">
+              <p className="font-semibold">외부 데이터 자동 수집</p>
+              {collecting ? (
+                <p>수집 중...</p>
+              ) : (
+                <p>
+                  대상 날짜 {importResult.externalCollect.totalDates ?? 0}건 ·{" "}
+                  처리 {importResult.externalCollect.processedDates ?? 0}건
+                  {(importResult.externalCollect.failedDates ?? 0) > 0 &&
+                    ` · 실패 ${importResult.externalCollect.failedDates}건`}
+                </p>
+              )}
+              {importResult.externalCollect.errors && importResult.externalCollect.errors.length > 0 && (
+                <ul className="text-amber-600 mt-0.5 list-disc list-inside">
+                  {importResult.externalCollect.errors.map((e, i) => (
+                    <li key={i}>{e}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
         </div>
       )}
 
@@ -183,17 +234,17 @@ export default function ImportDetailPage() {
         </div>
       )}
 
-      {/* Post-import: collect external data */}
-      {job.status === "imported" && job.successRows > 0 && (
+      {/* Post-import: re-collect external data */}
+      {job.status === "imported" && job.successRows > 0 && !hasAutoCollected && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-2">
-          <p className="text-sm font-semibold text-blue-800">외부 데이터 자동 수집</p>
-          <p className="text-xs text-blue-600">임포트된 날짜 범위의 날씨·공휴일·이벤트 데이터를 수집할 수 있습니다.</p>
+          <p className="text-sm font-semibold text-blue-800">외부 데이터 수집</p>
+          <p className="text-xs text-blue-600">임포트된 날짜 범위의 날씨·공휴일·이벤트 데이터를 다시 수집할 수 있습니다.</p>
           <button
             onClick={handleCollectExternal}
             disabled={collecting}
             className="px-4 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 text-sm transition-colors"
           >
-            {collecting ? "수집 중..." : "🌐 외부 데이터 수집"}
+            {collecting ? "수집 중..." : "🌐 외부 데이터 재수집"}
           </button>
         </div>
       )}

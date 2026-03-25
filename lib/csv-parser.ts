@@ -145,7 +145,10 @@ export function validateParsedRow(row: ParsedCsvRow): string[] {
 // ─── Main Parser ───────────────────────────────────────────────────────────────
 
 export function parseCsvContent(csvText: string): ParsedCsvRow[] {
-  const lines = csvText
+  // Strip UTF-8 BOM if present
+  const cleaned = csvText.startsWith("\uFEFF") ? csvText.slice(1) : csvText;
+
+  const lines = cleaned
     .split(/\r?\n/)
     .map((l) => l.trim())
     .filter((l) => l.length > 0);
