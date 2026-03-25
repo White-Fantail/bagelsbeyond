@@ -1,5 +1,6 @@
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../app/generated/prisma/client";
+import bcrypt from "bcryptjs";
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL ?? "" });
 const prisma = new PrismaClient({ adapter });
@@ -401,7 +402,31 @@ async function main() {
   console.log("✅ Seeding complete!");
 }
 
+// ─── Test users ──────────────────────────────────────────────────────────────
+// Default passwords are for development only.
+// IMPORTANT: Change all passwords before deploying to production!
+async function seedUsers() {
+  const defaultPassword = process.env.SEED_DEFAULT_PASSWORD ?? "Dev@12345!";
+  const hash = await bcrypt.hash(defaultPassword, 12);
+
+  const users = [
+    { email: "admin@example.com",    name: "Admin User",    role: "ADMIN"    as const },
+    { email: "staff@example.com",    name: "Staff User",    role: "STAFF"    as const },
+    { email: "customer@example.com", name: "Customer User", role: "CUSTOMER" as const },
+  ];
+
+  for (const u of users) {
+    await prisma.user.upsert({
+      where: { email: u.email },
+      update: { name: u.name, role: u.role, isActive: true },
+      create: { email: u.email, name: u.name, role: u.role, passwordHash: hash, isActive: true },
+    });
+    console.log(`  👤 ${u.role}: ${u.email}`);
+  }
+}
+
 main()
+  .then(() => seedUsers())
   .catch(console.error)
   .finally(async () => {
     await prisma.$disconnect();

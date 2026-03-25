@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+import { apiRequireAdmin, isNextResponse } from "@/lib/auth/dal";
 import { getWeeklyAnalytics } from "@/lib/services/analytics";
 
 export async function GET(req: NextRequest) {
+  const authResult = await apiRequireAdmin();
+  if (isNextResponse(authResult)) return authResult;
+
   try {
     const { searchParams } = new URL(req.url);
 

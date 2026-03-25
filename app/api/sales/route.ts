@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { salesFormSchema } from "@/lib/validations";
 import { Prisma } from "@/app/generated/prisma/client";
+import { apiRequireStaffOrAdmin, isNextResponse } from "@/lib/auth/dal";
 
 export async function GET() {
   try {
@@ -16,6 +17,9 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const authResult = await apiRequireStaffOrAdmin();
+  if (isNextResponse(authResult)) return authResult;
+
   try {
     const body = await req.json();
     const parsed = salesFormSchema.safeParse(body);
