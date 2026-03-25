@@ -30,6 +30,11 @@ export default async function SettingsPage() {
             shopName: "Bagels Beyond",
             defaultTargetWasteRatio: 0.05,
             defaultSafetyBuffer: 1.1,
+            defaultRegion: "Canterbury",
+            defaultCity: "Christchurch",
+            defaultCountry: "NZ",
+            defaultEventRegion: "Christchurch",
+            autoCollectExternalData: true,
           }
         }
       />

@@ -49,7 +49,15 @@ export default function NewPredictionPage() {
 
     try {
       const toNum = (v: string | undefined) => (v === "" || v === undefined ? null : parseFloat(v));
-      const externalFactors = {
+
+      // Check if any external factors were manually entered
+      const hasManualFactors = !!(
+        data.weatherSummary || data.minTemp || data.maxTemp ||
+        data.rainMm || data.windKph || data.holidayName ||
+        data.localEventName || data.nzNewsSummary || data.worldNewsSummary
+      );
+
+      const externalFactors = hasManualFactors ? {
         weatherSummary: data.weatherSummary || null,
         minTemp: toNum(data.minTemp),
         maxTemp: toNum(data.maxTemp),
@@ -60,12 +68,16 @@ export default function NewPredictionPage() {
         schoolHoliday: data.schoolHoliday ?? false,
         nzNewsSummary: data.nzNewsSummary || null,
         worldNewsSummary: data.worldNewsSummary || null,
-      };
+      } : undefined;
 
       const res = await fetch("/api/predictions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ targetDate: data.targetDate, externalFactors }),
+        body: JSON.stringify({
+          targetDate: data.targetDate,
+          autoCollect: true, // Always try auto-collect for missing external data
+          externalFactors,
+        }),
       });
 
       if (!res.ok) {
@@ -86,7 +98,7 @@ export default function NewPredictionPage() {
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">새 예측 만들기</h1>
-        <p className="text-gray-500 mt-1">날짜와 외부 요인을 입력하고 예측을 실행하세요.</p>
+        <p className="text-gray-500 mt-1">날짜를 입력하면 외부 요인이 자동으로 수집됩니다. 필요 시 직접 입력할 수도 있습니다.</p>
       </div>
 
       {error && (

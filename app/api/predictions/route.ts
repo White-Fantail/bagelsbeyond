@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { buildPredictionInput, calculateRuleBasedPrediction, savePredictionResult } from "@/lib/services/predictionService";
+import { ensureExternalFactorsForPredictionDate } from "@/lib/services/externalFactorService";
 import { z } from "zod";
 
 export async function GET() {
@@ -17,6 +18,7 @@ export async function GET() {
 
 const createPredictionSchema = z.object({
   targetDate: z.string().min(1, "날짜를 입력해주세요"),
+  autoCollect: z.boolean().optional().default(true),
   externalFactors: z.object({
     weatherSummary: z.string().optional().nullable(),
     minTemp: z.number().optional().nullable(),
@@ -46,9 +48,15 @@ export async function POST(req: NextRequest) {
     const targetDate = new Date(parsed.data.targetDate);
     targetDate.setHours(0, 0, 0, 0);
 
+    // Auto-collect external factors if not provided and autoCollect is enabled
+    let autoCollectResult: { existed: boolean; result: unknown } | null = null;
+    if (parsed.data.autoCollect && !parsed.data.externalFactors) {
+      autoCollectResult = await ensureExternalFactorsForPredictionDate(targetDate).catch(() => null);
+    }
+
     const input = await buildPredictionInput(targetDate);
 
-    // Override external factors if provided in request
+    // Override external factors if explicitly provided in request
     if (parsed.data.externalFactors) {
       Object.assign(input.externalFactors, parsed.data.externalFactors);
     }
@@ -56,7 +64,7 @@ export async function POST(req: NextRequest) {
     const result = calculateRuleBasedPrediction(input);
     const saved = await savePredictionResult(result);
 
-    return NextResponse.json(saved, { status: 201 });
+    return NextResponse.json({ ...saved, autoCollectResult }, { status: 201 });
   } catch (_error) {
     console.error(_error);
     return NextResponse.json({ message: "예측 생성에 실패했습니다" }, { status: 500 });

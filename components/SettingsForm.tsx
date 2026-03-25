@@ -10,6 +10,11 @@ type Props = {
     shopName: string;
     defaultTargetWasteRatio: number;
     defaultSafetyBuffer: number;
+    defaultRegion?: string;
+    defaultCity?: string;
+    defaultCountry?: string;
+    defaultEventRegion?: string;
+    autoCollectExternalData?: boolean;
   };
 };
 
@@ -110,6 +115,66 @@ export default function SettingsForm({ initialData }: Props) {
           {errors.defaultSafetyBuffer && (
             <p className="mt-1 text-xs text-red-600">{errors.defaultSafetyBuffer.message}</p>
           )}
+        </div>
+      </div>
+
+      <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
+        <h2 className="text-base font-semibold text-gray-900 border-b border-gray-100 pb-2">지역 설정 (외부 데이터 수집용)</h2>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">기본 지역 (Region)</label>
+            <input
+              type="text"
+              {...register("defaultRegion")}
+              placeholder="Canterbury"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+            />
+            <p className="mt-1 text-xs text-gray-400">예: Canterbury, Auckland</p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">기본 도시 (City)</label>
+            <input
+              type="text"
+              {...register("defaultCity")}
+              placeholder="Christchurch"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">국가 코드 (Country Code)</label>
+            <input
+              type="text"
+              {...register("defaultCountry")}
+              placeholder="NZ"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+            />
+            <p className="mt-1 text-xs text-gray-400">공휴일 조회에 사용됩니다 (예: NZ, AU)</p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">이벤트 검색 지역</label>
+            <input
+              type="text"
+              {...register("defaultEventRegion")}
+              placeholder="Christchurch"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              {...register("autoCollectExternalData")}
+              className="rounded border-gray-300"
+            />
+            <span className="text-sm font-medium text-gray-700">예측/매출 생성 시 외부 데이터 자동 수집</span>
+          </label>
+          <p className="mt-1 text-xs text-gray-400 ml-5">활성화 시 새 매출/예측 생성 때 외부 데이터를 자동으로 수집합니다.</p>
         </div>
       </div>
 

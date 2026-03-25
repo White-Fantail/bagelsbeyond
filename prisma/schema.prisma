@@ -28,21 +28,31 @@ model DailyRecord {
 }
 
 model DailyExternalFactor {
-  id              String      @id @default(cuid())
-  dailyRecordId   String      @unique
-  weatherSummary  String?
-  minTemp         Float?
-  maxTemp         Float?
-  rainMm          Float?
-  windKph         Float?
-  holidayName     String?
-  localEventName  String?
-  schoolHoliday   Boolean     @default(false)
-  nzNewsSummary   String?
+  id               String    @id @default(cuid())
+  date             DateTime  @unique
+  dailyRecordId    String?   @unique
+  weatherSummary   String?
+  minTemp          Float?
+  maxTemp          Float?
+  rainMm           Float?
+  windKph          Float?
+  holidayName      String?
+  localEventName   String?
+  schoolHoliday    Boolean   @default(false)
+  nzNewsSummary    String?
   worldNewsSummary String?
+  sourceWeather    String?
+  sourceHoliday    String?
+  sourceEvents     String?
+  sourceNews       String?
+  collectedAt      DateTime?
+  lastRefreshedAt  DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
-  dailyRecord     DailyRecord @relation(fields: [dailyRecordId], references: [id], onDelete: Cascade)
+  dailyRecord      DailyRecord? @relation(fields: [dailyRecordId], references: [id], onDelete: SetNull)
 
+  @@index([date])
   @@map("daily_external_factors")
 }
 
@@ -57,12 +67,17 @@ model PredictionWeight {
 }
 
 model AppSetting {
-  id                     String   @id @default(cuid())
-  shopName               String   @default("Bagels Beyond")
-  defaultTargetWasteRatio Float   @default(0.05)
-  defaultSafetyBuffer    Float   @default(1.1)
-  createdAt              DateTime @default(now())
-  updatedAt              DateTime @updatedAt
+  id                      String   @id @default(cuid())
+  shopName                String   @default("Bagels Beyond")
+  defaultTargetWasteRatio Float    @default(0.05)
+  defaultSafetyBuffer     Float    @default(1.1)
+  defaultRegion           String   @default("Canterbury")
+  defaultCity             String   @default("Christchurch")
+  defaultCountry          String   @default("NZ")
+  defaultEventRegion      String   @default("Christchurch")
+  autoCollectExternalData Boolean  @default(true)
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
 
   @@map("app_settings")
 }

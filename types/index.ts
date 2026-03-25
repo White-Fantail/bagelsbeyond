@@ -15,7 +15,8 @@ export type DailyRecord = {
 
 export type DailyExternalFactor = {
   id: string;
-  dailyRecordId: string;
+  date: Date;
+  dailyRecordId?: string | null;
   weatherSummary?: string | null;
   minTemp?: number | null;
   maxTemp?: number | null;
@@ -26,6 +27,14 @@ export type DailyExternalFactor = {
   schoolHoliday: boolean;
   nzNewsSummary?: string | null;
   worldNewsSummary?: string | null;
+  sourceWeather?: string | null;
+  sourceHoliday?: string | null;
+  sourceEvents?: string | null;
+  sourceNews?: string | null;
+  collectedAt?: Date | null;
+  lastRefreshedAt?: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
 };
 
 export type PredictionWeight = {
@@ -41,6 +50,11 @@ export type AppSetting = {
   shopName: string;
   defaultTargetWasteRatio: number;
   defaultSafetyBuffer: number;
+  defaultRegion: string;
+  defaultCity: string;
+  defaultCountry: string;
+  defaultEventRegion: string;
+  autoCollectExternalData: boolean;
   createdAt: Date;
   updatedAt: Date;
 };

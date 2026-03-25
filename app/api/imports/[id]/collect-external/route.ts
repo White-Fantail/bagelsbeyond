@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { collectExternalFactorsForDateRange } from "@/lib/providers";
+import { collectExternalFactorsForDateRange } from "@/lib/services/externalFactorService";
 
 export async function POST(
   _req: NextRequest,
@@ -16,10 +16,10 @@ export async function POST(
     });
 
     if (rows.length === 0) {
-      return NextResponse.json({ message: "임포트된 행이 없습니다", processed: 0, errors: [] });
+      return NextResponse.json({ message: "임포트된 행이 없습니다", totalDates: 0, processedDates: 0, errors: [] });
     }
 
-    const dates = rows.map((r) => new Date(r.parsedDate!));
+    const dates = rows.map((r: { parsedDate: Date | null }) => new Date(r.parsedDate!));
     const startDate = dates[0];
     const endDate = dates[dates.length - 1];
 
