@@ -95,7 +95,7 @@ function mapLoyverseItem(
   modifierMap: Map<string, LoyverseRawModifier>
 ): ExternalProduct {
   const category = item.category_id ? categoryMap.get(item.category_id) : undefined;
-  const modifierGroups = item.modifiers_ids
+    const modifierGroups = (item.modifiers_ids ?? [])
     .map((id) => modifierMap.get(id))
     .filter((g): g is LoyverseRawModifier => g !== undefined)
     .map(mapModifierGroup);
