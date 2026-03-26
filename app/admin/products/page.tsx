@@ -2,7 +2,10 @@ export const dynamic = "force-dynamic";
 
 import { requireAdmin } from "@/lib/auth/dal";
 import { prisma } from "@/lib/db";
+import { IntegrationSource, ProductCategory } from "@/app/generated/prisma/enums";
 import Link from "next/link";
+import { Suspense } from "react";
+import ProductFilters from "./ProductFilters";
 
 const CATEGORY_LABELS: Record<string, string> = {
   BAGEL: "베이글",
@@ -12,25 +15,76 @@ const CATEGORY_LABELS: Record<string, string> = {
   OTHER: "기타",
 };
 
-export default async function AdminProductsPage() {
+type SearchParams = {
+  search?: string;
+  category?: string;
+  source?: string;
+  isActive?: string;
+  subscription?: string;
+};
+
+export default async function AdminProductsPage({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>;
+}) {
   await requireAdmin();
 
-  const products = await prisma.product.findMany({
-    orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
-    select: {
-      id: true,
-      name: true,
-      category: true,
-      basePrice: true,
-      isActive: true,
-      isSubscriptionEligible: true,
-      sortOrder: true,
-      updatedAt: true,
-    },
-  });
+  const sp = await searchParams;
+  const search = sp.search?.trim() ?? "";
+  const categoryFilter = sp.category ?? "ALL";
+  const sourceFilter = sp.source ?? "ALL";
+  const activeFilter = sp.isActive ?? "ALL";
+  const subscriptionFilter = sp.subscription ?? "ALL";
 
-  const total = products.length;
-  const activeCount = products.filter((p) => p.isActive).length;
+  const hasFilters = !!(sp.search || sp.category || sp.source || sp.isActive || sp.subscription);
+
+  // Build where clause
+  const where: Record<string, unknown> = {};
+
+  if (search) {
+    where.name = { contains: search, mode: "insensitive" };
+  }
+
+  if (categoryFilter !== "ALL" && Object.values(ProductCategory).includes(categoryFilter as ProductCategory)) {
+    where.category = categoryFilter as ProductCategory;
+  }
+
+  if (activeFilter === "ACTIVE") where.isActive = true;
+  else if (activeFilter === "INACTIVE") where.isActive = false;
+
+  if (subscriptionFilter === "YES") where.isSubscriptionEligible = true;
+  else if (subscriptionFilter === "NO") where.isSubscriptionEligible = false;
+
+  // Source filter requires joining external mappings
+  if (sourceFilter === "LOYVERSE") {
+    where.externalMappings = { some: { source: IntegrationSource.LOYVERSE } };
+  } else if (sourceFilter === "INTERNAL") {
+    where.externalMappings = { none: { source: IntegrationSource.LOYVERSE } };
+  }
+
+  const [products, total, activeCount] = await Promise.all([
+    prisma.product.findMany({
+      where,
+      orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+      select: {
+        id: true,
+        name: true,
+        category: true,
+        basePrice: true,
+        isActive: true,
+        isSubscriptionEligible: true,
+        sortOrder: true,
+        updatedAt: true,
+        externalMappings: {
+          where: { source: IntegrationSource.LOYVERSE },
+          select: { id: true },
+        },
+      },
+    }),
+    prisma.product.count(),
+    prisma.product.count({ where: { isActive: true } }),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -49,12 +103,26 @@ export default async function AdminProductsPage() {
             전체 상품 목록 및 가격·활성 상태를 관리합니다
           </p>
         </div>
-        <Link
-          href="/admin/products/new"
-          className="px-4 py-2 bg-amber-500 text-white rounded-lg text-sm font-medium hover:bg-amber-600 transition-colors whitespace-nowrap"
-        >
-          + 새 상품 추가
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/admin/modifiers"
+            className="px-3 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors whitespace-nowrap"
+          >
+            Modifier 관리 →
+          </Link>
+          <Link
+            href="/admin/categories"
+            className="px-3 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors whitespace-nowrap"
+          >
+            카테고리 →
+          </Link>
+          <Link
+            href="/admin/products/new"
+            className="px-4 py-2 bg-amber-500 text-white rounded-lg text-sm font-medium hover:bg-amber-600 transition-colors whitespace-nowrap"
+          >
+            + 새 상품 추가
+          </Link>
+        </div>
       </div>
 
       {/* Summary cards */}
@@ -73,17 +141,35 @@ export default async function AdminProductsPage() {
         </div>
       </div>
 
+      {/* Filters */}
+      <Suspense fallback={null}>
+        <ProductFilters />
+      </Suspense>
+
       {/* Results info */}
       <div className="text-sm text-gray-500">
-        전체 <strong className="text-gray-700">{total}</strong>개 상품
+        {hasFilters ? (
+          <>
+            검색 결과 <strong className="text-gray-700">{products.length}</strong>개
+            <span className="text-gray-400"> (전체 {total}개)</span>
+          </>
+        ) : (
+          <>
+            전체 <strong className="text-gray-700">{products.length}</strong>개 상품
+          </>
+        )}
       </div>
 
       {/* Table */}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         {products.length === 0 ? (
           <div className="p-12 text-center text-gray-500">
-            <p className="text-lg font-medium">등록된 상품이 없습니다</p>
-            <p className="text-sm mt-1">새 상품을 추가해보세요.</p>
+            <p className="text-lg font-medium">
+              {hasFilters ? "검색 결과가 없습니다" : "등록된 상품이 없습니다"}
+            </p>
+            <p className="text-sm mt-1">
+              {hasFilters ? "필터 조건을 변경해보세요." : "새 상품을 추가해보세요."}
+            </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -92,6 +178,7 @@ export default async function AdminProductsPage() {
                 <tr className="border-b border-gray-200 bg-gray-50">
                   <th className="text-left px-4 py-3 font-medium text-gray-600">이름</th>
                   <th className="text-left px-4 py-3 font-medium text-gray-600">카테고리</th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-600">출처</th>
                   <th className="text-right px-4 py-3 font-medium text-gray-600">가격</th>
                   <th className="text-center px-4 py-3 font-medium text-gray-600">활성</th>
                   <th className="text-center px-4 py-3 font-medium text-gray-600">구독가능</th>
@@ -100,55 +187,66 @@ export default async function AdminProductsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {products.map((product) => (
-                  <tr
-                    key={product.id}
-                    className="hover:bg-amber-50 transition-colors"
-                  >
-                    <td className="px-4 py-3 font-medium text-gray-900">
-                      <Link
-                        href={`/admin/products/${product.id}`}
-                        className="hover:text-amber-600 transition-colors"
-                      >
-                        {product.name}
-                      </Link>
-                    </td>
-                    <td className="px-4 py-3 text-gray-600">
-                      {CATEGORY_LABELS[product.category] ?? product.category}
-                    </td>
-                    <td className="px-4 py-3 text-right text-gray-900 font-medium tabular-nums">
-                      ${product.basePrice.toFixed(2)}
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      {product.isActive ? (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
-                          활성
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
-                          비활성
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      {product.isSubscriptionEligible ? (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
-                          가능
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-400">
-                          불가
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-right text-gray-500 tabular-nums">
-                      {product.sortOrder}
-                    </td>
-                    <td className="px-4 py-3 text-right text-gray-400 tabular-nums text-xs">
-                      {product.updatedAt.toLocaleDateString("ko-KR")}
-                    </td>
-                  </tr>
-                ))}
+                {products.map((product) => {
+                  const isLoyverseSynced = product.externalMappings.length > 0;
+                  return (
+                    <tr key={product.id} className="hover:bg-amber-50 transition-colors">
+                      <td className="px-4 py-3 font-medium text-gray-900">
+                        <Link
+                          href={`/admin/products/${product.id}`}
+                          className="hover:text-amber-600 transition-colors"
+                        >
+                          {product.name}
+                        </Link>
+                      </td>
+                      <td className="px-4 py-3 text-gray-600">
+                        {CATEGORY_LABELS[product.category] ?? product.category}
+                      </td>
+                      <td className="px-4 py-3">
+                        {isLoyverseSynced ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                            🔗 Loyverse
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
+                            내부
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-right text-gray-900 font-medium tabular-nums">
+                        ${product.basePrice.toFixed(2)}
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        {product.isActive ? (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                            활성
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
+                            비활성
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        {product.isSubscriptionEligible ? (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
+                            가능
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-400">
+                            불가
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-right text-gray-500 tabular-nums">
+                        {product.sortOrder}
+                      </td>
+                      <td className="px-4 py-3 text-right text-gray-400 tabular-nums text-xs">
+                        {product.updatedAt.toLocaleDateString("ko-KR")}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

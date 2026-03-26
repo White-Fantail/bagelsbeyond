@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { apiRequireAdmin, isNextResponse } from "@/lib/auth/dal";
-import { ProductCategory } from "@/app/generated/prisma/enums";
+import { IntegrationSource, ProductCategory } from "@/app/generated/prisma/enums";
 import { z } from "zod";
 
 const productPatchSchema = z.object({
@@ -18,6 +18,9 @@ const productPatchSchema = z.object({
   isSubscriptionEligible: z.boolean().optional(),
   sortOrder: z.number().int().optional(),
 });
+
+/** Fields that cannot be changed on a Loyverse-synced product */
+const LOYVERSE_READONLY_FIELDS = ["name", "slug", "description", "category", "basePrice"] as const;
 
 export async function GET(
   _req: NextRequest,
@@ -80,9 +83,35 @@ export async function PATCH(
 
   const data = parsed.data;
 
-  const existing = await prisma.product.findUnique({ where: { id } });
+  const existing = await prisma.product.findUnique({
+    where: { id },
+    include: {
+      externalMappings: {
+        where: { source: IntegrationSource.LOYVERSE },
+        select: { id: true },
+      },
+    },
+  });
   if (!existing) {
     return NextResponse.json({ message: "상품을 찾을 수 없습니다" }, { status: 404 });
+  }
+
+  const isLoyverseSynced = existing.externalMappings.length > 0;
+
+  // Block changes to Loyverse read-only fields
+  if (isLoyverseSynced) {
+    const attemptedReadOnly = LOYVERSE_READONLY_FIELDS.filter(
+      (field) => field in data && data[field] !== undefined
+    );
+    if (attemptedReadOnly.length > 0) {
+      return NextResponse.json(
+        {
+          message: `Loyverse sync 상품의 원본 필드는 수정할 수 없습니다: ${attemptedReadOnly.join(", ")}`,
+          readOnlyFields: attemptedReadOnly,
+        },
+        { status: 403 }
+      );
+    }
   }
 
   if (data.slug && data.slug !== existing.slug) {

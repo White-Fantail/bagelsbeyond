@@ -27,6 +27,10 @@ export default async function EditProductPage({
       isActive: true,
       isSubscriptionEligible: true,
       sortOrder: true,
+      externalMappings: {
+        where: { source: IntegrationSource.LOYVERSE },
+        select: { id: true, externalProductId: true },
+      },
       optionGroups: {
         orderBy: { sortOrder: "asc" },
         select: {
@@ -89,11 +93,16 @@ export default async function EditProductPage({
     );
   }
 
-  const { optionGroups, ...productFields } = product;
+  const { optionGroups, externalMappings, ...productFields } = product;
+
+  const isLoyverseSynced = externalMappings.length > 0;
+  const externalProductId = externalMappings[0]?.externalProductId ?? null;
 
   const formProduct = {
     ...productFields,
     description: productFields.description ?? undefined,
+    isLoyverseSynced,
+    externalProductId,
   };
 
   // Count modifier mapping status

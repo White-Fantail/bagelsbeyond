@@ -33,6 +33,10 @@ export type ProductFormData = {
   isActive: boolean;
   isSubscriptionEligible: boolean;
   sortOrder: number;
+  /** True when the product has a Loyverse ExternalProductMap entry */
+  isLoyverseSynced?: boolean;
+  /** The external Loyverse product ID, if mapped */
+  externalProductId?: string | null;
 };
 
 const CATEGORY_OPTIONS = [
@@ -50,6 +54,7 @@ export default function ProductForm({
   product?: ProductFormData;
   mode: "create" | "edit";
 }) {
+  const isLoyverseSynced = product?.isLoyverseSynced ?? false;
   const router = useRouter();
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
@@ -92,10 +97,21 @@ export default function ProductForm({
           ? `/api/admin/products/${product.id}`
           : "/api/admin/products";
       const method = mode === "edit" ? "PATCH" : "POST";
+
+      // For Loyverse-synced products, only send editable fields
+      const payload =
+        isLoyverseSynced && mode === "edit"
+          ? {
+              isActive: data.isActive,
+              isSubscriptionEligible: data.isSubscriptionEligible,
+              sortOrder: data.sortOrder,
+            }
+          : data;
+
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify(payload),
       });
       if (!res.ok) {
         const err = await res.json();
@@ -124,32 +140,64 @@ export default function ProductForm({
         </div>
       )}
 
+      {/* Loyverse sync badge */}
+      {isLoyverseSynced && (
+        <div className="flex items-start gap-3 p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
+          <span className="text-lg leading-none">🔗</span>
+          <div>
+            <p className="font-semibold">Synced from Loyverse</p>
+            <p className="mt-0.5 text-blue-700">
+              이 상품은 Loyverse에서 동기화된 데이터입니다. 원본 필드(이름, 슬러그, 설명, 카테고리,
+              기본가격)는 수정할 수 없으며 내부 운영 필드만 수정 가능합니다.
+            </p>
+            {product?.externalProductId && (
+              <p className="mt-1 text-xs text-blue-600 font-mono">
+                Loyverse ID: {product.externalProductId}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* 기본 정보 */}
       <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-5">
-        <h2 className="text-base font-semibold text-gray-900 border-b border-gray-100 pb-2">
-          기본 정보
-        </h2>
+        <div className="flex items-center justify-between border-b border-gray-100 pb-2">
+          <h2 className="text-base font-semibold text-gray-900">기본 정보</h2>
+          {isLoyverseSynced && (
+            <span className="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
+              🔒 Loyverse 원본 (수정 불가)
+            </span>
+          )}
+        </div>
 
         <Field label="상품명 *" error={errors.name?.message}>
           <input
             type="text"
             placeholder="예: 플레인 베이글"
             {...register("name")}
-            className={inputClass(!!errors.name)}
+            disabled={isLoyverseSynced}
+            className={isLoyverseSynced ? readOnlyInputClass : inputClass(!!errors.name)}
           />
+          {isLoyverseSynced && (
+            <p className="mt-1 text-xs text-blue-500">🔒 Loyverse 원본 필드 — 수정 불가</p>
+          )}
         </Field>
 
         <Field
           label="슬러그 *"
           error={errors.slug?.message}
-          hint="영소문자, 숫자, 하이픈만 사용 (예: plain-bagel)"
+          hint={isLoyverseSynced ? undefined : "영소문자, 숫자, 하이픈만 사용 (예: plain-bagel)"}
         >
           <input
             type="text"
             placeholder="plain-bagel"
             {...register("slug")}
-            className={inputClass(!!errors.slug)}
+            disabled={isLoyverseSynced}
+            className={isLoyverseSynced ? readOnlyInputClass : inputClass(!!errors.slug)}
           />
+          {isLoyverseSynced && (
+            <p className="mt-1 text-xs text-blue-500">🔒 Loyverse 원본 필드 — 수정 불가</p>
+          )}
         </Field>
 
         <Field label="설명" error={errors.description?.message}>
@@ -157,26 +205,42 @@ export default function ProductForm({
             rows={3}
             placeholder="상품 설명을 입력하세요 (선택)"
             {...register("description")}
-            className={inputClass(false)}
+            disabled={isLoyverseSynced}
+            className={isLoyverseSynced ? readOnlyInputClass : inputClass(false)}
           />
+          {isLoyverseSynced && (
+            <p className="mt-1 text-xs text-blue-500">🔒 Loyverse 원본 필드 — 수정 불가</p>
+          )}
         </Field>
 
         <Field label="카테고리 *" error={errors.category?.message}>
-          <select {...register("category")} className={inputClass(!!errors.category)}>
+          <select
+            {...register("category")}
+            disabled={isLoyverseSynced}
+            className={isLoyverseSynced ? readOnlyInputClass : inputClass(!!errors.category)}
+          >
             {CATEGORY_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
                 {opt.label}
               </option>
             ))}
           </select>
+          {isLoyverseSynced && (
+            <p className="mt-1 text-xs text-blue-500">🔒 Loyverse 원본 필드 — 수정 불가</p>
+          )}
         </Field>
       </div>
 
       {/* 가격 및 상태 */}
       <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-5">
-        <h2 className="text-base font-semibold text-gray-900 border-b border-gray-100 pb-2">
-          가격 및 상태
-        </h2>
+        <div className="flex items-center justify-between border-b border-gray-100 pb-2">
+          <h2 className="text-base font-semibold text-gray-900">가격 및 상태</h2>
+          {isLoyverseSynced && (
+            <span className="text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded">
+              ✏️ 내부 운영 필드 (수정 가능)
+            </span>
+          )}
+        </div>
 
         <Field label="기본가격 *" error={errors.basePrice?.message}>
           <input
@@ -185,9 +249,13 @@ export default function ProductForm({
             min="0"
             placeholder="0.00"
             {...register("basePrice")}
+            disabled={isLoyverseSynced}
             onFocus={(e) => e.target.select()}
-            className={inputClass(!!errors.basePrice)}
+            className={isLoyverseSynced ? readOnlyInputClass : inputClass(!!errors.basePrice)}
           />
+          {isLoyverseSynced && (
+            <p className="mt-1 text-xs text-blue-500">🔒 Loyverse 원본 필드 — 수정 불가</p>
+          )}
         </Field>
 
         <Field label="정렬 순서" error={errors.sortOrder?.message}>
@@ -198,6 +266,9 @@ export default function ProductForm({
             onFocus={(e) => e.target.select()}
             className={inputClass(!!errors.sortOrder)}
           />
+          {isLoyverseSynced && (
+            <p className="mt-1 text-xs text-green-600">✏️ 내부 운영 필드 — 수정 가능</p>
+          )}
         </Field>
 
         <div className="space-y-3">
@@ -208,6 +279,9 @@ export default function ProductForm({
               className="w-4 h-4 rounded border-gray-300 text-amber-500 focus:ring-amber-500"
             />
             <span className="text-sm font-medium text-gray-700">활성 상태</span>
+            {isLoyverseSynced && (
+              <span className="text-xs text-green-600">✏️ 수정 가능</span>
+            )}
           </label>
 
           <label className="flex items-center gap-3 cursor-pointer">
@@ -217,6 +291,9 @@ export default function ProductForm({
               className="w-4 h-4 rounded border-gray-300 text-amber-500 focus:ring-amber-500"
             />
             <span className="text-sm font-medium text-gray-700">구독 가능 상품</span>
+            {isLoyverseSynced && (
+              <span className="text-xs text-green-600">✏️ 수정 가능</span>
+            )}
           </label>
         </div>
       </div>
@@ -267,3 +344,7 @@ function inputClass(hasError: boolean) {
     hasError ? "border-red-300 bg-red-50" : "border-gray-300"
   }`;
 }
+
+const readOnlyInputClass =
+  "w-full px-3 py-2 border border-gray-200 rounded-md text-sm text-gray-500 bg-gray-50 cursor-not-allowed";
+
