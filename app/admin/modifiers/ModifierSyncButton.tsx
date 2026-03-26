@@ -1,11 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 interface ModifierSyncResult {
   status: "success" | "empty" | "failed";
   groupCount: number;
   optionCount: number;
+  updatedGroups?: number;
+  updatedOptions?: number;
   syncedAt: string;
   errorMessage?: string;
   errorCode?: number;
@@ -13,6 +16,7 @@ interface ModifierSyncResult {
 }
 
 export default function ModifierSyncButton() {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ModifierSyncResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -30,6 +34,8 @@ export default function ModifierSyncButton() {
         setError(data.errorMessage ?? data.message ?? "Modifier 동기화 중 오류가 발생했습니다");
       } else {
         setResult(data);
+        // Refresh the page to reflect updated group/option data.
+        router.refresh();
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "네트워크 오류가 발생했습니다");
@@ -63,8 +69,13 @@ export default function ModifierSyncButton() {
             </span>
           </p>
           <p className="text-xs text-green-700">
-            그룹 {result.groupCount}개 · 옵션 {result.optionCount}개
+            Loyverse: 그룹 {result.groupCount}개 · 옵션 {result.optionCount}개
           </p>
+          {(result.updatedGroups !== undefined || result.updatedOptions !== undefined) && (
+            <p className="text-xs text-green-600">
+              내부 DB 갱신: 그룹 {result.updatedGroups ?? 0}개 · 옵션 {result.updatedOptions ?? 0}개
+            </p>
+          )}
         </div>
       )}
     </div>

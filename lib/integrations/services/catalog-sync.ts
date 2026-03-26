@@ -198,7 +198,7 @@ async function syncOptionGroups(
         where: { id: existingMap.id },
         data: { lastSyncedAt: new Date() },
       });
-      await syncOptions(existingMap.optionGroupId, extGroup.modifiers, existingMap.optionGroup.options);
+      await syncOptions(existingMap.optionGroupId, extGroup.modifiers, existingMap.optionGroup.options, source, extGroup.externalId);
       continue;
     }
 
@@ -219,7 +219,7 @@ async function syncOptionGroups(
           lastSyncedAt: new Date(),
         },
       });
-      await syncOptions(orphanGroup.id, extGroup.modifiers, orphanGroup.options);
+      await syncOptions(orphanGroup.id, extGroup.modifiers, orphanGroup.options, source, extGroup.externalId);
       continue;
     }
 
@@ -241,7 +241,7 @@ async function syncOptionGroups(
         lastSyncedAt: new Date(),
       },
     });
-    await syncOptions(newGroup.id, extGroup.modifiers, []);
+    await syncOptions(newGroup.id, extGroup.modifiers, [], source, extGroup.externalId);
   }
 }
 
@@ -249,28 +249,58 @@ type ExistingOption = { id: string; name: string };
 
 /**
  * Upsert ProductOption rows from external modifier items.
+ * Also creates/updates ExternalOptionMap records so each option carries its
+ * Loyverse external ID — enabling rename-safe lookups and inventory linking.
  */
 async function syncOptions(
   optionGroupId: string,
   modifiers: ExternalModifierGroup["modifiers"],
-  existingOptions: ExistingOption[]
+  existingOptions: ExistingOption[],
+  source: IntegrationSource,
+  externalGroupId?: string
 ): Promise<void> {
   const existingByName = new Map(existingOptions.map((o) => [o.name, o]));
 
   for (const modifier of modifiers) {
+    let optionId: string;
     const existing = existingByName.get(modifier.name);
+
     if (existing) {
       await prisma.productOption.update({
         where: { id: existing.id },
         data: { priceDelta: modifier.priceDelta, isActive: true },
       });
+      optionId = existing.id;
     } else {
-      await prisma.productOption.create({
+      const created = await prisma.productOption.create({
         data: {
           optionGroupId,
           name: modifier.name,
           priceDelta: modifier.priceDelta,
           isActive: true,
+        },
+      });
+      optionId = created.id;
+    }
+
+    // Upsert ExternalOptionMap so the option carries its Loyverse external ID.
+    // This is idempotent: re-running sync will update the mapping but never duplicate it.
+    if (modifier.externalId) {
+      await prisma.externalOptionMap.upsert({
+        where: { source_externalOptionId: { source, externalOptionId: modifier.externalId } },
+        create: {
+          source,
+          productOptionId: optionId,
+          externalOptionId: modifier.externalId,
+          externalName: modifier.name,
+          externalGroupId: externalGroupId ?? null,
+          lastSyncedAt: new Date(),
+        },
+        update: {
+          productOptionId: optionId,
+          externalName: modifier.name,
+          externalGroupId: externalGroupId ?? null,
+          lastSyncedAt: new Date(),
         },
       });
     }
