@@ -344,4 +344,23 @@ describe("normalizeLoyverseCatalog", () => {
     const products = normalizeLoyverseCatalog({ items: [], categories: [], modifiers: [] });
     expect(products).toEqual([]);
   });
+
+  it("handles a modifier group where options is undefined (Loyverse API omits empty arrays)", () => {
+    const catalogWithMissingOptions: LoyverseCatalogRaw = {
+      ...MOCK_CATALOG,
+      modifiers: [
+        {
+          id: "mod-group-001",
+          name: "Toppings",
+          created_at: "2024-01-01T00:00:00.000Z",
+          updated_at: "2024-06-01T00:00:00.000Z",
+          deleted_at: null,
+        },
+      ],
+    };
+    expect(() => normalizeLoyverseCatalog(catalogWithMissingOptions)).not.toThrow();
+    const products = normalizeLoyverseCatalog(catalogWithMissingOptions);
+    const bagel = products.find((p) => p.externalId === "item-001")!;
+    expect(bagel.modifierGroups![0].modifiers).toEqual([]);
+  });
 });
