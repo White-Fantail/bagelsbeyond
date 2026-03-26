@@ -106,14 +106,14 @@ export default async function AccountPage() {
         </Link>
 
         {/* Subscriptions */}
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
+        <Link href="/account/subscriptions" className="block bg-white rounded-xl border border-amber-200 p-5 hover:border-amber-400 transition-colors">
           <div className="flex items-center gap-3 mb-2">
             <span className="text-2xl">🔄</span>
             <h2 className="font-semibold text-gray-900">내 구독</h2>
           </div>
           <p className="text-sm text-gray-500">정기 구독 및 플랜을 관리할 수 있습니다.</p>
-          <p className="mt-3 text-xs text-amber-600 font-medium">곧 연결될 예정</p>
-        </div>
+          <p className="mt-3 text-xs text-amber-600 font-medium">구독 목록 보기 →</p>
+        </Link>
 
         {/* Pickup / Contact */}
         <div className="bg-white rounded-xl border border-gray-200 p-5">
