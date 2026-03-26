@@ -56,23 +56,35 @@ export interface LoyverseRawCategory {
   deleted_at: string | null;
 }
 
-export interface LoyverseRawModifier {
+/** One selectable option within a Loyverse modifier (e.g. "Oat Milk", price: 0.80) */
+export interface LoyverseRawModifierOption {
   id: string;
   name: string;
   price: number;
 }
 
-export interface LoyverseRawModifierGroup {
+/**
+ * A Loyverse "modifier" — equivalent to a modifier *group* in other systems.
+ * Each modifier has a name and a list of selectable options.
+ * Retrieved from GET /modifiers.
+ * Docs: https://developer.loyverse.com/docs/#tag/Modifiers
+ */
+export interface LoyverseRawModifier {
   id: string;
   name: string;
-  modifiers: LoyverseRawModifier[];
+  /** Selectable options within this modifier (e.g. milk choices, toppings) */
+  options: LoyverseRawModifierOption[];
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
 }
 
 /** Full normalised catalogue from Loyverse (raw + cross-referenced) */
 export interface LoyverseCatalogRaw {
   items: LoyverseRawItem[];
   categories: LoyverseRawCategory[];
-  modifierGroups: LoyverseRawModifierGroup[];
+  /** Loyverse modifiers — each corresponds to a modifier group in internal models */
+  modifiers: LoyverseRawModifier[];
 }
 
 // ─── Normalised External Types (POS-agnostic) ────────────────────────────────

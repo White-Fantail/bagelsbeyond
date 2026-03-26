@@ -210,22 +210,28 @@ const MOCK_CATALOG: LoyverseCatalogRaw = {
     { id: "cat-001", name: "Bagels", color: null, deleted_at: null },
     { id: "cat-002", name: "Drinks", color: null, deleted_at: null },
   ],
-  modifierGroups: [
+  modifiers: [
     {
       id: "mod-group-001",
       name: "Toppings",
-      modifiers: [
+      options: [
         { id: "mod-001", name: "Extra Cream Cheese", price: 1.0 },
         { id: "mod-002", name: "Avocado", price: 2.0 },
       ],
+      created_at: "2024-01-01T00:00:00.000Z",
+      updated_at: "2024-06-01T00:00:00.000Z",
+      deleted_at: null,
     },
     {
       id: "mod-group-002",
       name: "Milk Choice",
-      modifiers: [
+      options: [
         { id: "mod-003", name: "Regular Milk", price: 0 },
         { id: "mod-004", name: "Oat Milk", price: 0.8 },
       ],
+      created_at: "2024-01-01T00:00:00.000Z",
+      updated_at: "2024-06-01T00:00:00.000Z",
+      deleted_at: null,
     },
   ],
 };
@@ -335,7 +341,7 @@ describe("normalizeLoyverseCatalog", () => {
   });
 
   it("returns empty array for empty catalog", () => {
-    const products = normalizeLoyverseCatalog({ items: [], categories: [], modifierGroups: [] });
+    const products = normalizeLoyverseCatalog({ items: [], categories: [], modifiers: [] });
     expect(products).toEqual([]);
   });
 });

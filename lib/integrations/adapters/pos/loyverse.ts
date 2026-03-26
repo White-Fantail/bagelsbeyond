@@ -18,7 +18,7 @@ import type {
   SyncResult,
   LoyverseRawItem,
   LoyverseRawCategory,
-  LoyverseRawModifierGroup,
+  LoyverseRawModifier,
   LoyverseCatalogRaw,
 } from "./types";
 import { normalizeLoyverseCatalog } from "../../services/catalog-mapper";
@@ -172,24 +172,30 @@ const MOCK_CATALOG: LoyverseCatalogRaw = {
     { id: "mock-cat-001", name: "Bagels", color: null, deleted_at: null },
     { id: "mock-cat-002", name: "Drinks", color: null, deleted_at: null },
   ],
-  modifierGroups: [
+  modifiers: [
     {
       id: "mock-mod-group-001",
       name: "Toppings",
-      modifiers: [
+      options: [
         { id: "mock-mod-001", name: "Extra Cream Cheese", price: 1.0 },
         { id: "mock-mod-002", name: "Avocado", price: 2.0 },
         { id: "mock-mod-003", name: "Smoked Salmon", price: 3.5 },
       ],
+      created_at: "2024-01-01T00:00:00.000Z",
+      updated_at: "2024-06-01T00:00:00.000Z",
+      deleted_at: null,
     },
     {
       id: "mock-mod-group-002",
       name: "Milk Choice",
-      modifiers: [
+      options: [
         { id: "mock-mod-004", name: "Regular Milk", price: 0 },
         { id: "mock-mod-005", name: "Oat Milk", price: 0.8 },
         { id: "mock-mod-006", name: "Soy Milk", price: 0.5 },
       ],
+      created_at: "2024-01-01T00:00:00.000Z",
+      updated_at: "2024-06-01T00:00:00.000Z",
+      deleted_at: null,
     },
   ],
 };
@@ -217,6 +223,7 @@ export class LoyverseAdapter implements POSAdapter {
   /**
    * Low-level fetch wrapper with auth header and unified error handling.
    * Handles 401, 429, 5xx with descriptive errors.
+   * On non-2xx responses, logs request URL, method, HTTP status, and response body.
    */
   private async fetchWithAuth<T>(
     path: string,
@@ -239,25 +246,47 @@ export class LoyverseAdapter implements POSAdapter {
       );
     }
 
-    if (res.status === 401) {
-      throw new LoyverseApiError(
-        "Loyverse authentication failed — check LOYVERSE_API_TOKEN",
-        401
-      );
-    }
-    if (res.status === 429) {
-      throw new LoyverseApiError(
-        "Loyverse rate limit exceeded (HTTP 429) — retry later",
-        429
-      );
-    }
-    if (res.status >= 500) {
-      throw new LoyverseApiError(
-        `Loyverse server error (HTTP ${res.status}) — try again later`,
-        res.status
-      );
-    }
     if (!res.ok) {
+      let responseBody = "";
+      try {
+        responseBody = await res.text();
+      } catch {
+        responseBody = "(unable to read response body)";
+      }
+      console.error(
+        `[Loyverse] HTTP ${res.status} on ${method} ${url} — body: ${responseBody}`
+      );
+
+      if (res.status === 401) {
+        throw new LoyverseApiError(
+          "Loyverse authentication failed — check LOYVERSE_API_TOKEN",
+          401
+        );
+      }
+      if (res.status === 404) {
+        throw new LoyverseApiError(
+          `Loyverse endpoint not found (HTTP 404): ${url}`,
+          404
+        );
+      }
+      if (res.status === 422) {
+        throw new LoyverseApiError(
+          `Loyverse unprocessable entity (HTTP 422) on ${path} — body: ${responseBody}`,
+          422
+        );
+      }
+      if (res.status === 429) {
+        throw new LoyverseApiError(
+          "Loyverse rate limit exceeded (HTTP 429) — retry later",
+          429
+        );
+      }
+      if (res.status >= 500) {
+        throw new LoyverseApiError(
+          `Loyverse server error (HTTP ${res.status}) — try again later`,
+          res.status
+        );
+      }
       throw new LoyverseApiError(
         `Loyverse API error (HTTP ${res.status}) on ${path}`,
         res.status
@@ -314,32 +343,47 @@ export class LoyverseAdapter implements POSAdapter {
   }
 
   /**
-   * Fetch all modifier groups from Loyverse.
-   * Each group contains its modifiers inline.
+   * Fetch all modifiers from Loyverse, following cursor-based pagination.
+   * In the Loyverse API a "modifier" is a group of selectable options
+   * (e.g. "Milk Choice" with options "Regular Milk", "Oat Milk").
+   * Endpoint: GET /modifiers
+   * Docs: https://developer.loyverse.com/docs/#tag/Modifiers/paths/~1modifiers/get
    */
-  async fetchModifierGroups(): Promise<LoyverseRawModifierGroup[]> {
+  async fetchModifiers(): Promise<LoyverseRawModifier[]> {
     if (this.mockMode) {
-      return MOCK_CATALOG.modifierGroups;
+      return MOCK_CATALOG.modifiers;
     }
 
-    const data = await this.fetchWithAuth<{
-      modifier_groups: LoyverseRawModifierGroup[];
-    }>("/modifier_groups");
-    const groups = Array.isArray(data.modifier_groups) ? data.modifier_groups : [];
-    console.info(`[Loyverse] Fetched ${groups.length} modifier groups`);
-    return groups;
+    const allModifiers: LoyverseRawModifier[] = [];
+    let cursor: string | null = null;
+
+    do {
+      const query: string = cursor ? `?cursor=${encodeURIComponent(cursor)}` : "";
+      const page = await this.fetchWithAuth<{
+        modifiers: LoyverseRawModifier[];
+        cursor: string | null;
+      }>(`/modifiers${query}`);
+
+      if (Array.isArray(page.modifiers)) {
+        allModifiers.push(...page.modifiers);
+      }
+      cursor = page.cursor ?? null;
+    } while (cursor);
+
+    console.info(`[Loyverse] Fetched ${allModifiers.length} modifiers`);
+    return allModifiers;
   }
 
   /**
-   * Fetch the full raw catalogue (items + categories + modifier groups) in one call.
+   * Fetch the full raw catalogue (items + categories + modifiers) in one call.
    */
   async fetchCatalog(): Promise<LoyverseCatalogRaw> {
-    const [items, categories, modifierGroups] = await Promise.all([
+    const [items, categories, modifiers] = await Promise.all([
       this.fetchItems(),
       this.fetchCategories(),
-      this.fetchModifierGroups(),
+      this.fetchModifiers(),
     ]);
-    return { items, categories, modifierGroups };
+    return { items, categories, modifiers };
   }
 
   /**
