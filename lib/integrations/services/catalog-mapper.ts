@@ -73,7 +73,7 @@ function resolveItemSku(item: LoyverseRawItem): string | undefined {
  * and its selectable items are called "options".
  */
 function mapModifierGroup(raw: LoyverseRawModifier): ExternalModifierGroup {
-  const modifiers: ExternalModifier[] = raw.options.map((o) => ({
+  const modifiers: ExternalModifier[] = (raw.options ?? []).map((o) => ({
     externalId: o.id,
     name: o.name,
     priceDelta: o.price,

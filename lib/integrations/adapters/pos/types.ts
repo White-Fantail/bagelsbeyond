@@ -72,8 +72,9 @@ export interface LoyverseRawModifierOption {
 export interface LoyverseRawModifier {
   id: string;
   name: string;
-  /** Selectable options within this modifier (e.g. milk choices, toppings) */
-  options: LoyverseRawModifierOption[];
+  /** Selectable options within this modifier (e.g. milk choices, toppings).
+   * The Loyverse API may omit this field for modifiers with no options. */
+  options?: LoyverseRawModifierOption[];
   created_at: string;
   updated_at: string;
   deleted_at: string | null;

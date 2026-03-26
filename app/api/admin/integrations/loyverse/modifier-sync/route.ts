@@ -43,7 +43,7 @@ export async function POST() {
 
     const activeModifiers = rawModifiers.filter((m) => m.deleted_at === null);
     const groupCount = activeModifiers.length;
-    const optionCount = activeModifiers.reduce((sum, m) => sum + m.options.length, 0);
+    const optionCount = activeModifiers.reduce((sum, m) => sum + (m.options ?? []).length, 0);
 
     status = groupCount === 0 ? "empty" : "success";
 
