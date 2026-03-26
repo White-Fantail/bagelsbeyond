@@ -135,6 +135,8 @@ export const ADMIN_NAV: RoleNavConfig = {
       label: "상품 / 재고",
       items: [
         { href: "/admin/products", label: "상품 관리" },
+        { href: "/admin/modifiers", label: "모디파이어 관리" },
+        { href: "/admin/categories", label: "카테고리 관리" },
         { href: "/admin/inventory", label: "재고 관리" },
       ],
     },
