@@ -5,9 +5,12 @@ import Link from "next/link";
 export default async function AdminPage() {
   const session = await requireAdmin();
 
-  // Example: fetch user count
-  const userCount = await prisma.user.count();
-  const recordCount = await prisma.dailyRecord.count();
+  const [userCount, recordCount, productCount, inventoryCount] = await Promise.all([
+    prisma.user.count(),
+    prisma.dailyRecord.count(),
+    prisma.product.count({ where: { isActive: true } }),
+    prisma.dailyInventory.count(),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -17,7 +20,7 @@ export default async function AdminPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
         <div className="bg-white rounded-xl border border-gray-200 p-5">
           <p className="text-sm text-gray-500">전체 사용자</p>
           <p className="text-3xl font-bold text-gray-900 mt-1">{userCount}</p>
@@ -26,9 +29,13 @@ export default async function AdminPage() {
           <p className="text-sm text-gray-500">매출 기록 수</p>
           <p className="text-3xl font-bold text-gray-900 mt-1">{recordCount}</p>
         </div>
+        <div className="bg-white rounded-xl border border-amber-100 p-5">
+          <p className="text-sm text-amber-600">활성 상품</p>
+          <p className="text-3xl font-bold text-amber-700 mt-1">{productCount}</p>
+        </div>
         <div className="bg-white rounded-xl border border-gray-200 p-5">
-          <p className="text-sm text-gray-500">접근 권한</p>
-          <p className="text-lg font-semibold text-amber-600 mt-1">ADMIN (전체)</p>
+          <p className="text-sm text-gray-500">재고 입력 수</p>
+          <p className="text-3xl font-bold text-gray-900 mt-1">{inventoryCount}</p>
         </div>
       </div>
 
@@ -39,6 +46,16 @@ export default async function AdminPage() {
           <li>
             <Link href="/admin/users" className="text-amber-600 hover:underline">
               → 사용자 관리 (권한·활성 상태 변경)
+            </Link>
+          </li>
+          <li>
+            <Link href="/admin/products" className="text-amber-600 hover:underline">
+              → 상품 관리 (상품·옵션 등록 및 수정)
+            </Link>
+          </li>
+          <li>
+            <Link href="/admin/inventory" className="text-amber-600 hover:underline">
+              → 일별 재고 관리 (생산량·판매량 입력)
             </Link>
           </li>
           <li>

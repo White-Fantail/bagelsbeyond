@@ -28,6 +28,8 @@ const ADMIN_ITEMS = [
   { href: "/weights", label: "가중치" },
   { href: "/settings", label: "설정" },
   { href: "/admin/users", label: "사용자 관리" },
+  { href: "/admin/products", label: "상품 관리" },
+  { href: "/admin/inventory", label: "재고 관리" },
 ];
 
 function getNavItems(role?: Role | null) {

@@ -425,8 +425,268 @@ async function seedUsers() {
   }
 }
 
+// ─── Phase 4: Products & Inventory ───────────────────────────────────────────
+
+async function seedProducts() {
+  console.log("🥯 Seeding products...");
+
+  const products = [
+    {
+      slug: "plain-bagel",
+      name: "Plain Bagel",
+      description: "Classic plain bagel, perfectly chewy",
+      category: "BAGEL" as const,
+      basePrice: 3.5,
+      isActive: true,
+      isSubscriptionEligible: true,
+      sortOrder: 1,
+    },
+    {
+      slug: "sesame-bagel",
+      name: "Sesame Bagel",
+      description: "Topped with toasted sesame seeds",
+      category: "BAGEL" as const,
+      basePrice: 3.5,
+      isActive: true,
+      isSubscriptionEligible: true,
+      sortOrder: 2,
+    },
+    {
+      slug: "blueberry-bagel",
+      name: "Blueberry Bagel",
+      description: "Sweet blueberry bagel with dried blueberries",
+      category: "BAGEL" as const,
+      basePrice: 4.0,
+      isActive: true,
+      isSubscriptionEligible: true,
+      sortOrder: 3,
+    },
+    {
+      slug: "everything-bagel",
+      name: "Everything Bagel",
+      description: "Loaded with sesame, poppy, onion, garlic, and salt",
+      category: "BAGEL" as const,
+      basePrice: 3.5,
+      isActive: true,
+      isSubscriptionEligible: false,
+      sortOrder: 4,
+    },
+    {
+      slug: "salmon-bagel-sandwich",
+      name: "Salmon Bagel Sandwich",
+      description: "Fresh smoked salmon with cream cheese on your choice of bagel",
+      category: "SANDWICH" as const,
+      basePrice: 12.5,
+      isActive: true,
+      isSubscriptionEligible: false,
+      sortOrder: 10,
+    },
+    {
+      slug: "classic-bagel-sandwich",
+      name: "Classic Bagel Sandwich",
+      description: "Choose your bagel, spread, and fillings",
+      category: "SANDWICH" as const,
+      basePrice: 9.5,
+      isActive: true,
+      isSubscriptionEligible: false,
+      sortOrder: 11,
+    },
+    {
+      slug: "cream-cheese-plain",
+      name: "Cream Cheese – Plain",
+      description: "Classic plain cream cheese spread",
+      category: "SPREAD" as const,
+      basePrice: 1.5,
+      isActive: true,
+      isSubscriptionEligible: false,
+      sortOrder: 20,
+    },
+    {
+      slug: "cream-cheese-chive",
+      name: "Cream Cheese – Chive & Onion",
+      description: "Chive and onion cream cheese",
+      category: "SPREAD" as const,
+      basePrice: 1.5,
+      isActive: true,
+      isSubscriptionEligible: false,
+      sortOrder: 21,
+    },
+  ];
+
+  const createdProducts: Record<string, { id: string }> = {};
+
+  for (const p of products) {
+    const product = await prisma.product.upsert({
+      where: { slug: p.slug },
+      update: {
+        name: p.name,
+        description: p.description,
+        basePrice: p.basePrice,
+        isActive: p.isActive,
+        isSubscriptionEligible: p.isSubscriptionEligible,
+        sortOrder: p.sortOrder,
+      },
+      create: {
+        name: p.name,
+        slug: p.slug,
+        description: p.description,
+        category: p.category,
+        basePrice: p.basePrice,
+        isActive: p.isActive,
+        isSubscriptionEligible: p.isSubscriptionEligible,
+        sortOrder: p.sortOrder,
+      },
+    });
+    createdProducts[p.slug] = { id: product.id };
+    console.log(`  🏷️  ${p.category}: ${p.name}`);
+  }
+
+  // ── Option groups for Salmon Bagel Sandwich ─────────────────────────────────
+  const salmonId = createdProducts["salmon-bagel-sandwich"]?.id;
+  if (salmonId) {
+    const existingGroup = await prisma.productOptionGroup.findFirst({
+      where: { productId: salmonId, name: "Bagel Choice" },
+    });
+    if (!existingGroup) {
+      await prisma.productOptionGroup.create({
+        data: {
+          productId: salmonId,
+          name: "Bagel Choice",
+          minSelect: 1,
+          maxSelect: 1,
+          isRequired: true,
+          sortOrder: 1,
+          options: {
+            create: [
+              { name: "Plain Bagel",     priceDelta: 0,   sortOrder: 1 },
+              { name: "Sesame Bagel",    priceDelta: 0,   sortOrder: 2 },
+              { name: "Everything Bagel",priceDelta: 0,   sortOrder: 3 },
+            ],
+          },
+        },
+      });
+
+      await prisma.productOptionGroup.create({
+        data: {
+          productId: salmonId,
+          name: "Add-ons",
+          minSelect: 0,
+          maxSelect: 3,
+          isRequired: false,
+          sortOrder: 2,
+          options: {
+            create: [
+              { name: "Add Bacon",          priceDelta: 2.5, sortOrder: 1 },
+              { name: "Extra Cream Cheese", priceDelta: 1.0, sortOrder: 2 },
+              { name: "Add Avocado",        priceDelta: 2.0, sortOrder: 3 },
+            ],
+          },
+        },
+      });
+    }
+  }
+
+  // ── Option groups for Classic Bagel Sandwich ────────────────────────────────
+  const classicId = createdProducts["classic-bagel-sandwich"]?.id;
+  if (classicId) {
+    const existingGroup = await prisma.productOptionGroup.findFirst({
+      where: { productId: classicId, name: "Bagel Choice" },
+    });
+    if (!existingGroup) {
+      await prisma.productOptionGroup.create({
+        data: {
+          productId: classicId,
+          name: "Bagel Choice",
+          minSelect: 1,
+          maxSelect: 1,
+          isRequired: true,
+          sortOrder: 1,
+          options: {
+            create: [
+              { name: "Plain Bagel",      priceDelta: 0, sortOrder: 1 },
+              { name: "Sesame Bagel",     priceDelta: 0, sortOrder: 2 },
+              { name: "Blueberry Bagel",  priceDelta: 0.5, sortOrder: 3 },
+              { name: "Everything Bagel", priceDelta: 0, sortOrder: 4 },
+            ],
+          },
+        },
+      });
+
+      await prisma.productOptionGroup.create({
+        data: {
+          productId: classicId,
+          name: "Spread Choice",
+          minSelect: 1,
+          maxSelect: 1,
+          isRequired: true,
+          sortOrder: 2,
+          options: {
+            create: [
+              { name: "Cream Cheese – Plain",         priceDelta: 0, sortOrder: 1 },
+              { name: "Cream Cheese – Chive & Onion", priceDelta: 0, sortOrder: 2 },
+              { name: "Butter",                       priceDelta: -0.5, sortOrder: 3 },
+            ],
+          },
+        },
+      });
+    }
+  }
+
+  console.log("  ✅ Products and options seeded");
+  return createdProducts;
+}
+
+async function seedDailyInventory(
+  createdProducts: Record<string, { id: string }>
+) {
+  console.log("📦 Seeding daily inventory...");
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+
+  const sampleDays: { date: Date; label: string }[] = [
+    { date: today, label: "오늘" },
+    { date: tomorrow, label: "내일" },
+  ];
+
+  const bagelSlugs = ["plain-bagel", "sesame-bagel", "blueberry-bagel", "everything-bagel"];
+
+  for (const { date, label } of sampleDays) {
+    for (const slug of bagelSlugs) {
+      const productId = createdProducts[slug]?.id;
+      if (!productId) continue;
+
+      const planned = rndInt(30, 60);
+      const baked = planned;
+      const sold = rndInt(Math.floor(planned * 0.6), planned - 2);
+      const isSoldOut = sold >= baked;
+
+      await prisma.dailyInventory.upsert({
+        where: { productId_date: { productId, date } },
+        update: { plannedQty: planned, bakedQty: baked, soldQty: sold, isSoldOut },
+        create: {
+          productId,
+          date,
+          plannedQty: planned,
+          bakedQty: baked,
+          reservedQty: 0,
+          soldQty: sold,
+          isSoldOut,
+          note: label === "내일" ? "예측 기반 계획 수량" : null,
+        },
+      });
+    }
+    console.log(`  📅 ${label} (${date.toISOString().slice(0, 10)}) 재고 생성`);
+  }
+}
+
 main()
   .then(() => seedUsers())
+  .then(() => seedProducts())
+  .then((products) => seedDailyInventory(products))
   .catch(console.error)
   .finally(async () => {
     await prisma.$disconnect();
