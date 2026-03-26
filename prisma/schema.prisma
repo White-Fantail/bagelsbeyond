@@ -328,12 +328,15 @@ model Product {
   createdAt             DateTime        @default(now())
   updatedAt             DateTime        @updatedAt
 
-  variants              ProductVariant[]
-  optionGroups          ProductOptionGroup[]
-  dailyInventory        DailyInventory[]
-  orderItems            OrderItem[]
-  externalMappings      ExternalProductMap[]
-  subscriptionItems     SubscriptionItem[]
+  variants                   ProductVariant[]
+  optionGroups               ProductOptionGroup[]
+  // Shared modifier group assignments (many-to-many).
+  // Use this to link a product to an option group that is also used by other products.
+  optionGroupAssignments     ProductOptionGroupAssignment[]
+  dailyInventory             DailyInventory[]
+  orderItems                 OrderItem[]
+  externalMappings           ExternalProductMap[]
+  subscriptionItems          SubscriptionItem[]
 
   @@index([isActive])
   @@index([category])
@@ -361,7 +364,12 @@ model ProductVariant {
 
 // ─── ProductOptionGroup ───────────────────────────────────────────────────────
 // Groups of selectable options attached to a Product.
-// e.g. "Bagel Choice" (min 1, max 1), "Add-ons" (min 0, max 3)
+// e.g. "Bagel Type" (min 1, max 1), "Add-ons" (min 0, max 3)
+//
+// Bagel choice policy: "Bagel Type" is managed as a modifier group, NOT as
+// product variants. One modifier group can be shared across multiple products
+// (e.g. Bagel, Sandwich) via ProductOptionGroupAssignment.
+// See docs/bagel-modifier-policy.md for full rationale.
 
 model ProductOptionGroup {
   id         String          @id @default(cuid())
@@ -374,9 +382,11 @@ model ProductOptionGroup {
   createdAt  DateTime        @default(now())
   updatedAt  DateTime        @updatedAt
 
-  product         Product                  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product         Product                        @relation(fields: [productId], references: [id], onDelete: Cascade)
   options         ProductOption[]
   externalMapping ExternalOptionGroupMap?
+  // Cross-product sharing: additional products that also use this group
+  assignments     ProductOptionGroupAssignment[]
 
   @@index([productId])
   @@map("product_option_groups")
@@ -387,9 +397,12 @@ model ProductOptionGroup {
 // e.g. "Plain Bagel +$0", "Add Bacon +$2.50"
 //
 // tracksInventory: when true, this option is tracked in DailyOptionInventory.
-//   Only options that have independent stock concerns (e.g. specific bagel types)
-//   need this flag. Most add-ons (spreads, extras) can leave it false.
-// sku / externalOptionId: nullable mapping points for future POS sync expansion.
+//   Bagel-type options (Plain / Sesame / Blueberry / Everything) use this flag.
+//   Since one modifier option can be shared across multiple products, the shared
+//   inventory is tracked by optionId alone (not per-product).
+//   Most add-ons (spreads, extras) leave tracksInventory = false.
+// sku: optional SKU / reference code for this option.
+// Bagel choice is managed as modifier, NOT variant. See docs/bagel-modifier-policy.md.
 
 model ProductOption {
   id               String             @id @default(cuid())
@@ -406,6 +419,11 @@ model ProductOption {
   optionGroup           ProductOptionGroup     @relation(fields: [optionGroupId], references: [id], onDelete: Cascade)
   subscriptionOptions   SubscriptionItemOption[]
   dailyOptionInventory  DailyOptionInventory[]
+  // Loyverse modifier mapping for this option (modifier-based, not variant-based).
+  // Orders can only be transmitted to Loyverse when a mapping exists here.
+  externalOptionMappings ExternalOptionMap[]
+  // Back-reference to OrderItemOptions that recorded this option
+  orderItemOptions       OrderItemOption[]
 
   @@index([optionGroupId])
   @@map("product_options")
@@ -524,17 +542,23 @@ model OrderItem {
 // Snapshot of selected option name/price at time of order.
 
 model OrderItemOption {
-  id                     String    @id @default(cuid())
-  orderItemId            String
+  id                      String         @id @default(cuid())
+  orderItemId             String
+  // Optional reference to the source ProductOption.
+  // Set when created from a real product option; null for ad-hoc or imported options.
+  // Used for: Loyverse modifier mapping validation, shared option inventory tracking.
+  productOptionId         String?
   optionGroupNameSnapshot String
-  optionNameSnapshot     String
-  priceDeltaSnapshot     Float     @default(0)
-  quantity               Int       @default(1)
-  createdAt              DateTime  @default(now())
+  optionNameSnapshot      String
+  priceDeltaSnapshot      Float          @default(0)
+  quantity                Int            @default(1)
+  createdAt               DateTime       @default(now())
 
-  orderItem              OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  orderItem               OrderItem      @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  productOption           ProductOption? @relation(fields: [productOptionId], references: [id], onDelete: SetNull)
 
   @@index([orderItemId])
+  @@index([productOptionId])
   @@map("order_item_options")
 }
 
@@ -604,6 +628,65 @@ model ExternalOptionGroupMap {
   @@unique([source, externalOptionGroupId])
   @@index([optionGroupId])
   @@map("external_option_group_maps")
+}
+
+// ─── ExternalOptionMap ────────────────────────────────────────────────────────
+// Maps an internal ProductOption to an external POS modifier option ID.
+//
+// Bagel choice policy:
+//   Plain / Sesame / Blueberry / Everything are managed as MODIFIER options,
+//   NOT as product variants.  mappingType is always "MODIFIER".
+//   Orders cannot be transmitted to Loyverse unless every required option has
+//   a row here.  See docs/bagel-modifier-policy.md for full rationale.
+//
+// Shared inventory: because one modifier option (e.g. "Plain") can be linked
+//   to multiple products (Bagel, Sandwich), the reservedQty is tracked at
+//   the option level in DailyOptionInventory — not per-product.
+
+model ExternalOptionMap {
+  id                String            @id @default(cuid())
+  source            IntegrationSource
+  productOptionId   String
+  externalOptionId  String
+  externalName      String?
+  externalGroupId   String?
+  externalGroupName String?
+  // mappingType is always "MODIFIER" — variant-based bagel mapping is not used.
+  mappingType       String            @default("MODIFIER")
+  lastSyncedAt      DateTime?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  option            ProductOption     @relation(fields: [productOptionId], references: [id], onDelete: Cascade)
+
+  @@unique([source, externalOptionId])
+  @@unique([source, productOptionId])
+  @@index([productOptionId])
+  @@map("external_option_maps")
+}
+
+// ─── ProductOptionGroupAssignment ─────────────────────────────────────────────
+// Join table that allows one ProductOptionGroup to be shared across multiple Products.
+//
+// Example: "Bagel Type" modifier group can be assigned to both the Bagel product
+// and the Sandwich product.  Both products then share the same set of options
+// (Plain / Sesame / Blueberry / Everything) and the same DailyOptionInventory rows.
+//
+// This is ADDITIVE: the existing direct productId FK on ProductOptionGroup is kept
+// for backward compatibility.  Use this table for cross-product shared modifier groups.
+
+model ProductOptionGroupAssignment {
+  productId     String
+  optionGroupId String
+  createdAt     DateTime @default(now())
+
+  product     Product            @relation(fields: [productId], references: [id], onDelete: Cascade)
+  optionGroup ProductOptionGroup @relation(fields: [optionGroupId], references: [id], onDelete: Cascade)
+
+  @@id([productId, optionGroupId])
+  @@index([productId])
+  @@index([optionGroupId])
+  @@map("product_option_group_assignments")
 }
 
 // ─── Subscription ─────────────────────────────────────────────────────────────
