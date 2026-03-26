@@ -28,6 +28,7 @@ model User {
   updatedAt    DateTime @updatedAt
 
   customerProfile CustomerProfile?
+  subscriptions   Subscription[]
 
   @@map("users")
 }
@@ -332,6 +333,7 @@ model Product {
   dailyInventory        DailyInventory[]
   orderItems            OrderItem[]
   externalMappings      ExternalProductMap[]
+  subscriptionItems     SubscriptionItem[]
 
   @@index([isActive])
   @@index([category])
@@ -453,6 +455,7 @@ model Order {
 
   items                 OrderItem[]
   externalMapping       ExternalOrderMap?
+  subscriptionOccurrence SubscriptionOccurrence?
 
   @@index([status])
   @@index([userId])
@@ -564,4 +567,73 @@ model ExternalOptionGroupMap {
   @@unique([source, externalOptionGroupId])
   @@index([optionGroupId])
   @@map("external_option_group_maps")
+}
+
+// ─── Subscription ─────────────────────────────────────────────────────────────
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAUSED
+  CANCELLED
+}
+
+enum OccurrenceStatus {
+  SCHEDULED
+  ORDER_CREATED
+  SKIPPED
+  CANCELLED
+}
+
+model Subscription {
+  id              String             @id @default(cuid())
+  userId          String
+  status          SubscriptionStatus @default(ACTIVE)
+  pickupWeekday   Int
+  pickupTimeSlot  String?
+  startDate       DateTime           @db.Date
+  endDate         DateTime?          @db.Date
+  note            String?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  user            User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items           SubscriptionItem[]
+  occurrences     SubscriptionOccurrence[]
+
+  @@index([userId])
+  @@index([status])
+  @@map("subscriptions")
+}
+
+model SubscriptionItem {
+  id             String       @id @default(cuid())
+  subscriptionId String
+  productId      String
+  quantity       Int
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  product        Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([subscriptionId])
+  @@map("subscription_items")
+}
+
+model SubscriptionOccurrence {
+  id             String           @id @default(cuid())
+  subscriptionId String
+  date           DateTime         @db.Date
+  status         OccurrenceStatus @default(SCHEDULED)
+  orderId        String?          @unique
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  subscription   Subscription     @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  order          Order?           @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  @@unique([subscriptionId, date])
+  @@index([date])
+  @@index([status])
+  @@map("subscription_occurrences")
 }
