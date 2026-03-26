@@ -73,7 +73,7 @@ export async function GET() {
   }
 
   const flat = modifiers.flatMap((m) =>
-    m.options.map((o) => ({
+    (m.options ?? []).map((o) => ({
       groupId: m.id,
       groupName: m.name,
       optionId: o.id,
