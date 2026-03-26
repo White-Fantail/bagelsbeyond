@@ -191,7 +191,7 @@ export async function runDailyOrderPushSync(
     pushSucceeded,
     pushFailed,
     skippedAlreadySent,
-    skippedInvalid: pushFailed, // pushFailed includes mapping-invalid orders
+    skippedInvalid: 0, // validation failures are counted in pushFailed
     errors,
   };
 }

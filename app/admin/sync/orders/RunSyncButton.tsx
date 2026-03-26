@@ -17,19 +17,18 @@ export default function RunSyncButton() {
     setResult(null);
     setErrorMsg("");
     try {
-      const res = await fetch("/api/cron/run", {
+      const res = await fetch("/api/admin/sync/orders/run", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "daily_order_push" }),
       });
       const data = (await res.json()) as {
         ok?: boolean;
         error?: string;
-        results?: { dailyOrderPush?: typeof result };
+        result?: typeof result;
       };
       if (res.ok && data.ok) {
         setState("done");
-        setResult(data.results?.dailyOrderPush ?? null);
+        setResult(data.result ?? null);
       } else {
         setState("error");
         setErrorMsg(data.error ?? "알 수 없는 오류");
@@ -60,9 +59,13 @@ export default function RunSyncButton() {
           {result.skippedAlreadySent ?? 0}건
         </p>
       )}
+      {state === "done" && !result && (
+        <p className="text-sm text-green-600">✓ 실행 완료</p>
+      )}
       {state === "error" && (
         <p className="text-sm text-red-500">오류: {errorMsg}</p>
       )}
     </div>
   );
 }
+
