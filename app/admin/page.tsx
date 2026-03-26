@@ -5,11 +5,12 @@ import Link from "next/link";
 export default async function AdminPage() {
   const session = await requireAdmin();
 
-  const [userCount, recordCount, productCount, inventoryCount] = await Promise.all([
+  const [userCount, recordCount, productCount, inventoryCount, orderCount] = await Promise.all([
     prisma.user.count(),
     prisma.dailyRecord.count(),
     prisma.product.count({ where: { isActive: true } }),
     prisma.dailyInventory.count(),
+    prisma.order.count(),
   ]);
 
   return (
@@ -37,12 +38,21 @@ export default async function AdminPage() {
           <p className="text-sm text-gray-500">재고 입력 수</p>
           <p className="text-3xl font-bold text-gray-900 mt-1">{inventoryCount}</p>
         </div>
+        <div className="bg-white rounded-xl border border-blue-100 p-5">
+          <p className="text-sm text-blue-600">전체 주문</p>
+          <p className="text-3xl font-bold text-blue-700 mt-1">{orderCount}</p>
+        </div>
       </div>
 
       {/* Quick links */}
       <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-3">
         <h2 className="font-semibold text-gray-900">관리자 전용 메뉴</h2>
         <ul className="space-y-2 text-sm">
+          <li>
+            <Link href="/admin/orders" className="text-amber-600 hover:underline">
+              → 주문 관리 (픽업 주문 조회·상태 변경)
+            </Link>
+          </li>
           <li>
             <Link href="/admin/integrations" className="text-amber-600 hover:underline">
               → 외부 연동 (Loyverse POS 카탈로그 동기화)
