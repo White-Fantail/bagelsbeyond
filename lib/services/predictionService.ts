@@ -548,12 +548,21 @@ export function calculateRuleBasedPrediction(input: PredictionInput): Prediction
 // ─── Save Result ───────────────────────────────────────────────────────────────
 
 export async function savePredictionResult(result: PredictionResult): Promise<SalesPrediction> {
-  const existing = await prisma.salesPrediction.findFirst({
-    where: { targetDate: result.targetDate },
+  // Use a full-day range to catch any timezone-shifted duplicates
+  const dayStart = new Date(result.targetDate);
+  dayStart.setHours(0, 0, 0, 0);
+  const dayEnd = new Date(result.targetDate);
+  dayEnd.setHours(23, 59, 59, 999);
+
+  const existingList = await prisma.salesPrediction.findMany({
+    where: { targetDate: { gte: dayStart, lte: dayEnd } },
+    select: { id: true },
   });
 
-  if (existing) {
-    await prisma.salesPrediction.delete({ where: { id: existing.id } });
+  if (existingList.length > 0) {
+    await prisma.salesPrediction.deleteMany({
+      where: { id: { in: existingList.map((e: { id: string }) => e.id) } },
+    });
   }
 
   const saved = await prisma.salesPrediction.create({
