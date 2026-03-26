@@ -150,23 +150,33 @@ Loyverse는 `modifier_id`를 요구합니다. 내부에서 `ExternalOptionMap`�
 - 관리자 사이드바에 "Loyverse Modifier 매핑" 링크
 - Loyverse 연동 페이지에 modifier 매핑 섹션 추가
 
+### 핵심 운영 정책
+
+> **Loyverse에서 sync된 modifier만 내부에서 사용합니다.**
+>
+> - 내부에서 임의로 생성한 옵션을 Loyverse와 매핑하는 방향을 사용하지 않습니다.
+> - 모든 modifier group / modifier option은 Loyverse catalog sync를 통해 내부에 가져온 것만 사용합니다.
+> - sync되지 않은 옵션은 주문/구독/재고/Loyverse 전송 대상이 아닙니다.
+> - 이름 기반 자동 매핑 제안은 사용하지 않습니다. 잘못된 연결 가능성을 방지합니다.
+
 ### 🔜 남은 작업 (후속 권장)
 
-1. **Full modifier sync 고도화**
-   - Loyverse에서 modifier 전체를 자동으로 동기화하고 매핑 제안 기능 추가
+1. **Loyverse modifier sync 안정화**
+   - sync된 modifier group / option 목록을 내부에서 확인 가능하게
+   - 관리자 화면에서 어떤 modifier가 Loyverse sync 출처인지 표시
+   - sync refresh 기능 추가
    - 현재는 수동 매핑 + UI에서 Loyverse modifier 목록 조회만 지원
 
-2. **매핑 자동 제안 (name matching)**
-   - 내부 옵션 이름과 Loyverse modifier option 이름이 동일할 경우 자동 매핑 제안
-
-3. **Option 기반 품절 자동 차단 고도화**
+2. **Option 기반 품절 자동 차단 고도화**
    - `DailyOptionInventory.isSoldOut = true`인 옵션을 주문 생성 단계에서 자동으로 차단
    - 현재는 `reservedQty` 흐름만 지원, 실제 품절 차단 로직은 미구현
+   - 주문 화면/구독 화면에도 sold out 표시 추가
 
-4. **`ProductOptionGroupAssignment` 관리 UI**
+3. **`ProductOptionGroupAssignment` 관리 UI**
    - 현재는 join table만 존재, admin UI에서 "이 그룹을 다른 상품에도 연결" 기능 미구현
+   - sync된 modifier group만 product에 연결하는 정책 적용
 
-5. **구독 발생 Order 생성 시 `productOptionId` 전달**
+4. **구독 발생 Order 생성 시 `productOptionId` 전달**
    - 현재 `subscriptionService.ts`의 occurrence → order 변환에서 `productOptionId`를 명시적으로 전달하지 않음
 
 ---
