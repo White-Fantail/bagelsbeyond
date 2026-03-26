@@ -261,3 +261,284 @@ model AdminActionLog {
   @@index([createdAt])
   @@map("admin_action_logs")
 }
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Phase 4 – Product / Menu / Inventory / Order Domain (POS-ready)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+enum ProductCategory {
+  BAGEL
+  SANDWICH
+  SPREAD
+  DRINK
+  OTHER
+}
+
+enum OrderStatus {
+  DRAFT
+  PENDING
+  CONFIRMED
+  PREPARING
+  READY
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  UNPAID
+  PAID
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum FulfillmentType {
+  PICKUP
+  DELIVERY
+  DINE_IN
+}
+
+enum OrderSource {
+  INTERNAL
+  SUBSCRIPTION
+  POS_IMPORTED
+}
+
+enum IntegrationSource {
+  LOYVERSE
+  SQUARE
+  OTHER
+}
+
+// ─── Product (master catalogue) ───────────────────────────────────────────────
+// Internal master data. All POS-imported items are eventually mapped to a Product.
+
+model Product {
+  id                    String          @id @default(cuid())
+  name                  String
+  slug                  String          @unique
+  description           String?
+  category              ProductCategory @default(OTHER)
+  basePrice             Float
+  isActive              Boolean         @default(true)
+  isSubscriptionEligible Boolean        @default(false)
+  sortOrder             Int             @default(0)
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+
+  variants              ProductVariant[]
+  optionGroups          ProductOptionGroup[]
+  dailyInventory        DailyInventory[]
+  orderItems            OrderItem[]
+  externalMappings      ExternalProductMap[]
+
+  @@index([isActive])
+  @@index([category])
+  @@map("products")
+}
+
+// ─── ProductVariant ──────────────────────────────────────────────────────────
+// Optional size / bundle / bread-choice variants for a Product.
+
+model ProductVariant {
+  id         String   @id @default(cuid())
+  productId  String
+  name       String
+  priceDelta Float    @default(0)
+  isActive   Boolean  @default(true)
+  sortOrder  Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@map("product_variants")
+}
+
+// ─── ProductOptionGroup ───────────────────────────────────────────────────────
+// Groups of selectable options attached to a Product.
+// e.g. "Bagel Choice" (min 1, max 1), "Add-ons" (min 0, max 3)
+
+model ProductOptionGroup {
+  id         String          @id @default(cuid())
+  productId  String
+  name       String
+  minSelect  Int             @default(0)
+  maxSelect  Int             @default(1)
+  isRequired Boolean         @default(false)
+  sortOrder  Int             @default(0)
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+
+  product    Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  options    ProductOption[]
+
+  @@index([productId])
+  @@map("product_option_groups")
+}
+
+// ─── ProductOption ────────────────────────────────────────────────────────────
+// Individual selectable option within a group.
+// e.g. "Plain Bagel +$0", "Add Bacon +$2.50"
+
+model ProductOption {
+  id             String             @id @default(cuid())
+  optionGroupId  String
+  name           String
+  priceDelta     Float              @default(0)
+  isActive       Boolean            @default(true)
+  sortOrder      Int                @default(0)
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  optionGroup    ProductOptionGroup @relation(fields: [optionGroupId], references: [id], onDelete: Cascade)
+
+  @@index([optionGroupId])
+  @@map("product_options")
+}
+
+// ─── DailyInventory ───────────────────────────────────────────────────────────
+// Per-product, per-day production & sales inventory.
+// Unlike traditional stock, this tracks daily baked/sold/remaining quantities.
+// Extension point: reservedQty will be populated by subscription + confirmed orders.
+// Extension point: soldQty can be auto-calculated from POS imports or internal orders.
+// Relation to DailyRecord: loosely coupled via date; future logic can join them.
+
+model DailyInventory {
+  id           String   @id @default(cuid())
+  productId    String
+  date         DateTime @db.Date
+  plannedQty   Int      @default(0)
+  bakedQty     Int      @default(0)
+  reservedQty  Int      @default(0)
+  soldQty      Int      @default(0)
+  isSoldOut    Boolean  @default(false)
+  note         String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  product      Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, date])
+  @@index([date])
+  @@map("daily_inventory")
+}
+
+// ─── Order ────────────────────────────────────────────────────────────────────
+// Shared order structure for internal / subscription / POS-imported orders.
+// source field distinguishes the origin; all order flows share this model.
+
+model Order {
+  id                    String          @id @default(cuid())
+  orderNumber           String          @unique
+  userId                String?
+  status                OrderStatus     @default(DRAFT)
+  paymentStatus         PaymentStatus   @default(UNPAID)
+  fulfillmentType       FulfillmentType @default(PICKUP)
+  pickupDate            DateTime?       @db.Date
+  pickupTimeSlot        String?
+  customerNameSnapshot  String?
+  customerEmailSnapshot String?
+  customerPhoneSnapshot String?
+  subtotalAmount        Float           @default(0)
+  discountAmount        Float           @default(0)
+  totalAmount           Float           @default(0)
+  note                  String?
+  source                OrderSource     @default(INTERNAL)
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+
+  items                 OrderItem[]
+  externalMapping       ExternalOrderMap?
+
+  @@index([status])
+  @@index([userId])
+  @@index([pickupDate])
+  @@index([source])
+  @@map("orders")
+}
+
+// ─── OrderItem ────────────────────────────────────────────────────────────────
+// Snapshot of product name/price at time of order to preserve history.
+
+model OrderItem {
+  id                   String           @id @default(cuid())
+  orderId              String
+  productId            String?
+  productNameSnapshot  String
+  unitPriceSnapshot    Float
+  quantity             Int
+  lineTotal            Float
+  note                 String?
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+
+  order                Order            @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product              Product?         @relation(fields: [productId], references: [id], onDelete: SetNull)
+  options              OrderItemOption[]
+
+  @@index([orderId])
+  @@map("order_items")
+}
+
+// ─── OrderItemOption ─────────────────────────────────────────────────────────
+// Snapshot of selected option name/price at time of order.
+
+model OrderItemOption {
+  id                     String    @id @default(cuid())
+  orderItemId            String
+  optionGroupNameSnapshot String
+  optionNameSnapshot     String
+  priceDeltaSnapshot     Float     @default(0)
+  quantity               Int       @default(1)
+  createdAt              DateTime  @default(now())
+
+  orderItem              OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+
+  @@index([orderItemId])
+  @@map("order_item_options")
+}
+
+// ─── ExternalProductMap ───────────────────────────────────────────────────────
+// Maps an internal Product to an external POS product ID.
+// Used during Loyverse / other POS menu sync.
+
+model ExternalProductMap {
+  id                String            @id @default(cuid())
+  source            IntegrationSource
+  externalProductId String
+  productId         String
+  externalName      String?
+  lastSyncedAt      DateTime?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  product           Product           @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([source, externalProductId])
+  @@index([productId])
+  @@map("external_product_maps")
+}
+
+// ─── ExternalOrderMap ────────────────────────────────────────────────────────
+// Tracks sync status of an internal Order to an external POS order.
+
+model ExternalOrderMap {
+  id              String            @id @default(cuid())
+  source          IntegrationSource
+  orderId         String            @unique
+  externalOrderId String
+  syncStatus      String            @default("pending") // pending | synced | failed
+  lastSyncedAt    DateTime?
+  errorMessage    String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  order           Order             @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@unique([source, externalOrderId])
+  @@index([syncStatus])
+  @@map("external_order_maps")
+}
