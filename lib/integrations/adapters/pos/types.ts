@@ -115,12 +115,20 @@ export interface ExternalProduct {
   updatedAt?: string;
 }
 
+export interface ExternalOrderItemModifier {
+  name: string;
+  price: number;
+  quantity?: number;
+}
+
 export interface ExternalOrderItem {
   externalProductId: string;
   productName: string;
   quantity: number;
   unitPrice: number;
   lineTotal: number;
+  /** Optional modifiers/options attached to this line item (e.g. Oat Milk +$0.80) */
+  modifiers?: ExternalOrderItemModifier[];
 }
 
 export interface ExternalOrder {

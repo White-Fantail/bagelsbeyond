@@ -444,6 +444,10 @@ export class LoyverseAdapter implements POSAdapter {
           quantity: item.quantity,
           price: item.unitPrice,
           total_money: item.lineTotal,
+          modifiers: item.modifiers?.map((m) => ({
+            name: m.name,
+            price: m.price,
+          })) ?? [],
         })),
         created_at: order.createdAt.toISOString(),
       };

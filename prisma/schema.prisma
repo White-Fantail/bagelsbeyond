@@ -561,19 +561,23 @@ model ExternalProductMap {
 
 // ─── ExternalOrderMap ────────────────────────────────────────────────────────
 // Tracks sync status of an internal Order to an external POS order.
+// syncStatus values: pending | success | failed | skipped
+// Legacy value "synced" is treated as "success" in code.
 
 model ExternalOrderMap {
-  id              String            @id @default(cuid())
-  source          IntegrationSource
-  orderId         String            @unique
-  externalOrderId String
-  syncStatus      String            @default("pending") // pending | synced | failed
-  lastSyncedAt    DateTime?
-  errorMessage    String?
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
+  id               String            @id @default(cuid())
+  source           IntegrationSource
+  orderId          String            @unique
+  externalOrderId  String?           // null until successfully pushed
+  syncStatus       String            @default("pending") // pending | success | failed | skipped
+  lastSyncedAt     DateTime?
+  errorMessage     String?
+  requestSummary   String?           // JSON summary of what was sent to POS
+  responseSummary  String?           // JSON summary of POS response
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
 
-  order           Order             @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  order            Order             @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@unique([source, externalOrderId])
   @@index([syncStatus])
