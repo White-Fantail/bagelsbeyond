@@ -444,6 +444,67 @@ CRON_SECRET=your-random-secret-here
 
 ---
 
+## 🔌 Loyverse POS 연동 (Phase 5)
+
+### 개요
+
+Loyverse POS의 상품 카탈로그를 내부 Product 구조로 자동 동기화하고, 내부 주문을 Loyverse 영수증으로 전송하며, Loyverse 영수증 내역으로부터 일별 판매 수량을 가져오는 기능이 구현되어 있습니다.
+
+### 구현 범위
+
+| 기능 | 상태 | 파일 |
+|------|------|------|
+| 카탈로그 동기화 (Loyverse → Product) | ✅ Phase 5A | `lib/integrations/services/catalog-sync.ts` |
+| 카탈로그 매퍼 (Raw → ExternalProduct) | ✅ Phase 5A | `lib/integrations/services/catalog-mapper.ts` |
+| 주문 POS 전송 (POST /receipts) | ✅ Phase 5B | `lib/integrations/adapters/pos/loyverse.ts` |
+| 일별 판매 수량 동기화 (GET /receipts) | ✅ Phase 5B | `lib/integrations/adapters/pos/loyverse.ts` |
+| 모디파이어 그룹 이름 변경 안전성 | ✅ Phase 5B | `ExternalOptionGroupMap` 모델 |
+| 관리자 UI (`/admin/integrations/loyverse`) | ✅ Phase 5A | `app/admin/integrations/loyverse/` |
+
+### ExternalOptionGroupMap (Phase 5B 신규)
+
+Phase 5A에서는 모디파이어 그룹을 `(productId, name)` 으로 식별했기 때문에, Loyverse에서 그룹 이름을 변경하면 기존 그룹이 유지된 채 새 그룹이 추가되는 문제가 있었습니다.
+
+Phase 5B에서 `ExternalOptionGroupMap` 테이블을 추가하여 `(source, externalOptionGroupId)` 기반으로 그룹을 식별하도록 개선했습니다.
+
+- 기존(Phase 5A 이전) 그룹: 이름 매칭으로 채택 후 매핑 생성 (마이그레이션 호환)
+- 이후 sync: `externalId` 기반 lookup → 이름 변경 시에도 기존 그룹 갱신
+
+### Loyverse 어댑터 메서드
+
+| 메서드 | 설명 |
+|--------|------|
+| `fetchExternalCatalog()` | 전체 카탈로그 fetch + 정규화 |
+| `pushOrderToExternalPos(order)` | 내부 주문 → Loyverse POST /receipts |
+| `syncInventoryFromExternal(date)` | 특정 날짜 Loyverse 영수증 → 판매 수량 집계 |
+
+**Mock 모드 (`LOYVERSE_MOCK=true` 또는 토큰 미설정):**
+- `fetchExternalCatalog` → 내장 목 데이터 반환
+- `pushOrderToExternalPos` → `MOCK-{orderNumber}` 반환
+- `syncInventoryFromExternal` → 빈 객체 반환
+
+### 동기화 정책
+
+```
+외부 상품 1개 → 내부 Product 1개
+덮어쓰는 필드: name, description, basePrice, isActive, category
+보호되는 필드: slug, sortOrder, isSubscriptionEligible
+
+모디파이어 그룹:
+  • ExternalOptionGroupMap(source, externalId) 기반 lookup (rename-safe)
+  • minSelect / maxSelect / isRequired: 첫 생성 시만 기본값 적용 (이후 sync에서 보호)
+  • Option.priceDelta: 매 sync마다 POS 값으로 덮어씀
+```
+
+### 관련 API 엔드포인트
+
+| 경로 | 메서드 | 설명 |
+|------|--------|------|
+| `GET /api/admin/integrations/loyverse/status` | GET | 연동 상태 + 매핑된 상품 수 |
+| `POST /api/admin/integrations/loyverse/sync` | POST | 카탈로그 즉시 동기화 트리거 |
+
+---
+
 ## 🔮 향후 개선 아이디어
 
 - ~~**자동 예측 생성**: cron job으로 매일 자정에 내일 예측 자동 생성~~ ✅ 6단계에서 구현

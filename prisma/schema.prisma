@@ -372,8 +372,9 @@ model ProductOptionGroup {
   createdAt  DateTime        @default(now())
   updatedAt  DateTime        @updatedAt
 
-  product    Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
-  options    ProductOption[]
+  product         Product                  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  options         ProductOption[]
+  externalMapping ExternalOptionGroupMap?
 
   @@index([productId])
   @@map("product_option_groups")
@@ -541,4 +542,26 @@ model ExternalOrderMap {
   @@unique([source, externalOrderId])
   @@index([syncStatus])
   @@map("external_order_maps")
+}
+
+// ─── ExternalOptionGroupMap ──────────────────────────────────────────────────
+// Maps an internal ProductOptionGroup to an external POS modifier group ID.
+// Created during catalog sync; enables rename-safe lookup of modifier groups.
+// Without this, renaming a group in Loyverse would create a duplicate group on
+// the next sync instead of updating the existing one.
+
+model ExternalOptionGroupMap {
+  id                      String             @id @default(cuid())
+  source                  IntegrationSource
+  externalOptionGroupId   String
+  optionGroupId           String             @unique
+  lastSyncedAt            DateTime?
+  createdAt               DateTime           @default(now())
+  updatedAt               DateTime           @updatedAt
+
+  optionGroup             ProductOptionGroup @relation(fields: [optionGroupId], references: [id], onDelete: Cascade)
+
+  @@unique([source, externalOptionGroupId])
+  @@index([optionGroupId])
+  @@map("external_option_group_maps")
 }

@@ -2,12 +2,105 @@
 // Shared interface contract for all external POS systems.
 // Each POS adapter (Loyverse, Square, etc.) implements POSAdapter.
 
+// ─── Loyverse Raw API Types ───────────────────────────────────────────────────
+// These reflect the actual Loyverse REST API v1.0 response shapes.
+// https://developer.loyverse.com/docs/
+// Do NOT mix these with internal Product types.
+
+export interface LoyverseRawVariant {
+  variant_id: string;
+  item_id: string;
+  sku: string | null;
+  reference_id: string | null;
+  barcode: string | null;
+  cost: number | null;
+  default_pricing_type: "FIXED" | "VARIABLE";
+  default_price: number | null;
+  stores: Array<{
+    store_id: string;
+    pricing_type: "FIXED" | "VARIABLE";
+    price: number | null;
+    available_for_sale: boolean;
+  }>;
+  option1_name: string | null;
+  option1_val: string | null;
+  option2_name: string | null;
+  option2_val: string | null;
+  option3_name: string | null;
+  option3_val: string | null;
+}
+
+export interface LoyverseRawItem {
+  id: string;
+  item_name: string;
+  description: string | null;
+  reference_id: string | null;
+  category_id: string | null;
+  sold_by_weight: boolean;
+  is_composite: boolean;
+  /** IDs of modifier groups attached to this item */
+  modifiers_ids: string[];
+  form: string;
+  image_url: string | null;
+  color: string | null;
+  variants: LoyverseRawVariant[];
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
+export interface LoyverseRawCategory {
+  id: string;
+  name: string;
+  color: string | null;
+  deleted_at: string | null;
+}
+
+export interface LoyverseRawModifier {
+  id: string;
+  name: string;
+  price: number;
+}
+
+export interface LoyverseRawModifierGroup {
+  id: string;
+  name: string;
+  modifiers: LoyverseRawModifier[];
+}
+
+/** Full normalised catalogue from Loyverse (raw + cross-referenced) */
+export interface LoyverseCatalogRaw {
+  items: LoyverseRawItem[];
+  categories: LoyverseRawCategory[];
+  modifierGroups: LoyverseRawModifierGroup[];
+}
+
+// ─── Normalised External Types (POS-agnostic) ────────────────────────────────
+// These are the canonical types used by catalog-sync and catalog-mapper.
+
+export interface ExternalModifier {
+  externalId: string;
+  name: string;
+  priceDelta: number;
+}
+
+export interface ExternalModifierGroup {
+  externalId: string;
+  name: string;
+  modifiers: ExternalModifier[];
+}
+
 export interface ExternalProduct {
   externalId: string;
   name: string;
+  description?: string;
+  /** SKU / reference code from the external system, if available */
+  sku?: string;
   price: number;
   category?: string;
   isActive: boolean;
+  modifierGroups?: ExternalModifierGroup[];
+  updatedAt?: string;
 }
 
 export interface ExternalOrderItem {
