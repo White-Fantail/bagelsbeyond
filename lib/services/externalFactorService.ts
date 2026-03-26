@@ -318,14 +318,29 @@ export async function refreshExternalFactorsForRecord(
 /**
  * Ensure external factors exist for a prediction date.
  * Creates a standalone DailyExternalFactor if one doesn't exist yet.
+ *
+ * Uses a date-range query (midnight-to-midnight) to avoid timezone mismatch
+ * when the stored UTC timestamp differs from the input Date object.
  */
 export async function ensureExternalFactorsForPredictionDate(
   date: Date,
   locationOptions?: LocationOptions
 ): Promise<{ existed: boolean; result: CollectionResult | null }> {
-  const existing = await prisma.dailyExternalFactor.findUnique({ where: { date } });
-  if (existing) return { existed: true, result: null };
+  const dateKey = date.toISOString().split("T")[0];
+  const dayStart = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const dayEnd = new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1);
 
+  const existing = await prisma.dailyExternalFactor.findFirst({
+    where: { date: { gte: dayStart, lt: dayEnd } },
+  });
+
+  if (existing) {
+    console.log(`[externalFactor] Data already exists for ${dateKey} (id=${existing.id}), skipping collection`);
+    return { existed: true, result: null };
+  }
+
+  console.log(`[externalFactor] No data found for ${dateKey}, starting collection…`);
   const result = await upsertExternalFactorsByDate(date, locationOptions);
+  console.log(`[externalFactor] Collection for ${dateKey} complete — success=${result.success}, fields=${result.collectedFields.join(",")}`);
   return { existed: false, result };
 }

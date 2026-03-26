@@ -7,11 +7,13 @@ import {
   getWeeklyAnalytics,
   getHolidaySegmentComparison,
   getSchoolHolidaySegmentComparison,
+  getDayOfWeekAnalytics,
 } from "@/lib/services/analytics";
 import { buildComparablePreviousPeriod, formatCurrencyNZD, formatPercentage, startOfMonth, endOfMonth } from "@/lib/analytics-utils";
 import PeriodComparisonSection from "@/components/analytics/PeriodComparisonSection";
 import TrendBar from "@/components/analytics/TrendBar";
 import ChannelBar from "@/components/analytics/ChannelBar";
+import DayOfWeekTable from "@/components/analytics/DayOfWeekTable";
 
 type SearchParams = { period?: string };
 
@@ -72,13 +74,14 @@ export default async function AnalyticsPage({
   const eightWeeksAgo = new Date(endDate.getTime() - 56 * 24 * 60 * 60 * 1000);
   eightWeeksAgo.setHours(0, 0, 0, 0);
 
-  const [summary, comparison, weeklyData, holidaySeg, schoolHolidaySeg] =
+  const [summary, comparison, weeklyData, holidaySeg, schoolHolidaySeg, dayOfWeekData] =
     await Promise.all([
       getPeriodSummary(startDate, endDate),
       getPeriodComparison(startDate, endDate, previousStart, previousEnd),
       getWeeklyAnalytics(eightWeeksAgo, endDate),
       getHolidaySegmentComparison(startDate, endDate),
       getSchoolHolidaySegmentComparison(startDate, endDate),
+      getDayOfWeekAnalytics(startDate, endDate),
     ]);
 
   const maxWeeklySales = Math.max(...weeklyData.map((w) => w.totalSales), 1);
@@ -264,6 +267,20 @@ export default async function AnalyticsPage({
             </Link>
           </div>
         )}
+      </div>
+
+      {/* Day-of-Week Analysis */}
+      <div className="bg-white rounded-lg border border-gray-200 p-5">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-sm font-semibold text-gray-700">📅 요일별 분석</h3>
+            <p className="text-xs text-gray-400 mt-0.5">선택 기간 내 요일별 평균 매출 및 판매량</p>
+          </div>
+        </div>
+        <DayOfWeekTable data={dayOfWeekData} />
+        <p className="text-xs text-gray-400 mt-3">
+          * 전체 대비: 해당 기간 일평균 매출 대비 각 요일 평균 매출의 증감률
+        </p>
       </div>
 
       {/* Quick Navigation */}
