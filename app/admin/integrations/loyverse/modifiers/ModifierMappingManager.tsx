@@ -38,6 +38,16 @@ interface ExternalModifierOption {
   price: number;
 }
 
+/** Metadata from the last modifier sync attempt (from LoyverseModifierSyncLog) */
+interface ModifierSyncMeta {
+  status: "success" | "empty" | "failed" | "never";
+  syncedAt: string | null;
+  groupCount: number;
+  optionCount: number;
+  errorMessage?: string;
+  errorCode?: number;
+}
+
 interface ModifierMappingManagerProps {
   initialGroups: InternalGroup[];
 }
@@ -54,6 +64,9 @@ export default function ModifierMappingManager({
   const [groups, setGroups] = useState(initialGroups);
   const [externalOptions, setExternalOptions] = useState<ExternalModifierOption[]>([]);
   const [loadingExternal, setLoadingExternal] = useState(false);
+  const [syncingModifiers, setSyncingModifiers] = useState(false);
+  const [syncMeta, setSyncMeta] = useState<ModifierSyncMeta | null>(null);
+  const [showManualFallback, setShowManualFallback] = useState(false);
   const [filterMode, setFilterMode] = useState<FilterMode>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [filterProductId, setFilterProductId] = useState("all");
@@ -66,23 +79,85 @@ export default function ModifierMappingManager({
   // Track selected externalOptionId per internal option
   const [selectedExternal, setSelectedExternal] = useState<Record<string, string>>({});
 
-  // ── Load Loyverse modifiers on mount ───────────────────────────────────────
+  // ── Load stored Loyverse modifiers on mount ────────────────────────────────
   useEffect(() => {
     void loadExternalModifiers();
   }, []);
 
+  /** Load modifier data from the stored sync log (does NOT call Loyverse live). */
   async function loadExternalModifiers() {
     setLoadingExternal(true);
     try {
       const res = await fetch("/api/admin/integrations/loyverse/external-modifiers");
       if (res.ok) {
-        const data = (await res.json()) as { options: ExternalModifierOption[] };
+        const data = (await res.json()) as {
+          options: ExternalModifierOption[];
+          sync: ModifierSyncMeta;
+        };
         setExternalOptions(data.options ?? []);
+        setSyncMeta(data.sync ?? null);
+      } else {
+        setSyncMeta({
+          status: "failed",
+          syncedAt: new Date().toISOString(),
+          groupCount: 0,
+          optionCount: 0,
+          errorMessage: `서버 오류 (HTTP ${res.status})`,
+        });
       }
-    } catch {
-      // silently handle — manual input still works
+    } catch (err) {
+      setSyncMeta({
+        status: "failed",
+        syncedAt: new Date().toISOString(),
+        groupCount: 0,
+        optionCount: 0,
+        errorMessage: err instanceof Error ? err.message : "네트워크 오류",
+      });
     } finally {
       setLoadingExternal(false);
+    }
+  }
+
+  /**
+   * Trigger a fresh Loyverse modifier sync.
+   * Calls POST /api/admin/integrations/loyverse/modifier-sync which fetches
+   * from Loyverse and stores the result in LoyverseModifierSyncLog.
+   * Then reloads modifier data from the stored log.
+   */
+  async function refreshFromLoyverse() {
+    setSyncingModifiers(true);
+    try {
+      const res = await fetch("/api/admin/integrations/loyverse/modifier-sync", {
+        method: "POST",
+      });
+      const data = (await res.json()) as {
+        status: string;
+        groupCount: number;
+        optionCount: number;
+        syncedAt: string;
+        errorMessage?: string;
+        errorCode?: number;
+      };
+      setSyncMeta({
+        status: data.status as ModifierSyncMeta["status"],
+        syncedAt: data.syncedAt,
+        groupCount: data.groupCount,
+        optionCount: data.optionCount,
+        errorMessage: data.errorMessage,
+        errorCode: data.errorCode,
+      });
+      // Re-fetch the stored modifier data so dropdowns reflect the new sync
+      await loadExternalModifiers();
+    } catch (err) {
+      setSyncMeta({
+        status: "failed",
+        syncedAt: new Date().toISOString(),
+        groupCount: 0,
+        optionCount: 0,
+        errorMessage: err instanceof Error ? err.message : "네트워크 오류",
+      });
+    } finally {
+      setSyncingModifiers(false);
     }
   }
 
@@ -217,6 +292,15 @@ export default function ModifierMappingManager({
 
   return (
     <div className="space-y-4">
+      {/* Sync status panel */}
+      <ModifierSyncStatusPanel
+        syncMeta={syncMeta}
+        loading={loadingExternal || syncingModifiers}
+        onRefresh={() => void refreshFromLoyverse()}
+        showManualFallback={showManualFallback}
+        onToggleManualFallback={() => setShowManualFallback((v) => !v)}
+      />
+
       {/* Filter bar */}
       <div className="bg-white rounded-xl border border-gray-200 p-4 flex flex-wrap gap-3 items-end">
         <div className="flex-1 min-w-[180px]">
@@ -258,29 +342,7 @@ export default function ModifierMappingManager({
             ))}
           </select>
         </div>
-
-        <button
-          onClick={() => void loadExternalModifiers()}
-          disabled={loadingExternal}
-          className="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-sm text-gray-700 transition-colors disabled:opacity-50"
-        >
-          {loadingExternal ? "불러오는 중..." : "🔄 Loyverse 새로고침"}
-        </button>
       </div>
-
-      {/* Loyverse modifier status */}
-      {externalOptions.length > 0 && (
-        <div className="rounded-lg border border-blue-100 bg-blue-50 px-4 py-2 text-sm text-blue-700">
-          ✓ Loyverse에서 <strong>{externalOptions.length}개</strong>의 modifier option을
-          불러왔습니다.
-        </div>
-      )}
-      {!loadingExternal && externalOptions.length === 0 && (
-        <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-2 text-sm text-gray-500">
-          ⚠ Loyverse modifier를 불러오지 못했습니다. 수동으로 Loyverse modifier ID를 입력하거나,
-          {" "}&#8220;Loyverse 새로고침&#8221; 버튼을 눌러주세요.
-        </div>
-      )}
 
       {/* No results */}
       {visibleGroups.length === 0 && (
@@ -326,6 +388,8 @@ export default function ModifierMappingManager({
                 const isMapped = Boolean(mapping);
                 const isSaving = savingIds.has(option.id);
                 const isDeleting = deletingIds.has(option.id);
+                // Use dropdown when sync data is available; manual input when fallback is on
+                const useManual = showManualFallback || externalOptions.length === 0;
 
                 return (
                   <tr
@@ -384,7 +448,7 @@ export default function ModifierMappingManager({
                         </div>
                       ) : (
                         <div className="flex flex-col gap-1">
-                          {externalOptions.length > 0 ? (
+                          {!useManual ? (
                             <select
                               value={selectedExternal[option.id] ?? ""}
                               onChange={(e) =>
@@ -477,6 +541,127 @@ export default function ModifierMappingManager({
           </table>
         </div>
       ))}
+    </div>
+  );
+}
+
+// ── ModifierSyncStatusPanel ────────────────────────────────────────────────────
+// Displays the current modifier sync state with specific error messages and a
+// refresh button.  The panel is shown above the mapping table.
+
+function ModifierSyncStatusPanel({
+  syncMeta,
+  loading,
+  onRefresh,
+  showManualFallback,
+  onToggleManualFallback,
+}: {
+  syncMeta: ModifierSyncMeta | null;
+  loading: boolean;
+  onRefresh: () => void;
+  showManualFallback: boolean;
+  onToggleManualFallback: () => void;
+}) {
+  const syncedAtLabel = syncMeta?.syncedAt
+    ? new Date(syncMeta.syncedAt).toLocaleString("ko-KR")
+    : null;
+
+  // ── Human-readable error message ─────────────────────────────────────────
+  function errorLabel(meta: ModifierSyncMeta): string {
+    if (meta.status === "never") return "아직 modifier 동기화가 실행된 적 없습니다.";
+    if (meta.status === "empty") return "Loyverse modifier API 응답이 비어 있습니다. (modifier 0개)";
+    if (meta.status !== "failed") return "";
+
+    const code = meta.errorCode;
+    if (code === 401 || code === 403) return `Loyverse 인증 실패 (HTTP ${code}) — LOYVERSE_API_TOKEN을 확인하세요.`;
+    if (code === 404) return `Modifier 엔드포인트를 찾을 수 없습니다 (HTTP 404).`;
+    if (code === 429) return "Loyverse API 요청 한도 초과 (HTTP 429) — 잠시 후 다시 시도하세요.";
+    if (code && code >= 500) return `Loyverse 서버 오류 (HTTP ${code}) — 잠시 후 다시 시도하세요.`;
+    if (meta.errorMessage?.toLowerCase().includes("parse") || meta.errorMessage?.toLowerCase().includes("json"))
+      return `Modifier 응답 파싱에 실패했습니다: ${meta.errorMessage}`;
+    if (meta.errorMessage?.toLowerCase().includes("network") || meta.errorMessage?.toLowerCase().includes("fetch"))
+      return `네트워크 오류로 Loyverse에 연결할 수 없습니다: ${meta.errorMessage}`;
+    return meta.errorMessage ?? "알 수 없는 오류가 발생했습니다.";
+  }
+
+  const isSuccess = syncMeta?.status === "success";
+  const isNeverOrEmpty = syncMeta === null || syncMeta.status === "never" || syncMeta.status === "empty";
+  const isFailed = syncMeta?.status === "failed";
+
+  return (
+    <div
+      className={`rounded-xl border p-4 space-y-3 ${
+        isSuccess
+          ? "border-blue-100 bg-blue-50"
+          : isFailed
+          ? "border-red-200 bg-red-50"
+          : "border-amber-200 bg-amber-50"
+      }`}
+    >
+      {/* Header row */}
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <div className="flex items-center gap-2">
+          {isSuccess ? (
+            <span className="text-sm font-semibold text-blue-800">✓ Modifier 동기화 완료</span>
+          ) : isFailed ? (
+            <span className="text-sm font-semibold text-red-700">✗ Modifier 동기화 실패</span>
+          ) : (
+            <span className="text-sm font-semibold text-amber-800">⚠ Modifier 미동기화</span>
+          )}
+          {syncedAtLabel && (
+            <span className="text-xs text-gray-500">({syncedAtLabel})</span>
+          )}
+        </div>
+
+        <button
+          onClick={onRefresh}
+          disabled={loading}
+          className="px-3 py-1.5 rounded-lg bg-white border border-gray-200 hover:bg-gray-50 text-sm text-gray-700 transition-colors disabled:opacity-50 flex items-center gap-1.5"
+        >
+          <span className={loading ? "animate-spin inline-block" : ""}>🔄</span>
+          {loading ? "동기화 중..." : "Loyverse 새로고침"}
+        </button>
+      </div>
+
+      {/* Metadata pills */}
+      {isSuccess && syncMeta && (
+        <div className="flex flex-wrap gap-3 text-xs">
+          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-blue-100 text-blue-700">
+            그룹 <strong>{syncMeta.groupCount}개</strong>
+          </span>
+          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-blue-100 text-blue-700">
+            옵션 <strong>{syncMeta.optionCount}개</strong>
+          </span>
+        </div>
+      )}
+
+      {/* Error / info message */}
+      {syncMeta && syncMeta.status !== "success" && (
+        <p className={`text-xs ${isFailed ? "text-red-700" : "text-amber-700"}`}>
+          {errorLabel(syncMeta)}
+        </p>
+      )}
+
+      {/* Manual fallback toggle */}
+      {(isNeverOrEmpty || isFailed) && (
+        <div className="border-t border-gray-200 pt-2">
+          <button
+            type="button"
+            onClick={onToggleManualFallback}
+            className="text-xs text-gray-500 hover:text-gray-700 underline"
+          >
+            {showManualFallback
+              ? "▲ 수동 입력 숨기기"
+              : "▼ 수동 modifier ID 입력 (비상 fallback)"}
+          </button>
+          {showManualFallback && (
+            <p className="mt-1 text-xs text-gray-400">
+              아래 테이블의 &ldquo;Loyverse Modifier&rdquo; 열에서 modifier option ID를 직접 입력할 수
+              있습니다. Loyverse 동기화가 성공하면 이 모드를 닫고 드롭다운에서 선택하세요.
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 }

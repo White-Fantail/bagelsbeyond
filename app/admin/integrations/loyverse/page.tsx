@@ -16,7 +16,7 @@ export default async function LoyverseIntegrationPage() {
   const baseUrl =
     process.env.LOYVERSE_API_BASE_URL ?? "https://api.loyverse.com/v1.0";
 
-  const [mappedCount, lastSyncEntry] = await Promise.all([
+  const [mappedCount, lastSyncEntry, lastModifierSync] = await Promise.all([
     prisma.externalProductMap.count({
       where: { source: IntegrationSource.LOYVERSE },
     }),
@@ -24,6 +24,10 @@ export default async function LoyverseIntegrationPage() {
       where: { source: IntegrationSource.LOYVERSE },
       orderBy: { lastSyncedAt: "desc" },
       select: { lastSyncedAt: true },
+    }),
+    prisma.loyverseModifierSyncLog.findFirst({
+      orderBy: { syncedAt: "desc" },
+      select: { syncedAt: true, status: true, groupCount: true, optionCount: true, errorMessage: true, errorCode: true },
     }),
   ]);
 
@@ -151,12 +155,48 @@ export default async function LoyverseIntegrationPage() {
       </div>
 
       {/* Docs link */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-2">
+      <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
         <h2 className="font-semibold text-gray-900">Modifier 매핑</h2>
         <p className="text-sm text-gray-500">
           베이글 종류(Plain / Sesame / Blueberry / Everything)는 <strong>modifier 기준</strong>으로
           관리됩니다. 주문 전송 전에 내부 옵션과 Loyverse modifier를 연결해야 합니다.
         </p>
+
+        {/* Modifier sync status summary */}
+        {lastModifierSync ? (
+          <div
+            className={`rounded-lg border p-3 text-xs space-y-1 ${
+              lastModifierSync.status === "success"
+                ? "border-green-200 bg-green-50 text-green-800"
+                : lastModifierSync.status === "failed"
+                ? "border-red-200 bg-red-50 text-red-700"
+                : "border-amber-200 bg-amber-50 text-amber-700"
+            }`}
+          >
+            <p className="font-semibold">
+              {lastModifierSync.status === "success"
+                ? "✓ Modifier 동기화 완료"
+                : lastModifierSync.status === "failed"
+                ? "✗ Modifier 동기화 실패"
+                : "⚠ Modifier 데이터 없음"}
+            </p>
+            <p>
+              마지막 시도: {lastModifierSync.syncedAt.toLocaleString("ko-KR")}
+              {lastModifierSync.status === "success" && (
+                <> &middot; 그룹 {lastModifierSync.groupCount}개 &middot; 옵션 {lastModifierSync.optionCount}개</>
+              )}
+            </p>
+            {lastModifierSync.errorMessage && (
+              <p className="text-red-600 font-mono break-all">{lastModifierSync.errorMessage}</p>
+            )}
+          </div>
+        ) : (
+          <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 text-xs text-gray-500">
+            아직 modifier 동기화가 실행된 적 없습니다.
+            Modifier 매핑 페이지에서 &ldquo;Loyverse 새로고침&rdquo; 버튼을 눌러 동기화하세요.
+          </div>
+        )}
+
         <Link
           href="/admin/integrations/loyverse/modifiers"
           className="inline-block mt-2 px-4 py-2 bg-amber-500 text-white rounded-lg text-sm font-medium hover:bg-amber-600 transition-colors"

@@ -190,8 +190,61 @@ Loyverse는 `modifier_id`를 요구합니다. 내부에서 `ExternalOptionMap`�
 | `lib/integrations/adapters/pos/loyverse.ts` | Loyverse API adapter (modifier 조회 포함) |
 | `lib/integrations/services/catalog-sync.ts` | 카탈로그 동기화 |
 | `app/api/admin/integrations/loyverse/option-maps/route.ts` | ExternalOptionMap CRUD API |
-| `app/api/admin/integrations/loyverse/external-modifiers/route.ts` | Loyverse modifier 조회 API |
+| `app/api/admin/integrations/loyverse/external-modifiers/route.ts` | 저장된 modifier sync 결과 조회 API |
+| `app/api/admin/integrations/loyverse/modifier-sync/route.ts` | Loyverse modifier 동기화 트리거 + 결과 저장 |
 | `app/admin/integrations/loyverse/modifiers/page.tsx` | Modifier 매핑 UI |
 | `app/admin/integrations/loyverse/modifiers/ModifierMappingManager.tsx` | 매핑 관리 클라이언트 컴포넌트 |
 | `app/admin/products/[id]/page.tsx` | 상품 상세 (modifier 매핑 상태 포함) |
 | `app/actions/order.ts` | 주문 생성 액션 (productOptionId 저장) |
+
+---
+
+## Loyverse Modifier Sync 상세
+
+### 왜 sync가 필요한가
+
+Modifier 매핑 UI에서 내부 옵션과 Loyverse modifier를 연결하려면 Loyverse modifier 목록이 필요합니다.  
+이 데이터를 페이지 로드마다 Loyverse API에서 실시간으로 가져오면 다음 문제가 생깁니다:
+
+- 네트워크 오류 시 UI 전체가 차단됨
+- API 토큰 문제 등 실패 원인이 사용자에게 노출되지 않음
+- Loyverse API 레이트 리밋 소모
+
+따라서 modifier 데이터는 **별도 sync 액션으로 가져와 DB에 저장**하고, UI는 저장된 데이터를 사용합니다.
+
+### Sync 흐름
+
+```
+[관리자] "Loyverse 새로고침" 클릭
+    └→ POST /api/admin/integrations/loyverse/modifier-sync
+           ├→ LoyverseAdapter.fetchModifiers() (Loyverse API 호출)
+           ├→ LoyverseModifierSyncLog 생성 (status, groupCount, optionCount, rawGroups)
+           └→ 결과 반환
+
+[Modifier 매핑 페이지 로드]
+    └→ GET /api/admin/integrations/loyverse/external-modifiers
+           └→ 최신 LoyverseModifierSyncLog 조회 (live API 호출 없음)
+```
+
+### 실패 원인 분류
+
+| 원인 | errorCode | 표시 메시지 |
+|------|-----------|-------------|
+| API 토큰 없음 / 유효하지 않음 | 401 / 403 | "Loyverse 인증 실패 — LOYVERSE_API_TOKEN을 확인하세요." |
+| 엔드포인트 없음 | 404 | "Modifier 엔드포인트를 찾을 수 없습니다 (HTTP 404)." |
+| 레이트 리밋 | 429 | "Loyverse API 요청 한도 초과 — 잠시 후 다시 시도하세요." |
+| 서버 오류 | 5xx | "Loyverse 서버 오류 — 잠시 후 다시 시도하세요." |
+| 응답 비어 있음 | — | "Loyverse modifier API 응답이 비어 있습니다. (modifier 0개)" |
+| 응답 파싱 실패 | — | "Modifier 응답 파싱에 실패했습니다." |
+| 동기화 미실행 | — | "아직 modifier 동기화가 실행된 적 없습니다." |
+
+### 수동 입력 fallback 정책
+
+수동 modifier ID 입력은 **비상 fallback**입니다.  
+기본 UX:
+
+1. `POST /modifier-sync` → 동기화 성공
+2. 드롭다운에서 modifier 선택 → 매핑 저장
+
+수동 입력은 sync가 실패하거나 empty일 때만 "수동 입력 fallback" 토글로 접근 가능합니다.  
+sync가 성공하면 드롭다운 선택이 주 경로이고, 수동 입력 토글은 숨겨집니다.

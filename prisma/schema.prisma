@@ -787,3 +787,33 @@ model SubscriptionOccurrence {
   @@index([status])
   @@map("subscription_occurrences")
 }
+
+// ─── LoyverseModifierSyncLog ──────────────────────────────────────────────────
+// Records each attempt to sync modifier groups from the Loyverse API.
+// The most recent successful entry is used as the cached modifier list in the
+// admin Modifier Mapping UI, so the UI does not need to hit the live API on
+// every page load.  A "Loyverse 새로고침" action triggers a new sync and writes
+// a fresh row here.
+//
+// status values:
+//   "success"  — modifiers fetched and stored in rawGroups
+//   "empty"    — API returned 200 but zero modifier groups
+//   "failed"   — API or parse error; see errorMessage / errorCode
+//
+// errorCode: HTTP status from Loyverse (401, 403, 404, 429, 5xx…); null when the
+//            error is non-HTTP (network, parse, normalize).
+
+model LoyverseModifierSyncLog {
+  id           String   @id @default(cuid())
+  syncedAt     DateTime @default(now())
+  status       String   // "success" | "empty" | "failed"
+  groupCount   Int      @default(0)
+  optionCount  Int      @default(0)
+  errorMessage String?
+  errorCode    Int?
+  rawGroups    Json?
+  createdAt    DateTime @default(now())
+
+  @@index([syncedAt])
+  @@map("loyverse_modifier_sync_logs")
+}
