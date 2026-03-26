@@ -45,7 +45,11 @@ export class OpenMeteoWeatherProvider implements WeatherProvider {
   ): Promise<WeatherData | null> {
     const lat = options.latitude ?? DEFAULT_LATITUDE;
     const lon = options.longitude ?? DEFAULT_LONGITUDE;
-    const tz = encodeURIComponent(options.timezone ?? DEFAULT_TIMEZONE);
+    // NOTE: Do NOT call encodeURIComponent here — URLSearchParams handles encoding automatically.
+    // Pre-encoding causes double-encoding: "Pacific/Auckland" → "Pacific%2FAuckland" via
+    // encodeURIComponent, then URLSearchParams encodes "%" → "%25", giving the invalid
+    // "Pacific%252FAuckland" that Open-Meteo rejects with a 400 error.
+    const tz = options.timezone ?? DEFAULT_TIMEZONE;
     const dateStr = date.toISOString().split("T")[0];
 
     const today = new Date();
@@ -66,12 +70,22 @@ export class OpenMeteoWeatherProvider implements WeatherProvider {
       timezone: tz,
     });
 
+    console.log(
+      `[weather] 요청 시작 | date=${dateStr} | isPast=${isPast} | lat=${lat} | lon=${lon} | tz=${tz} | url=${baseUrl}?${params.toString()}`
+    );
+
     try {
       const res = await fetch(`${baseUrl}?${params.toString()}`, {
         headers: { "Accept": "application/json" },
         signal: AbortSignal.timeout(8000),
       });
-      if (!res.ok) return null;
+
+      console.log(`[weather] 응답 수신 | date=${dateStr} | status=${res.status}`);
+
+      if (!res.ok) {
+        const errBody = await res.text().catch(() => "");
+        throw new Error(`Weather API ${res.status}: ${errBody.slice(0, 200)}`);
+      }
 
       const json = await res.json() as {
         daily?: {
@@ -84,7 +98,10 @@ export class OpenMeteoWeatherProvider implements WeatherProvider {
       };
 
       const d = json.daily;
-      if (!d) return null;
+      if (!d) {
+        console.warn(`[weather] daily 데이터 없음 | date=${dateStr}`);
+        return null;
+      }
 
       const maxTemp = d.temperature_2m_max?.[0] ?? null;
       const minTemp = d.temperature_2m_min?.[0] ?? null;
@@ -92,18 +109,30 @@ export class OpenMeteoWeatherProvider implements WeatherProvider {
       const windKph = d.windspeed_10m_max?.[0] ?? 0;
       const wmoCode = d.weathercode?.[0] ?? 0;
 
-      if (maxTemp == null || minTemp == null) return null;
+      if (maxTemp == null || minTemp == null) {
+        console.warn(`[weather] 온도 없음 | date=${dateStr} | maxTemp=${maxTemp} | minTemp=${minTemp}`);
+        return null;
+      }
 
-      return {
+      const result: WeatherData = {
         summary: wmoToSummary(wmoCode),
         minTemp: Math.round(minTemp * 10) / 10,
         maxTemp: Math.round(maxTemp * 10) / 10,
         rainMm: Math.round(rainMm * 10) / 10,
         windKph: Math.round(windKph * 10) / 10,
       };
-    } catch {
-      // Network error or timeout — fall through to null
-      return null;
+
+      console.log(
+        `[weather] 파싱 완료 | date=${dateStr} | summary=${result.summary} | minTemp=${result.minTemp} | maxTemp=${result.maxTemp} | rainMm=${result.rainMm} | windKph=${result.windKph}`
+      );
+
+      return result;
+    } catch (err) {
+      // Re-throw so the service layer records this as a provider failure (not a silent skip)
+      console.error(
+        `[weather] 오류 | date=${dateStr} | error=${err instanceof Error ? err.message : String(err)}`
+      );
+      throw err;
     }
   }
 }
