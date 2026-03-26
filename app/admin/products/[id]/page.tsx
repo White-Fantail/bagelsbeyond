@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import Link from "next/link";
 import ProductForm from "../ProductForm";
 import DeleteProductButton from "./DeleteProductButton";
+import OptionGroupManager from "./OptionGroupManager";
 
 export default async function EditProductPage({
   params,
@@ -25,6 +26,29 @@ export default async function EditProductPage({
       isActive: true,
       isSubscriptionEligible: true,
       sortOrder: true,
+      optionGroups: {
+        orderBy: { sortOrder: "asc" },
+        select: {
+          id: true,
+          name: true,
+          minSelect: true,
+          maxSelect: true,
+          isRequired: true,
+          sortOrder: true,
+          options: {
+            orderBy: { sortOrder: "asc" },
+            select: {
+              id: true,
+              name: true,
+              priceDelta: true,
+              isActive: true,
+              sortOrder: true,
+              sku: true,
+              tracksInventory: true,
+            },
+          },
+        },
+      },
     },
   });
 
@@ -56,9 +80,11 @@ export default async function EditProductPage({
     );
   }
 
+  const { optionGroups, ...productFields } = product;
+
   const formProduct = {
-    ...product,
-    description: product.description ?? undefined,
+    ...productFields,
+    description: productFields.description ?? undefined,
   };
 
   return (
@@ -83,6 +109,8 @@ export default async function EditProductPage({
       </div>
 
       <ProductForm product={formProduct} mode="edit" />
+
+      <OptionGroupManager productId={product.id} initialGroups={optionGroups} />
     </div>
   );
 }
