@@ -53,13 +53,27 @@ export default async function ExternalFactorDetailPage({ params }: Props) {
         <>
           <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
             <h2 className="text-base font-semibold text-gray-900 border-b border-gray-100 pb-2">날씨</h2>
+            {factor.sourceWeather === "open-meteo:failed" && (
+              <div className="bg-red-50 border border-red-200 rounded-md px-3 py-2 text-sm text-red-700 flex items-center gap-2">
+                <span>⚠️</span>
+                <span>날씨 수집 실패 — 수집 버튼을 다시 눌러 재시도하세요.</span>
+              </div>
+            )}
+            {!factor.sourceWeather && !factor.weatherSummary && (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-md px-3 py-2 text-sm text-yellow-700 flex items-center gap-2">
+                <span>ℹ️</span>
+                <span>날씨 데이터가 없습니다. 수집 버튼을 눌러 수집하세요.</span>
+              </div>
+            )}
             <dl className="grid grid-cols-2 sm:grid-cols-3 gap-4">
               <InfoItem label="날씨 요약" value={factor.weatherSummary ?? "—"} />
               <InfoItem label="최저 기온" value={factor.minTemp != null ? `${factor.minTemp}°C` : "—"} />
               <InfoItem label="최고 기온" value={factor.maxTemp != null ? `${factor.maxTemp}°C` : "—"} />
               <InfoItem label="강수량" value={factor.rainMm != null ? `${factor.rainMm}mm` : "—"} />
               <InfoItem label="풍속" value={factor.windKph != null ? `${factor.windKph}kph` : "—"} />
-              {factor.sourceWeather && <InfoItem label="소스" value={factor.sourceWeather} />}
+              {factor.sourceWeather && factor.sourceWeather !== "open-meteo:failed" && (
+                <InfoItem label="소스" value={factor.sourceWeather} />
+              )}
             </dl>
           </div>
 

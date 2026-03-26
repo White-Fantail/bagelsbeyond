@@ -116,10 +116,23 @@ export async function upsertExternalFactorsByDate(
     collectedFields.push("weather");
   } else if (weatherResult.status === "rejected") {
     failedProviders.push("weather");
-    warnings.push(`Weather provider error: ${String(weatherResult.reason)}`);
+    const reason = String(weatherResult.reason);
+    warnings.push(`Weather provider error: ${reason}`);
+    // Store explicit failure marker so the UI can show a warning even without re-collecting
+    weatherData = {
+      weatherSummary: null,
+      minTemp: null,
+      maxTemp: null,
+      rainMm: null,
+      windKph: null,
+      sourceWeather: "open-meteo:failed",
+    };
+    console.error(`[externalFactor] weather 실패 | date=${dateKey} | reason=${reason}`);
   } else {
+    // Provider returned null (no data available for this date, e.g. too far in the future)
     skippedProviders.push("weather");
     weatherData = { sourceWeather: null };
+    console.warn(`[externalFactor] weather 데이터 없음 (null 반환) | date=${dateKey}`);
   }
 
   // --- Holiday ---
@@ -202,6 +215,15 @@ export async function upsertExternalFactorsByDate(
   };
 
   try {
+    console.log(
+      `[externalFactor] upsert 시작 | date=${dateKey}` +
+      ` | weatherSummary=${upsertData.weatherSummary ?? "null"}` +
+      ` | minTemp=${upsertData.minTemp ?? "null"}` +
+      ` | maxTemp=${upsertData.maxTemp ?? "null"}` +
+      ` | rainMm=${upsertData.rainMm ?? "null"}` +
+      ` | windKph=${upsertData.windKph ?? "null"}` +
+      ` | sourceWeather=${upsertData.sourceWeather ?? "null"}`
+    );
     await prisma.dailyExternalFactor.upsert({
       where: { date },
       update: { ...upsertData, updatedAt: now },
