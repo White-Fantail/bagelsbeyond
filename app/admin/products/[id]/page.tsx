@@ -4,6 +4,7 @@ import Link from "next/link";
 import ProductForm from "../ProductForm";
 import DeleteProductButton from "./DeleteProductButton";
 import OptionGroupManager from "./OptionGroupManager";
+import { IntegrationSource } from "@/app/generated/prisma/enums";
 
 export default async function EditProductPage({
   params,
@@ -45,6 +46,14 @@ export default async function EditProductPage({
               sortOrder: true,
               sku: true,
               tracksInventory: true,
+              externalOptionMappings: {
+                where: { source: IntegrationSource.LOYVERSE },
+                select: {
+                  id: true,
+                  externalOptionId: true,
+                  externalName: true,
+                },
+              },
             },
           },
         },
@@ -87,6 +96,13 @@ export default async function EditProductPage({
     description: productFields.description ?? undefined,
   };
 
+  // Count modifier mapping status
+  const allOptions = optionGroups.flatMap((g) => g.options);
+  const mappedCount = allOptions.filter((o) => o.externalOptionMappings.length > 0).length;
+  const unmappedActiveCount = allOptions.filter(
+    (o) => o.isActive && o.externalOptionMappings.length === 0
+  ).length;
+
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4">
@@ -111,6 +127,92 @@ export default async function EditProductPage({
       <ProductForm product={formProduct} mode="edit" />
 
       <OptionGroupManager productId={product.id} initialGroups={optionGroups} />
+
+      {/* Modifier Mapping Status */}
+      {allOptions.length > 0 && (
+        <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="font-semibold text-gray-900">Loyverse Modifier 매핑 상태</h2>
+              <p className="text-sm text-gray-500 mt-0.5">
+                베이글 종류(Bagel Type)는 variant가 아닌 modifier 기준으로 관리됩니다.
+                주문 전송 전에 모든 옵션이 매핑되어 있어야 합니다.
+              </p>
+            </div>
+            <Link
+              href="/admin/integrations/loyverse/modifiers"
+              className="shrink-0 px-3 py-1.5 rounded-lg text-sm bg-amber-500 text-white hover:bg-amber-600 transition-colors"
+            >
+              매핑 관리 →
+            </Link>
+          </div>
+
+          <div className="flex gap-4 text-sm">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
+              ✓ 매핑됨 {mappedCount}개
+            </span>
+            {unmappedActiveCount > 0 ? (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-600">
+                ✗ 미매핑 (활성) {unmappedActiveCount}개
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
+                미매핑 없음
+              </span>
+            )}
+          </div>
+
+          {optionGroups.map((group) => (
+            <div key={group.id} className="rounded-lg border border-gray-100 overflow-hidden">
+              <div className="bg-gray-50 border-b border-gray-100 px-4 py-2 text-xs font-semibold text-gray-600">
+                {group.name}
+                {group.isRequired && (
+                  <span className="ml-2 text-amber-600">* 필수</span>
+                )}
+              </div>
+              <ul className="divide-y divide-gray-100">
+                {group.options.map((opt) => {
+                  const mapping = opt.externalOptionMappings[0];
+                  return (
+                    <li key={opt.id} className="flex items-center justify-between px-4 py-2 text-sm">
+                      <div className="flex items-center gap-2">
+                        <span className={opt.isActive ? "text-gray-800" : "text-gray-400 line-through"}>
+                          {opt.name}
+                        </span>
+                        {opt.tracksInventory && (
+                          <span className="text-xs px-1.5 py-0.5 rounded bg-purple-100 text-purple-700">
+                            재고추적
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-3">
+                        {mapping ? (
+                          <>
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700">
+                              ✓ 매핑됨
+                            </span>
+                            <span className="text-xs text-gray-400 font-mono">
+                              {mapping.externalName ?? mapping.externalOptionId}
+                            </span>
+                          </>
+                        ) : opt.isActive ? (
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-600">
+                            ✗ 미매핑
+                          </span>
+                        ) : (
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-400">
+                            비활성
+                          </span>
+                        )}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -152,6 +152,21 @@ export default async function LoyverseIntegrationPage() {
 
       {/* Docs link */}
       <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-2">
+        <h2 className="font-semibold text-gray-900">Modifier 매핑</h2>
+        <p className="text-sm text-gray-500">
+          베이글 종류(Plain / Sesame / Blueberry / Everything)는 <strong>modifier 기준</strong>으로
+          관리됩니다. 주문 전송 전에 내부 옵션과 Loyverse modifier를 연결해야 합니다.
+        </p>
+        <Link
+          href="/admin/integrations/loyverse/modifiers"
+          className="inline-block mt-2 px-4 py-2 bg-amber-500 text-white rounded-lg text-sm font-medium hover:bg-amber-600 transition-colors"
+        >
+          Loyverse Modifier 매핑 관리 →
+        </Link>
+      </div>
+
+      {/* Env docs link */}
+      <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-2">
         <h2 className="font-semibold text-gray-900">환경변수 설정 가이드</h2>
         <p className="text-sm text-gray-500">
           <code className="font-mono text-xs bg-gray-100 px-1 py-0.5 rounded">.env</code> 파일 또는 배포 환경에 아래 변수를 설정하세요.

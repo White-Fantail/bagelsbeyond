@@ -106,6 +106,7 @@ export async function createOrderAction(
     quantity: number;
     lineTotal: number;
     options: {
+      productOptionId: string;
       optionGroupNameSnapshot: string;
       optionNameSnapshot: string;
       priceDeltaSnapshot: number;
@@ -137,6 +138,7 @@ export async function createOrderAction(
       }
       unitPrice += option.priceDelta;
       resolvedOptions.push({
+        productOptionId: option.id,
         optionGroupNameSnapshot: group.name,
         optionNameSnapshot: option.name,
         priceDeltaSnapshot: option.priceDelta,
@@ -213,6 +215,7 @@ export async function createOrderAction(
               lineTotal: item.lineTotal,
               options: {
                 create: item.options.map((opt) => ({
+                  productOptionId: opt.productOptionId,
                   optionGroupNameSnapshot: opt.optionGroupNameSnapshot,
                   optionNameSnapshot: opt.optionNameSnapshot,
                   priceDeltaSnapshot: opt.priceDeltaSnapshot,
