@@ -218,13 +218,21 @@ export class LoyverseAdapter implements POSAdapter {
    * Low-level fetch wrapper with auth header and unified error handling.
    * Handles 401, 429, 5xx with descriptive errors.
    */
-  private async fetchWithAuth<T>(path: string): Promise<T> {
+  private async fetchWithAuth<T>(
+    path: string,
+    options?: { method?: string; body?: string }
+  ): Promise<T> {
     const url = `${this.baseUrl}${path}`;
-    console.debug(`[Loyverse] GET ${url}`);
+    const method = options?.method ?? "GET";
+    console.debug(`[Loyverse] ${method} ${url}`);
 
     let res: Response;
     try {
-      res = await fetch(url, { headers: this.authHeaders });
+      res = await fetch(url, {
+        method,
+        headers: this.authHeaders,
+        body: options?.body,
+      });
     } catch (err) {
       throw new LoyverseApiError(
         `Network error calling Loyverse (${path}): ${err instanceof Error ? err.message : String(err)}`
@@ -364,8 +372,9 @@ export class LoyverseAdapter implements POSAdapter {
   }
 
   /**
-   * Push an order to Loyverse.
-   * TODO: Implement real API call to POST /receipts
+   * Push an order to Loyverse as a receipt.
+   * Maps internal Order fields to the Loyverse POST /receipts payload.
+   * Loyverse docs: https://developer.loyverse.com/docs/#tag/Receipts/paths/~1receipts/post
    */
   async pushOrderToExternalPos(
     order: ExternalOrder
@@ -374,23 +383,48 @@ export class LoyverseAdapter implements POSAdapter {
       return { success: false, error: "LOYVERSE_API_TOKEN is not configured" };
     }
 
-    // TODO: Replace with real Loyverse receipt push:
-    // const payload = mapInternalOrderToLoyverse(order);
-    // const res = await this.fetchWithAuth<{ receipt_number: string }>(
-    //   "/receipts", { method: "POST", body: JSON.stringify(payload) }
-    // );
-    // return { success: true, data: { externalOrderId: res.receipt_number } };
+    if (this.mockMode) {
+      const mockReceiptNumber = `MOCK-${order.orderNumber ?? order.externalId}`;
+      console.info(`[Loyverse] Mock mode — simulated receipt ${mockReceiptNumber}`);
+      return { success: true, data: { externalOrderId: mockReceiptNumber } };
+    }
 
-    void order;
-    return {
-      success: false,
-      error: "pushOrderToExternalPos not yet implemented",
-    };
+    try {
+      const payload = {
+        receipt_number: order.orderNumber ?? order.externalId,
+        note: order.note ?? null,
+        total_money: order.totalAmount,
+        line_items: order.items.map((item) => ({
+          item_id: item.externalProductId !== "" ? item.externalProductId : null,
+          item_name: item.productName,
+          quantity: item.quantity,
+          price: item.unitPrice,
+          total_money: item.lineTotal,
+        })),
+        created_at: order.createdAt.toISOString(),
+      };
+
+      const res = await this.fetchWithAuth<{ receipt_number: string }>(
+        "/receipts",
+        { method: "POST", body: JSON.stringify(payload) }
+      );
+
+      console.info(`[Loyverse] Pushed receipt ${res.receipt_number}`);
+      return { success: true, data: { externalOrderId: res.receipt_number } };
+    } catch (err) {
+      const message =
+        err instanceof LoyverseApiError
+          ? err.message
+          : `Unexpected error: ${String(err)}`;
+      console.error("[Loyverse] pushOrderToExternalPos failed:", message);
+      return { success: false, error: message };
+    }
   }
 
   /**
-   * Sync daily sold quantities from Loyverse receipts.
-   * TODO: Implement real API call to GET /receipts with date range filter
+   * Sync daily sold quantities from Loyverse receipts for a given date.
+   * Fetches GET /receipts with date range and aggregates line_item quantities
+   * by Loyverse item_id (= externalProductId).
    */
   async syncInventoryFromExternal(
     date: Date
@@ -399,19 +433,58 @@ export class LoyverseAdapter implements POSAdapter {
       return { success: false, error: "LOYVERSE_API_TOKEN is not configured" };
     }
 
-    // TODO: Replace with real Loyverse receipts query:
-    // const start = new Date(date); start.setHours(0,0,0,0);
-    // const end   = new Date(date); end.setHours(23,59,59,999);
-    // const res = await this.fetchWithAuth<{ receipts: unknown[] }>(
-    //   `/receipts?created_at_min=${start.toISOString()}&created_at_max=${end.toISOString()}`
-    // );
-    // return { success: true, data: aggregateSoldQty(res.receipts) };
+    if (this.mockMode) {
+      console.info("[Loyverse] Mock mode — returning empty inventory sync");
+      return { success: true, data: {} };
+    }
 
-    void date;
-    return {
-      success: false,
-      error: "syncInventoryFromExternal not yet implemented",
-    };
+    try {
+      const start = new Date(date);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(date);
+      end.setHours(23, 59, 59, 999);
+
+      const soldQty: Record<string, number> = {};
+      let cursor: string | null = null;
+
+      do {
+        const params = new URLSearchParams({
+          created_at_min: start.toISOString(),
+          created_at_max: end.toISOString(),
+        });
+        if (cursor) params.set("cursor", cursor);
+
+        const page = await this.fetchWithAuth<{
+          receipts: Array<{
+            line_items?: Array<{ item_id?: string | null; quantity?: number }>;
+          }>;
+          cursor: string | null;
+        }>(`/receipts?${params.toString()}`);
+
+        if (Array.isArray(page.receipts)) {
+          for (const receipt of page.receipts) {
+            for (const line of receipt.line_items ?? []) {
+              if (!line.item_id) continue;
+              soldQty[line.item_id] = (soldQty[line.item_id] ?? 0) + (line.quantity ?? 1);
+            }
+          }
+        }
+
+        cursor = page.cursor ?? null;
+      } while (cursor);
+
+      console.info(
+        `[Loyverse] Synced inventory for ${date.toISOString().slice(0, 10)}: ${Object.keys(soldQty).length} items`
+      );
+      return { success: true, data: soldQty };
+    } catch (err) {
+      const message =
+        err instanceof LoyverseApiError
+          ? err.message
+          : `Unexpected error: ${String(err)}`;
+      console.error("[Loyverse] syncInventoryFromExternal failed:", message);
+      return { success: false, error: message };
+    }
   }
 }
 
