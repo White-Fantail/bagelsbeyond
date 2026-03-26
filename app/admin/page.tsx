@@ -44,6 +44,11 @@ export default async function AdminPage() {
         <h2 className="font-semibold text-gray-900">관리자 전용 메뉴</h2>
         <ul className="space-y-2 text-sm">
           <li>
+            <Link href="/admin/integrations" className="text-amber-600 hover:underline">
+              → 외부 연동 (Loyverse POS 카탈로그 동기화)
+            </Link>
+          </li>
+          <li>
             <Link href="/admin/users" className="text-amber-600 hover:underline">
               → 사용자 관리 (권한·활성 상태 변경)
             </Link>
