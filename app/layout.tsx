@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Navigation from "@/components/Navigation";
+import Sidebar from "@/components/navigation/Sidebar";
 import { getSession } from "@/lib/auth/session";
 
 export const metadata: Metadata = {
@@ -22,10 +23,16 @@ export default async function RootLayout({
     <html lang="ko">
       <body className="font-sans antialiased">
         <div className="min-h-screen bg-gray-50">
+          {/* Fixed left sidebar — desktop only */}
+          <Sidebar session={navSession} />
+
+          {/* Fixed top bar + mobile drawer */}
           <Navigation session={navSession} />
-          <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            {children}
-          </main>
+
+          {/* Main content — offset for sidebar (lg) and top bar */}
+          <div className="lg:pl-64 pt-16">
+            <main className="p-4 sm:p-6 lg:p-8">{children}</main>
+          </div>
         </div>
       </body>
     </html>
