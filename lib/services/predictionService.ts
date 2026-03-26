@@ -107,17 +107,35 @@ export async function buildPredictionInput(targetDate: Date): Promise<Prediction
     weights[w.factorKey] = w.weightValue;
   }
 
-  // Try to get external factors from existing record for this date
+  // Build a date range for the target date (midnight to midnight UTC)
+  const dayStart = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate());
+  const dayEnd = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate() + 1);
+
+  // 1. Try to get external factors via DailyRecord relation (actual sales day)
   const existingRecord = await prisma.dailyRecord.findFirst({
-    where: {
-      date: {
-        gte: new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate()),
-        lt: new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate() + 1),
-      },
-    },
+    where: { date: { gte: dayStart, lt: dayEnd } },
     include: { externalFactor: true },
   });
-  const externalFactors: ExternalFactorInput = existingRecord?.externalFactor ?? {};
+
+  let externalFactors: ExternalFactorInput = {};
+
+  if (existingRecord?.externalFactor) {
+    // Use factors from the linked DailyRecord
+    externalFactors = existingRecord.externalFactor;
+    console.log(`[prediction] External factors loaded from DailyRecord relation for ${targetDate.toISOString().split("T")[0]}`);
+  } else {
+    // 2. Fallback: look for a standalone DailyExternalFactor by date
+    //    (created by ensureExternalFactorsForPredictionDate before we get here)
+    const standaloneFactors = await prisma.dailyExternalFactor.findFirst({
+      where: { date: { gte: dayStart, lt: dayEnd } },
+    });
+    if (standaloneFactors) {
+      externalFactors = standaloneFactors;
+      console.log(`[prediction] External factors loaded from standalone DailyExternalFactor for ${targetDate.toISOString().split("T")[0]}`);
+    } else {
+      console.warn(`[prediction] No external factors found for ${targetDate.toISOString().split("T")[0]} — prediction will use default values`);
+    }
+  }
 
   const settingsRow = await prisma.appSetting.findFirst();
   const settings: AppSettingInput = {

@@ -2,16 +2,19 @@
 
 import { useRouter } from "next/navigation";
 import { getTotalSales, formatCurrency } from "@/lib/utils";
-import type { DailyRecord, SalesPrediction } from "@/types";
+import { getWeatherIcon } from "@/lib/utils/weather-icon";
+import type { DailyRecord, DailyExternalFactor, SalesPrediction } from "@/types";
 
 type Props = {
   year: number;
   month: number;
   records: DailyRecord[];
   predictions?: SalesPrediction[];
+  /** Map of day-of-month → DailyExternalFactor for weather icon display */
+  externalFactors?: Map<number, DailyExternalFactor>;
 };
 
-export default function CalendarView({ year, month, records, predictions = [] }: Props) {
+export default function CalendarView({ year, month, records, predictions = [], externalFactors }: Props) {
   const router = useRouter();
 
   const recordMap = new Map(
@@ -94,6 +97,10 @@ export default function CalendarView({ year, month, records, predictions = [] }:
 
           const isClickable = !!(record || prediction);
 
+          // Weather icon for this day
+          const ef = day ? externalFactors?.get(day) : undefined;
+          const weatherInfo = ef ? getWeatherIcon(ef.weatherSummary) : null;
+
           let bgClass = "";
           if (hasBoth) bgClass = "hover:bg-purple-50";
           else if (hasRecord) bgClass = "hover:bg-amber-50";
@@ -120,12 +127,23 @@ export default function CalendarView({ year, month, records, predictions = [] }:
                   ? `${year}년 ${month}월 ${day}일${record ? " 실적 있음" : ""}${prediction ? " 예측 있음" : ""}`
                   : undefined
               }
-              className={`min-h-[90px] p-1.5 border-b border-r border-gray-100 transition-colors ${
+              className={`min-h-[90px] p-1.5 border-b border-r border-gray-100 transition-colors relative ${
                 day === null ? "bg-gray-50" : isClickable ? `cursor-pointer focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-400 ${bgClass}` : bgClass
               } ${isFuture ? "bg-slate-50" : ""}`}
             >
               {day !== null && (
                 <>
+                  {/* Weather icon — top-right corner */}
+                  {weatherInfo && (
+                    <span
+                      className="absolute top-1 right-1 text-[11px] leading-none select-none"
+                      title={ef?.weatherSummary ?? weatherInfo.label}
+                      aria-label={weatherInfo.label}
+                    >
+                      {weatherInfo.icon}
+                    </span>
+                  )}
+
                   {/* Day number */}
                   <div
                     className={`text-xs font-medium mb-1 w-5 h-5 flex items-center justify-center rounded-full ${

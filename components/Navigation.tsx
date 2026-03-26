@@ -10,7 +10,7 @@ import type { Role } from "@/app/generated/prisma/enums";
 // ── Nav items per role ────────────────────────────────────────────────────────
 
 const COMMON_ITEMS = [
-  { href: "/", label: "대시보드" },
+  { href: "/dashboard", label: "대시보드" },
   { href: "/sales", label: "매출 목록" },
   { href: "/calendar", label: "달력" },
   { href: "/predictions", label: "예측" },

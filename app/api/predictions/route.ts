@@ -48,25 +48,43 @@ export async function POST(req: NextRequest) {
     const targetDate = new Date(parsed.data.targetDate);
     targetDate.setHours(0, 0, 0, 0);
 
-    // Auto-collect external factors if not provided and autoCollect is enabled
+    const dateStr = targetDate.toISOString().split("T")[0];
+    console.log(`[prediction] POST /api/predictions — targetDate=${dateStr}, autoCollect=${parsed.data.autoCollect}`);
+
+    // Step 1: Auto-collect external factors for the target date if not provided manually.
+    // This MUST happen before buildPredictionInput so the freshly collected data is available.
     let autoCollectResult: { existed: boolean; result: unknown } | null = null;
     if (parsed.data.autoCollect && !parsed.data.externalFactors) {
-      autoCollectResult = await ensureExternalFactorsForPredictionDate(targetDate).catch(() => null);
+      try {
+        autoCollectResult = await ensureExternalFactorsForPredictionDate(targetDate);
+        console.log(`[prediction] ensureExternalFactors result — existed=${autoCollectResult.existed}`);
+      } catch (collectErr) {
+        // Log the error but don't block prediction — factors may still exist from a previous run
+        console.error(`[prediction] External factor collection failed for ${dateStr}:`, collectErr);
+        autoCollectResult = null;
+      }
     }
 
+    // Step 2: Build prediction input (will pick up the just-collected external factors)
     const input = await buildPredictionInput(targetDate);
 
-    // Override external factors if explicitly provided in request
+    console.log(`[prediction] buildPredictionInput — recentRecords=${input.recentRecords.length}, sameDayRecords=${input.sameDayRecords.length}, hasExternalFactors=${!!(input.externalFactors.weatherSummary || input.externalFactors.rainMm !== undefined)}`);
+
+    // Step 3: Override external factors if explicitly provided in the request
     if (parsed.data.externalFactors) {
       Object.assign(input.externalFactors, parsed.data.externalFactors);
+      console.log(`[prediction] External factors overridden by request body`);
     }
 
+    // Step 4: Calculate and save prediction
     const result = calculateRuleBasedPrediction(input);
     const saved = await savePredictionResult(result);
 
+    console.log(`[prediction] Saved prediction id=${saved.id}, predictedSales=${saved.predictedSales}, confidence=${saved.confidenceScore}`);
+
     return NextResponse.json({ ...saved, autoCollectResult }, { status: 201 });
-  } catch (_error) {
-    console.error(_error);
+  } catch (error) {
+    console.error("[prediction] Unhandled error:", error);
     return NextResponse.json({ message: "예측 생성에 실패했습니다" }, { status: 500 });
   }
 }

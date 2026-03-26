@@ -101,6 +101,21 @@ export type HolidayBreakdown = {
   avgWasteRate: number;
 };
 
+export type DayOfWeekAnalyticsItem = {
+  /** 0 = Sunday … 6 = Saturday */
+  dayOfWeek: number;
+  dayLabel: string;
+  recordCount: number;
+  totalSales: number;
+  avgSales: number;
+  totalBagelsSold: number;
+  avgBagelsSold: number;
+  avgWasteRate: number;
+  /** Deviation from the overall period average sales (fractional, e.g. 0.12 = +12%) */
+  salesVsOverallAvgPercent: number;
+  isWeekend: boolean;
+};
+
 // ─── Helper ──────────────────────────────────────────────────────────────────
 
 function recordTotalSales(r: RecordWithFactor): number {
@@ -501,4 +516,92 @@ export async function getHolidayNameBreakdown(
   }
 
   return result.sort((a, b) => b.avgSales - a.avgSales);
+}
+
+const DOW_LABELS: Record<number, string> = {
+  0: "일요일",
+  1: "월요일",
+  2: "화요일",
+  3: "수요일",
+  4: "목요일",
+  5: "금요일",
+  6: "토요일",
+};
+
+/**
+ * Aggregate daily records by day-of-week and return per-weekday metrics.
+ * Also computes deviation vs the overall period average.
+ *
+ * Calculation basis:
+ * - Uses the record's local date (stored as UTC midnight by Prisma).
+ * - Day-of-week is derived with Date.getDay() on the UTC date value.
+ * - totalSales = storeSales + uberSales + doordashSales + otherSales
+ * - bagelsSold = bagelsBaked - bagelsLeft
+ * - Results sorted Sunday → Saturday (0 → 6).
+ */
+export async function getDayOfWeekAnalytics(
+  startDate: Date,
+  endDate: Date
+): Promise<DayOfWeekAnalyticsItem[]> {
+  const records = await fetchRecordsInRange(startDate, endDate);
+  if (records.length === 0) return [];
+
+  // Group by day-of-week (UTC day, consistent with how dates are stored)
+  const groups = new Map<number, RecordWithFactor[]>();
+  for (const r of records) {
+    const dow = new Date(r.date).getUTCDay();
+    if (!groups.has(dow)) groups.set(dow, []);
+    groups.get(dow)!.push(r);
+  }
+
+  // Overall period average for deviation calculation
+  const overallTotalSales = records.reduce((s, r) => s + recordTotalSales(r), 0);
+  const overallAvgSales = safeDivide(overallTotalSales, records.length);
+
+  const result: DayOfWeekAnalyticsItem[] = [];
+
+  for (let dow = 0; dow <= 6; dow++) {
+    const dayRecords = groups.get(dow) ?? [];
+    if (dayRecords.length === 0) {
+      result.push({
+        dayOfWeek: dow,
+        dayLabel: DOW_LABELS[dow],
+        recordCount: 0,
+        totalSales: 0,
+        avgSales: 0,
+        totalBagelsSold: 0,
+        avgBagelsSold: 0,
+        avgWasteRate: 0,
+        salesVsOverallAvgPercent: 0,
+        isWeekend: dow === 0 || dow === 6,
+      });
+      continue;
+    }
+
+    const totalSales = dayRecords.reduce((s, r) => s + recordTotalSales(r), 0);
+    const totalBagelsSold = dayRecords.reduce((s, r) => s + Math.max(0, r.bagelsBaked - r.bagelsLeft), 0);
+    const avgWasteRate =
+      dayRecords.reduce((s, r) => s + safeDivide(r.bagelsLeft, r.bagelsBaked), 0) /
+      dayRecords.length;
+
+    const avgSales = safeDivide(totalSales, dayRecords.length);
+
+    result.push({
+      dayOfWeek: dow,
+      dayLabel: DOW_LABELS[dow],
+      recordCount: dayRecords.length,
+      totalSales,
+      avgSales,
+      totalBagelsSold,
+      avgBagelsSold: safeDivide(totalBagelsSold, dayRecords.length),
+      avgWasteRate,
+      salesVsOverallAvgPercent:
+        overallAvgSales > 0
+          ? ((avgSales - overallAvgSales) / overallAvgSales) * 100
+          : 0,
+      isWeekend: dow === 0 || dow === 6,
+    });
+  }
+
+  return result;
 }
