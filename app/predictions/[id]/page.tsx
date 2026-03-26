@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { comparePredictedVsActual, parsePredictionExplanation } from "@/lib/prediction-utils";
 import type { DailyRecord, SalesPrediction, PredictionExplanationItem } from "@/types";
+import DeletePredictionButton from "@/components/DeletePredictionButton";
 
 const METHOD_LABELS: Record<string, string> = {
   rule_based_v1: "규칙 기반 v1",
@@ -77,6 +78,7 @@ export default async function PredictionDetailPage({
           >
             목록
           </Link>
+          <DeletePredictionButton predictionId={prediction.id} />
         </div>
       </div>
 
