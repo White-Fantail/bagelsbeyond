@@ -3,29 +3,54 @@ import { OpenMeteoWeatherProvider } from "../providers/weather/index";
 
 // ─── URL encoding fix verification ──────────────────────────────────────────
 
+// Minimal fake response that satisfies what the provider needs
+function makeFetchStub(overrides?: Partial<{ ok: boolean; status: number; json: () => Promise<unknown>; text: () => Promise<string> }>) {
+  const defaults = {
+    ok: true,
+    status: 200,
+    json: () =>
+      Promise.resolve({
+        daily: {
+          temperature_2m_max: [18.5],
+          temperature_2m_min: [10.2],
+          precipitation_sum: [0.0],
+          windspeed_10m_max: [25.0],
+          weathercode: [1],
+        },
+      }),
+    text: () => Promise.resolve(""),
+  };
+  const mock = { ...defaults, ...overrides };
+  return vi.fn((_input: RequestInfo | URL, _init?: RequestInit) =>
+    Promise.resolve(mock as unknown as Response)
+  );
+}
+
 describe("OpenMeteoWeatherProvider — timezone URL encoding", () => {
   let capturedUrl: string | null = null;
 
   beforeEach(() => {
     capturedUrl = null;
-    vi.stubGlobal("fetch", (url: string) => {
-      capturedUrl = url;
-      // Return a valid minimal Open-Meteo response
-      return Promise.resolve({
-        ok: true,
-        status: 200,
-        json: () =>
-          Promise.resolve({
-            daily: {
-              temperature_2m_max: [18.5],
-              temperature_2m_min: [10.2],
-              precipitation_sum: [0.0],
-              windspeed_10m_max: [25.0],
-              weathercode: [1],
-            },
-          }),
-      });
-    });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((_input: RequestInfo | URL, _init?: RequestInit) => {
+        capturedUrl = String(_input);
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: () =>
+            Promise.resolve({
+              daily: {
+                temperature_2m_max: [18.5],
+                temperature_2m_min: [10.2],
+                precipitation_sum: [0.0],
+                windspeed_10m_max: [25.0],
+                weathercode: [1],
+              },
+            }),
+        } as unknown as Response);
+      })
+    );
   });
 
   afterEach(() => {
@@ -76,26 +101,20 @@ describe("OpenMeteoWeatherProvider — timezone URL encoding", () => {
   });
 
   it("throws (does not return null) when API responds with an error status", async () => {
-    vi.stubGlobal("fetch", () =>
-      Promise.resolve({
-        ok: false,
-        status: 400,
-        text: () => Promise.resolve('{"reason":"Invalid timezone"}'),
-      })
-    );
+    vi.stubGlobal("fetch", makeFetchStub({
+      ok: false,
+      status: 400,
+      text: () => Promise.resolve('{"reason":"Invalid timezone"}'),
+    }));
     const provider = new OpenMeteoWeatherProvider();
     const date = new Date("2025-01-15T00:00:00.000Z");
     await expect(provider.fetchWeatherByDate(date)).rejects.toThrow("Weather API 400");
   });
 
   it("returns null (not throw) when daily data is absent", async () => {
-    vi.stubGlobal("fetch", () =>
-      Promise.resolve({
-        ok: true,
-        status: 200,
-        json: () => Promise.resolve({}), // no 'daily' key
-      })
-    );
+    vi.stubGlobal("fetch", makeFetchStub({
+      json: () => Promise.resolve({}), // no 'daily' key
+    }));
     const provider = new OpenMeteoWeatherProvider();
     const date = new Date("2025-01-15T00:00:00.000Z");
     const result = await provider.fetchWeatherByDate(date);
