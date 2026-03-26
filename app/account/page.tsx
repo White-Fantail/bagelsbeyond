@@ -96,14 +96,14 @@ export default async function AccountPage() {
       {/* Future feature sections */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* Orders */}
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
+        <Link href="/account/orders" className="block bg-white rounded-xl border border-amber-200 p-5 hover:border-amber-400 transition-colors">
           <div className="flex items-center gap-3 mb-2">
             <span className="text-2xl">📦</span>
             <h2 className="font-semibold text-gray-900">내 주문</h2>
           </div>
           <p className="text-sm text-gray-500">주문 내역 및 상태를 확인할 수 있습니다.</p>
-          <p className="mt-3 text-xs text-amber-600 font-medium">곧 연결될 예정</p>
-        </div>
+          <p className="mt-3 text-xs text-amber-600 font-medium">주문 목록 보기 →</p>
+        </Link>
 
         {/* Subscriptions */}
         <div className="bg-white rounded-xl border border-gray-200 p-5">

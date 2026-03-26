@@ -30,14 +30,15 @@ const ADMIN_ITEMS = [
   { href: "/admin/users", label: "사용자 관리" },
   { href: "/admin/products", label: "상품 관리" },
   { href: "/admin/inventory", label: "재고 관리" },
+  { href: "/admin/orders", label: "주문 관리" },
 ];
 
 function getNavItems(role?: Role | null) {
   if (!role) return [];
   if (role === "ADMIN") return [...COMMON_ITEMS, ...STAFF_ITEMS, ...ADMIN_ITEMS];
-  if (role === "STAFF") return [...COMMON_ITEMS, ...STAFF_ITEMS];
+  if (role === "STAFF") return [...COMMON_ITEMS, ...STAFF_ITEMS, { href: "/admin/orders", label: "주문 관리" }];
   // CUSTOMER
-  return [{ href: "/account", label: "내 계정" }];
+  return [{ href: "/order", label: "주문하기" }, { href: "/account", label: "내 계정" }];
 }
 
 // ── Props ─────────────────────────────────────────────────────────────────────
