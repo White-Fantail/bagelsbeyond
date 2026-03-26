@@ -74,6 +74,11 @@ export default async function AdminPage() {
             </Link>
           </li>
           <li>
+            <Link href="/admin/production" className="text-amber-600 hover:underline">
+              → 생산량 추천 엔진 (주문·구독·예측 기반 최적 생산량)
+            </Link>
+          </li>
+          <li>
             <Link href="/analytics" className="text-amber-600 hover:underline">
               → 전체 매출 분석 (ADMIN 전용)
             </Link>
