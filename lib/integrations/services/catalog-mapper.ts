@@ -138,7 +138,7 @@ export function mapExternalCategory(externalCategoryName?: string): ProductCateg
 
   const name = externalCategoryName.toLowerCase();
   if (name.includes("bagel")) return ProductCategory.BAGEL;
-  if (name.includes("sandwich") || name.includes("sandwich")) return ProductCategory.SANDWICH;
+  if (name.includes("sandwich") || name.includes("wrap") || name.includes("sub") || name.includes("panini")) return ProductCategory.SANDWICH;
   if (name.includes("spread") || name.includes("cream")) return ProductCategory.SPREAD;
   if (
     name.includes("drink") ||
