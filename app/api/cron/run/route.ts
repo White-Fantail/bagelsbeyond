@@ -17,6 +17,7 @@ import {
   ensureExternalFactorsForNextDays,
   schedulePredictionForNextDay,
 } from "@/lib/services/schedulerService";
+import { runDailyOrderPushSync } from "@/lib/services/daily-order-push";
 
 export const dynamic = "force-dynamic";
 
@@ -55,6 +56,10 @@ export async function POST(req: NextRequest) {
       // Run it immediately
       const pending = await runPendingTasks();
       results.ranAfterSchedule = pending;
+    }
+
+    if (action === "daily_order_push" || action === "all") {
+      results.dailyOrderPush = await runDailyOrderPushSync();
     }
 
     return NextResponse.json({ ok: true, action, results });

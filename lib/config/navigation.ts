@@ -99,6 +99,7 @@ export const STAFF_NAV: RoleNavConfig = {
       items: [
         { href: "/admin/orders", label: "주문 관리" },
         { href: "/admin/subscriptions", label: "구독 관리" },
+        { href: "/admin/sync/orders", label: "주문 자동 전송 현황" },
       ],
     },
     {
@@ -180,6 +181,8 @@ export const ADMIN_NAV: RoleNavConfig = {
       label: "관리자",
       items: [
         { href: "/admin/users", label: "사용자 관리" },
+        { href: "/admin/sync/orders", label: "주문 자동 전송 현황" },
+        { href: "/admin/integrations", label: "외부 연동" },
         { href: "/settings", label: "설정" },
       ],
     },
