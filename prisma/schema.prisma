@@ -385,21 +385,54 @@ model ProductOptionGroup {
 // ─── ProductOption ────────────────────────────────────────────────────────────
 // Individual selectable option within a group.
 // e.g. "Plain Bagel +$0", "Add Bacon +$2.50"
+//
+// tracksInventory: when true, this option is tracked in DailyOptionInventory.
+//   Only options that have independent stock concerns (e.g. specific bagel types)
+//   need this flag. Most add-ons (spreads, extras) can leave it false.
+// sku / externalOptionId: nullable mapping points for future POS sync expansion.
 
 model ProductOption {
-  id             String             @id @default(cuid())
-  optionGroupId  String
-  name           String
-  priceDelta     Float              @default(0)
-  isActive       Boolean            @default(true)
-  sortOrder      Int                @default(0)
-  createdAt      DateTime           @default(now())
-  updatedAt      DateTime           @updatedAt
+  id               String             @id @default(cuid())
+  optionGroupId    String
+  name             String
+  priceDelta       Float              @default(0)
+  isActive         Boolean            @default(true)
+  sortOrder        Int                @default(0)
+  sku              String?
+  tracksInventory  Boolean            @default(false)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
 
-  optionGroup    ProductOptionGroup @relation(fields: [optionGroupId], references: [id], onDelete: Cascade)
+  optionGroup           ProductOptionGroup     @relation(fields: [optionGroupId], references: [id], onDelete: Cascade)
+  subscriptionOptions   SubscriptionItemOption[]
+  dailyOptionInventory  DailyOptionInventory[]
 
   @@index([optionGroupId])
   @@map("product_options")
+}
+
+// ─── DailyOptionInventory ────────────────────────────────────────────────────
+// Per-option, per-day inventory — only for options where tracksInventory = true.
+// Mirrors the shape of DailyInventory but targets a specific ProductOption rather
+// than a Product.  Use case: "How many Plain bagels do we need tomorrow?"
+
+model DailyOptionInventory {
+  id           String        @id @default(cuid())
+  optionId     String
+  date         DateTime      @db.Date
+  plannedQty   Int           @default(0)
+  reservedQty  Int           @default(0)
+  soldQty      Int           @default(0)
+  isSoldOut    Boolean       @default(false)
+  note         String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  option       ProductOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+
+  @@unique([optionId, date])
+  @@index([date])
+  @@map("daily_option_inventory")
 }
 
 // ─── DailyInventory ───────────────────────────────────────────────────────────
@@ -615,9 +648,39 @@ model SubscriptionItem {
 
   subscription   Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
   product        Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  options        SubscriptionItemOption[]
 
   @@index([subscriptionId])
   @@map("subscription_items")
+}
+
+// ─── SubscriptionItemOption ───────────────────────────────────────────────────
+// Stores the selected option(s) for each subscription item.
+// When a SubscriptionOccurrence generates an Order, these options are copied
+// to OrderItemOption snapshots so the historical record is preserved.
+//
+// Fallback policy for deactivated options:
+//   - If an option becomes inactive after subscription creation, the existing
+//     SubscriptionItemOption row is retained (for reference) but flagged during
+//     occurrence → order conversion so an admin can review.
+//   - New subscriptions cannot select an inactive option.
+
+model SubscriptionItemOption {
+  id                      String           @id @default(cuid())
+  subscriptionItemId      String
+  optionId                String
+  optionGroupNameSnapshot String
+  optionNameSnapshot      String
+  priceDeltaSnapshot      Float            @default(0)
+  createdAt               DateTime         @default(now())
+  updatedAt               DateTime         @updatedAt
+
+  subscriptionItem        SubscriptionItem @relation(fields: [subscriptionItemId], references: [id], onDelete: Cascade)
+  option                  ProductOption    @relation(fields: [optionId], references: [id], onDelete: Restrict)
+
+  @@index([subscriptionItemId])
+  @@index([optionId])
+  @@map("subscription_item_options")
 }
 
 model SubscriptionOccurrence {
