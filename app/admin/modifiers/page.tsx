@@ -6,6 +6,7 @@ import { IntegrationSource } from "@/app/generated/prisma/enums";
 import Link from "next/link";
 import { Suspense } from "react";
 import ModifierFilters from "./ModifierFilters";
+import ModifierSyncButton from "./ModifierSyncButton";
 
 type SearchParams = { search?: string; groupId?: string; source?: string; tracksInventory?: string; isActive?: string };
 
@@ -25,7 +26,7 @@ export default async function AdminModifiersPage({ searchParams }: { searchParam
 
   const hasFilters = !!(sp.search || sp.groupId || sp.source || sp.tracksInventory || sp.isActive);
 
-  const [options, groups, total] = await Promise.all([
+  const [options, groups, total, lastModifierSync] = await Promise.all([
     prisma.productOption.findMany({
       where,
       orderBy: [{ optionGroupId: "asc" }, { sortOrder: "asc" }],
@@ -41,6 +42,10 @@ export default async function AdminModifiersPage({ searchParams }: { searchParam
     }),
     prisma.productOptionGroup.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
     prisma.productOption.count(),
+    prisma.loyverseModifierSyncLog.findFirst({
+      orderBy: { syncedAt: "desc" },
+      select: { syncedAt: true, status: true, groupCount: true, optionCount: true, errorMessage: true },
+    }),
   ]);
 
   return (
@@ -50,15 +55,63 @@ export default async function AdminModifiersPage({ searchParams }: { searchParam
           <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
             <Link href="/admin" className="hover:text-amber-600">관리자 대시보드</Link>
             <span>/</span>
-            <span className="text-gray-700 font-medium">Modifier 관리</span>
+            <span className="text-gray-700 font-medium">모디파이어 관리</span>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">Modifier 관리</h1>
-          <p className="text-gray-500 mt-0.5 text-sm">ProductOption 기반 Modifier 목록 및 재고추적 설정을 관리합니다</p>
+          <h1 className="text-2xl font-bold text-gray-900">모디파이어 관리</h1>
+          <p className="text-gray-500 mt-0.5 text-sm">Loyverse sync 기반 Modifier (옵션) 목록 및 재고추적 설정을 관리합니다</p>
         </div>
-        <div className="flex gap-2">
-          <Link href="/admin/products" className="px-3 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 whitespace-nowrap">← 상품 관리</Link>
-          <Link href="/admin/inventory" className="px-3 py-2 bg-amber-500 text-white rounded-lg text-sm font-medium hover:bg-amber-600 whitespace-nowrap">재고 관리 →</Link>
+        <Link href="/admin/inventory" className="px-3 py-2 bg-amber-500 text-white rounded-lg text-sm font-medium hover:bg-amber-600 whitespace-nowrap">재고 관리 →</Link>
+      </div>
+
+      {/* Last modifier sync status */}
+      {lastModifierSync ? (
+        <div
+          className={`rounded-lg border p-4 text-sm space-y-1 ${
+            lastModifierSync.status === "success"
+              ? "border-green-200 bg-green-50 text-green-800"
+              : lastModifierSync.status === "failed"
+              ? "border-red-200 bg-red-50 text-red-700"
+              : "border-amber-200 bg-amber-50 text-amber-700"
+          }`}
+        >
+          <p className="font-semibold">
+            {lastModifierSync.status === "success"
+              ? "✓ Loyverse Modifier 마지막 동기화 성공"
+              : lastModifierSync.status === "failed"
+              ? "✗ Loyverse Modifier 마지막 동기화 실패"
+              : "⚠ Modifier 데이터 없음"}
+          </p>
+          <p className="text-xs">
+            {lastModifierSync.syncedAt.toLocaleString("ko-KR")}
+            {lastModifierSync.status === "success" && (
+              <> · 그룹 {lastModifierSync.groupCount}개 · 옵션 {lastModifierSync.optionCount}개</>
+            )}
+            {lastModifierSync.errorMessage && (
+              <span className="text-red-600 ml-2 font-mono">{lastModifierSync.errorMessage}</span>
+            )}
+          </p>
         </div>
+      ) : (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+          <p className="font-semibold">⚠ Modifier 동기화 이력 없음</p>
+          <p className="text-xs mt-0.5">아직 Loyverse Modifier 동기화가 실행된 적 없습니다. 아래 버튼으로 동기화하세요.</p>
+        </div>
+      )}
+
+      {/* Modifier sync button */}
+      <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-3">
+        <div>
+          <h2 className="font-semibold text-gray-900 text-sm">Loyverse Modifier 동기화</h2>
+          <p className="text-xs text-gray-500 mt-0.5">
+            Loyverse에서 modifier 그룹·옵션 목록을 가져와 내부 매핑 데이터를 업데이트합니다.
+            전체 카탈로그 sync는{" "}
+            <Link href="/admin/integrations/loyverse" className="underline hover:text-amber-600">
+              Loyverse 연동 페이지
+            </Link>
+            에서도 실행할 수 있습니다.
+          </p>
+        </div>
+        <ModifierSyncButton />
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">

@@ -105,18 +105,6 @@ export default async function AdminProductsPage({
         </div>
         <div className="flex items-center gap-2">
           <Link
-            href="/admin/modifiers"
-            className="px-3 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors whitespace-nowrap"
-          >
-            Modifier 관리 →
-          </Link>
-          <Link
-            href="/admin/categories"
-            className="px-3 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors whitespace-nowrap"
-          >
-            카테고리 →
-          </Link>
-          <Link
             href="/admin/products/new"
             className="px-4 py-2 bg-amber-500 text-white rounded-lg text-sm font-medium hover:bg-amber-600 transition-colors whitespace-nowrap"
           >
