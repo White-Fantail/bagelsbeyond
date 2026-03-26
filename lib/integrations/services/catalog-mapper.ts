@@ -36,7 +36,7 @@
 import type {
   LoyverseRawItem,
   LoyverseRawCategory,
-  LoyverseRawModifierGroup,
+  LoyverseRawModifier,
   LoyverseCatalogRaw,
   ExternalProduct,
   ExternalModifierGroup,
@@ -68,13 +68,15 @@ function resolveItemSku(item: LoyverseRawItem): string | undefined {
 }
 
 /**
- * Map a Loyverse modifier group to a POS-agnostic ExternalModifierGroup.
+ * Map a Loyverse modifier to a POS-agnostic ExternalModifierGroup.
+ * In the Loyverse API, a "modifier" is the top-level entity (the group),
+ * and its selectable items are called "options".
  */
-function mapModifierGroup(raw: LoyverseRawModifierGroup): ExternalModifierGroup {
-  const modifiers: ExternalModifier[] = raw.modifiers.map((m) => ({
-    externalId: m.id,
-    name: m.name,
-    priceDelta: m.price,
+function mapModifierGroup(raw: LoyverseRawModifier): ExternalModifierGroup {
+  const modifiers: ExternalModifier[] = raw.options.map((o) => ({
+    externalId: o.id,
+    name: o.name,
+    priceDelta: o.price,
   }));
   return {
     externalId: raw.id,
@@ -85,17 +87,17 @@ function mapModifierGroup(raw: LoyverseRawModifierGroup): ExternalModifierGroup 
 
 /**
  * Convert a single Loyverse raw item to the POS-agnostic ExternalProduct type.
- * Requires a pre-built lookup maps for categories and modifier groups.
+ * Requires a pre-built lookup maps for categories and modifiers.
  */
 function mapLoyverseItem(
   item: LoyverseRawItem,
   categoryMap: Map<string, LoyverseRawCategory>,
-  modifierGroupMap: Map<string, LoyverseRawModifierGroup>
+  modifierMap: Map<string, LoyverseRawModifier>
 ): ExternalProduct {
   const category = item.category_id ? categoryMap.get(item.category_id) : undefined;
   const modifierGroups = item.modifiers_ids
-    .map((id) => modifierGroupMap.get(id))
-    .filter((g): g is LoyverseRawModifierGroup => g !== undefined)
+    .map((id) => modifierMap.get(id))
+    .filter((g): g is LoyverseRawModifier => g !== undefined)
     .map(mapModifierGroup);
 
   return {
@@ -120,11 +122,11 @@ function mapLoyverseItem(
  */
 export function normalizeLoyverseCatalog(raw: LoyverseCatalogRaw): ExternalProduct[] {
   const categoryMap = new Map(raw.categories.map((c) => [c.id, c]));
-  const modifierGroupMap = new Map(raw.modifierGroups.map((g) => [g.id, g]));
+  const modifierMap = new Map(raw.modifiers.map((m) => [m.id, m]));
 
   return raw.items
     .filter((item) => item.deleted_at === null)
-    .map((item) => mapLoyverseItem(item, categoryMap, modifierGroupMap));
+    .map((item) => mapLoyverseItem(item, categoryMap, modifierMap));
 }
 
 // ─── ExternalProduct → internal Product field mapping ─────────────────────────
