@@ -37,10 +37,19 @@ export interface MirrorSyncResult {
   itemModifierLinksSynced: number;
   variantsSynced: number;
   inventoryLevelsSynced: number;
-  /** Items whose payload contained no modifier reference field at all */
+  // ── Stage A: Raw API response (before deleted_at filter) ─────────────────────
+  /** Total items returned by the Loyverse API (including deleted) */
+  rawItemsTotal: number;
+  /** Raw items that have the `modifiers_ids` field present in the API response */
+  rawItemsWithModifiersIds: number;
+  /** Raw items that are missing the `modifiers_ids` field in the API response */
+  rawItemsWithoutModifiersIds: number;
+  // ── Stage B: Parsed + active items (after deleted_at filter) ─────────────────
+  /** Active items whose payload contained no modifier reference field at all */
   itemsWithoutModifierField: number;
-  /** Items that had the modifier field but it was an empty array */
+  /** Active items that had the modifier field but it was an empty array */
   itemsWithEmptyModifiers: number;
+  // ── Stage C: Final link creation ──────────────────────────────────────────────
   /** Modifier IDs that could not be matched in the local DB */
   modifierNotFoundLocally: number;
   /** Number of item-modifier link DB inserts that failed */
@@ -66,6 +75,9 @@ export async function syncAllLoyverse(adapter: LoyverseAdapter): Promise<MirrorS
     itemModifierLinksSynced: 0,
     variantsSynced: 0,
     inventoryLevelsSynced: 0,
+    rawItemsTotal: 0,
+    rawItemsWithModifiersIds: 0,
+    rawItemsWithoutModifiersIds: 0,
     itemsWithoutModifierField: 0,
     itemsWithEmptyModifiers: 0,
     modifierNotFoundLocally: 0,
@@ -94,33 +106,67 @@ export async function syncAllLoyverse(adapter: LoyverseAdapter): Promise<MirrorS
     // Step 3: Items
     console.info("[mirror-sync] Step 3: Syncing items…");
     const items = await adapter.fetchItems();
-    const activeItems = items.filter((item) => item.deleted_at === null);
-    await syncItems(activeItems, result);
-    console.info(`[mirror-sync] Items synced: ${result.itemsSynced}`);
 
-    // Debug: log modifier-reference summary for active items
-    const itemsWithField = activeItems.filter((i) => "modifiers_ids" in (i as object));
-    const itemsWithRefs = activeItems.filter(
-      (i) => "modifiers_ids" in (i as object) && Array.isArray(i.modifiers_ids) && i.modifiers_ids.length > 0
+    // ── Stage A: Raw payload diagnostics (before any filtering) ───────────────
+    // This shows whether `modifiers_ids` is present in the raw API response,
+    // BEFORE the deleted_at filter is applied.
+    const rawItemsWithField = items.filter(
+      (i) => "modifiers_ids" in (i as unknown as Record<string, unknown>)
     );
-    const itemsWithEmptyField = itemsWithField.length - itemsWithRefs.length;
-    console.info(`[Loyverse Sync] Items fetched: ${activeItems.length}`);
-    console.info(`[Loyverse Sync] items with modifiers_ids field: ${itemsWithField.length}`);
-    console.info(`[Loyverse Sync] items with non-empty modifiers_ids: ${itemsWithRefs.length}`);
-    console.info(`[Loyverse Sync] items with empty modifiers_ids: ${itemsWithEmptyField}`);
+    result.rawItemsTotal = items.length;
+    result.rawItemsWithModifiersIds = rawItemsWithField.length;
+    result.rawItemsWithoutModifiersIds = items.length - rawItemsWithField.length;
+    console.info(
+      `[STAGE A: RAW] total=${result.rawItemsTotal} ` +
+      `with_modifiers_ids=${result.rawItemsWithModifiersIds} ` +
+      `without_modifiers_ids=${result.rawItemsWithoutModifiersIds}`
+    );
+    items.slice(0, 3).forEach((item, idx) => {
+      const rawObj = item as unknown as Record<string, unknown>;
+      const modIds = rawObj["modifiers_ids"];
+      console.info(
+        `[RAW ITEM #${idx + 1}] id=${item.id} name="${item.item_name}" ` +
+        `modifiers_ids=${modIds !== undefined ? JSON.stringify(modIds) : "FIELD ABSENT"}`
+      );
+    });
+
+    const activeItems = items.filter((item) => item.deleted_at === null);
+
+    // ── Stage B: Active (parsed) item diagnostics (after deleted_at filter) ───
+    const activeWithField = activeItems.filter(
+      (i) => "modifiers_ids" in (i as unknown as Record<string, unknown>)
+    );
+    const activeWithNonEmpty = activeWithField.filter(
+      (i) => Array.isArray(i.modifiers_ids) && i.modifiers_ids.length > 0
+    );
+    console.info(
+      `[STAGE B: ACTIVE] total=${activeItems.length} ` +
+      `with_modifiers_ids_field=${activeWithField.length} ` +
+      `with_non_empty_modifiers_ids=${activeWithNonEmpty.length} ` +
+      `deleted_filtered_out=${items.length - activeItems.length}`
+    );
     activeItems.slice(0, 3).forEach((item, idx) => {
       const modIds = Array.isArray(item.modifiers_ids) ? item.modifiers_ids : [];
       console.info(
-        `[Loyverse Sync] Sample Item #${idx + 1}:\n` +
-          `  id: ${item.id}\n` +
-          `  name: ${item.item_name}\n` +
-          `  modifiers_ids: [${modIds.map((id) => `"${id}"`).join(", ")}]`
+        `[PARSED ITEM #${idx + 1}] id=${item.id} name="${item.item_name}" ` +
+        `modifiers_ids=${JSON.stringify(modIds)}`
       );
     });
+
+    await syncItems(activeItems, result);
+    console.info(`[mirror-sync] Items synced: ${result.itemsSynced}`);
 
     // Step 4: Item-Modifier links
     console.info("[mirror-sync] Step 4: Syncing item-modifier links…");
     await syncItemModifierLinks(activeItems, result);
+    // ── Stage C: Final link creation summary ─────────────────────────────────
+    console.info(
+      `[STAGE C: FINAL LINKS] links_created=${result.itemModifierLinksSynced} ` +
+      `modifier_not_found_locally=${result.modifierNotFoundLocally} ` +
+      `no_field_in_parsed=${result.itemsWithoutModifierField} ` +
+      `empty_array_in_parsed=${result.itemsWithEmptyModifiers} ` +
+      `insert_errors=${result.linkInsertErrors}`
+    );
     console.info(`[mirror-sync] Item-modifier links synced: ${result.itemModifierLinksSynced}`);
 
     // Step 5: Variants
@@ -153,10 +199,9 @@ export async function syncAllLoyverse(adapter: LoyverseAdapter): Promise<MirrorS
       `options=${result.modifierOptionsSynced} items=${result.itemsSynced} ` +
       `links=${result.itemModifierLinksSynced} variants=${result.variantsSynced} ` +
       `inventory=${result.inventoryLevelsSynced} errors=${result.errorCount} ` +
-      `noModifierField=${result.itemsWithoutModifierField} ` +
-      `emptyModifiers=${result.itemsWithEmptyModifiers} ` +
-      `modifierNotFound=${result.modifierNotFoundLocally} ` +
-      `linkInsertErrors=${result.linkInsertErrors}`
+      `[A] rawTotal=${result.rawItemsTotal} rawWithField=${result.rawItemsWithModifiersIds} rawWithoutField=${result.rawItemsWithoutModifiersIds} ` +
+      `[B] noModifierField=${result.itemsWithoutModifierField} emptyModifiers=${result.itemsWithEmptyModifiers} ` +
+      `[C] modifierNotFound=${result.modifierNotFoundLocally} linkInsertErrors=${result.linkInsertErrors}`
   );
 
   return result;

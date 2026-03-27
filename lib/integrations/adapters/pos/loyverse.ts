@@ -355,20 +355,41 @@ export class LoyverseAdapter implements POSAdapter {
       );
     }
 
-    return res.json() as Promise<T>;
+    const data = (await res.json()) as T;
+    console.debug(
+      `[Loyverse] HTTP ${res.status} OK on ${method} ${url} (content-type: ${res.headers.get("content-type") ?? "unknown"})`
+    );
+    return data;
   }
 
   /**
    * Fetch all items (products) from Loyverse, following cursor-based pagination.
+   * Logs raw payload diagnostics on the first page so the presence/absence of
+   * `modifiers_ids` in the API response can be verified before any processing.
    */
   async fetchItems(): Promise<LoyverseRawItem[]> {
     if (this.mockMode) {
-      console.info("[Loyverse] Mock mode — returning mock items");
+      console.info(
+        `[Loyverse] fetchItems: mockMode=true LOYVERSE_MOCK=${process.env.LOYVERSE_MOCK ?? "unset"} — returning MOCK_CATALOG items`
+      );
+      MOCK_CATALOG.items.slice(0, 3).forEach((item, idx) => {
+        const rawObj = item as unknown as Record<string, unknown>;
+        console.info(`[RAW ITEM #${idx + 1} KEYS] ${JSON.stringify(Object.keys(rawObj))}`);
+        const modIds = rawObj["modifiers_ids"];
+        console.info(
+          `[RAW ITEM #${idx + 1} modifiers_ids] ${modIds !== undefined ? JSON.stringify(modIds) : "FIELD ABSENT"}`
+        );
+      });
       return MOCK_CATALOG.items;
     }
 
+    console.info(
+      `[Loyverse] fetchItems: mockMode=false LOYVERSE_MOCK=${process.env.LOYVERSE_MOCK ?? "unset"} url=${this.baseUrl}/items`
+    );
+
     const allItems: LoyverseRawItem[] = [];
     let cursor: string | null = null;
+    let pageNum = 0;
 
     do {
       const query: string = cursor ? `?cursor=${encodeURIComponent(cursor)}` : "";
@@ -379,12 +400,35 @@ export class LoyverseAdapter implements POSAdapter {
         }>(`/items${query}`);
 
       if (Array.isArray(page.items)) {
+        // Log raw payload diagnostics for the first page only
+        if (pageNum === 0) {
+          const sample = page.items.slice(0, 3);
+          sample.forEach((rawItem, idx) => {
+            const rawObj = rawItem as unknown as Record<string, unknown>;
+            console.info(`[RAW ITEM #${idx + 1} KEYS] ${JSON.stringify(Object.keys(rawObj))}`);
+            const modIds = rawObj["modifiers_ids"];
+            console.info(
+              `[RAW ITEM #${idx + 1} modifiers_ids] ${modIds !== undefined ? JSON.stringify(modIds) : "FIELD ABSENT"}`
+            );
+            console.info(`[RAW ITEM #${idx + 1} FULL JSON] ${JSON.stringify(rawItem)}`);
+          });
+
+          // Count field presence across ALL items on first page
+          const total = page.items.length;
+          const withField = page.items.filter(
+            (i) => "modifiers_ids" in (i as unknown as Record<string, unknown>)
+          ).length;
+          console.info(
+            `[RAW PAGE 1 SUMMARY] items=${total} with_modifiers_ids_field=${withField} without=${total - withField}`
+          );
+        }
         allItems.push(...page.items);
       }
       cursor = page.cursor ?? null;
+      pageNum++;
     } while (cursor);
 
-    console.info(`[Loyverse] Fetched ${allItems.length} items`);
+    console.info(`[Loyverse] Fetched ${allItems.length} items (${pageNum} page(s))`);
     return allItems;
   }
 
