@@ -7,8 +7,12 @@ interface ModifierSyncResult {
   status: "success" | "empty" | "failed";
   groupCount: number;
   optionCount: number;
+  createdGroups?: number;
   updatedGroups?: number;
+  createdOptions?: number;
   updatedOptions?: number;
+  linkedProducts?: number;
+  skippedGroups?: number;
   syncedAt: string;
   errorMessage?: string;
   errorCode?: number;
@@ -44,6 +48,9 @@ export default function ModifierSyncButton() {
     }
   }
 
+  const totalSavedGroups = (result?.createdGroups ?? 0) + (result?.updatedGroups ?? 0);
+  const totalSavedOptions = (result?.createdOptions ?? 0) + (result?.updatedOptions ?? 0);
+
   return (
     <div className="space-y-3">
       <button
@@ -71,9 +78,18 @@ export default function ModifierSyncButton() {
           <p className="text-xs text-green-700">
             Loyverse: 그룹 {result.groupCount}개 · 옵션 {result.optionCount}개
           </p>
-          {(result.updatedGroups !== undefined || result.updatedOptions !== undefined) && (
+          <p className="text-xs text-green-600">
+            내부 DB — 그룹 {totalSavedGroups}개 (신규 {result.createdGroups ?? 0} · 업데이트 {result.updatedGroups ?? 0})
+            {" "}· 옵션 {totalSavedOptions}개 (신규 {result.createdOptions ?? 0} · 업데이트 {result.updatedOptions ?? 0})
+          </p>
+          {(result.linkedProducts ?? 0) > 0 && (
             <p className="text-xs text-green-600">
-              내부 DB 갱신: 그룹 {result.updatedGroups ?? 0}개 · 옵션 {result.updatedOptions ?? 0}개
+              상품 연결: {result.linkedProducts}건
+            </p>
+          )}
+          {(result.skippedGroups ?? 0) > 0 && (
+            <p className="text-xs text-amber-600">
+              ⚠ skip된 그룹: {result.skippedGroups}개
             </p>
           )}
         </div>
