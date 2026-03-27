@@ -18,7 +18,7 @@ export default async function ModifierDetailPage({ params }: { params: Promise<{
     include: {
       optionGroup: {
         include: {
-          product: { select: { id: true, name: true, category: true } },
+          product: { select: { id: true, name: true } },
           assignments: { include: { product: { select: { id: true, name: true } } } },
         },
       },

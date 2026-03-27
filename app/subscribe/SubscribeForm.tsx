@@ -11,7 +11,6 @@ interface Product {
   id: string;
   name: string;
   basePrice: number;
-  category: string;
 }
 
 interface Props {

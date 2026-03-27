@@ -111,7 +111,256 @@ export default function ModifierMappingManager({
         syncedAt: new Date().toISOString(),
         groupCount: 0,
         optionCount: 0,
-          return null;
+        errorMessage: err instanceof Error ? err.message : "알 수 없는 오류",
+      });
+    } finally {
+      setLoadingExternal(false);
+    }
+  }
+
+  /** Trigger a live Loyverse modifier sync and reload data. */
+  async function syncModifiers() {
+    setSyncingModifiers(true);
+    try {
+      const res = await fetch("/api/admin/integrations/loyverse/modifier-sync", {
+        method: "POST",
+      });
+      const data = (await res.json()) as ModifierSyncMeta & { syncedAt: string };
+      setSyncMeta({
+        status: data.status,
+        syncedAt: data.syncedAt ?? new Date().toISOString(),
+        groupCount: data.groupCount ?? 0,
+        optionCount: data.optionCount ?? 0,
+        errorMessage: data.errorMessage,
+        errorCode: data.errorCode,
+      });
+      await loadExternalModifiers();
+    } catch (err) {
+      setSyncMeta({
+        status: "failed",
+        syncedAt: new Date().toISOString(),
+        groupCount: 0,
+        optionCount: 0,
+        errorMessage: err instanceof Error ? err.message : "알 수 없는 오류",
+      });
+    } finally {
+      setSyncingModifiers(false);
+    }
+  }
+
+  async function saveMapping(option: InternalOption) {
+    const externalOptionId = selectedExternal[option.id];
+    if (!externalOptionId) return;
+    setSavingIds((prev) => new Set(prev).add(option.id));
+    try {
+      const externalOpt = externalOptions.find((e) => e.optionId === externalOptionId);
+      const res = await fetch("/api/admin/integrations/loyverse/option-maps", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          productOptionId: option.id,
+          externalOptionId,
+          externalName: externalOpt?.optionName ?? null,
+          externalGroupId: externalOpt?.groupId ?? null,
+          externalGroupName: externalOpt?.groupName ?? null,
+        }),
+      });
+      if (res.ok) {
+        const saved = (await res.json()) as {
+          id: string;
+          externalOptionId: string;
+          externalName: string | null;
+          externalGroupId: string | null;
+          externalGroupName: string | null;
+          lastSyncedAt: string | null;
+        };
+        startTransition(() => {
+          setGroups((prev) =>
+            prev.map((g) => ({
+              ...g,
+              options: g.options.map((o) =>
+                o.id === option.id
+                  ? {
+                      ...o,
+                      externalOptionMappings: [
+                        {
+                          id: saved.id,
+                          externalOptionId: saved.externalOptionId,
+                          externalName: saved.externalName,
+                          externalGroupId: saved.externalGroupId,
+                          externalGroupName: saved.externalGroupName,
+                          lastSyncedAt: saved.lastSyncedAt,
+                        },
+                      ],
+                    }
+                  : o
+              ),
+            }))
+          );
+          setSelectedExternal((prev) => {
+            const next = { ...prev };
+            delete next[option.id];
+            return next;
+          });
+        });
+      }
+    } finally {
+      setSavingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(option.id);
+        return next;
+      });
+    }
+  }
+
+  async function deleteMapping(option: InternalOption, mappingId: string) {
+    setDeletingIds((prev) => new Set(prev).add(option.id));
+    try {
+      const res = await fetch(`/api/admin/integrations/loyverse/option-maps/${mappingId}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        startTransition(() => {
+          setGroups((prev) =>
+            prev.map((g) => ({
+              ...g,
+              options: g.options.map((o) =>
+                o.id === option.id ? { ...o, externalOptionMappings: [] } : o
+              ),
+            }))
+          );
+        });
+      }
+    } finally {
+      setDeletingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(option.id);
+        return next;
+      });
+    }
+  }
+
+  // ── Derived state ─────────────────────────────────────────────────────────────
+
+  const allProducts = Array.from(
+    new Map(
+      groups
+        .filter((g) => g.product)
+        .map((g) => [g.product!.id, g.product!])
+    ).values()
+  );
+
+  const filteredGroups = groups.filter((g) => {
+    if (filterProductId !== "all" && g.product?.id !== filterProductId) return false;
+    return true;
+  });
+
+  return (
+    <div className="space-y-4">
+      <ModifierSyncStatusPanel
+        syncMeta={syncMeta}
+        loading={loadingExternal || syncingModifiers}
+        onRefresh={() => void syncModifiers()}
+        showManualFallback={showManualFallback}
+        onToggleManualFallback={() => setShowManualFallback((v) => !v)}
+      />
+
+      {/* Filter bar */}
+      <div className="flex flex-wrap gap-3 items-center">
+        <input
+          type="text"
+          placeholder="옵션 이름 검색..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="px-3 py-1.5 border border-gray-300 rounded-md text-sm text-gray-900 bg-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500"
+        />
+        <select
+          value={filterProductId}
+          onChange={(e) => setFilterProductId(e.target.value)}
+          className="px-3 py-1.5 border border-gray-300 rounded-md text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+        >
+          <option value="all">전체 상품</option>
+          {allProducts.map((p) => (
+            <option key={p.id} value={p.id}>{p.name}</option>
+          ))}
+        </select>
+        <div className="flex gap-1">
+          {(["all", "unmapped", "tracksInventory"] as FilterMode[]).map((mode) => (
+            <button
+              key={mode}
+              type="button"
+              onClick={() => setFilterMode(mode)}
+              className={`px-3 py-1.5 text-xs rounded-md border transition-colors ${
+                filterMode === mode
+                  ? "bg-amber-500 text-white border-amber-500"
+                  : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+              }`}
+            >
+              {mode === "all" ? "전체" : mode === "unmapped" ? "미매핑" : "재고 추적"}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Groups */}
+      {filteredGroups.map((group) => (
+        <div key={group.id} className="rounded-xl border border-gray-200 overflow-hidden">
+          <div className="px-5 py-3 bg-gray-50 border-b border-gray-200 flex items-center gap-3">
+            <span className="font-semibold text-sm text-gray-900">{group.name}</span>
+            {group.product && (
+              <Link
+                href={`/admin/products/${group.product.id}`}
+                className="text-xs text-amber-600 hover:underline"
+              >
+                {group.product.name}
+              </Link>
+            )}
+          </div>
+          <table className="w-full text-left">
+            <thead>
+              <tr className="border-b border-gray-200 bg-gray-50">
+                <th className="px-5 py-2 text-xs font-medium text-gray-500">옵션</th>
+                <th className="px-5 py-2 text-xs font-medium text-gray-500">Loyverse Modifier</th>
+                <th className="px-5 py-2 text-xs font-medium text-gray-500">마지막 동기화</th>
+                <th className="px-5 py-2 text-xs font-medium text-gray-500">작업</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {group.options.map((option) => {
+                const useManual = showManualFallback;
+                const isMapped = option.externalOptionMappings.length > 0;
+                const mapping = option.externalOptionMappings[0] ?? null;
+                const isSaving = savingIds.has(option.id);
+                const isDeleting = deletingIds.has(option.id);
+                if (filterMode === "unmapped" && isMapped) return null;
+                if (filterMode === "tracksInventory" && !option.tracksInventory) return null;
+                if (
+                  searchQuery &&
+                  !option.name.toLowerCase().includes(searchQuery.toLowerCase())
+                )
+                  return null;
+
+                return (
+                  <tr key={option.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-5 py-3">
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-sm font-medium text-gray-900">{option.name}</span>
+                        {option.priceDelta !== 0 && (
+                          <span className="text-xs text-gray-400">
+                            {option.priceDelta > 0 ? "+" : ""}${option.priceDelta}
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-5 py-3">
+                      {isMapped ? (
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-xs font-mono text-gray-700">
+                            {mapping?.externalOptionId}
+                          </span>
+                          {mapping?.externalName && (
+                            <span className="text-xs text-gray-400">{mapping.externalName}</span>
+                          )}
                         </div>
                       ) : (
                         <div className="flex flex-col gap-1">
