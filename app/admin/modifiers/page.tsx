@@ -218,12 +218,12 @@ export default async function AdminModifiersPage({ searchParams }: { searchParam
           <h2 className="font-semibold text-gray-900 text-sm">Loyverse Modifier 동기화</h2>
           <p className="text-xs text-gray-500 mt-0.5">
             Loyverse에서 modifier 그룹·옵션 목록을 가져와 내부 매핑 데이터를 업데이트합니다.
-            이미 매핑된 그룹은 이름·옵션이 즉시 갱신되며, 새 그룹은 전체 카탈로그 sync 후 반영됩니다.
-            전체 카탈로그 sync는{" "}
+            이미 매핑된 그룹은 이름·옵션이 즉시 갱신되며, 아직 내부 DB에 없는 그룹은 연결된 상품이 이미 동기화된 경우 자동 생성됩니다.
+            상품이 아직 내부 DB에 없다면{" "}
             <Link href="/admin/integrations/loyverse" className="underline hover:text-amber-600">
               Loyverse 연동 페이지
             </Link>
-            에서 실행할 수 있습니다.
+            에서 전체 카탈로그 sync를 먼저 실행하세요.
           </p>
         </div>
         <ModifierSyncButton />

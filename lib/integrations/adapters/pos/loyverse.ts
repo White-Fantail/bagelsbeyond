@@ -359,13 +359,20 @@ export class LoyverseAdapter implements POSAdapter {
 
     do {
       const query: string = cursor ? `?cursor=${encodeURIComponent(cursor)}` : "";
+      // The real Loyverse API v1.0 uses "modifier_options" for the options array
+      // inside each modifier group. We normalise it to "options" here so the rest
+      // of the codebase (and tests) can use the stable internal field name.
       const page = await this.fetchWithAuth<{
-        modifiers: LoyverseRawModifier[];
+        modifiers: Array<LoyverseRawModifier & { modifier_options?: LoyverseRawModifier["options"] }>;
         cursor: string | null;
       }>(`/modifiers${query}`);
 
       if (Array.isArray(page.modifiers)) {
-        allModifiers.push(...page.modifiers);
+        const normalised = page.modifiers.map((m) => ({
+          ...m,
+          options: m.options ?? m.modifier_options,
+        }));
+        allModifiers.push(...normalised);
       }
       cursor = page.cursor ?? null;
     } while (cursor);
