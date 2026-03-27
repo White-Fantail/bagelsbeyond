@@ -10,7 +10,7 @@ export default async function SubscribePage() {
   const products = await prisma.product.findMany({
     where: { isActive: true, isSubscriptionEligible: true },
     orderBy: { sortOrder: "asc" },
-    select: { id: true, name: true, basePrice: true, category: true },
+    select: { id: true, name: true, basePrice: true },
   });
 
   return (

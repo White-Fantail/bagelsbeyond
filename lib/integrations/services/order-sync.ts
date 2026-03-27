@@ -141,8 +141,7 @@ export async function pushOrderToPOS(
         .map((o) => `"${o.optionNameSnapshot}" (optionId=${o.productOptionId})`)
         .join(", ");
       const errorMessage =
-        `Missing ExternalOptionMap for modifier option(s): ${names}. ` +
-        // Loyverse modifier mapping 안내 제거됨
+        `Missing ExternalOptionMap for modifier option(s): ${names}.`;
       await prisma.externalOrderMap.upsert({
         where: { orderId },
         update: {

@@ -72,8 +72,7 @@ function makeAdapter(groups: ExternalModifierGroup[] = []): POSAdapter {
         },
       ],
     }),
-    fetchExternalOrders: vi.fn(),
-    pushOrder: vi.fn(),
+    pushOrderToExternalPos: vi.fn(),
   };
 }
 
