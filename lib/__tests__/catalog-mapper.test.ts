@@ -61,7 +61,7 @@ const MOCK_CATALOG: LoyverseCatalogRaw = {
       category_id: "cat-001",
       sold_by_weight: false,
       is_composite: false,
-      modifiers_ids: ["mod-group-001"],
+      modifier_ids: ["mod-group-001"],
       form: "FORM_ITEM",
       image_url: null,
       color: null,
@@ -98,7 +98,7 @@ const MOCK_CATALOG: LoyverseCatalogRaw = {
       category_id: null,
       sold_by_weight: false,
       is_composite: false,
-      modifiers_ids: [],
+      modifier_ids: [],
       form: "FORM_ITEM",
       image_url: null,
       color: null,
@@ -115,7 +115,7 @@ const MOCK_CATALOG: LoyverseCatalogRaw = {
       category_id: "cat-002",
       sold_by_weight: false,
       is_composite: false,
-      modifiers_ids: ["mod-group-002"],
+      modifier_ids: ["mod-group-002"],
       form: "FORM_ITEM",
       image_url: null,
       color: null,
@@ -225,10 +225,10 @@ describe("normalizeLoyverseCatalog", () => {
     });
   });
 
-  it("sets modifierGroups to undefined for items with no modifiers_ids", () => {
+  it("sets modifierGroups to undefined for items with no modifier_ids", () => {
     const products = normalizeLoyverseCatalog({
       ...MOCK_CATALOG,
-      items: [{ ...MOCK_CATALOG.items[0], modifiers_ids: [] }],
+      items: [{ ...MOCK_CATALOG.items[0], modifier_ids: [] }],
     });
     expect(products[0].modifierGroups).toBeUndefined();
   });
@@ -274,7 +274,7 @@ describe("normalizeLoyverseCatalog", () => {
   });
 
   it("returns price 0 for items with no variants", () => {
-    const noVariantItem = { ...MOCK_CATALOG.items[0], variants: [], modifiers_ids: [] };
+    const noVariantItem = { ...MOCK_CATALOG.items[0], variants: [], modifier_ids: [] };
     const products = normalizeLoyverseCatalog({ ...MOCK_CATALOG, items: [noVariantItem] });
     expect(products[0].price).toBe(0);
   });
