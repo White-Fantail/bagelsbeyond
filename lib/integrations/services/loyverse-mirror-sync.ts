@@ -37,6 +37,14 @@ export interface MirrorSyncResult {
   itemModifierLinksSynced: number;
   variantsSynced: number;
   inventoryLevelsSynced: number;
+  /** Items whose payload contained no modifier reference field at all */
+  itemsWithoutModifierField: number;
+  /** Items that had the modifier field but it was an empty array */
+  itemsWithEmptyModifiers: number;
+  /** Modifier IDs that could not be matched in the local DB */
+  modifierNotFoundLocally: number;
+  /** Number of item-modifier link DB inserts that failed */
+  linkInsertErrors: number;
   errorCount: number;
   errors: string[];
 }
@@ -58,6 +66,10 @@ export async function syncAllLoyverse(adapter: LoyverseAdapter): Promise<MirrorS
     itemModifierLinksSynced: 0,
     variantsSynced: 0,
     inventoryLevelsSynced: 0,
+    itemsWithoutModifierField: 0,
+    itemsWithEmptyModifiers: 0,
+    modifierNotFoundLocally: 0,
+    linkInsertErrors: 0,
     errorCount: 0,
     errors: [],
   };
@@ -85,6 +97,26 @@ export async function syncAllLoyverse(adapter: LoyverseAdapter): Promise<MirrorS
     const activeItems = items.filter((item) => item.deleted_at === null);
     await syncItems(activeItems, result);
     console.info(`[mirror-sync] Items synced: ${result.itemsSynced}`);
+
+    // Debug: log modifier-reference summary for active items
+    const itemsWithRefs = activeItems.filter(
+      (i) => "modifiers_ids" in (i as object) && Array.isArray(i.modifiers_ids) && i.modifiers_ids.length > 0
+    );
+    const itemsWithoutRefs = activeItems.length - itemsWithRefs.length;
+    console.info(`[Loyverse Sync] Items fetched: ${activeItems.length}`);
+    console.info(`[Loyverse Sync] Items with modifier refs: ${itemsWithRefs.length}`);
+    console.info(`[Loyverse Sync] Items without modifier refs: ${itemsWithoutRefs}`);
+    activeItems.slice(0, 3).forEach((item, idx) => {
+      const rawKeys = Object.keys(item as object).join(", ");
+      const modIds = Array.isArray(item.modifiers_ids) ? item.modifiers_ids : [];
+      console.info(
+        `[Loyverse Sync] Sample Item #${idx + 1}:\n` +
+          `  id: ${item.id}\n` +
+          `  name: ${item.item_name}\n` +
+          `  modifier refs: [${modIds.join(", ")}]\n` +
+          `  raw fields: ${rawKeys}`
+      );
+    });
 
     // Step 4: Item-Modifier links
     console.info("[mirror-sync] Step 4: Syncing item-modifier links…");
@@ -120,7 +152,11 @@ export async function syncAllLoyverse(adapter: LoyverseAdapter): Promise<MirrorS
       `categories=${result.categoriesSynced} modifiers=${result.modifiersSynced} ` +
       `options=${result.modifierOptionsSynced} items=${result.itemsSynced} ` +
       `links=${result.itemModifierLinksSynced} variants=${result.variantsSynced} ` +
-      `inventory=${result.inventoryLevelsSynced} errors=${result.errorCount}`
+      `inventory=${result.inventoryLevelsSynced} errors=${result.errorCount} ` +
+      `noModifierField=${result.itemsWithoutModifierField} ` +
+      `emptyModifiers=${result.itemsWithEmptyModifiers} ` +
+      `modifierNotFound=${result.modifierNotFoundLocally} ` +
+      `linkInsertErrors=${result.linkInsertErrors}`
   );
 
   return result;
@@ -270,8 +306,22 @@ async function syncItemModifierLinks(
   items: LoyverseRawItem[],
   result: MirrorSyncResult
 ): Promise<void> {
+  // Pre-load all known modifier IDs to avoid N+1 queries
+  const knownModifiers = await prisma.loyverseModifier.findMany({ select: { id: true } });
+  const knownModifierIds = new Set(knownModifiers.map((m: { id: string }) => m.id));
+
   for (const item of items) {
     try {
+      // Case 1: modifier reference field is completely absent from the payload
+      const hasModifierField = "modifiers_ids" in (item as object);
+      if (!hasModifierField) {
+        result.itemsWithoutModifierField++;
+        console.warn(
+          `[mirror-sync] API response does not include modifier references for item "${item.item_name}" (${item.id})`
+        );
+        continue;
+      }
+
       const modifierIds = item.modifiers_ids ?? [];
 
       // Delete existing links for this item then re-insert from Loyverse
@@ -279,16 +329,36 @@ async function syncItemModifierLinks(
         where: { itemId: item.id },
       });
 
+      // Case 3: modifier field present but empty
+      if (modifierIds.length === 0) {
+        result.itemsWithEmptyModifiers++;
+        console.info(
+          `[mirror-sync] Item "${item.item_name}" (${item.id}) has no modifiers assigned in Loyverse`
+        );
+        continue;
+      }
+
       for (const modifierId of modifierIds) {
+        // Case 2: modifier ID not found in local DB
+        if (!knownModifierIds.has(modifierId)) {
+          result.modifierNotFoundLocally++;
+          console.warn(
+            `[mirror-sync] Modifier not found in local DB: modifier=${modifierId} for item "${item.item_name}" (${item.id})`
+          );
+          continue;
+        }
+
         try {
           await prisma.loyverseItemModifier.create({
             data: { itemId: item.id, modifierId },
           });
           result.itemModifierLinksSynced++;
         } catch (err) {
+          // Case 4: DB insert failure
+          result.linkInsertErrors++;
+          result.errorCount++;
           const msg = `Item-modifier link item=${item.id} modifier=${modifierId}: ${String(err)}`;
           result.errors.push(msg);
-          result.errorCount++;
           console.error("[mirror-sync] Item-modifier link error:", msg);
         }
       }
@@ -299,6 +369,16 @@ async function syncItemModifierLinks(
       console.error("[mirror-sync] Item-modifier deleteMany error:", msg);
     }
   }
+
+  // Summary log
+  console.info(
+    `[mirror-sync] Item-modifier link summary: ` +
+      `links=${result.itemModifierLinksSynced} ` +
+      `noField=${result.itemsWithoutModifierField} ` +
+      `emptyList=${result.itemsWithEmptyModifiers} ` +
+      `notFoundLocally=${result.modifierNotFoundLocally} ` +
+      `insertErrors=${result.linkInsertErrors}`
+  );
 }
 
 // ─── Step 5: Variants ─────────────────────────────────────────────────────────
