@@ -135,7 +135,7 @@ function GroupForm({
           disabled={saving || !form.name.trim()}
           className="px-4 py-1.5 bg-amber-500 text-white rounded-md text-sm font-medium hover:bg-amber-600 transition-colors disabled:opacity-50"
         >
-          {saving ? "Saving......" : saveLabel}
+          {saving ? "Saving..." : saveLabel}
         </button>
         <button
           type="button"
@@ -239,7 +239,7 @@ function OptionForm({
           disabled={saving || !form.name.trim()}
           className="px-3 py-1.5 bg-amber-500 text-white rounded-md text-xs font-medium hover:bg-amber-600 transition-colors disabled:opacity-50"
         >
-          {saving ? "Saving......" : saveLabel}
+          {saving ? "Saving..." : saveLabel}
         </button>
         <button
           type="button"
@@ -594,7 +594,7 @@ export default function ModifierGroupManager({
                     className="px-2.5 py-1 text-xs text-red-600 border border-red-200 rounded-md hover:bg-red-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                     title={group.isLoyverseSynced ? "Cannot delete Loyverse-synced groups" : undefined}
                   >
-                    {deletingGroupId === group.id ? "Deleting......" : "Delete"}
+                    {deletingGroupId === group.id ? "Deleting..." : "Delete"}
                   </button>
                 </div>
               </div>

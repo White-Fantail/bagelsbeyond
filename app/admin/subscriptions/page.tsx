@@ -79,7 +79,7 @@ export default async function AdminSubscriptionsPage({
       {/* Table */}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         {subscriptions.length === 0 ? (
-          <div className="p-10 text-center text-gray-500">No results matching your filters No subscriptions yet</div>
+          <div className="p-10 text-center text-gray-500">No subscriptions yet. No results matching your filters.</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">

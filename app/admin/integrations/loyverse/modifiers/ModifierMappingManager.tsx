@@ -446,7 +446,7 @@ export default function ModifierMappingManager({
                           disabled={isSaving || !selectedExternal[option.id] || isPending}
                           className="px-3 py-1 text-xs rounded bg-amber-500 text-white hover:bg-amber-600 transition-colors disabled:opacity-40"
                         >
-                          {isSaving ? "Saving......" : "Save Mapping"}
+                          {isSaving ? "Saving..." : "Save Mapping"}
                         </button>
                       )}
                     </td>

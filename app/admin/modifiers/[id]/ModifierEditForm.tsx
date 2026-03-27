@@ -55,7 +55,7 @@ export default function ModifierEditForm({
         </label>
       </div>
       <button type="submit" disabled={status === "loading"} className="px-6 py-2 bg-amber-500 text-white rounded-lg text-sm font-medium hover:bg-amber-600 disabled:opacity-50">
-        {status === "loading" ? "Saving......" : "Save"}
+        {status === "loading" ? "Saving..." : "Save"}
       </button>
     </form>
   );

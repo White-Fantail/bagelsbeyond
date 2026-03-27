@@ -44,7 +44,7 @@ export default function DeleteProductButton({
         disabled={status === "loading"}
         className="px-4 py-2 bg-red-50 text-red-600 border border-red-200 rounded-lg text-sm font-medium hover:bg-red-100 transition-colors disabled:opacity-50 whitespace-nowrap"
       >
-        {status === "loading" ? "Deleting......" : "Products Delete"}
+        {status === "loading" ? "Deleting..." : "Delete Product"}
       </button>
       {error && <p className="text-xs text-red-600">{error}</p>}
     </div>

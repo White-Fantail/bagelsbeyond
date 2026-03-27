@@ -314,7 +314,7 @@ export default function ProductForm({
           disabled={status === "loading" || status === "success"}
           className="px-6 py-2 bg-amber-500 text-white rounded-lg text-sm font-medium hover:bg-amber-600 transition-colors disabled:opacity-50"
         >
-          {status === "loading" ? "Saving......" : "Save"}
+          {status === "loading" ? "Saving..." : "Save"}
         </button>
         <Link
           href="/admin/products"

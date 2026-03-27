@@ -74,7 +74,7 @@ export default async function SegmentsPage({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">🔍 segments Analytics</h1>
+        <h1 className="text-2xl font-bold text-gray-900">🔍 Segments Analytics</h1>
         <p className="text-gray-500 mt-1">
           Compare sales and operational metrics by condition
         </p>
