@@ -235,7 +235,7 @@ async function syncItems(
 ): Promise<void> {
   for (const item of items) {
     try {
-      const defaultPrice = item.variants[0]?.default_price ?? null;
+      const defaultPrice = item.variants?.[0]?.default_price ?? null;
       await prisma.loyverseItem.upsert({
         where: { id: item.id },
         create: {
@@ -310,7 +310,7 @@ async function syncVariants(
   for (const variant of variants) {
     try {
       const price = variant.default_price ?? variant.stores?.[0]?.price ?? null;
-      const updatedAt = new Date();
+      const updatedAt = variant.updated_at ? new Date(variant.updated_at) : new Date();
       await prisma.loyverseVariant.upsert({
         where: { id: variant.variant_id },
         create: {

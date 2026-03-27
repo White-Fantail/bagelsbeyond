@@ -28,6 +28,7 @@ export interface LoyverseRawVariant {
   option2_val: string | null;
   option3_name: string | null;
   option3_val: string | null;
+  updated_at?: string;
 }
 
 export interface LoyverseRawItem {
