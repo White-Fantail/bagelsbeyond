@@ -26,12 +26,12 @@ export default function CatalogSyncButton() {
       });
       const data = (await res.json()) as SyncResult;
       if (!res.ok) {
-        setError(data.message ?? "동기화 중 오류가 발생했습니다");
+        setError(data.message ?? "Error during Sync");
       } else {
         setResult(data);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "네트워크 오류가 발생했습니다");
+      setError(err instanceof Error ? err.message : "Network error");
     } finally {
       setLoading(false);
     }
@@ -44,29 +44,29 @@ export default function CatalogSyncButton() {
         disabled={loading}
         className="px-5 py-2.5 bg-amber-500 text-white rounded-lg text-sm font-medium hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >
-        {loading ? "동기화 중…" : "🔄 Loyverse 카탈로그 동기화"}
+        {loading ? "Syncing…" : "🔄 Loyverse Catalog Sync"}
       </button>
 
       {error && (
         <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-          <strong>동기화 실패:</strong> {error}
+          <strong>Sync Failed:</strong> {error}
         </div>
       )}
 
       {result && !error && (
         <div className="rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800 space-y-1">
           <p className="font-semibold">
-            ✓ 동기화 완료
+            ✓ Sync complete
             {result.finishedAt && (
               <span className="ml-2 text-xs font-normal text-green-600">
-                {new Date(result.finishedAt).toLocaleString("ko-KR")}
+                {new Date(result.finishedAt).toLocaleString("en-NZ")}
               </span>
             )}
           </p>
           <p className="text-xs text-green-700">
-            가져옴 {result.fetched}개 · 신규 {result.created}개 · 업데이트 {result.updated}개
+            Fetched {result.fetched} · New {result.created} · Updated {result.updated}
             {result.errors.length > 0 && (
-              <span className="text-red-600"> · 오류 {result.errors.length}개</span>
+              <span className="text-red-600"> · Error {result.errors.length}</span>
             )}
           </p>
           {result.errors.length > 0 && (

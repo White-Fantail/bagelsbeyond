@@ -7,8 +7,8 @@ import Link from "next/link";
 import CancelOrderButton from "./CancelOrderButton";
 
 const STATUS_LABELS: Record<string, string> = {
-  DRAFT: "임시", PENDING: "접수됨", CONFIRMED: "확인됨",
-  PREPARING: "준비중", READY: "준비완료", COMPLETED: "완료", CANCELLED: "취소됨",
+  DRAFT: "Draft", PENDING: "Received", CONFIRMED: "Confirmed",
+  PREPARING: "Preparing", READY: "Ready", COMPLETED: "Completed", CANCELLED: "Cancelled",
 };
 
 const STATUS_COLOR: Record<string, string> = {
@@ -38,20 +38,20 @@ export default async function AccountOrderDetailPage({
 
   if (!order || order.userId !== session.userId) notFound();
 
-  const fmt = new Intl.DateTimeFormat("ko-KR", { year: "numeric", month: "long", day: "numeric" });
+  const fmt = new Intl.DateTimeFormat("en-NZ", { year: "numeric", month: "long", day: "numeric" });
   const canCancel = order.status === "PENDING" || order.status === "CONFIRMED";
 
   return (
     <div className="space-y-6 max-w-2xl">
       <div>
         <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
-          <Link href="/account" className="hover:text-amber-600">내 계정</Link>
+          <Link href="/account" className="hover:text-amber-600">My Account</Link>
           <span>/</span>
-          <Link href="/account/orders" className="hover:text-amber-600">내 주문</Link>
+          <Link href="/account/orders" className="hover:text-amber-600">My Orders</Link>
           <span>/</span>
           <span className="text-gray-700 font-medium">{order.orderNumber}</span>
         </div>
-        <h1 className="text-2xl font-bold text-gray-900">주문 상세</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Orders Details</h1>
       </div>
 
       {/* Order info */}
@@ -65,25 +65,25 @@ export default async function AccountOrderDetailPage({
         <hr className="border-gray-100" />
         <div className="grid grid-cols-2 gap-3 text-sm">
           <div>
-            <p className="text-gray-500">픽업 날짜</p>
+            <p className="text-gray-500">Pickup Date</p>
             <p className="font-medium">{order.pickupDate ? fmt.format(new Date(order.pickupDate)) : "-"}</p>
           </div>
           <div>
-            <p className="text-gray-500">픽업 시간</p>
+            <p className="text-gray-500">Pickup Time</p>
             <p className="font-medium">{order.pickupTimeSlot ?? "-"}</p>
           </div>
           <div>
-            <p className="text-gray-500">결제 상태</p>
-            <p className="font-medium">{order.paymentStatus === "UNPAID" ? "현장 결제 예정" : order.paymentStatus}</p>
+            <p className="text-gray-500">Payment Status</p>
+            <p className="font-medium">{order.paymentStatus === "UNPAID" ? "On-site payment" : order.paymentStatus}</p>
           </div>
           <div>
-            <p className="text-gray-500">주문일</p>
+            <p className="text-gray-500">Order Date</p>
             <p className="font-medium">{fmt.format(new Date(order.createdAt))}</p>
           </div>
         </div>
         {order.note && (
           <div className="text-sm">
-            <p className="text-gray-500">메모</p>
+            <p className="text-gray-500">Notes</p>
             <p className="text-gray-800">{order.note}</p>
           </div>
         )}
@@ -91,7 +91,7 @@ export default async function AccountOrderDetailPage({
 
       {/* Items */}
       <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-3">
-        <h2 className="font-semibold text-gray-900">주문 상품</h2>
+        <h2 className="font-semibold text-gray-900">Orders Products</h2>
         {order.items.map((item) => (
           <div key={item.id} className="text-sm space-y-0.5">
             <div className="flex justify-between">
@@ -107,7 +107,7 @@ export default async function AccountOrderDetailPage({
         ))}
         <hr className="border-gray-100" />
         <div className="flex justify-between font-bold text-gray-900">
-          <span>합계</span>
+          <span>Total</span>
           <span>${order.totalAmount.toFixed(2)}</span>
         </div>
       </div>

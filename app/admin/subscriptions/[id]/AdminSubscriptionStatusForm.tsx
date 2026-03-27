@@ -25,14 +25,14 @@ export default function AdminSubscriptionStatusForm({ subscriptionId, currentSta
 
   return (
     <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
-      <span className="text-xs text-gray-500 self-center">상태 변경:</span>
+      <span className="text-xs text-gray-500 self-center">Change Status:</span>
       {currentStatus !== "ACTIVE" && (
         <button
           onClick={() => handleStatusChange("ACTIVE")}
           disabled={isPending}
           className="px-3 py-1.5 rounded-lg bg-green-600 text-white text-xs font-medium hover:bg-green-700 disabled:opacity-60"
         >
-          활성화
+          Activate
         </button>
       )}
       {currentStatus !== "PAUSED" && (
@@ -41,18 +41,18 @@ export default function AdminSubscriptionStatusForm({ subscriptionId, currentSta
           disabled={isPending}
           className="px-3 py-1.5 rounded-lg bg-amber-500 text-white text-xs font-medium hover:bg-amber-600 disabled:opacity-60"
         >
-          일시정지
+          Pause
         </button>
       )}
       <button
         onClick={() => {
-          if (!confirm("구독을 취소하시겠습니까?")) return;
+          if (!confirm("Cancel this subscription?")) return;
           handleStatusChange("CANCELLED");
         }}
         disabled={isPending}
         className="px-3 py-1.5 rounded-lg border border-red-200 text-red-600 text-xs font-medium hover:bg-red-50 disabled:opacity-60"
       >
-        {isPending ? "처리중..." : "취소"}
+        {isPending ? "Processing..." : "Cancel"}
       </button>
     </div>
   );

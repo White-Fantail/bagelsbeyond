@@ -5,8 +5,8 @@ import { prisma } from "@/lib/db";
 import Link from "next/link";
 
 const STATUS_LABELS: Record<string, string> = {
-  DRAFT: "임시", PENDING: "접수됨", CONFIRMED: "확인됨",
-  PREPARING: "준비중", READY: "준비완료", COMPLETED: "완료", CANCELLED: "취소됨",
+  DRAFT: "Draft", PENDING: "Received", CONFIRMED: "Confirmed",
+  PREPARING: "Preparing", READY: "Ready", COMPLETED: "Completed", CANCELLED: "Cancelled",
 };
 
 const STATUS_COLOR: Record<string, string> = {
@@ -35,25 +35,25 @@ export default async function AccountOrdersPage() {
     },
   });
 
-  const fmt = new Intl.DateTimeFormat("ko-KR", { year: "numeric", month: "short", day: "numeric" });
+  const fmt = new Intl.DateTimeFormat("en-NZ", { year: "numeric", month: "short", day: "numeric" });
 
   return (
     <div className="space-y-6 max-w-3xl">
       <div>
         <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
-          <Link href="/account" className="hover:text-amber-600">내 계정</Link>
+          <Link href="/account" className="hover:text-amber-600">My Account</Link>
           <span>/</span>
-          <span className="text-gray-700 font-medium">내 주문</span>
+          <span className="text-gray-700 font-medium">My Orders</span>
         </div>
-        <h1 className="text-2xl font-bold text-gray-900">내 주문 목록</h1>
+        <h1 className="text-2xl font-bold text-gray-900">My Orders List</h1>
       </div>
 
       {orders.length === 0 ? (
         <div className="bg-white rounded-xl border border-gray-200 p-10 text-center space-y-4">
           <p className="text-4xl">📦</p>
-          <p className="text-gray-500">아직 주문 내역이 없습니다</p>
+          <p className="text-gray-500">No order history yet</p>
           <Link href="/order" className="inline-block px-5 py-2 rounded-lg bg-amber-500 text-white font-medium hover:bg-amber-600">
-            주문하러 가기
+            Place an Order
           </Link>
         </div>
       ) : (
@@ -75,7 +75,7 @@ export default async function AccountOrdersPage() {
               </div>
               <div className="mt-2 flex items-center justify-between text-sm">
                 <span className="text-gray-600">
-                  픽업: {order.pickupDate ? fmt.format(new Date(order.pickupDate)) : "-"}
+                  Pickup: {order.pickupDate ? fmt.format(new Date(order.pickupDate)) : "-"}
                   {order.pickupTimeSlot && ` ${order.pickupTimeSlot}`}
                 </span>
                 <span className="font-bold text-gray-900">${order.totalAmount.toFixed(2)}</span>

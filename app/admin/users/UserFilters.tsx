@@ -4,24 +4,24 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
 const ROLE_OPTIONS = [
-  { value: "ALL", label: "전체 권한" },
+  { value: "ALL", label: "All Role" },
   { value: "ADMIN", label: "ADMIN" },
   { value: "STAFF", label: "STAFF" },
   { value: "CUSTOMER", label: "CUSTOMER" },
 ];
 
 const ACTIVE_OPTIONS = [
-  { value: "ALL", label: "전체 상태" },
-  { value: "ACTIVE", label: "활성" },
-  { value: "INACTIVE", label: "비활성" },
+  { value: "ALL", label: "All Status" },
+  { value: "ACTIVE", label: "Active" },
+  { value: "INACTIVE", label: "Inactive" },
 ];
 
 const SORT_OPTIONS = [
-  { value: "createdAt_desc", label: "최신 가입순" },
-  { value: "createdAt_asc", label: "오래된 가입순" },
-  { value: "email_asc", label: "이메일 오름차순" },
-  { value: "email_desc", label: "이메일 내림차순" },
-  { value: "name_asc", label: "이름 오름차순" },
+  { value: "createdAt_desc", label: "Newest join date" },
+  { value: "createdAt_asc", label: "Oldest join date" },
+  { value: "email_asc", label: "Email A-Z" },
+  { value: "email_desc", label: "Email Z-A" },
+  { value: "name_asc", label: "Name A-Z" },
 ];
 
 export default function UserFilters() {
@@ -64,19 +64,19 @@ export default function UserFilters() {
       <div className="flex flex-wrap gap-3 items-end">
         {/* Search */}
         <div className="flex flex-col gap-1 flex-1 min-w-[180px]">
-          <label className="text-xs font-medium text-gray-600">이름 / 이메일 검색</label>
+          <label className="text-xs font-medium text-gray-600">Name / Email Search</label>
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="이름 또는 이메일..."
+            placeholder="Name or Email..."
             className="px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500"
           />
         </div>
 
         {/* Role filter */}
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-gray-600">권한</label>
+          <label className="text-xs font-medium text-gray-600">Role</label>
           <select
             value={role}
             onChange={(e) => {
@@ -93,7 +93,7 @@ export default function UserFilters() {
 
         {/* Active filter */}
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-gray-600">활성 상태</label>
+          <label className="text-xs font-medium text-gray-600">Active Status</label>
           <select
             value={isActive}
             onChange={(e) => {
@@ -110,7 +110,7 @@ export default function UserFilters() {
 
         {/* Sort */}
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-gray-600">정렬</label>
+          <label className="text-xs font-medium text-gray-600">Sort</label>
           <select
             value={sort}
             onChange={(e) => {
@@ -131,14 +131,14 @@ export default function UserFilters() {
             type="submit"
             className="px-4 py-2 bg-amber-500 text-white rounded-md text-sm font-medium hover:bg-amber-600 transition-colors"
           >
-            검색
+            Search
           </button>
           <button
             type="button"
             onClick={handleReset}
             className="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors"
           >
-            초기화
+            Reset
           </button>
         </div>
       </div>

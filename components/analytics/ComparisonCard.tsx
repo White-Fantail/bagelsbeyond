@@ -52,7 +52,7 @@ export default function ComparisonCard({
         <div className={`mt-2 text-sm font-medium ${diffColor}`}>
           {diffArrow}{" "}
           {isPositive ? "+" : ""}
-          {diffPercent.toFixed(1)}% (세그먼트 기준)
+          {diffPercent.toFixed(1)}% (segments baseline)
         </div>
       )}
     </div>

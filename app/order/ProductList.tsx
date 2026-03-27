@@ -52,7 +52,7 @@ export default function ProductList({ products }: Props) {
       if (!group.isRequired) continue;
       const sel = selections[product.id]?.[group.id];
       if (!sel) {
-        setFeedback((f) => ({ ...f, [product.id]: `"${group.name}" 옵션을 선택해주세요` }));
+        setFeedback((f) => ({ ...f, [product.id]: `Please select "${group.name}" option` }));
         return;
       }
     }
@@ -86,7 +86,7 @@ export default function ProductList({ products }: Props) {
     const updated = [...cart, newItem];
     setCart(updated);
     saveCart(updated);
-    setFeedback((f) => ({ ...f, [product.id]: "장바구니에 담겼습니다 ✓" }));
+    setFeedback((f) => ({ ...f, [product.id]: "Added to cart ✓" }));
     setTimeout(() => setFeedback((f) => ({ ...f, [product.id]: "" })), 2000);
   }, [cart, quantities, selections]);
 
@@ -113,13 +113,13 @@ export default function ProductList({ products }: Props) {
                 </div>
                 <div className="flex flex-col items-end gap-1 shrink-0">
                   <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">
-                    {product.category ?? "기타"}
+                    {product.category ?? "Other"}
                   </span>
                   {product.isSubscriptionEligible && (
-                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">구독 가능</span>
+                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">Subscribable</span>
                   )}
                   {isSoldOut && (
-                    <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full">품절</span>
+                    <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full">Out of Stock</span>
                   )}
                 </div>
               </div>
@@ -145,8 +145,8 @@ export default function ProductList({ products }: Props) {
                       }))
                     }
                   >
-                    {!group.isRequired && <option value="">선택 안 함</option>}
-                    {group.isRequired && <option value="">선택해주세요</option>}
+                    {!group.isRequired && <option value="">No selection</option>}
+                    {group.isRequired && <option value="">Please select</option>}
                     {group.options.map((o) => (
                       <option key={o.id} value={o.id}>
                         {o.name}{o.priceDelta !== 0 && ` (${o.priceDelta > 0 ? "+" : ""}$${o.priceDelta.toFixed(2)})`}
@@ -176,7 +176,7 @@ export default function ProductList({ products }: Props) {
                   onClick={() => handleAddToCart(product)}
                   className="flex-1 py-1.5 px-3 text-sm font-medium rounded-lg bg-amber-500 text-white hover:bg-amber-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
                 >
-                  {isSoldOut ? "품절" : "장바구니 담기"}
+                  {isSoldOut ? "Out of Stock" : "Add to Cart"}
                 </button>
               </div>
 
@@ -191,9 +191,9 @@ export default function ProductList({ products }: Props) {
       {/* Sticky cart bar */}
       {cartCount > 0 && (
         <div className="fixed bottom-0 left-0 right-0 bg-amber-600 text-white p-4 flex items-center justify-between z-50">
-          <span className="font-medium">장바구니 {cartCount}개</span>
+          <span className="font-medium">Cart ({cartCount})</span>
           <Link href="/order/cart" className="bg-white text-amber-700 font-semibold px-5 py-2 rounded-lg text-sm">
-            장바구니 보기 →
+            View Cart →
           </Link>
         </div>
       )}

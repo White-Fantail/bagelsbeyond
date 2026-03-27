@@ -4,7 +4,7 @@ import { apiRequireAdmin, isNextResponse } from "@/lib/auth/dal";
 import { z } from "zod";
 
 const optionCreateSchema = z.object({
-  name: z.string().min(1, "옵션명을 입력해주세요"),
+  name: z.string().min(1, "Please enter an option name"),
   priceDelta: z.number().default(0),
   isActive: z.boolean().default(true),
   sortOrder: z.number().int().default(0),
@@ -25,20 +25,20 @@ export async function POST(
     where: { id: groupId, productId },
   });
   if (!group) {
-    return NextResponse.json({ message: "옵션 그룹을 찾을 수 없습니다" }, { status: 404 });
+    return NextResponse.json({ message: "Option group not found" }, { status: 404 });
   }
 
   let body: unknown;
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ message: "요청 본문이 올바르지 않습니다" }, { status: 400 });
+    return NextResponse.json({ message: "Invalid request body" }, { status: 400 });
   }
 
   const parsed = optionCreateSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { message: "입력값이 올바르지 않습니다", errors: parsed.error.flatten() },
+      { message: "Invalid input", errors: parsed.error.flatten() },
       { status: 400 }
     );
   }
@@ -49,6 +49,6 @@ export async function POST(
     });
     return NextResponse.json({ option }, { status: 201 });
   } catch (_error) {
-    return NextResponse.json({ message: "옵션 생성에 실패했습니다" }, { status: 500 });
+    return NextResponse.json({ message: "Failed to create option" }, { status: 500 });
   }
 }

@@ -16,7 +16,7 @@ export default function AnalyticsSubNav({ items }: Props) {
     pathname === href || pathname.startsWith(href + "/");
 
   return (
-    <nav className="flex gap-1 flex-wrap" aria-label="분석 서브 네비게이션">
+    <nav className="flex gap-1 flex-wrap" aria-label="Analytics sub-navigation">
       {items.map((item) => (
         <Link
           key={item.href}

@@ -55,7 +55,7 @@ export default function OptionGroupManager({ productId, initialGroups }: Props) 
     try {
       const qs = search ? `?search=${encodeURIComponent(search)}` : "";
       const res = await fetch(`/api/admin/modifier-groups${qs}`);
-      if (!res.ok) throw new Error("불러오기 실패");
+      if (!res.ok) throw new Error("Load failed");
       const { groups: all } = (await res.json()) as { groups: AvailableGroup[] };
       setAvailableGroups(all);
     } catch {
@@ -82,7 +82,7 @@ export default function OptionGroupManager({ productId, initialGroups }: Props) 
       });
       if (!res.ok) {
         const err = (await res.json()) as { message?: string };
-        throw new Error(err.message || "연결에 실패했습니다");
+        throw new Error(err.message || "Link failed");
       }
       const { group } = (await res.json()) as { group: ProductOptionGroup };
       setGroups((prev) => {
@@ -94,7 +94,7 @@ export default function OptionGroupManager({ productId, initialGroups }: Props) 
       setShowPicker(false);
       setPickerSearch("");
     } catch (e) {
-      setAssignError(e instanceof Error ? e.message : "연결에 실패했습니다");
+      setAssignError(e instanceof Error ? e.message : "Link failed");
     } finally {
       setAssigningGroupId(null);
     }
@@ -102,7 +102,7 @@ export default function OptionGroupManager({ productId, initialGroups }: Props) 
 
   const handleRemove = async (group: ProductOptionGroup) => {
     const confirmed = window.confirm(
-      `"${group.name}" 그룹을 이 상품에서 제거하시겠습니까?\n\n그룹 자체는 삭제되지 않으며, 이 상품에서만 연결이 해제됩니다.`
+      `Remove "${group.name}" group from this product?\n\nThe group itself will not be deleted — only this product's link will be removed.`
     );
     if (!confirmed) return;
 
@@ -114,11 +114,11 @@ export default function OptionGroupManager({ productId, initialGroups }: Props) 
       );
       if (!res.ok) {
         const err = (await res.json()) as { message?: string };
-        throw new Error(err.message || "제거에 실패했습니다");
+        throw new Error(err.message || "Remove failed");
       }
       setGroups((prev) => prev.filter((g) => g.id !== group.id));
     } catch (e) {
-      alert(e instanceof Error ? e.message : "제거에 실패했습니다");
+      alert(e instanceof Error ? e.message : "Remove failed");
     } finally {
       setRemovingGroupId(null);
     }
@@ -130,13 +130,13 @@ export default function OptionGroupManager({ productId, initialGroups }: Props) 
     <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-5">
       <div className="flex items-center justify-between border-b border-gray-100 pb-2">
         <div>
-          <h2 className="text-base font-semibold text-gray-900">모디파이어 그룹</h2>
+          <h2 className="text-base font-semibold text-gray-900">Modifier Groups</h2>
           <p className="text-xs text-gray-500 mt-0.5">
-            이 상품에 연결된 모디파이어 그룹 목록입니다.{" "}
+            List of modifier groups linked to this product.{" "}
             <Link href="/admin/modifiers" className="text-amber-600 hover:underline">
-              모디파이어 관리
+              Modifier Management
             </Link>
-            에서 그룹·옵션을 생성하거나 수정할 수 있습니다.
+            to create or edit groups and options.
           </p>
         </div>
         {!showPicker && (
@@ -148,7 +148,7 @@ export default function OptionGroupManager({ productId, initialGroups }: Props) 
             }}
             className="px-3 py-1.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-md text-xs font-medium hover:bg-amber-100 transition-colors whitespace-nowrap"
           >
-            + 그룹 연결
+            + Link Group
           </button>
         )}
       </div>
@@ -156,21 +156,21 @@ export default function OptionGroupManager({ productId, initialGroups }: Props) 
       {/* Assignment picker */}
       {showPicker && (
         <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 space-y-3">
-          <p className="text-sm font-medium text-amber-800">모디파이어 그룹 선택</p>
+          <p className="text-sm font-medium text-amber-800">Select Modifier Group</p>
           {assignError && <p className="text-xs text-red-600">❌ {assignError}</p>}
           <input
             type="text"
             value={pickerSearch}
             onChange={(e) => setPickerSearch(e.target.value)}
-            placeholder="그룹명으로 검색..."
+            placeholder="Search by group name..."
             className="w-full px-3 py-1.5 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-amber-500"
           />
           <div className="max-h-48 overflow-y-auto space-y-1">
             {pickerLoading ? (
-              <p className="text-xs text-gray-400 text-center py-3">불러오는 중...</p>
+              <p className="text-xs text-gray-400 text-center py-3">Loading...</p>
             ) : unassignedAvailable.length === 0 ? (
               <p className="text-xs text-gray-400 text-center py-3">
-                {pickerSearch ? "검색 결과가 없습니다" : "연결 가능한 그룹이 없습니다"}
+                {pickerSearch ? "No search results" : "No groups available to link"}
               </p>
             ) : (
               unassignedAvailable.map((g) => (
@@ -180,7 +180,7 @@ export default function OptionGroupManager({ productId, initialGroups }: Props) 
                 >
                   <div>
                     <p className="text-sm font-medium text-gray-800">{g.name}</p>
-                    <p className="text-xs text-gray-400">{g._count.options}개 옵션</p>
+                    <p className="text-xs text-gray-400">{g._count.options} options</p>
                   </div>
                   <button
                     type="button"
@@ -188,7 +188,7 @@ export default function OptionGroupManager({ productId, initialGroups }: Props) 
                     disabled={assigningGroupId === g.id}
                     className="px-3 py-1 text-xs bg-amber-500 text-white rounded-md hover:bg-amber-600 transition-colors disabled:opacity-50"
                   >
-                    {assigningGroupId === g.id ? "연결 중..." : "연결"}
+                    {assigningGroupId === g.id ? "Connecting..." : "Link"}
                   </button>
                 </div>
               ))
@@ -196,7 +196,7 @@ export default function OptionGroupManager({ productId, initialGroups }: Props) 
           </div>
           <div className="flex gap-2 pt-1">
             <Link href="/admin/modifiers" className="text-xs text-amber-700 hover:underline">
-              모디파이어 관리에서 새 그룹 만들기 →
+              Create new group in Modifier Management →
             </Link>
             <span className="text-gray-300">|</span>
             <button
@@ -208,7 +208,7 @@ export default function OptionGroupManager({ productId, initialGroups }: Props) 
               }}
               className="text-xs text-gray-500 hover:text-gray-700"
             >
-              닫기
+              Close
             </button>
           </div>
         </div>
@@ -216,14 +216,14 @@ export default function OptionGroupManager({ productId, initialGroups }: Props) 
 
       {groups.length === 0 && !showPicker && (
         <div className="text-sm text-gray-400 text-center py-6 space-y-2">
-          <p>연결된 모디파이어 그룹이 없습니다.</p>
+          <p>No linked modifier groups.</p>
           <p className="text-xs">
-            위의 <strong className="text-amber-600">+ 그룹 연결</strong> 버튼으로 기존 그룹을
-            연결하거나,{" "}
+            Use the <strong className="text-amber-600">+ Link Group</strong> button above to link an existing group,
+            link, or{" "}
             <Link href="/admin/modifiers" className="text-amber-600 hover:underline">
-              모디파이어 관리
+              Modifier Management
             </Link>
-            에서 새 그룹을 만드세요.
+            Create a new group there.
           </p>
         </div>
       )}
@@ -252,11 +252,11 @@ export default function OptionGroupManager({ productId, initialGroups }: Props) 
                   )}
                   {group.isRequired && (
                     <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-xs rounded-full font-medium">
-                      필수
+                      Required
                     </span>
                   )}
                   <span className="text-xs text-gray-400">
-                    선택 {group.minSelect}~{group.maxSelect}개 · {group.options.length}개 옵션
+                    Select {group.minSelect}~{group.maxSelect} · {group.options.length} options
                   </span>
                 </button>
                 <div className="flex items-center gap-2 flex-shrink-0 ml-2">
@@ -265,7 +265,7 @@ export default function OptionGroupManager({ productId, initialGroups }: Props) 
                     className="px-2.5 py-1 text-xs text-amber-600 border border-amber-200 rounded-md hover:bg-amber-50 transition-colors"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    수정 →
+                    Edit →
                   </Link>
                   <button
                     type="button"
@@ -273,7 +273,7 @@ export default function OptionGroupManager({ productId, initialGroups }: Props) 
                     disabled={removingGroupId === group.id}
                     className="px-2.5 py-1 text-xs text-red-600 border border-red-200 rounded-md hover:bg-red-50 transition-colors disabled:opacity-50"
                   >
-                    {removingGroupId === group.id ? "제거 중..." : "제거"}
+                    {removingGroupId === group.id ? "Removing..." : "Remove"}
                   </button>
                 </div>
               </div>
@@ -282,7 +282,7 @@ export default function OptionGroupManager({ productId, initialGroups }: Props) 
               {isExpanded && (
                 <div className="divide-y divide-gray-100">
                   {group.options.length === 0 ? (
-                    <p className="px-4 py-3 text-xs text-gray-400">옵션이 없습니다</p>
+                    <p className="px-4 py-3 text-xs text-gray-400">No options</p>
                   ) : (
                     group.options.map((option) => (
                       <div
@@ -299,19 +299,19 @@ export default function OptionGroupManager({ productId, initialGroups }: Props) 
                           </span>
                           <span className="text-gray-500 tabular-nums">
                             {option.priceDelta === 0
-                              ? "무료"
+                              ? "Free"
                               : option.priceDelta > 0
                               ? `+$${option.priceDelta.toFixed(2)}`
                               : `-$${Math.abs(option.priceDelta).toFixed(2)}`}
                           </span>
                           {!option.isActive && (
                             <span className="px-1.5 py-0.5 bg-gray-100 text-gray-400 text-xs rounded-full">
-                              비활성
+                              Inactive
                             </span>
                           )}
                           {option.tracksInventory && (
                             <span className="px-1.5 py-0.5 bg-blue-50 text-blue-600 text-xs rounded-full">
-                              재고추적
+                              Inventory Tracking
                             </span>
                           )}
                           {option.sku && (
@@ -322,7 +322,7 @@ export default function OptionGroupManager({ productId, initialGroups }: Props) 
                           href={`/admin/modifiers/${option.id}`}
                           className="text-xs text-gray-400 hover:text-amber-600 transition-colors flex-shrink-0"
                         >
-                          상세 →
+                          Details →
                         </Link>
                       </div>
                     ))

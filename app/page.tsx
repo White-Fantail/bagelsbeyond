@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/session";
 
 /**
- * Home page routing policy (B안):
+ * Home page routing policy:
  * - Unauthenticated users see the Bagel's Beyond landing page.
  * - Authenticated ADMIN/STAFF are redirected to /dashboard.
  * - Authenticated CUSTOMER is redirected to /account.
@@ -32,27 +32,27 @@ export default async function HomePage() {
           Bagel&apos;s Beyond
         </h1>
         <p className="mt-4 text-lg sm:text-xl text-gray-500 max-w-xl">
-          매출 기록부터 예측, 생산량 추천까지 — 베이글 매장 운영을 스마트하게
+          From sales records to predictions and production recommendations — manage your bagel shop smartly
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           <Link
             href="/login"
             className="px-6 py-3 rounded-lg bg-amber-500 text-white font-semibold text-sm hover:bg-amber-600 transition-colors shadow-sm"
           >
-            로그인
+            Login
           </Link>
           <Link
             href="/signup"
             className="px-6 py-3 rounded-lg border border-gray-300 bg-white text-gray-700 font-semibold text-sm hover:bg-gray-50 transition-colors"
           >
-            회원가입
+            Sign Up
           </Link>
         </div>
       </section>
 
       {/* Feature cards */}
       <section className="max-w-4xl mx-auto px-4 pb-16 w-full">
-        <h2 className="text-xl font-bold text-gray-800 mb-6 text-center">주요 기능</h2>
+        <h2 className="text-xl font-bold text-gray-800 mb-6 text-center">Key Features</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {FEATURES.map((f) => (
             <div
@@ -69,12 +69,12 @@ export default async function HomePage() {
 
       {/* Footer CTA */}
       <section className="border-t border-gray-200 bg-white py-8 text-center">
-        <p className="text-sm text-gray-500 mb-3">이미 계정이 있으신가요?</p>
+        <p className="text-sm text-gray-500 mb-3">Already have an account?</p>
         <Link
           href="/login"
           className="text-sm font-medium text-amber-600 hover:text-amber-700 underline underline-offset-2"
         >
-          로그인하러 가기 →
+          Go to Login →
         </Link>
       </section>
     </div>
@@ -84,32 +84,32 @@ export default async function HomePage() {
 const FEATURES = [
   {
     emoji: "📋",
-    title: "일별 매출 기록",
-    description: "매장, Uber Eats, DoorDash, 기타 채널별 매출과 생산량을 날짜별로 간편하게 기록하세요.",
+    title: "Daily Sales Records",
+    description: "Easily record daily store, Uber Eats, DoorDash, and other channel sales and production.",
   },
   {
     emoji: "🌤️",
-    title: "외부 데이터 자동 수집",
-    description: "날씨, 공휴일, 학교 방학, 지역 이벤트, 뉴스 데이터를 자동으로 수집해 분석에 반영합니다.",
+    title: "Automatic External Data Collection",
+    description: "Automatically collects Weather, Holiday, School Holiday, Local Event, and News data for analytics.",
   },
   {
     emoji: "🔮",
-    title: "매출 예측",
-    description: "과거 데이터와 외부 요인 가중치를 활용한 규칙 기반 예측 엔진으로 내일 매출을 미리 알아보세요.",
+    title: "Sales Predictions",
+    description: "Preview tomorrow's sales with a rule-based prediction engine using historical data and external factor weights.",
   },
   {
     emoji: "🥯",
-    title: "생산량 추천",
-    description: "예측 판매량과 과거 소진율을 기반으로 최적의 베이글 생산량을 추천해드립니다.",
+    title: "Production Recommendation",
+    description: "Recommends the optimal baking quantity based on predicted sold qty and historical sell-through rate.",
   },
   {
     emoji: "📊",
-    title: "분석 리포트",
-    description: "일별·주별·월별·요일별 분석과 공휴일·날씨 세그먼트 비교로 패턴을 파악하세요.",
+    title: "Analytics Report",
+    description: "Identify patterns with daily/weekly/monthly/day-of-week analytics and Holiday/Weather segment comparisons.",
   },
   {
     emoji: "📅",
-    title: "달력 시각화",
-    description: "실제 매출과 예측을 달력 형태로 한눈에 보고, 날씨 아이콘으로 외부 요인도 확인하세요.",
+    title: "Calendar Visualization",
+    description: "View actual sales and predictions in Calendar view, and check external factors with weather icons.",
   },
 ];

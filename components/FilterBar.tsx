@@ -31,7 +31,7 @@ export default function FilterBar() {
     <form onSubmit={handleSubmit} className="bg-white rounded-lg border border-gray-200 p-4">
       <div className="flex flex-wrap gap-3 items-end">
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-gray-600">시작일</label>
+          <label className="text-xs font-medium text-gray-600">Start Date</label>
           <input
             type="date"
             value={startDate}
@@ -40,7 +40,7 @@ export default function FilterBar() {
           />
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-gray-600">종료일</label>
+          <label className="text-xs font-medium text-gray-600">End Date</label>
           <input
             type="date"
             value={endDate}
@@ -49,12 +49,12 @@ export default function FilterBar() {
           />
         </div>
         <div className="flex flex-col gap-1 flex-1 min-w-[160px]">
-          <label className="text-xs font-medium text-gray-600">키워드</label>
+          <label className="text-xs font-medium text-gray-600">Keyword</label>
           <input
             type="text"
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
-            placeholder="메모, 이벤트, 공휴일 검색..."
+            placeholder="Notes, Event, Holiday Search..."
             className="px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500"
           />
         </div>
@@ -63,14 +63,14 @@ export default function FilterBar() {
             type="submit"
             className="px-4 py-2 bg-amber-500 text-white rounded-md text-sm font-medium hover:bg-amber-600 transition-colors"
           >
-            검색
+            Search
           </button>
           <button
             type="button"
             onClick={handleReset}
             className="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors"
           >
-            초기화
+            Reset
           </button>
         </div>
       </div>

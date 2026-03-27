@@ -7,7 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
 const schema = z.object({
-  targetDate: z.string().min(1, "날짜를 선택해주세요"),
+  targetDate: z.string().min(1, "Please select a date"),
   weatherSummary: z.string().optional(),
   minTemp: z.string().optional(),
   maxTemp: z.string().optional(),
@@ -82,13 +82,13 @@ export default function NewPredictionPage() {
 
       if (!res.ok) {
         const json = await res.json() as { message?: string };
-        throw new Error(json.message ?? "예측 생성에 실패했습니다");
+        throw new Error(json.message ?? "Failed to create prediction");
       }
 
       const saved = await res.json() as { id: string };
       router.push(`/predictions/${saved.id}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "오류가 발생했습니다");
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setIsSubmitting(false);
     }
@@ -97,8 +97,8 @@ export default function NewPredictionPage() {
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">새 예측 만들기</h1>
-        <p className="text-gray-500 mt-1">날짜를 입력하면 외부 요인이 자동으로 수집됩니다. 필요 시 직접 입력할 수도 있습니다.</p>
+        <h1 className="text-2xl font-bold text-gray-900">Create New Prediction</h1>
+        <p className="text-gray-500 mt-1">External factors will be automatically collected when you enter a date. You can also enter them manually if needed.</p>
       </div>
 
       {error && (
@@ -110,9 +110,9 @@ export default function NewPredictionPage() {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* Date */}
         <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
-          <h2 className="text-base font-semibold text-gray-900">예측 날짜</h2>
+          <h2 className="text-base font-semibold text-gray-900">Predictions Date</h2>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">날짜 *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Date *</label>
             <input
               type="date"
               {...register("targetDate")}
@@ -126,21 +126,21 @@ export default function NewPredictionPage() {
 
         {/* External Factors */}
         <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
-          <h2 className="text-base font-semibold text-gray-900">외부 요인 (선택)</h2>
+          <h2 className="text-base font-semibold text-gray-900">External Factors (Select)</h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="sm:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">날씨 요약</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Weather Summary</label>
               <input
                 type="text"
                 {...register("weatherSummary")}
-                placeholder="예: 맑음, 흐림, 비"
+                placeholder="e.g. Clear, Cloudy, Rain"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">최저 기온 (°C)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Min Temp (°C)</label>
               <input
                 type="number"
                 step="0.1"
@@ -150,7 +150,7 @@ export default function NewPredictionPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">최고 기온 (°C)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Max Temp (°C)</label>
               <input
                 type="number"
                 step="0.1"
@@ -160,7 +160,7 @@ export default function NewPredictionPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">강수량 (mm)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Rainfall (mm)</label>
               <input
                 type="number"
                 step="0.1"
@@ -171,7 +171,7 @@ export default function NewPredictionPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">풍속 (kph)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Wind Speed (kph)</label>
               <input
                 type="number"
                 step="0.1"
@@ -182,21 +182,21 @@ export default function NewPredictionPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">공휴일명</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Holiday Name</label>
               <input
                 type="text"
                 {...register("holidayName")}
-                placeholder="예: 크리스마스"
+                placeholder="e.g. Christmas"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">로컬 이벤트</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Local Event</label>
               <input
                 type="text"
                 {...register("localEventName")}
-                placeholder="예: 지역 마켓"
+                placeholder="e.g. Local Market"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -208,26 +208,26 @@ export default function NewPredictionPage() {
                   {...register("schoolHoliday")}
                   className="rounded border-gray-300"
                 />
-                <span className="text-sm font-medium text-gray-700">학교 방학</span>
+                <span className="text-sm font-medium text-gray-700">School Holiday</span>
               </label>
             </div>
 
             <div className="sm:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">뉴질랜드 뉴스 요약</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">NZ News Summary</label>
               <textarea
                 {...register("nzNewsSummary")}
                 rows={2}
-                placeholder="주요 뉴질랜드 뉴스..."
+                placeholder="Main NZ news..."
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
             <div className="sm:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">국제 뉴스 요약</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">World News Summary</label>
               <textarea
                 {...register("worldNewsSummary")}
                 rows={2}
-                placeholder="주요 국제 뉴스..."
+                placeholder="Main world news..."
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -240,14 +240,14 @@ export default function NewPredictionPage() {
             disabled={isSubmitting}
             className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 font-medium transition-colors"
           >
-            {isSubmitting ? "예측 실행 중..." : "🔮 예측 실행"}
+            {isSubmitting ? "Predictions Running..." : "🔮 Run Predictions"}
           </button>
           <button
             type="button"
             onClick={() => router.back()}
             className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
           >
-            취소
+            Cancel
           </button>
         </div>
       </form>

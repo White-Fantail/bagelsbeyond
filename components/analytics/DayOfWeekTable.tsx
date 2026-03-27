@@ -9,7 +9,7 @@ export default function DayOfWeekTable({ data }: Props) {
   if (data.every((d) => d.recordCount === 0)) {
     return (
       <p className="text-sm text-gray-500 py-4 text-center">
-        해당 기간에 데이터가 없습니다.
+        No data for this period.
       </p>
     );
   }
@@ -21,13 +21,13 @@ export default function DayOfWeekTable({ data }: Props) {
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-gray-200">
-            <th className="text-left py-2 pr-3 font-medium text-gray-500 whitespace-nowrap">요일</th>
-            <th className="text-right py-2 px-2 font-medium text-gray-500 whitespace-nowrap">일수</th>
-            <th className="text-right py-2 px-2 font-medium text-gray-500 whitespace-nowrap">평균 매출</th>
-            <th className="text-right py-2 px-2 font-medium text-gray-500 whitespace-nowrap hidden sm:table-cell">총 매출</th>
-            <th className="text-right py-2 px-2 font-medium text-gray-500 whitespace-nowrap hidden sm:table-cell">평균 판매</th>
-            <th className="text-right py-2 px-2 font-medium text-gray-500 whitespace-nowrap">전체 대비</th>
-            <th className="py-2 pl-2 font-medium text-gray-500 w-28 hidden md:table-cell">비중</th>
+            <th className="text-left py-2 pr-3 font-medium text-gray-500 whitespace-nowrap">Day</th>
+            <th className="text-right py-2 px-2 font-medium text-gray-500 whitespace-nowrap">Days</th>
+            <th className="text-right py-2 px-2 font-medium text-gray-500 whitespace-nowrap">Avg. Sales</th>
+            <th className="text-right py-2 px-2 font-medium text-gray-500 whitespace-nowrap hidden sm:table-cell">Total Sales</th>
+            <th className="text-right py-2 px-2 font-medium text-gray-500 whitespace-nowrap hidden sm:table-cell">Avg. Sold</th>
+            <th className="text-right py-2 px-2 font-medium text-gray-500 whitespace-nowrap">vs. All</th>
+            <th className="py-2 pl-2 font-medium text-gray-500 w-28 hidden md:table-cell">Share</th>
           </tr>
         </thead>
         <tbody>
@@ -46,10 +46,10 @@ export default function DayOfWeekTable({ data }: Props) {
                 <td className="py-2.5 pr-3 font-medium text-gray-800 whitespace-nowrap">
                   {row.dayLabel}
                   {isWeekend && (
-                    <span className="ml-1 text-[10px] text-amber-600 font-normal">주말</span>
+                    <span className="ml-1 text-[10px] text-amber-600 font-normal">Weekend</span>
                   )}
                 </td>
-                <td className="py-2.5 px-2 text-right text-gray-600">{row.recordCount}일</td>
+                <td className="py-2.5 px-2 text-right text-gray-600">{row.recordCount} days</td>
                 <td className="py-2.5 px-2 text-right font-semibold text-gray-900 whitespace-nowrap">
                   {row.recordCount > 0 ? formatCurrencyNZD(row.avgSales) : "—"}
                 </td>
@@ -57,7 +57,7 @@ export default function DayOfWeekTable({ data }: Props) {
                   {row.recordCount > 0 ? formatCurrencyNZD(row.totalSales) : "—"}
                 </td>
                 <td className="py-2.5 px-2 text-right text-gray-600 whitespace-nowrap hidden sm:table-cell">
-                  {row.recordCount > 0 ? `${Math.round(row.avgBagelsSold)}개` : "—"}
+                  {row.recordCount > 0 ? `${Math.round(row.avgBagelsSold)}` : "—"}
                 </td>
                 <td className="py-2.5 px-2 text-right whitespace-nowrap">
                   {row.recordCount > 0 ? (

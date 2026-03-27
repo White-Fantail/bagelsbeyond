@@ -16,8 +16,8 @@ export default async function SubscribePage() {
   return (
     <div className="max-w-xl space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">정기 구독 신청</h1>
-        <p className="text-gray-500 mt-1">매주 원하는 요일에 픽업할 상품을 구독하세요</p>
+        <h1 className="text-2xl font-bold text-gray-900">Subscribe to Regular Orders</h1>
+        <p className="text-gray-500 mt-1">Subscribe to products for weekly pickup on your chosen day</p>
       </div>
       <SubscribeForm products={products} />
     </div>

@@ -12,7 +12,7 @@ export async function GET() {
     });
     return NextResponse.json(records);
   } catch (_error) {
-    return NextResponse.json({ message: "데이터를 불러오는데 실패했습니다" }, { status: 500 });
+    return NextResponse.json({ message: "Failed to load data" }, { status: 500 });
   }
 }
 
@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { message: "입력값이 올바르지 않습니다", errors: parsed.error.flatten() },
+        { message: "Invalid input", errors: parsed.error.flatten() },
         { status: 400 }
       );
     }
@@ -92,8 +92,8 @@ export async function POST(req: NextRequest) {
   } catch (_error) {
     console.error(_error);
     if (_error instanceof Prisma.PrismaClientKnownRequestError && _error.code === "P2002") {
-      return NextResponse.json({ message: "이미 해당 날짜의 기록이 있습니다. 해당 날짜의 기록을 수정하려면 수정 페이지를 이용해주세요." }, { status: 409 });
+      return NextResponse.json({ message: "A record already exists for this date. To edit it, use the Edit page." }, { status: 409 });
     }
-    return NextResponse.json({ message: "저장에 실패했습니다" }, { status: 500 });
+    return NextResponse.json({ message: "Save failed" }, { status: 500 });
   }
 }

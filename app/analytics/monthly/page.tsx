@@ -38,9 +38,9 @@ export default async function MonthlyAnalyticsPage({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">🗓️ 월별 분석</h1>
+        <h1 className="text-2xl font-bold text-gray-900">🗓️ Monthly Analytics</h1>
         <p className="text-gray-500 mt-1">
-          전체 기간 ({months.length}개월)
+          Full Period ({months.length} months)
         </p>
       </div>
 
@@ -48,23 +48,23 @@ export default async function MonthlyAnalyticsPage({
       {bestMonth && worstMonth && months.length > 1 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="bg-green-50 rounded-lg border border-green-200 p-4">
-            <p className="text-xs text-green-600 font-medium mb-1">🏆 최고 월</p>
+            <p className="text-xs text-green-600 font-medium mb-1">🏆 Best Month</p>
             <p className="font-semibold text-gray-900">{bestMonth.monthLabel}</p>
             <p className="text-lg font-bold text-green-700 mt-1">
               {formatCurrencyNZD(bestMonth.totalSales)}
             </p>
             <p className="text-xs text-gray-500 mt-0.5">
-              {bestMonth.recordCount}일 · 일평균 {formatCurrencyNZD(bestMonth.averageDailySales)}
+              {bestMonth.recordCount} days · Daily Avg. {formatCurrencyNZD(bestMonth.averageDailySales)}
             </p>
           </div>
           <div className="bg-red-50 rounded-lg border border-red-200 p-4">
-            <p className="text-xs text-red-600 font-medium mb-1">📉 최저 월</p>
+            <p className="text-xs text-red-600 font-medium mb-1">📉 Worst Month</p>
             <p className="font-semibold text-gray-900">{worstMonth.monthLabel}</p>
             <p className="text-lg font-bold text-red-700 mt-1">
               {formatCurrencyNZD(worstMonth.totalSales)}
             </p>
             <p className="text-xs text-gray-500 mt-0.5">
-              {worstMonth.recordCount}일 · 일평균 {formatCurrencyNZD(worstMonth.averageDailySales)}
+              {worstMonth.recordCount} days · Daily Avg. {formatCurrencyNZD(worstMonth.averageDailySales)}
             </p>
           </div>
         </div>
@@ -72,13 +72,13 @@ export default async function MonthlyAnalyticsPage({
 
       {months.length === 0 ? (
         <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-          <p className="text-gray-400">데이터가 없습니다.</p>
+          <p className="text-gray-400">No data.</p>
         </div>
       ) : (
         <>
           {/* Bar Chart */}
           <div className="bg-white rounded-lg border border-gray-200 p-5">
-            <h3 className="text-sm font-semibold text-gray-700 mb-4">월별 총 매출</h3>
+            <h3 className="text-sm font-semibold text-gray-700 mb-4">Monthly Total Sales</h3>
             <div className="space-y-2">
               {months.map((month) => (
                 <div key={`${month.year}-${month.month}`} className="flex items-center gap-3">
@@ -111,13 +111,13 @@ export default async function MonthlyAnalyticsPage({
             <table className="min-w-full divide-y divide-gray-200 text-sm">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">월</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">총 매출</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">일평균</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">판매 베이글</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">평균 폐기율</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">전월 대비</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">채널 비중</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Month</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Total Sales</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Daily Avg.</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Sold Bagels</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Avg. Waste Rate</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">vs. Last Month</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Channel Share</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -140,7 +140,7 @@ export default async function MonthlyAnalyticsPage({
                     >
                       <td className="px-4 py-3 font-medium text-gray-900">
                         {month.monthLabel}
-                        <span className="text-xs text-gray-400 ml-2">({month.recordCount}일)</span>
+                        <span className="text-xs text-gray-400 ml-2">({month.recordCount} days)</span>
                       </td>
                       <td className="px-4 py-3 text-right font-medium text-gray-900">
                         {formatCurrencyNZD(month.totalSales)}
@@ -149,7 +149,7 @@ export default async function MonthlyAnalyticsPage({
                         {formatCurrencyNZD(month.averageDailySales)}
                       </td>
                       <td className="px-4 py-3 text-right text-gray-700">
-                        {month.totalBagelsSold}개
+                        {month.totalBagelsSold}
                       </td>
                       <td
                         className={`px-4 py-3 text-right font-medium ${
@@ -177,11 +177,11 @@ export default async function MonthlyAnalyticsPage({
                         )}
                       </td>
                       <td className="px-4 py-3 text-xs text-gray-500">
-                        <span className="text-blue-600">매장 {month.storePercent.toFixed(0)}%</span>
+                        <span className="text-blue-600">Store {month.storePercent.toFixed(0)}%</span>
                         {" · "}
-                        <span className="text-green-600">우버 {month.uberPercent.toFixed(0)}%</span>
+                        <span className="text-green-600">Uber {month.uberPercent.toFixed(0)}%</span>
                         {" · "}
-                        <span className="text-red-600">대쉬 {month.doordashPercent.toFixed(0)}%</span>
+                        <span className="text-red-600">Dash {month.doordashPercent.toFixed(0)}%</span>
                       </td>
                     </tr>
                   );
@@ -207,8 +207,8 @@ export default async function MonthlyAnalyticsPage({
                     </span>
                   </div>
                   <div className="text-sm text-gray-500 flex flex-wrap gap-3">
-                    <span>일평균 {formatCurrencyNZD(month.averageDailySales)}</span>
-                    <span>폐기율 {formatPercentage(month.wasteRate)}</span>
+                    <span>Daily Avg. {formatCurrencyNZD(month.averageDailySales)}</span>
+                    <span>Waste Rate {formatPercentage(month.wasteRate)}</span>
                     {changePercent !== null && (
                       <span className={changePercent >= 0 ? "text-green-600" : "text-red-600"}>
                         {changePercent >= 0 ? "▲ +" : "▼ "}{changePercent.toFixed(1)}%

@@ -14,11 +14,11 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
       include: { externalFactor: true },
     });
     if (!record) {
-      return NextResponse.json({ message: "기록을 찾을 수 없습니다" }, { status: 404 });
+      return NextResponse.json({ message: "Record not found" }, { status: 404 });
     }
     return NextResponse.json(record);
   } catch (_error) {
-    return NextResponse.json({ message: "데이터를 불러오는데 실패했습니다" }, { status: 500 });
+    return NextResponse.json({ message: "Failed to load data" }, { status: 500 });
   }
 }
 
@@ -33,7 +33,7 @@ export async function PUT(req: NextRequest, { params }: RouteContext) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { message: "입력값이 올바르지 않습니다", errors: parsed.error.flatten() },
+        { message: "Invalid input", errors: parsed.error.flatten() },
         { status: 400 }
       );
     }
@@ -74,7 +74,7 @@ export async function PUT(req: NextRequest, { params }: RouteContext) {
 
     const dailyRecord = await prisma.dailyRecord.findUnique({ where: { id } });
     if (!dailyRecord) {
-      return NextResponse.json({ message: "기록을 찾을 수 없습니다" }, { status: 404 });
+      return NextResponse.json({ message: "Record not found" }, { status: 404 });
     }
 
     const record = await prisma.dailyRecord.update({
@@ -102,9 +102,9 @@ export async function PUT(req: NextRequest, { params }: RouteContext) {
   } catch (_error) {
     console.error(_error);
     if (_error instanceof Prisma.PrismaClientKnownRequestError && _error.code === "P2002") {
-      return NextResponse.json({ message: "이미 해당 날짜의 기록이 있습니다. 다른 날짜를 선택해주세요." }, { status: 409 });
+      return NextResponse.json({ message: "A record already exists for this date. Please select a different date." }, { status: 409 });
     }
-    return NextResponse.json({ message: "수정에 실패했습니다" }, { status: 500 });
+    return NextResponse.json({ message: "Edit failed" }, { status: 500 });
   }
 }
 
@@ -115,8 +115,8 @@ export async function DELETE(_req: NextRequest, { params }: RouteContext) {
   try {
     const { id } = await params;
     await prisma.dailyRecord.delete({ where: { id } });
-    return NextResponse.json({ message: "삭제되었습니다" });
+    return NextResponse.json({ message: "Deleted" });
   } catch (_error) {
-    return NextResponse.json({ message: "삭제에 실패했습니다" }, { status: 500 });
+    return NextResponse.json({ message: "Delete failed" }, { status: 500 });
   }
 }

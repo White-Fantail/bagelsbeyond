@@ -42,11 +42,11 @@ export async function ensureExternalFactorsForDate(
           status: "skipped",
           startedAt: new Date(),
           finishedAt: new Date(),
-          resultSummary: "외부요인 이미 존재",
+          resultSummary: "ExternalFactor already exists",
         },
       });
       await prisma.taskLog.create({
-        data: { scheduledTaskId: task.id, message: `외부요인 이미 존재: ${toDateKey(d)}`, level: "info" },
+        data: { scheduledTaskId: task.id, message: `ExternalFactor already exists: ${toDateKey(d)}`, level: "info" },
       });
       return task.id;
     }
@@ -118,11 +118,11 @@ export async function ensurePredictionForDate(
           status: "skipped",
           startedAt: new Date(),
           finishedAt: new Date(),
-          resultSummary: "예측 이미 존재",
+          resultSummary: "Prediction already exists",
         },
       });
       await prisma.taskLog.create({
-        data: { scheduledTaskId: task.id, message: `예측 이미 존재: ${toDateKey(d)}`, level: "info" },
+        data: { scheduledTaskId: task.id, message: `Prediction already exists: ${toDateKey(d)}`, level: "info" },
       });
       return task.id;
     }

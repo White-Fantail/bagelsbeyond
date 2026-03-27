@@ -4,7 +4,7 @@ import { apiRequireAdmin, isNextResponse } from "@/lib/auth/dal";
 import { z } from "zod";
 
 const assignSchema = z.object({
-  groupId: z.string().min(1, "모디파이어 그룹 ID를 입력해주세요"),
+  groupId: z.string().min(1, "Please enter a Modifier Group ID"),
 });
 
 export async function POST(
@@ -18,20 +18,20 @@ export async function POST(
 
   const product = await prisma.product.findUnique({ where: { id: productId } });
   if (!product) {
-    return NextResponse.json({ message: "상품을 찾을 수 없습니다" }, { status: 404 });
+    return NextResponse.json({ message: "Product not found" }, { status: 404 });
   }
 
   let body: unknown;
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ message: "요청 본문이 올바르지 않습니다" }, { status: 400 });
+    return NextResponse.json({ message: "Invalid request body" }, { status: 400 });
   }
 
   const parsed = assignSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { message: "입력값이 올바르지 않습니다", errors: parsed.error.flatten() },
+      { message: "Invalid input", errors: parsed.error.flatten() },
       { status: 400 }
     );
   }
@@ -40,7 +40,7 @@ export async function POST(
 
   const group = await prisma.productOptionGroup.findUnique({ where: { id: groupId } });
   if (!group) {
-    return NextResponse.json({ message: "모디파이어 그룹을 찾을 수 없습니다" }, { status: 404 });
+    return NextResponse.json({ message: "Modifier group not found" }, { status: 404 });
   }
 
   try {
@@ -76,6 +76,6 @@ export async function POST(
 
     return NextResponse.json({ group: updatedGroup }, { status: 201 });
   } catch {
-    return NextResponse.json({ message: "모디파이어 그룹 연결에 실패했습니다" }, { status: 500 });
+    return NextResponse.json({ message: "Failed to link modifier group" }, { status: 500 });
   }
 }

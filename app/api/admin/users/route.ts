@@ -79,7 +79,7 @@ export async function GET(req: NextRequest) {
     });
   } catch (_error) {
     return NextResponse.json(
-      { message: "사용자 목록을 불러오는데 실패했습니다" },
+      { message: "Failed to load users list" },
       { status: 500 }
     );
   }

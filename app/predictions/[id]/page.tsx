@@ -7,10 +7,10 @@ import type { DailyRecord, SalesPrediction, PredictionExplanationItem } from "@/
 import DeletePredictionButton from "@/components/DeletePredictionButton";
 
 const METHOD_LABELS: Record<string, string> = {
-  rule_based_v1: "규칙 기반 v1",
-  rule_based_v2: "규칙 기반 v2",
-  weighted_v1: "가중치 기반 v1",
-  manual: "수동 입력",
+  rule_based_v1: "Rule-based v1",
+  rule_based_v2: "Rule-based v2",
+  weighted_v1: "Weights-based v1",
+  manual: "Manual Enter",
 };
 
 async function getPredictionDetail(id: string) {
@@ -58,10 +58,10 @@ export default async function PredictionDetailPage({
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">
-            예측 상세 — {formatDate(prediction.targetDate)}
+            Prediction Details — {formatDate(prediction.targetDate)}
           </h1>
           <p className="text-gray-500 mt-1">
-            방식: {METHOD_LABELS[prediction.method] ?? prediction.method} · 생성:{" "}
+            Method: {METHOD_LABELS[prediction.method] ?? prediction.method} · Created:{" "}
             {formatDate(prediction.createdAt)}
           </p>
         </div>
@@ -70,13 +70,13 @@ export default async function PredictionDetailPage({
             href="/predictions/performance"
             className="px-3 py-1.5 text-sm border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
           >
-            성과 보기
+            View Performance
           </Link>
           <Link
             href="/predictions"
             className="px-3 py-1.5 text-sm border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
           >
-            목록
+            List
           </Link>
           <DeletePredictionButton predictionId={prediction.id} />
         </div>
@@ -84,10 +84,10 @@ export default async function PredictionDetailPage({
 
       {/* Main Results */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <ResultCard title="예상 총매출" value={formatCurrency(prediction.predictedSales)} highlight />
-        <ResultCard title="예상 판매 베이글" value={`${prediction.predictedBagelsSold}개`} />
-        <ResultCard title="추천 생산량" value={`${prediction.recommendedBagelsToBake}개`} highlight />
-        <ResultCard title="예상 잔여량" value={`${prediction.predictedLeftovers}개`} />
+        <ResultCard title="Predicted Total Sales" value={formatCurrency(prediction.predictedSales)} highlight />
+        <ResultCard title="Predicted Sold Bagels" value={`${prediction.predictedBagelsSold}`} />
+        <ResultCard title="Recommended Production" value={`${prediction.recommendedBagelsToBake}`} highlight />
+        <ResultCard title="Predicted Remaining" value={`${prediction.predictedLeftovers}`} />
       </div>
 
       {/* Extended Stats */}
@@ -95,23 +95,23 @@ export default async function PredictionDetailPage({
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {prediction.baselineSales != null && (
             <MetaCard
-              label="기준 매출"
+              label="Baseline Sales"
               value={formatCurrency(prediction.baselineSales)}
-              sub="최근 평균 기준값"
+              sub="recent average baselineValue"
             />
           )}
           {prediction.projectedSellThroughRate != null && (
             <MetaCard
-              label="예상 판매율"
+              label="Estimated Sell-through Rate"
               value={`${(prediction.projectedSellThroughRate * 100).toFixed(1)}%`}
-              sub="추천 생산 대비"
+              sub="vs. Recommended Production"
             />
           )}
           {prediction.projectedWasteRate != null && (
             <MetaCard
-              label="예상 폐기율"
+              label="Predicted Waste Rate"
               value={`${(prediction.projectedWasteRate * 100).toFixed(1)}%`}
-              sub="추천 생산 대비"
+              sub="vs. Recommended Production"
             />
           )}
         </div>
@@ -121,7 +121,7 @@ export default async function PredictionDetailPage({
       {prediction.confidenceScore != null && (
         <div className="bg-white rounded-lg border border-gray-200 p-4">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-gray-700">예측 신뢰도</span>
+            <span className="text-sm font-medium text-gray-700">Predictions Confidence</span>
             <span className={`text-sm font-bold ${prediction.confidenceScore >= 70 ? "text-green-600" : prediction.confidenceScore >= 50 ? "text-yellow-600" : "text-red-600"}`}>
               {prediction.confidenceScore}%
             </span>
@@ -141,7 +141,7 @@ export default async function PredictionDetailPage({
       {/* Explanation */}
       {explanation && (
         <div className="bg-blue-50 rounded-lg border border-blue-200 p-5">
-          <h2 className="text-sm font-semibold text-blue-900 mb-3">💡 예측 근거</h2>
+          <h2 className="text-sm font-semibold text-blue-900 mb-3">💡 Prediction Basis</h2>
           <p className="text-sm text-blue-800 mb-4 font-medium">{explanation.summary}</p>
           <ul className="space-y-2">
             {explanation.items.map((item, i) => (
@@ -155,15 +155,15 @@ export default async function PredictionDetailPage({
       {prediction.factorSnapshots && prediction.factorSnapshots.length > 0 && (
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
           <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
-            <h2 className="text-sm font-semibold text-gray-700">반영된 요인별 영향</h2>
+            <h2 className="text-sm font-semibold text-gray-700">Impact by Applied Factor</h2>
           </div>
           <table className="min-w-full divide-y divide-gray-100">
             <thead>
               <tr className="bg-gray-50">
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">요인</th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">값</th>
-                <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">가중치</th>
-                <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">영향 (매출)</th>
+                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Factor</th>
+                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Value</th>
+                <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">Weights</th>
+                <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">Impact (Sales)</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -192,30 +192,30 @@ export default async function PredictionDetailPage({
       {comparison && (
         <div className="bg-white rounded-lg border border-blue-200 overflow-hidden">
           <div className="px-4 py-3 border-b border-blue-100 bg-blue-50 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-blue-800">📊 예측 vs 실제 비교</h2>
+            <h2 className="text-sm font-semibold text-blue-800">📊 Predictions vs Actual Comparison</h2>
             <AccuracyBadge direction={comparison.direction} label={comparison.label} />
           </div>
           <div className="p-4">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <CompareRow
-                label="총매출"
+                label="Total Sales"
                 predicted={formatCurrency(comparison.predictedSales)}
                 actual={formatCurrency(comparison.actualSales)}
                 error={`${comparison.salesError >= 0 ? "+" : ""}${formatCurrency(comparison.salesError)}`}
                 errorPct={comparison.salesErrorPct}
               />
               <CompareRow
-                label="판매 베이글"
-                predicted={`${comparison.predictedBagelsSold}개`}
-                actual={`${comparison.actualBagelsSold}개`}
-                error={`${comparison.bagelsError >= 0 ? "+" : ""}${comparison.bagelsError}개`}
+                label="Sold Bagels"
+                predicted={`${comparison.predictedBagelsSold}`}
+                actual={`${comparison.actualBagelsSold}`}
+                error={`${comparison.bagelsError >= 0 ? "+" : ""}${comparison.bagelsError}`}
                 errorPct={comparison.bagelsErrorPct}
               />
               <CompareRow
-                label="잔여 베이글"
-                predicted={`${comparison.predictedLeftovers}개`}
-                actual={`${comparison.actualLeftovers}개`}
-                error={`${comparison.leftoversError >= 0 ? "+" : ""}${comparison.leftoversError}개`}
+                label="Remaining Bagels"
+                predicted={`${comparison.predictedLeftovers}`}
+                actual={`${comparison.actualLeftovers}`}
+                error={`${comparison.leftoversError >= 0 ? "+" : ""}${comparison.leftoversError}`}
                 errorPct={comparison.predictedLeftovers > 0 ? comparison.leftoversError / comparison.predictedLeftovers * 100 : 0}
               />
             </div>
@@ -226,13 +226,13 @@ export default async function PredictionDetailPage({
       {!actualRecord && (
         <div className="bg-gray-50 rounded-lg border border-gray-200 p-4 text-center">
           <p className="text-sm text-gray-500">
-            이 날짜({formatDate(prediction.targetDate)})의 실제 매출 기록이 없습니다.
+            No actual sales records for this date ({formatDate(prediction.targetDate)}).
           </p>
           <Link
             href="/sales/new"
             className="mt-2 inline-block text-sm text-amber-600 hover:underline"
           >
-            매출 입력하기 →
+            Enter Sales →
           </Link>
         </div>
       )}
@@ -298,15 +298,15 @@ function CompareRow({
     <div className="space-y-1 p-3 bg-gray-50 rounded-lg">
       <p className="text-xs font-semibold text-gray-500 uppercase">{label}</p>
       <div className="flex justify-between text-sm">
-        <span className="text-gray-500">예측</span>
+        <span className="text-gray-500">Predictions</span>
         <span className="text-gray-700">{predicted}</span>
       </div>
       <div className="flex justify-between text-sm">
-        <span className="text-gray-600 font-medium">실제</span>
+        <span className="text-gray-600 font-medium">Actual</span>
         <span className="font-semibold text-gray-900">{actual}</span>
       </div>
       <div className="flex justify-between text-sm pt-1 border-t border-gray-200">
-        <span className="text-gray-400 text-xs">오차</span>
+        <span className="text-gray-400 text-xs">Error</span>
         <span className={`text-xs font-medium ${pctColor}`}>
           {error} ({errorPct >= 0 ? "+" : ""}{errorPct.toFixed(1)}%)
         </span>

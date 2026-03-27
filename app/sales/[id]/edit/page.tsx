@@ -16,9 +16,9 @@ export default async function EditSalesPage({ params }: Props) {
   if (!record) {
     return (
       <div className="space-y-4">
-        <p className="text-gray-600">기록을 찾을 수 없습니다.</p>
+        <p className="text-gray-600">Record not found.</p>
         <Link href="/sales" className="text-amber-600 hover:underline text-sm">
-          ← 매출 목록으로
+          ← Back to Sales List
         </Link>
       </div>
     );
@@ -50,10 +50,10 @@ export default async function EditSalesPage({ params }: Props) {
     <div className="space-y-6">
       <div>
         <Link href={`/sales/${id}`} className="text-sm text-amber-600 hover:underline">
-          ← 상세 페이지로
+          ← Back to Details
         </Link>
-        <h1 className="text-2xl font-bold text-gray-900 mt-1">매출 수정</h1>
-        <p className="text-gray-500 mt-1">일별 매출 데이터를 수정합니다</p>
+        <h1 className="text-2xl font-bold text-gray-900 mt-1">Sales Edit</h1>
+        <p className="text-gray-500 mt-1">Edit daily sales data</p>
       </div>
       <SalesForm initialData={initialData} recordId={id} />
     </div>

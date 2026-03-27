@@ -52,9 +52,9 @@ export default function CartPage() {
     return (
       <div className="max-w-xl mx-auto text-center py-16 space-y-4">
         <p className="text-4xl">🛒</p>
-        <h1 className="text-xl font-semibold text-gray-800">장바구니가 비어 있습니다</h1>
+        <h1 className="text-xl font-semibold text-gray-800">Cart is empty</h1>
         <Link href="/order" className="inline-block px-5 py-2 rounded-lg bg-amber-500 text-white font-medium hover:bg-amber-600">
-          상품 보러 가기
+          Browse Products
         </Link>
       </div>
     );
@@ -63,8 +63,8 @@ export default function CartPage() {
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">장바구니</h1>
-        <p className="text-gray-500 text-sm mt-1">주문 전 내용을 확인해주세요</p>
+        <h1 className="text-2xl font-bold text-gray-900">Cart</h1>
+        <p className="text-gray-500 text-sm mt-1">Please check the contents before placing your order</p>
       </div>
 
       <div className="space-y-3">
@@ -82,7 +82,7 @@ export default function CartPage() {
                 {item.selectedOptions.some((o) => o.priceDelta !== 0) && (
                   <span className="text-gray-500">
                     {" + "}
-                    ${item.selectedOptions.reduce((s, o) => s + o.priceDelta, 0).toFixed(2)} (옵션)
+                    ${item.selectedOptions.reduce((s, o) => s + o.priceDelta, 0).toFixed(2)} (Options)
                   </span>
                 )}
               </p>
@@ -94,7 +94,7 @@ export default function CartPage() {
                 <span className="px-2">{item.quantity}</span>
                 <button onClick={() => updateQty(item.id, 1)} className="px-2 py-1 hover:bg-gray-50">+</button>
               </div>
-              <button onClick={() => remove(item.id)} className="text-xs text-red-500 hover:underline">삭제</button>
+              <button onClick={() => remove(item.id)} className="text-xs text-red-500 hover:underline">Delete</button>
             </div>
           </div>
         ))}
@@ -102,18 +102,18 @@ export default function CartPage() {
 
       <div className="bg-white rounded-xl border border-gray-200 p-4">
         <div className="flex justify-between font-bold text-gray-900 text-lg">
-          <span>소계</span>
+          <span>Subtotal</span>
           <span>${subtotal.toFixed(2)}</span>
         </div>
-        <p className="text-xs text-gray-500 mt-1">최종 금액은 서버에서 재계산됩니다</p>
+        <p className="text-xs text-gray-500 mt-1">Final amount will be recalculated on the server</p>
       </div>
 
       <div className="flex gap-3">
         <Link href="/order" className="flex-1 text-center py-3 rounded-xl border border-gray-200 text-gray-700 font-medium hover:bg-gray-50">
-          ← 쇼핑 계속하기
+          ← Continue Shopping
         </Link>
         <Link href="/order/checkout" className="flex-1 text-center py-3 rounded-xl bg-amber-500 text-white font-bold hover:bg-amber-600">
-          결제하기 →
+          Checkout →
         </Link>
       </div>
     </div>

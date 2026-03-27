@@ -6,7 +6,7 @@ export async function GET() {
     const jobs = await listImportJobs();
     return NextResponse.json(jobs);
   } catch (_error) {
-    return NextResponse.json({ message: "가져오기 목록을 불러오는데 실패했습니다" }, { status: 500 });
+    return NextResponse.json({ message: "Failed to load imports list" }, { status: 500 });
   }
 }
 
@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
     const { csvText } = body;
 
     if (!csvText || !csvText.trim()) {
-      return NextResponse.json({ message: "CSV 내용이 필요합니다" }, { status: 400 });
+      return NextResponse.json({ message: "CSV content is required" }, { status: 400 });
     }
 
     // Auto-generate a file name when only paste text is provided
@@ -28,6 +28,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(job, { status: 201 });
   } catch (_error) {
     console.error(_error);
-    return NextResponse.json({ message: "가져오기 작업 생성에 실패했습니다" }, { status: 500 });
+    return NextResponse.json({ message: "Failed to create import task" }, { status: 500 });
   }
 }

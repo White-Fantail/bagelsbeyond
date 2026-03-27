@@ -23,14 +23,14 @@ export default function RetryButton({ orderId, orderNumber }: RetryButtonProps) 
       const data = (await res.json()) as { ok?: boolean; error?: string; result?: { success: boolean; error?: string } };
       if (res.ok && data.result?.success) {
         setState("success");
-        setMessage("재전송 성공");
+        setMessage("Re-send successful");
       } else {
         setState("error");
-        setMessage(data.result?.error ?? data.error ?? "재전송 실패");
+        setMessage(data.result?.error ?? data.error ?? "Re-send failed");
       }
     } catch (err) {
       setState("error");
-      setMessage(err instanceof Error ? err.message : "네트워크 오류");
+      setMessage(err instanceof Error ? err.message : "Network error");
     }
   }
 
@@ -47,9 +47,9 @@ export default function RetryButton({ orderId, orderNumber }: RetryButtonProps) 
             ? "bg-gray-100 text-gray-400 cursor-not-allowed"
             : "bg-amber-100 text-amber-700 hover:bg-amber-200")
         }
-        title={`주문 ${orderNumber} 재전송`}
+        title={`Re-send Order ${orderNumber}`}
       >
-        {state === "loading" ? "전송 중…" : state === "success" ? "✓ 성공" : "재시도"}
+        {state === "loading" ? "Sending…" : state === "success" ? "✓ Success" : "Retry"}
       </button>
       {message && (
         <span

@@ -37,7 +37,7 @@ export default function SubscriptionActions({
         disabled={isPending}
         className="text-xs px-2 py-1 rounded border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-60"
       >
-        {isPending ? "처리중..." : "건너뛰기"}
+        {isPending ? "Processing..." : "Skip"}
       </button>
     );
   }
@@ -57,7 +57,7 @@ export default function SubscriptionActions({
           disabled={isPending}
           className="px-4 py-2 rounded-lg border border-gray-200 text-gray-700 text-sm hover:bg-gray-50 disabled:opacity-60 transition-colors"
         >
-          {isPending ? "처리중..." : "일시정지"}
+          {isPending ? "Processing..." : "Pause"}
         </button>
       )}
       {status === "PAUSED" && (
@@ -71,12 +71,12 @@ export default function SubscriptionActions({
           disabled={isPending}
           className="px-4 py-2 rounded-lg bg-amber-500 text-white text-sm hover:bg-amber-600 disabled:opacity-60 transition-colors"
         >
-          {isPending ? "처리중..." : "재개하기"}
+          {isPending ? "Processing..." : "Resume"}
         </button>
       )}
       <button
         onClick={() => {
-          if (!confirm("구독을 취소하시겠습니까?")) return;
+          if (!confirm("Cancel this subscription?")) return;
           startTransition(async () => {
             await cancelSubscriptionAction(subscriptionId);
             router.refresh();
@@ -85,7 +85,7 @@ export default function SubscriptionActions({
         disabled={isPending}
         className="px-4 py-2 rounded-lg border border-red-200 text-red-600 text-sm hover:bg-red-50 disabled:opacity-60 transition-colors"
       >
-        {isPending ? "처리중..." : "구독 취소"}
+        {isPending ? "Processing..." : "Cancel Subscription"}
       </button>
     </div>
   );

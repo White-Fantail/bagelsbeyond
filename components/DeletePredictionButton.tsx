@@ -17,12 +17,12 @@ export default function DeletePredictionButton({ predictionId }: Props) {
     setIsDeleting(true);
     try {
       const res = await fetch(`/api/predictions/${predictionId}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("삭제에 실패했습니다");
+      if (!res.ok) throw new Error("Delete failed");
       router.push("/predictions");
     } catch {
       setIsDeleting(false);
       setIsOpen(false);
-      alert("삭제에 실패했습니다.");
+      alert("Delete failed.");
     }
   };
 
@@ -32,7 +32,7 @@ export default function DeletePredictionButton({ predictionId }: Props) {
         onClick={() => setIsOpen(true)}
         className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors text-sm font-medium"
       >
-        삭제
+        Delete
       </button>
       <ConfirmDeleteDialog
         isOpen={isOpen}

@@ -47,24 +47,24 @@ async function main() {
   // ── PredictionWeights ───────────────────────────────────────────────────────
   const weights = [
     // Weekday
-    { factorKey: "monday",         weightValue: -0.12, description: "월요일 — 주중 가장 조용한 날" },
-    { factorKey: "tuesday",        weightValue: -0.06, description: "화요일 — 평균 아래" },
-    { factorKey: "wednesday",      weightValue:  0.00, description: "수요일 — 기준값" },
-    { factorKey: "thursday",       weightValue:  0.06, description: "목요일 — 주말 전 소폭 증가" },
-    { factorKey: "friday",         weightValue:  0.12, description: "금요일 — 주말 기대 수요 증가" },
-    { factorKey: "saturday",       weightValue:  0.22, description: "토요일 — 가장 매출 높은 날" },
-    { factorKey: "sunday",         weightValue:  0.18, description: "일요일 — 주말 브런치 수요" },
+    { factorKey: "monday",         weightValue: -0.12, description: "Mon — quietest weekday" },
+    { factorKey: "tuesday",        weightValue: -0.06, description: "Tue — below average" },
+    { factorKey: "wednesday",      weightValue:  0.00, description: "Wed — baselineValue" },
+    { factorKey: "thursday",       weightValue:  0.06, description: "Thu — slight increase before weekend" },
+    { factorKey: "friday",         weightValue:  0.12, description: "Fri — anticipated pre-weekend demand increase" },
+    { factorKey: "saturday",       weightValue:  0.22, description: "Sat — highest sales day" },
+    { factorKey: "sunday",         weightValue:  0.18, description: "Sun — Weekend brunch demand" },
     // Weather
-    { factorKey: "weather_rain",   weightValue: -0.15, description: "비 오는 날 — 방문 고객 감소" },
-    { factorKey: "weather_hot",    weightValue: -0.05, description: "더운 날 (28°C+) — 소폭 감소" },
+    { factorKey: "weather_rain",   weightValue: -0.15, description: "Rainy days — customer visit decrease" },
+    { factorKey: "weather_hot",    weightValue: -0.05, description: "Hot day (28°C+) — slight decrease" },
     // Holiday
-    { factorKey: "holiday",        weightValue:  0.28, description: "공휴일 — 나들이 고객 증가" },
+    { factorKey: "holiday",        weightValue:  0.28, description: "Holiday — outing customer increase" },
     // Events
-    { factorKey: "local_event",    weightValue:  0.20, description: "지역 이벤트 — 유동 인구 증가" },
-    { factorKey: "school_holiday", weightValue:  0.10, description: "학교 방학 — 가족 고객 증가" },
+    { factorKey: "local_event",    weightValue:  0.20, description: "Local Event — foot traffic increase" },
+    { factorKey: "school_holiday", weightValue:  0.10, description: "School Holiday — family customer increase" },
     // News
-    { factorKey: "nz_news",        weightValue: -0.05, description: "부정적 뉴질랜드 뉴스 영향" },
-    { factorKey: "world_news",     weightValue: -0.03, description: "부정적 국제 뉴스 영향" },
+    { factorKey: "nz_news",        weightValue: -0.05, description: "Negative NZ News impact" },
+    { factorKey: "world_news",     weightValue: -0.03, description: "Negative World News impact" },
   ];
 
   for (const w of weights) {
@@ -79,7 +79,7 @@ async function main() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const weatherOptions = ["맑음", "흐림", "비", "구름 조금", "맑음", "맑음"];
+  const weatherOptions = ["Clear", "Cloudy", "Rain", "Partly Cloudy", "Clear", "Clear"];
 
   // Day of week multipliers (0=Sun..6=Sat)
   const dowMultiplier = [1.18, 0.88, 0.94, 1.0, 1.06, 1.12, 1.22];
@@ -123,11 +123,11 @@ async function main() {
         uberSales:     round2(totalSales * uberPct),
         doordashSales: round2(totalSales * ddPct),
         otherSales:    round2(Math.max(0, totalSales * otherPct)),
-        notes: isHoliday ? "공휴일" : isEvent ? "지역 이벤트" : null,
+        notes: isHoliday ? "Holiday" : isEvent ? "Local Event" : null,
         externalFactor: {
           create: {
             date,
-            weatherSummary: isRainy ? "비" : weatherOptions[rndInt(0, 4)],
+            weatherSummary: isRainy ? "Rain" : weatherOptions[rndInt(0, 4)],
             minTemp:   round2(rnd(8, 16)),
             maxTemp:   round2(rnd(16, 26)),
             rainMm:    isRainy ? round2(rnd(1, 15)) : 0,
@@ -174,11 +174,11 @@ async function main() {
 
     const explanation = {
       items: [
-        { type: "baseline", text: `최근 30일 평균 매출이 기준값(${Math.round(baselineSales).toLocaleString("ko-KR")}원)으로 사용됨` },
-        { type: "weekday", text: `${["일요일","월요일","화요일","수요일","목요일","금요일","토요일"][dow]} 요일 가중치가 반영됨` },
-        { type: "production", text: `최근 폐기율을 고려해 판매량 대비 10% 버퍼 적용 (${predictedBagelsSold}개 × 1.1 = ${recommendedBagelsToBake}개)` },
+        { type: "baseline", text: `Recent 30-day avg. sales ($${Math.round(baselineSales).toLocaleString("en-NZ")}) used as baseline` },
+        { type: "weekday", text: `${["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][dow]} day-of-week weights applied` },
+        { type: "production", text: `recent Applying 10% buffer over predicted sold qty based on Waste Rate (${predictedBagelsSold} × 1.1 = ${recommendedBagelsToBake})` },
       ],
-      summary: `예상 매출 ${Math.round(predictedSales).toLocaleString("ko-KR")}원, 판매 ${predictedBagelsSold}개 기준으로 ${recommendedBagelsToBake}개 생산을 추천합니다.`,
+      summary: `Predicted Sales $${Math.round(predictedSales).toLocaleString("en-NZ")}, recommended production: ${recommendedBagelsToBake} (based on Sold: ${predictedBagelsSold})`,
     };
 
     await prisma.salesPrediction.create({
@@ -194,15 +194,15 @@ async function main() {
         baselineBagelsSold:       rndInt(55, 75),
         confidenceScore:          rndInt(60, 85),
         method: "rule_based_v2",
-        notes: `기준 데이터: 최근 30일 | 같은 요일 4건 참고 | 적용 요인: 1개`,
-        adjustmentSummary: `${["일요일","월요일","화요일","수요일","목요일","금요일","토요일"][dow]} 요일 가중치 반영`,
+        notes: `Baseline data: recent 30 days | same-day 4 data points reference | Applied Factor: 1`,
+        adjustmentSummary: `${["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][dow]} Day Weights Reflected`,
         explanationJson: JSON.stringify(explanation),
         factorSnapshots: {
           create: [
             {
               factorKey:     ["sunday","monday","tuesday","wednesday","thursday","friday","saturday"][dow],
-              factorLabel:   `요일 (${["일요일","월요일","화요일","수요일","목요일","금요일","토요일"][dow]})`,
-              factorValue:   ["일요일","월요일","화요일","수요일","목요일","금요일","토요일"][dow],
+              factorLabel:   `Day (${["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][dow]})`,
+              factorValue:   ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][dow],
               appliedWeight: [0.18, -0.12, -0.06, 0.0, 0.06, 0.12, 0.22][dow],
               impactScore:   round2(baselineSales * [0.18, -0.12, -0.06, 0.0, 0.06, 0.12, 0.22][dow]),
             },
@@ -220,7 +220,7 @@ async function main() {
     return d;
   });
 
-  const futureWeatherOptions = ["맑음", "구름 조금", "흐림"];
+  const futureWeatherOptions = ["Clear", "Partly Cloudy", "Cloudy"];
   for (let fi = 0; fi < futureDates.length; fi++) {
     const futureDate = futureDates[fi];
     const existing = await prisma.dailyExternalFactor.findUnique({ where: { date: futureDate } });
@@ -313,14 +313,14 @@ async function main() {
         status: "success",
         startedAt: new Date(now.getTime() - 60_000),
         finishedAt: new Date(now.getTime() - 59_000),
-        resultSummary: "대상: 1일 | 처리: 1일",
+        resultSummary: "Target: 1 day | Processed: 1 day",
         retryCount: 0,
       },
     });
     await prisma.taskLog.createMany({
       data: [
-        { scheduledTaskId: t1.id, message: `외부요인 수집 시작: ${date2DaysAgo.toISOString().split("T")[0]}`, level: "info" },
-        { scheduledTaskId: t1.id, message: "수집 완료: weather, holiday, schoolHoliday", level: "info" },
+        { scheduledTaskId: t1.id, message: `ExternalFactor Collect Started: ${date2DaysAgo.toISOString().split("T")[0]}`, level: "info" },
+        { scheduledTaskId: t1.id, message: "Collection complete: weather, holiday, schoolHoliday", level: "info" },
       ],
     });
 
@@ -334,15 +334,15 @@ async function main() {
         status: "partial",
         startedAt: new Date(now.getTime() - 30_000),
         finishedAt: new Date(now.getTime() - 29_000),
-        resultSummary: "대상: 1일 | 처리: 1일 | 실패 provider: news",
+        resultSummary: "Target: 1 day | Processed: 1 day | Failed provider: news",
         retryCount: 0,
       },
     });
     await prisma.taskLog.createMany({
       data: [
-        { scheduledTaskId: t2.id, message: `외부요인 수집 시작: ${yesterday.toISOString().split("T")[0]}`, level: "info" },
-        { scheduledTaskId: t2.id, message: "News provider error: API 키가 설정되지 않았습니다", level: "warning" },
-        { scheduledTaskId: t2.id, message: "부분 성공: 1개 provider 실패", level: "warning" },
+        { scheduledTaskId: t2.id, message: `ExternalFactor Collect Started: ${yesterday.toISOString().split("T")[0]}`, level: "info" },
+        { scheduledTaskId: t2.id, message: "News provider error: API key is not configured", level: "warning" },
+        { scheduledTaskId: t2.id, message: "Partial Success: 1 provider Failed", level: "warning" },
       ],
     });
 
@@ -354,15 +354,15 @@ async function main() {
         status: "success",
         startedAt: new Date(now.getTime() - 20_000),
         finishedAt: new Date(now.getTime() - 18_000),
-        resultSummary: "예측 생성 완료 | 예상매출: 342",
+        resultSummary: "Predictions Create Completed | PredictedSales: 342",
         retryCount: 0,
       },
     });
     await prisma.taskLog.createMany({
       data: [
-        { scheduledTaskId: t3.id, message: `예측 생성 시작: ${yesterday.toISOString().split("T")[0]}`, level: "info" },
-        { scheduledTaskId: t3.id, message: "기존 외부요인 사용", level: "info" },
-        { scheduledTaskId: t3.id, message: "예측 생성 완료: 예상매출=342", level: "info" },
+        { scheduledTaskId: t3.id, message: `Predictions Create Started: ${yesterday.toISOString().split("T")[0]}`, level: "info" },
+        { scheduledTaskId: t3.id, message: "Using existing ExternalFactor", level: "info" },
+        { scheduledTaskId: t3.id, message: "Predictions Create Completed: PredictedSales=342", level: "info" },
       ],
     });
 
@@ -376,15 +376,15 @@ async function main() {
         status: "failed",
         startedAt: new Date(now.getTime() - 90_000),
         finishedAt: new Date(now.getTime() - 89_500),
-        errorMessage: "데이터 부족: 최근 기록 없음",
-        resultSummary: "예측 실패",
+        errorMessage: "Insufficient data: no recent records",
+        resultSummary: "Predictions Failed",
         retryCount: 1,
       },
     });
     await prisma.taskLog.createMany({
       data: [
-        { scheduledTaskId: t4.id, message: `예측 생성 시작: ${date3DaysAgo.toISOString().split("T")[0]}`, level: "info" },
-        { scheduledTaskId: t4.id, message: "예외 발생: 데이터 부족: 최근 기록 없음", level: "error" },
+        { scheduledTaskId: t4.id, message: `Predictions Create Started: ${date3DaysAgo.toISOString().split("T")[0]}`, level: "info" },
+        { scheduledTaskId: t4.id, message: "Exception: Insufficient data: no recent records", level: "error" },
       ],
     });
 
@@ -639,8 +639,8 @@ async function seedDailyInventory(
   tomorrow.setDate(today.getDate() + 1);
 
   const sampleDays: { date: Date; label: string }[] = [
-    { date: today, label: "오늘" },
-    { date: tomorrow, label: "내일" },
+    { date: today, label: "Today" },
+    { date: tomorrow, label: "Tomorrow" },
   ];
 
   const bagelSlugs = ["plain-bagel", "sesame-bagel", "blueberry-bagel", "everything-bagel"];
@@ -666,11 +666,11 @@ async function seedDailyInventory(
           reservedQty: 0,
           soldQty: sold,
           isSoldOut,
-          note: label === "내일" ? "예측 기반 계획 수량" : null,
+          note: label === "Tomorrow" ? "Prediction-based planned qty" : null,
         },
       });
     }
-    console.log(`  📅 ${label} (${date.toISOString().slice(0, 10)}) 재고 생성`);
+    console.log(`  📅 ${label} (${date.toISOString().slice(0, 10)}) Inventory Create`);
   }
 }
 

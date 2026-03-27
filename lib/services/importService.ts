@@ -35,7 +35,7 @@ export async function createImportJob(data: {
       totalRows,
       successRows: 0,
       failedRows,
-      errorMessage: totalRows === 0 ? "CSV 파일에 데이터 행이 없습니다" : null,
+      errorMessage: totalRows === 0 ? "CSV file has no data rows" : null,
       rows: {
         create: parsedRows.map((r) => ({
           rowNumber: r.rowNumber,
@@ -64,9 +64,9 @@ export async function createImportJob(data: {
       status,
       errorMessage:
         totalRows === 0
-          ? "CSV 파일에 데이터 행이 없습니다"
+          ? "CSV file has no data rows"
           : validRows === 0
-          ? "모든 행에 오류가 있습니다. CSV 형식을 확인해주세요"
+          ? "All rows have errors. Please check the CSV format"
           : null,
     },
     include: { rows: true },
@@ -87,7 +87,7 @@ export async function executeImport(
   });
 
   if (job.status === "imported") {
-    throw new Error("이미 임포트가 완료된 작업입니다");
+    throw new Error("Import task is already completed");
   }
 
   const result: ImportExecuteResult = {
@@ -101,10 +101,10 @@ export async function executeImport(
     if (!row.parsedDate) {
       await prisma.importRow.update({
         where: { id: row.id },
-        data: { status: "invalid", validationErrors: "날짜 정보가 없습니다" },
+        data: { status: "invalid", validationErrors: "Date information is missing" },
       });
       result.failedRows++;
-      result.errors.push({ rowNumber: row.rowNumber, error: "날짜 정보가 없습니다" });
+      result.errors.push({ rowNumber: row.rowNumber, error: "Date information is missing" });
       continue;
     }
 
@@ -162,7 +162,7 @@ export async function executeImport(
 
       result.successRows++;
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : "알 수 없는 오류";
+      const errorMsg = err instanceof Error ? err.message : "Unknown error";
       await prisma.importRow.update({
         where: { id: row.id },
         data: { status: "invalid", validationErrors: errorMsg },

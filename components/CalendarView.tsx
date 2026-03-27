@@ -39,7 +39,7 @@ export default function CalendarView({ year, month, records, predictions = [], e
     router.push(`/calendar?year=${d.getFullYear()}&month=${d.getMonth() + 1}`);
   };
 
-  const dayLabels = ["일", "월", "화", "수", "목", "금", "토"];
+  const dayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
   const cells: (number | null)[] = [
     ...Array(firstDay).fill(null),
@@ -60,7 +60,7 @@ export default function CalendarView({ year, month, records, predictions = [], e
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
         <button onClick={prevMonth} className="p-2 hover:bg-gray-100 rounded-md text-gray-600">←</button>
-        <h2 className="text-lg font-semibold text-gray-900">{year}년 {month}월</h2>
+        <h2 className="text-lg font-semibold text-gray-900">{year}/{month}</h2>
         <button onClick={nextMonth} className="p-2 hover:bg-gray-100 rounded-md text-gray-600">→</button>
       </div>
 
@@ -124,7 +124,7 @@ export default function CalendarView({ year, month, records, predictions = [], e
               }
               aria-label={
                 day
-                  ? `${year}년 ${month}월 ${day}일${record ? " 실적 있음" : ""}${prediction ? " 예측 있음" : ""}`
+                  ? `${year}/${month}/${day}${record ? " has actual data" : ""}${prediction ? " Has Prediction" : ""}`
                   : undefined
               }
               className={`min-h-[90px] p-1.5 border-b border-r border-gray-100 transition-colors relative ${
@@ -187,7 +187,7 @@ export default function CalendarView({ year, month, records, predictions = [], e
                         ~{formatCurrency(prediction.predictedSales)}
                       </div>
                       <div className="text-[10px] text-blue-400">
-                        🔮{prediction.recommendedBagelsToBake}굽
+                        🔮{prediction.recommendedBagelsToBake} baked
                       </div>
                     </div>
                   )}
@@ -195,7 +195,7 @@ export default function CalendarView({ year, month, records, predictions = [], e
                   {/* Both: show actual with prediction sub-text */}
                   {hasBoth && (
                     <div className="text-[10px] text-purple-500 mt-0.5">
-                      예측 있음
+                      Has Prediction
                     </div>
                   )}
                 </>

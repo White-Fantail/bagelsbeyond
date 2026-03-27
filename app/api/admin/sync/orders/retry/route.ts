@@ -24,13 +24,13 @@ export async function POST(req: NextRequest) {
     const body = (await req.json()) as Record<string, unknown>;
     if (typeof body.orderId !== "string" || !body.orderId) {
       return NextResponse.json(
-        { error: "orderId가 필요합니다" },
+        { error: "orderId is required" },
         { status: 400 }
       );
     }
     orderId = body.orderId;
   } catch {
-    return NextResponse.json({ error: "잘못된 요청 형식" }, { status: 400 });
+    return NextResponse.json({ error: "Invalid request format" }, { status: 400 });
   }
 
   try {

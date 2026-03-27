@@ -5,15 +5,15 @@ import { IntegrationSource } from "@/app/generated/prisma/enums";
 import { z } from "zod";
 
 const productPatchSchema = z.object({
-  name: z.string().min(1, "상품명을 입력해주세요").optional(),
+  name: z.string().min(1, "Please enter a product name").optional(),
   slug: z
     .string()
-    .min(1, "슬러그를 입력해주세요")
-    .regex(/^[a-z0-9-]+$/, "슬러그는 소문자, 숫자, 하이픈만 사용할 수 있습니다")
+    .min(1, "Please enter a slug")
+    .regex(/^[a-z0-9-]+$/, "Slug can only contain lowercase letters, numbers, and hyphens")
     .optional(),
   description: z.string().optional().nullable(),
   loyverseCategoryId: z.string().optional().nullable(),
-  basePrice: z.number().min(0, "가격은 0 이상이어야 합니다").optional(),
+  basePrice: z.number().min(0, "Price must be 0 or more").optional(),
   isActive: z.boolean().optional(),
   isSubscriptionEligible: z.boolean().optional(),
   sortOrder: z.number().int().optional(),
@@ -45,13 +45,13 @@ export async function GET(
     });
 
     if (!product) {
-      return NextResponse.json({ message: "상품을 찾을 수 없습니다" }, { status: 404 });
+      return NextResponse.json({ message: "Product not found" }, { status: 404 });
     }
 
     return NextResponse.json({ product });
   } catch (_error) {
     return NextResponse.json(
-      { message: "상품 정보를 불러오는데 실패했습니다" },
+      { message: "Failed to load product info" },
       { status: 500 }
     );
   }
@@ -70,13 +70,13 @@ export async function PATCH(
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ message: "요청 본문이 올바르지 않습니다" }, { status: 400 });
+    return NextResponse.json({ message: "Invalid request body" }, { status: 400 });
   }
 
   const parsed = productPatchSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { message: "입력값이 올바르지 않습니다", errors: parsed.error.flatten() },
+      { message: "Invalid input", errors: parsed.error.flatten() },
       { status: 400 }
     );
   }
@@ -93,7 +93,7 @@ export async function PATCH(
     },
   });
   if (!existing) {
-    return NextResponse.json({ message: "상품을 찾을 수 없습니다" }, { status: 404 });
+    return NextResponse.json({ message: "Product not found" }, { status: 404 });
   }
 
   const isLoyverseSynced = existing.externalMappings.length > 0;
@@ -106,7 +106,7 @@ export async function PATCH(
     if (attemptedReadOnly.length > 0) {
       return NextResponse.json(
         {
-          message: `Loyverse sync 상품의 원본 필드는 수정할 수 없습니다: ${attemptedReadOnly.join(", ")}`,
+          message: `Loyverse-synced Product original fields cannot be edited: ${attemptedReadOnly.join(", ")}`,
           readOnlyFields: attemptedReadOnly,
         },
         { status: 403 }
@@ -118,7 +118,7 @@ export async function PATCH(
     const slugConflict = await prisma.product.findUnique({ where: { slug: data.slug } });
     if (slugConflict) {
       return NextResponse.json(
-        { message: "이미 사용 중인 슬러그입니다" },
+        { message: "Slug is already in use" },
         { status: 409 }
       );
     }
@@ -141,7 +141,7 @@ export async function PATCH(
     return NextResponse.json({ product });
   } catch (_error) {
     return NextResponse.json(
-      { message: "상품 수정에 실패했습니다" },
+      { message: "Failed to edit product" },
       { status: 500 }
     );
   }
@@ -158,15 +158,15 @@ export async function DELETE(
 
   const existing = await prisma.product.findUnique({ where: { id } });
   if (!existing) {
-    return NextResponse.json({ message: "상품을 찾을 수 없습니다" }, { status: 404 });
+    return NextResponse.json({ message: "Product not found" }, { status: 404 });
   }
 
   try {
     await prisma.product.delete({ where: { id } });
-    return NextResponse.json({ message: "상품이 삭제되었습니다" });
+    return NextResponse.json({ message: "Product deleted" });
   } catch (_error) {
     return NextResponse.json(
-      { message: "상품 삭제에 실패했습니다" },
+      { message: "Failed to delete product" },
       { status: 500 }
     );
   }

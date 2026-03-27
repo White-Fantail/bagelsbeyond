@@ -75,7 +75,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ options });
   } catch (_error) {
     return NextResponse.json(
-      { message: "Modifier 목록을 불러오는데 실패했습니다" },
+      { message: "Failed to load modifier list" },
       { status: 500 }
     );
   }

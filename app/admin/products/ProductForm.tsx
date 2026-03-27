@@ -8,14 +8,14 @@ import { z } from "zod";
 import Link from "next/link";
 
 const productFormSchema = z.object({
-  name: z.string().min(1, "상품명을 입력해주세요"),
+  name: z.string().min(1, "Please enter a product name"),
   slug: z
     .string()
-    .min(1, "슬러그를 입력해주세요")
-    .regex(/^[a-z0-9-]+$/, "슬러그는 소문자, 숫자, 하이픈만 사용할 수 있습니다"),
+    .min(1, "Please enter a slug")
+    .regex(/^[a-z0-9-]+$/, "Slug can only contain lowercase letters, numbers, and hyphens"),
   description: z.string().optional(),
   loyverseCategoryId: z.string().nullable().optional(),
-  basePrice: z.coerce.number().min(0, "가격은 0 이상이어야 합니다"),
+  basePrice: z.coerce.number().min(0, "Price must be 0 or more"),
   isActive: z.boolean(),
   isSubscriptionEligible: z.boolean(),
   sortOrder: z.coerce.number().int(),
@@ -123,7 +123,7 @@ export default function ProductForm({
       });
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.message || "저장에 실패했습니다");
+        throw new Error(err.message || "Save failed");
       }
       setStatus("success");
       setTimeout(() => {
@@ -131,7 +131,7 @@ export default function ProductForm({
       }, 1200);
     } catch (e) {
       setStatus("error");
-      setErrorMessage(e instanceof Error ? e.message : "저장에 실패했습니다");
+      setErrorMessage(e instanceof Error ? e.message : "Save failed");
     }
   };
 
@@ -139,7 +139,7 @@ export default function ProductForm({
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       {status === "success" && (
         <div className="p-4 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm">
-          ✅ 저장되었습니다. 상품 목록으로 이동합니다...
+          ✅ Saved. Redirecting to products list...
         </div>
       )}
       {status === "error" && (
@@ -155,8 +155,8 @@ export default function ProductForm({
           <div>
             <p className="font-semibold">Synced from Loyverse</p>
             <p className="mt-0.5 text-blue-700">
-              이 상품은 Loyverse에서 동기화된 데이터입니다. 원본 필드(이름, 슬러그, 설명,
-              기본가격)는 수정할 수 없으며 내부 운영 필드만 수정 가능합니다.
+              This product is synced from Loyverse. Original fields (Name, slug, Description,
+              base price) cannot be edited. Only internal operation fields can be modified.
             </p>
             {product?.externalProductId && (
               <p className="mt-1 text-xs text-blue-600 font-mono">
@@ -167,34 +167,34 @@ export default function ProductForm({
         </div>
       )}
 
-      {/* 기본 정보 */}
+      {/* Default Info */}
       <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-5">
         <div className="flex items-center justify-between border-b border-gray-100 pb-2">
-          <h2 className="text-base font-semibold text-gray-900">기본 정보</h2>
+          <h2 className="text-base font-semibold text-gray-900">Default Info</h2>
           {isLoyverseSynced && (
             <span className="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
-              🔒 Loyverse 원본 (수정 불가)
+              🔒 Loyverse Original (Read-only)
             </span>
           )}
         </div>
 
-        <Field label="상품명 *" error={errors.name?.message}>
+        <Field label="Product Name *" error={errors.name?.message}>
           <input
             type="text"
-            placeholder="예: 플레인 베이글"
+            placeholder="e.g. Plain Bagel"
             {...register("name")}
             disabled={isLoyverseSynced}
             className={isLoyverseSynced ? readOnlyInputClass : inputClass(!!errors.name)}
           />
           {isLoyverseSynced && (
-            <p className="mt-1 text-xs text-blue-500">🔒 Loyverse 원본 필드 — 수정 불가</p>
+            <p className="mt-1 text-xs text-blue-500">🔒 Loyverse original field — Read-only</p>
           )}
         </Field>
 
         <Field
-          label="슬러그 *"
+          label="slug *"
           error={errors.slug?.message}
-          hint={isLoyverseSynced ? undefined : "영소문자, 숫자, 하이픈만 사용 (예: plain-bagel)"}
+          hint={isLoyverseSynced ? undefined : "Lowercase letters, numbers, hyphens only (e.g. plain-bagel)"}
         >
           <input
             type="text"
@@ -204,30 +204,30 @@ export default function ProductForm({
             className={isLoyverseSynced ? readOnlyInputClass : inputClass(!!errors.slug)}
           />
           {isLoyverseSynced && (
-            <p className="mt-1 text-xs text-blue-500">🔒 Loyverse 원본 필드 — 수정 불가</p>
+            <p className="mt-1 text-xs text-blue-500">🔒 Loyverse original field — Read-only</p>
           )}
         </Field>
 
-        <Field label="설명" error={errors.description?.message}>
+        <Field label="Description" error={errors.description?.message}>
           <textarea
             rows={3}
-            placeholder="상품 설명을 입력하세요 (선택)"
+            placeholder="Enter product description (optional)"
             {...register("description")}
             disabled={isLoyverseSynced}
             className={isLoyverseSynced ? readOnlyInputClass : inputClass(false)}
           />
           {isLoyverseSynced && (
-            <p className="mt-1 text-xs text-blue-500">🔒 Loyverse 원본 필드 — 수정 불가</p>
+            <p className="mt-1 text-xs text-blue-500">🔒 Loyverse original field — Read-only</p>
           )}
         </Field>
 
-        <Field label="카테고리" error={errors.loyverseCategoryId?.message}>
+        <Field label="Categories" error={errors.loyverseCategoryId?.message}>
           <select
             {...register("loyverseCategoryId")}
             disabled={isLoyverseSynced}
             className={isLoyverseSynced ? readOnlyInputClass : inputClass(!!errors.loyverseCategoryId)}
           >
-            <option value="">카테고리 없음</option>
+            <option value="">Categories None</option>
             {categories.map((cat) => (
               <option key={cat.id} value={cat.id}>
                 {cat.name}
@@ -235,23 +235,23 @@ export default function ProductForm({
             ))}
           </select>
           {isLoyverseSynced && (
-            <p className="mt-1 text-xs text-blue-500">🔒 Loyverse 원본 필드 — 수정 불가</p>
+            <p className="mt-1 text-xs text-blue-500">🔒 Loyverse original field — Read-only</p>
           )}
         </Field>
       </div>
 
-      {/* 가격 및 상태 */}
+      {/* Price & Status */}
       <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-5">
         <div className="flex items-center justify-between border-b border-gray-100 pb-2">
-          <h2 className="text-base font-semibold text-gray-900">가격 및 상태</h2>
+          <h2 className="text-base font-semibold text-gray-900">Price & Status</h2>
           {isLoyverseSynced && (
             <span className="text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded">
-              ✏️ 내부 운영 필드 (수정 가능)
+              ✏️ Internal Operation Fields (Editable)
             </span>
           )}
         </div>
 
-        <Field label="기본가격 *" error={errors.basePrice?.message}>
+        <Field label="base price *" error={errors.basePrice?.message}>
           <input
             type="number"
             step="0.01"
@@ -263,11 +263,11 @@ export default function ProductForm({
             className={isLoyverseSynced ? readOnlyInputClass : inputClass(!!errors.basePrice)}
           />
           {isLoyverseSynced && (
-            <p className="mt-1 text-xs text-blue-500">🔒 Loyverse 원본 필드 — 수정 불가</p>
+            <p className="mt-1 text-xs text-blue-500">🔒 Loyverse original field — Read-only</p>
           )}
         </Field>
 
-        <Field label="정렬 순서" error={errors.sortOrder?.message}>
+        <Field label="Sort Order" error={errors.sortOrder?.message}>
           <input
             type="number"
             step="1"
@@ -276,7 +276,7 @@ export default function ProductForm({
             className={inputClass(!!errors.sortOrder)}
           />
           {isLoyverseSynced && (
-            <p className="mt-1 text-xs text-green-600">✏️ 내부 운영 필드 — 수정 가능</p>
+            <p className="mt-1 text-xs text-green-600">✏️ Internal operation field — Editable</p>
           )}
         </Field>
 
@@ -287,9 +287,9 @@ export default function ProductForm({
               {...register("isActive")}
               className="w-4 h-4 rounded border-gray-300 text-amber-500 focus:ring-amber-500"
             />
-            <span className="text-sm font-medium text-gray-700">활성 상태</span>
+            <span className="text-sm font-medium text-gray-700">Active Status</span>
             {isLoyverseSynced && (
-              <span className="text-xs text-green-600">✏️ 수정 가능</span>
+              <span className="text-xs text-green-600">✏️ Edit Available</span>
             )}
           </label>
 
@@ -299,9 +299,9 @@ export default function ProductForm({
               {...register("isSubscriptionEligible")}
               className="w-4 h-4 rounded border-gray-300 text-amber-500 focus:ring-amber-500"
             />
-            <span className="text-sm font-medium text-gray-700">구독 가능 상품</span>
+            <span className="text-sm font-medium text-gray-700">Subscribable Products</span>
             {isLoyverseSynced && (
-              <span className="text-xs text-green-600">✏️ 수정 가능</span>
+              <span className="text-xs text-green-600">✏️ Edit Available</span>
             )}
           </label>
         </div>
@@ -314,13 +314,13 @@ export default function ProductForm({
           disabled={status === "loading" || status === "success"}
           className="px-6 py-2 bg-amber-500 text-white rounded-lg text-sm font-medium hover:bg-amber-600 transition-colors disabled:opacity-50"
         >
-          {status === "loading" ? "저장 중..." : "저장"}
+          {status === "loading" ? "Saving..." : "Save"}
         </button>
         <Link
           href="/admin/products"
           className="px-6 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
         >
-          취소
+          Cancel
         </Link>
       </div>
     </form>

@@ -16,7 +16,7 @@ export async function POST(
 
     return NextResponse.json(result);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "임포트 실행에 실패했습니다";
+    const message = error instanceof Error ? error.message : "import failed to execute";
     return NextResponse.json({ message }, { status: 500 });
   }
 }

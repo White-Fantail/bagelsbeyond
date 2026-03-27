@@ -3,7 +3,7 @@
  *
  * Each role gets its own sidebar menu:
  *  - PUBLIC   : unauthenticated users — CTA-focused, no internal menus
- *  - CUSTOMER : order/account-centric (고객 메뉴)
+ *  - CUSTOMER : order/account-centric (Customer Menu)
  *  - STAFF    : day-to-day operations only — no analytics/data/admin menus
  *  - ADMIN    : full grouped sidebar with all sections
  *
@@ -53,11 +53,11 @@ export type RoleNavConfig = {
 export const PUBLIC_NAV_GROUPS: NavGroup[] = [
   {
     id: "public",
-    label: "메뉴",
+    label: "Menu",
     items: [
-      { href: "/", label: "홈" },
-      { href: "/order", label: "주문하기" },
-      { href: "/subscribe", label: "구독" },
+      { href: "/", label: "Home" },
+      { href: "/order", label: "Order" },
+      { href: "/subscribe", label: "Subscriptions" },
     ],
   },
 ];
@@ -66,17 +66,17 @@ export const PUBLIC_NAV_GROUPS: NavGroup[] = [
 
 export const CUSTOMER_NAV: RoleNavConfig = {
   dashboardHref: "/account",
-  dashboardLabel: "내 계정",
+  dashboardLabel: "My Account",
   groups: [
     {
       id: "customer",
-      label: "고객 메뉴",
+      label: "Customer Menu",
       items: [
-        { href: "/", label: "홈" },
-        { href: "/order", label: "메뉴 / 주문" },
-        { href: "/account/subscriptions", label: "구독 관리" },
-        { href: "/account/orders", label: "내 주문" },
-        { href: "/account", label: "내 계정" },
+        { href: "/", label: "Home" },
+        { href: "/order", label: "Menu / Order" },
+        { href: "/account/subscriptions", label: "Manage Subscriptions" },
+        { href: "/account/orders", label: "My Orders" },
+        { href: "/account", label: "My Account" },
       ],
     },
   ],
@@ -86,35 +86,35 @@ export const CUSTOMER_NAV: RoleNavConfig = {
 
 export const STAFF_NAV: RoleNavConfig = {
   dashboardHref: "/staff",
-  dashboardLabel: "운영 대시보드",
+  dashboardLabel: "Operations Dashboard",
   groups: [
     {
       id: "dashboard",
-      label: "대시보드",
-      items: [{ href: "/staff", label: "운영 대시보드" }],
+      label: "Dashboard",
+      items: [{ href: "/staff", label: "Operations Dashboard" }],
     },
     {
       id: "orders",
-      label: "주문 / 구독",
+      label: "Orders / Subscriptions",
       items: [
-        { href: "/admin/orders", label: "주문 관리" },
-        { href: "/admin/subscriptions", label: "구독 관리" },
-        { href: "/admin/sync/orders", label: "주문 자동 전송 현황" },
+        { href: "/admin/orders", label: "Order Management" },
+        { href: "/admin/subscriptions", label: "Manage Subscriptions" },
+        { href: "/admin/sync/orders", label: "Order Auto-Send Status" },
       ],
     },
     {
       id: "sales",
-      label: "매출",
+      label: "Sales",
       items: [
-        { href: "/sales/new", label: "매출 입력" },
-        { href: "/sales", label: "매출 목록" },
-        { href: "/calendar", label: "달력" },
+        { href: "/sales/new", label: "Enter Sales" },
+        { href: "/sales", label: "Sales List" },
+        { href: "/calendar", label: "Calendar" },
       ],
     },
     {
       id: "inventory",
-      label: "재고",
-      items: [{ href: "/admin/inventory", label: "재고 관리" }],
+      label: "Inventory",
+      items: [{ href: "/admin/inventory", label: "Inventory Management" }],
     },
   ],
 };
@@ -123,70 +123,70 @@ export const STAFF_NAV: RoleNavConfig = {
 
 export const ADMIN_NAV: RoleNavConfig = {
   dashboardHref: "/admin",
-  dashboardLabel: "관리자 대시보드",
+  dashboardLabel: "Admin Dashboard",
   groups: [
     {
       id: "dashboard",
-      label: "대시보드",
-      items: [{ href: "/admin", label: "운영 대시보드" }],
+      label: "Dashboard",
+      items: [{ href: "/admin", label: "Operations Dashboard" }],
     },
     {
       id: "products",
-      label: "상품 / 재고",
+      label: "Products / Inventory",
       items: [
-        { href: "/admin/products", label: "상품 관리" },
-        { href: "/admin/modifiers", label: "모디파이어 관리" },
-        { href: "/admin/categories", label: "카테고리 관리" },
-        { href: "/admin/inventory", label: "재고 관리" },
+        { href: "/admin/products", label: "Product Management" },
+        { href: "/admin/modifiers", label: "Modifier Management" },
+        { href: "/admin/categories", label: "Category Management" },
+        { href: "/admin/inventory", label: "Inventory Management" },
       ],
     },
     {
       id: "orders",
-      label: "주문 / 구독",
+      label: "Orders / Subscriptions",
       items: [
-        { href: "/admin/orders", label: "주문 관리" },
-        { href: "/admin/subscriptions", label: "구독 관리" },
-        { href: "/admin/subscription-occurrences", label: "구독 플랜 관리" },
+        { href: "/admin/orders", label: "Order Management" },
+        { href: "/admin/subscriptions", label: "Manage Subscriptions" },
+        { href: "/admin/subscription-occurrences", label: "Subscription Plan Management" },
       ],
     },
     {
       id: "sales",
-      label: "매출",
+      label: "Sales",
       items: [
-        { href: "/calendar", label: "달력" },
-        { href: "/sales/new", label: "매출 입력" },
-        { href: "/sales", label: "매출 목록" },
+        { href: "/calendar", label: "Calendar" },
+        { href: "/sales/new", label: "Enter Sales" },
+        { href: "/sales", label: "Sales List" },
       ],
     },
     {
       id: "analytics",
-      label: "분석 / 예측",
+      label: "Analytics / Predictions",
       items: [
-        { href: "/analytics", label: "매출 분석" },
-        { href: "/analytics/weekly", label: "요일별 분석" },
-        { href: "/predictions", label: "매출 예측" },
-        { href: "/weights", label: "가중치 관리" },
-        { href: "/predictions/performance", label: "성과 분석" },
+        { href: "/analytics", label: "Sales Analytics" },
+        { href: "/analytics/weekly", label: "Day-of-Week Analysis" },
+        { href: "/predictions", label: "Sales Predictions" },
+        { href: "/weights", label: "Weights Management" },
+        { href: "/predictions/performance", label: "Performance Analysis" },
       ],
     },
     {
       id: "data",
-      label: "데이터",
+      label: "Data",
       items: [
-        { href: "/imports", label: "가져오기" },
-        { href: "/external-factors", label: "외부 데이터" },
-        { href: "/tasks", label: "자동화" },
+        { href: "/imports", label: "Imports" },
+        { href: "/external-factors", label: "External Data" },
+        { href: "/tasks", label: "Automation" },
       ],
     },
     {
       id: "admin",
-      label: "관리자",
+      label: "Admin",
       items: [
-        { href: "/admin/users", label: "사용자 관리" },
-        { href: "/admin/sync/orders", label: "주문 자동 전송 현황" },
-        { href: "/admin/integrations", label: "외부 연동" },
-        // Loyverse Modifier 매핑 메뉴 제거됨
-        { href: "/settings", label: "설정" },
+        { href: "/admin/users", label: "Users" },
+        { href: "/admin/sync/orders", label: "Order Auto-Send Status" },
+        { href: "/admin/integrations", label: "Integrations" },
+        // Loyverse Modifier mapping menu removed
+        { href: "/settings", label: "Settings" },
       ],
     },
   ],

@@ -66,7 +66,7 @@ export async function requireStaffOrAdmin(): Promise<SessionPayload> {
 export async function apiRequireAuth(): Promise<SessionPayload | NextResponse> {
   const session = await getSession();
   if (!session?.userId) {
-    return NextResponse.json({ message: "인증이 필요합니다" }, { status: 401 });
+    return NextResponse.json({ message: "Authentication required" }, { status: 401 });
   }
   return session;
 }
@@ -76,10 +76,10 @@ export async function apiRequireRole(
 ): Promise<SessionPayload | NextResponse> {
   const session = await getSession();
   if (!session?.userId) {
-    return NextResponse.json({ message: "인증이 필요합니다" }, { status: 401 });
+    return NextResponse.json({ message: "Authentication required" }, { status: 401 });
   }
   if (!roles.includes(session.role)) {
-    return NextResponse.json({ message: "접근 권한이 없습니다" }, { status: 403 });
+    return NextResponse.json({ message: "Access unauthorized" }, { status: 403 });
   }
   return session;
 }
@@ -87,10 +87,10 @@ export async function apiRequireRole(
 export async function apiRequireStaffOrAdmin(): Promise<SessionPayload | NextResponse> {
   const session = await getSession();
   if (!session?.userId) {
-    return NextResponse.json({ message: "인증이 필요합니다" }, { status: 401 });
+    return NextResponse.json({ message: "Authentication required" }, { status: 401 });
   }
   if (!isStaffOrAdmin(session.role)) {
-    return NextResponse.json({ message: "접근 권한이 없습니다" }, { status: 403 });
+    return NextResponse.json({ message: "Access unauthorized" }, { status: 403 });
   }
   return session;
 }

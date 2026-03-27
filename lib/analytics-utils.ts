@@ -75,7 +75,7 @@ export function formatWeekLabel(start: Date, end: Date): string {
 }
 
 export function formatMonthLabel(year: number, month: number): string {
-  return `${year}년 ${month}월`;
+  return `${year}/${month}`;
 }
 
 export function buildComparablePreviousPeriod(

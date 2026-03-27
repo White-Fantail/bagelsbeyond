@@ -5,11 +5,11 @@ import { prisma } from "@/lib/db";
 import { formatDate } from "@/lib/utils";
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
-  pending:    { label: "대기중",   color: "bg-yellow-100 text-yellow-700" },
-  validating: { label: "검증중",   color: "bg-blue-100 text-blue-700" },
-  ready:      { label: "준비완료", color: "bg-green-100 text-green-700" },
-  imported:   { label: "임포트됨", color: "bg-purple-100 text-purple-700" },
-  failed:     { label: "실패",     color: "bg-red-100 text-red-700" },
+  pending:    { label: "Pending", color: "bg-yellow-100 text-yellow-700" },
+  validating: { label: "Validating", color: "bg-blue-100 text-blue-700" },
+  ready:      { label: "Ready", color: "bg-green-100 text-green-700" },
+  imported:   { label: "Imported", color: "bg-purple-100 text-purple-700" },
+  failed:     { label: "Failed",     color: "bg-red-100 text-red-700" },
 };
 
 async function getImportJobs() {
@@ -30,26 +30,26 @@ export default async function ImportsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">CSV 가져오기</h1>
-          <p className="text-gray-500 mt-1">내부 매출 데이터 CSV 임포트 ({jobs.length}건)</p>
+          <h1 className="text-2xl font-bold text-gray-900">CSV Imports</h1>
+          <p className="text-gray-500 mt-1">Internal Sales Data CSV Import ({jobs.length} items)</p>
         </div>
         <Link
           href="/imports/new"
           className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors text-sm font-medium"
         >
-          + 새 CSV 가져오기
+          + New CSV Import
         </Link>
       </div>
 
       {jobs.length === 0 ? (
         <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
           <p className="text-4xl mb-3">📂</p>
-          <p className="text-gray-500 mb-4">아직 가져오기 작업이 없습니다.</p>
+          <p className="text-gray-500 mb-4">No import tasks yet.</p>
           <Link
             href="/imports/new"
             className="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
           >
-            첫 번째 CSV 파일 업로드
+            Upload First CSV File
           </Link>
         </div>
       ) : (
@@ -57,12 +57,12 @@ export default async function ImportsPage() {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">파일명</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">상태</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">총 행</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">성공</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">실패</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">생성일</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">File Name</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Total Rows</th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Success</th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Failed</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Created Date</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">

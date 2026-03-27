@@ -6,10 +6,10 @@ import Link from "next/link";
 import OccurrencesAdminActions from "./OccurrencesAdminActions";
 
 const OCC_STATUS_LABEL: Record<string, string> = {
-  SCHEDULED: "예약됨",
-  ORDER_CREATED: "주문생성",
-  SKIPPED: "건너뜀",
-  CANCELLED: "취소됨",
+  SCHEDULED: "Scheduled",
+  ORDER_CREATED: "Order Created",
+  SKIPPED: "Skipped",
+  CANCELLED: "Cancelled",
 };
 
 const OCC_STATUS_COLOR: Record<string, string> = {
@@ -64,12 +64,12 @@ export default async function AdminSubscriptionOccurrencesPage({
     <div className="space-y-6">
       <div>
         <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
-          <Link href="/admin" className="hover:text-amber-600">관리자 대시보드</Link>
+          <Link href="/admin" className="hover:text-amber-600">Admin Dashboard</Link>
           <span>/</span>
-          <span className="text-gray-700 font-medium">구독 발생 관리</span>
+          <span className="text-gray-700 font-medium">Subscription Occurrence Management</span>
         </div>
-        <h1 className="text-2xl font-bold text-gray-900">구독 발생 관리</h1>
-        <p className="text-gray-500 text-sm mt-0.5">날짜별 구독 발생 조회 및 주문 생성 (STAFF 이상)</p>
+        <h1 className="text-2xl font-bold text-gray-900">Subscription Occurrence Management</h1>
+        <p className="text-gray-500 text-sm mt-0.5">View subscription occurrences by date and create orders (STAFF and above)</p>
       </div>
 
       {/* Date filter + actions */}
@@ -82,7 +82,7 @@ export default async function AdminSubscriptionOccurrencesPage({
             className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
           />
           <button type="submit" className="px-4 py-2 rounded-lg bg-amber-500 text-white text-sm font-medium hover:bg-amber-600">
-            조회
+            View
           </button>
         </form>
 
@@ -92,17 +92,17 @@ export default async function AdminSubscriptionOccurrencesPage({
       {/* Occurrences list */}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         {occurrences.length === 0 ? (
-          <div className="p-10 text-center text-gray-500">해당 날짜에 구독 발생이 없습니다</div>
+          <div className="p-10 text-center text-gray-500">No subscription occurrences for this date</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-gray-50 text-xs text-gray-500 uppercase">
                 <tr>
-                  <th className="px-4 py-3 text-left">고객</th>
-                  <th className="px-4 py-3 text-left">상태</th>
-                  <th className="px-4 py-3 text-left">상품</th>
-                  <th className="px-4 py-3 text-left">주문번호</th>
-                  <th className="px-4 py-3 text-left">작업</th>
+                  <th className="px-4 py-3 text-left">Customer</th>
+                  <th className="px-4 py-3 text-left">Status</th>
+                  <th className="px-4 py-3 text-left">Products</th>
+                  <th className="px-4 py-3 text-left">Order Number</th>
+                  <th className="px-4 py-3 text-left">Task</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">

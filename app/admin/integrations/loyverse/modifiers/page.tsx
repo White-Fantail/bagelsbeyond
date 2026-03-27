@@ -1,4 +1,4 @@
-// Loyverse Modifier 매핑 페이지 제거됨
+// Loyverse Modifier mapping page removed
 export default function LoyverseModifierMappingPage() {
   return null;
 }

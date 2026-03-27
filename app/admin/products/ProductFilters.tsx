@@ -6,21 +6,21 @@ import { useState, useEffect } from "react";
 type CategoryOption = { id: string; name: string };
 
 const SOURCE_OPTIONS = [
-  { value: "ALL", label: "전체 출처" },
+  { value: "ALL", label: "All Source" },
   { value: "LOYVERSE", label: "Loyverse Sync" },
-  { value: "INTERNAL", label: "내부 생성" },
+  { value: "INTERNAL", label: "Internal Create" },
 ];
 
 const ACTIVE_OPTIONS = [
-  { value: "ALL", label: "전체 상태" },
-  { value: "ACTIVE", label: "활성" },
-  { value: "INACTIVE", label: "비활성" },
+  { value: "ALL", label: "All Status" },
+  { value: "ACTIVE", label: "Active" },
+  { value: "INACTIVE", label: "Inactive" },
 ];
 
 const SUBSCRIPTION_OPTIONS = [
-  { value: "ALL", label: "구독 여부 전체" },
-  { value: "YES", label: "구독 가능" },
-  { value: "NO", label: "구독 불가" },
+  { value: "ALL", label: "All (subscription or not)" },
+  { value: "YES", label: "Subscribable" },
+  { value: "NO", label: "Subscriptions Unavailable" },
 ];
 
 export default function ProductFilters() {
@@ -88,19 +88,19 @@ export default function ProductFilters() {
       <div className="flex flex-wrap gap-3 items-end">
         {/* Search */}
         <div className="flex flex-col gap-1 flex-1 min-w-[180px]">
-          <label className="text-xs font-medium text-gray-600">이름 검색</label>
+          <label className="text-xs font-medium text-gray-600">Name Search</label>
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="상품명 검색..."
+            placeholder="Product Name Search..."
             className="px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500"
           />
         </div>
 
         {/* Category filter */}
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-gray-600">카테고리</label>
+          <label className="text-xs font-medium text-gray-600">Categories</label>
           <select
             value={category}
             onChange={(e) => {
@@ -109,7 +109,7 @@ export default function ProductFilters() {
             }}
             className={selectClass}
           >
-            <option value="ALL">전체 카테고리</option>
+            <option value="ALL">All Categories</option>
             {categories.map((cat) => (
               <option key={cat.id} value={cat.id}>
                 {cat.name}
@@ -120,7 +120,7 @@ export default function ProductFilters() {
 
         {/* Source filter */}
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-gray-600">출처</label>
+          <label className="text-xs font-medium text-gray-600">Source</label>
           <select
             value={source}
             onChange={(e) => {
@@ -139,7 +139,7 @@ export default function ProductFilters() {
 
         {/* Active filter */}
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-gray-600">활성 상태</label>
+          <label className="text-xs font-medium text-gray-600">Active Status</label>
           <select
             value={isActive}
             onChange={(e) => {
@@ -158,7 +158,7 @@ export default function ProductFilters() {
 
         {/* Subscription filter */}
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-gray-600">구독</label>
+          <label className="text-xs font-medium text-gray-600">Subscriptions</label>
           <select
             value={subscription}
             onChange={(e) => {
@@ -181,14 +181,14 @@ export default function ProductFilters() {
             type="submit"
             className="px-4 py-2 bg-amber-500 text-white rounded-md text-sm font-medium hover:bg-amber-600 transition-colors"
           >
-            검색
+            Search
           </button>
           <button
             type="button"
             onClick={handleReset}
             className="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors"
           >
-            초기화
+            Reset
           </button>
         </div>
       </div>

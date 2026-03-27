@@ -32,7 +32,7 @@ export async function POST() {
   } catch (err) {
     console.error("[/api/admin/integrations/loyverse/full-sync] Unexpected error:", err);
     return NextResponse.json(
-      { message: err instanceof Error ? err.message : "동기화 중 오류가 발생했습니다" },
+      { message: err instanceof Error ? err.message : "Error during Sync" },
       { status: 500 }
     );
   }

@@ -40,8 +40,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         error:
-          "INTERNAL_JOB_SECRET 환경변수가 설정되지 않았습니다. " +
-          "보안을 위해 엔드포인트를 사용하기 전에 반드시 설정하세요.",
+          "INTERNAL_JOB_SECRET environment variable is not configured. " +
+          "Please configure it before using this endpoint for security.",
       },
       { status: 403 }
     );

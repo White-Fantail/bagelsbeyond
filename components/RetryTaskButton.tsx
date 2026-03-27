@@ -25,12 +25,12 @@ export default function RetryTaskButton({ taskId, currentStatus }: Props) {
       const res = await fetch(`/api/tasks/${taskId}/retry`, { method: "POST" });
       if (!res.ok) {
         const data = await res.json() as { error?: string };
-        throw new Error(data.error ?? "재시도에 실패했습니다");
+        throw new Error(data.error ?? "Retry failed");
       }
       setDone(true);
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "오류가 발생했습니다");
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setLoading(false);
     }
@@ -43,7 +43,7 @@ export default function RetryTaskButton({ taskId, currentStatus }: Props) {
         disabled={loading || done}
         className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >
-        {loading ? "재시도 중…" : done ? "✓ 재시도 완료" : "🔄 재시도"}
+        {loading ? "Retrying…" : done ? "✓ Retry complete" : "🔄 Retry"}
       </button>
       {error && <p className="text-red-600 text-sm mt-1">{error}</p>}
     </div>

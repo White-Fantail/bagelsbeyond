@@ -12,7 +12,7 @@ export async function PUT(req: NextRequest, { params }: RouteContext) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { message: "입력값이 올바르지 않습니다", errors: parsed.error.flatten() },
+        { message: "Invalid input", errors: parsed.error.flatten() },
         { status: 400 }
       );
     }
@@ -23,7 +23,7 @@ export async function PUT(req: NextRequest, { params }: RouteContext) {
     });
     return NextResponse.json(weight);
   } catch (_error) {
-    return NextResponse.json({ message: "수정에 실패했습니다" }, { status: 500 });
+    return NextResponse.json({ message: "Edit failed" }, { status: 500 });
   }
 }
 
@@ -31,8 +31,8 @@ export async function DELETE(_req: NextRequest, { params }: RouteContext) {
   try {
     const { id } = await params;
     await prisma.predictionWeight.delete({ where: { id } });
-    return NextResponse.json({ message: "삭제되었습니다" });
+    return NextResponse.json({ message: "Deleted" });
   } catch (_error) {
-    return NextResponse.json({ message: "삭제에 실패했습니다" }, { status: 500 });
+    return NextResponse.json({ message: "Delete failed" }, { status: 500 });
   }
 }

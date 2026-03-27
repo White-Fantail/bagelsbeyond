@@ -25,6 +25,6 @@ export async function GET(request: Request) {
 
     return NextResponse.json(factors);
   } catch {
-    return NextResponse.json({ message: "외부 데이터를 불러오는데 실패했습니다" }, { status: 500 });
+    return NextResponse.json({ message: "Failed to load external data" }, { status: 500 });
   }
 }

@@ -4,7 +4,7 @@ import { apiRequireAdmin, isNextResponse } from "@/lib/auth/dal";
 import { z } from "zod";
 
 const createSchema = z.object({
-  name: z.string().min(1, "그룹명을 입력해주세요"),
+  name: z.string().min(1, "Please enter a group name"),
   minSelect: z.number().int().min(0).default(0),
   maxSelect: z.number().int().min(1).default(1),
   isRequired: z.boolean().default(false),
@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
     });
     return NextResponse.json({ groups });
   } catch {
-    return NextResponse.json({ message: "모디파이어 그룹 목록을 불러오는데 실패했습니다" }, { status: 500 });
+    return NextResponse.json({ message: "Failed to load modifier groups list" }, { status: 500 });
   }
 }
 
@@ -45,13 +45,13 @@ export async function POST(req: NextRequest) {
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ message: "요청 본문이 올바르지 않습니다" }, { status: 400 });
+    return NextResponse.json({ message: "Invalid request body" }, { status: 400 });
   }
 
   const parsed = createSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { message: "입력값이 올바르지 않습니다", errors: parsed.error.flatten() },
+      { message: "Invalid input", errors: parsed.error.flatten() },
       { status: 400 }
     );
   }
@@ -63,6 +63,6 @@ export async function POST(req: NextRequest) {
     });
     return NextResponse.json({ group }, { status: 201 });
   } catch {
-    return NextResponse.json({ message: "모디파이어 그룹 생성에 실패했습니다" }, { status: 500 });
+    return NextResponse.json({ message: "Failed to create modifier group" }, { status: 500 });
   }
 }

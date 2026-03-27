@@ -52,33 +52,33 @@ export default function PeriodComparisonSection({ comparison }: Props) {
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-5">
       <h3 className="text-sm font-semibold text-gray-700 mb-4">
-        기간 비교 ({current.startDate} ~ {current.endDate} vs{" "}
+        Period Comparison ({current.startDate} ~ {current.endDate} vs{" "}
         {previous.startDate} ~ {previous.endDate})
       </h3>
       <div className="space-y-0">
         <ChangeRow
-          label="총 매출"
+          label="Total Sales"
           currentValue={formatCurrencyNZD(current.totalSales)}
           previousValue={formatCurrencyNZD(previous.totalSales)}
           change={comparison.salesChange}
           changePercent={comparison.salesChangePercent}
         />
         <ChangeRow
-          label="일평균 매출"
+          label="Daily Avg. Sales"
           currentValue={formatCurrencyNZD(current.averageDailySales)}
           previousValue={formatCurrencyNZD(previous.averageDailySales)}
           change={comparison.avgSalesChange}
           changePercent={comparison.avgSalesChangePercent}
         />
         <ChangeRow
-          label="총 판매 베이글"
-          currentValue={`${current.totalBagelsSold}개`}
-          previousValue={`${previous.totalBagelsSold}개`}
+          label="Total Sold Bagels"
+          currentValue={`${current.totalBagelsSold}`}
+          previousValue={`${previous.totalBagelsSold}`}
           change={comparison.bagelsSoldChange}
           changePercent={comparison.bagelsSoldChangePercent}
         />
         <ChangeRow
-          label="평균 폐기율"
+          label="Avg. Waste Rate"
           currentValue={formatPercentage(current.wasteRate)}
           previousValue={formatPercentage(previous.wasteRate)}
           change={comparison.wasteRateChange}
@@ -86,21 +86,21 @@ export default function PeriodComparisonSection({ comparison }: Props) {
           higherIsBetter={false}
         />
         <ChangeRow
-          label="매장 매출 비중"
+          label="Store Sales Share"
           currentValue={`${current.storePercent.toFixed(1)}%`}
           previousValue={`${previous.storePercent.toFixed(1)}%`}
           change={comparison.storePercentChange}
           changePercent={comparison.storePercentChange}
         />
         <ChangeRow
-          label="우버이츠 비중"
+          label="Uber Eats Share"
           currentValue={`${current.uberPercent.toFixed(1)}%`}
           previousValue={`${previous.uberPercent.toFixed(1)}%`}
           change={comparison.uberPercentChange}
           changePercent={comparison.uberPercentChange}
         />
         <ChangeRow
-          label="도어대쉬 비중"
+          label="DoorDash Share"
           currentValue={`${current.doordashPercent.toFixed(1)}%`}
           previousValue={`${previous.doordashPercent.toFixed(1)}%`}
           change={comparison.doordashPercentChange}

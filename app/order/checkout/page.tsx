@@ -15,8 +15,8 @@ export default async function CheckoutPage() {
   return (
     <div className="max-w-xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">결제하기</h1>
-        <p className="text-gray-500 text-sm mt-1">픽업 날짜와 시간을 선택하고 주문을 완료하세요</p>
+        <h1 className="text-2xl font-bold text-gray-900">Checkout</h1>
+        <p className="text-gray-500 text-sm mt-1">Select a pickup date and time to complete your order</p>
       </div>
       <CheckoutForm
         customerName={session.name}

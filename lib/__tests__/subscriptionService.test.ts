@@ -106,13 +106,13 @@ describe("createSubscription", () => {
       pickupTimeSlot: "10:00",
       startDate: new Date("2025-01-10T00:00:00.000Z"),
       endDate: new Date("2025-06-30T00:00:00.000Z"),
-      note: "알레르기 주의",
+      note: "allergy warning",
       items: [{ productId: "prod-2", quantity: 1 }],
     });
 
     const callArg = mockPrisma.subscription.create.mock.calls[0][0];
     expect(callArg.data.pickupTimeSlot).toBe("10:00");
-    expect(callArg.data.note).toBe("알레르기 주의");
+    expect(callArg.data.note).toBe("allergy warning");
   });
 });
 
@@ -333,6 +333,6 @@ describe("cancelOccurrence", () => {
 
   it("throws when occurrence not found", async () => {
     mockPrisma.subscriptionOccurrence.findUnique.mockResolvedValue(null);
-    await expect(cancelOccurrence("nonexistent")).rejects.toThrow("발생 항목을 찾을 수 없습니다");
+    await expect(cancelOccurrence("nonexistent")).rejects.toThrow("Occurrence not found");
   });
 });

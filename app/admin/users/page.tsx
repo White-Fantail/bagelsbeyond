@@ -102,20 +102,20 @@ export default async function AdminUsersPage({
         <div>
           <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
             <Link href="/admin" className="hover:text-amber-600 transition-colors">
-              관리자 대시보드
+              Admin Dashboard
             </Link>
             <span>/</span>
-            <span className="text-gray-700 font-medium">사용자 관리</span>
+            <span className="text-gray-700 font-medium">Users</span>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">사용자 관리</h1>
-          <p className="text-gray-500 mt-0.5 text-sm">전체 사용자 목록 및 권한/활성 상태를 관리합니다</p>
+          <h1 className="text-2xl font-bold text-gray-900">Users</h1>
+          <p className="text-gray-500 mt-0.5 text-sm">Manage all users, their roles and active status</p>
         </div>
       </div>
 
       {/* Summary cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         <div className="bg-white rounded-xl border border-gray-200 p-4">
-          <p className="text-xs text-gray-500">전체 사용자</p>
+          <p className="text-xs text-gray-500">All Users</p>
           <p className="text-2xl font-bold text-gray-900 mt-1">{summary.total}</p>
         </div>
         <div className="bg-white rounded-xl border border-red-100 p-4">
@@ -131,7 +131,7 @@ export default async function AdminUsersPage({
           <p className="text-2xl font-bold text-gray-700 mt-1">{summary.customerCount}</p>
         </div>
         <div className="bg-white rounded-xl border border-orange-100 p-4">
-          <p className="text-xs text-orange-500">비활성</p>
+          <p className="text-xs text-orange-500">Inactive</p>
           <p className="text-2xl font-bold text-orange-700 mt-1">{summary.inactiveCount}</p>
         </div>
       </div>
@@ -146,12 +146,12 @@ export default async function AdminUsersPage({
         <span>
           {hasFilters ? (
             <>
-              검색 결과 <strong className="text-gray-700">{users.length}</strong>명
-              <span className="text-gray-400"> (전체 {summary.total}명)</span>
+              Search results <strong className="text-gray-700">{users.length}</strong>
+              <span className="text-gray-400"> (All {summary.total})</span>
             </>
           ) : (
             <>
-              전체 <strong className="text-gray-700">{users.length}</strong>명
+              All <strong className="text-gray-700">{users.length}</strong>
             </>
           )}
         </span>

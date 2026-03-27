@@ -12,17 +12,17 @@ export async function GET(_req: NextRequest, { params }: Params) {
     const date = new Date(`${dateParam}T00:00:00.000Z`);
 
     if (isNaN(date.getTime())) {
-      return NextResponse.json({ message: "유효하지 않은 날짜입니다" }, { status: 400 });
+      return NextResponse.json({ message: "Invalid date" }, { status: 400 });
     }
 
     const factor = await prisma.dailyExternalFactor.findUnique({ where: { date } });
     if (!factor) {
-      return NextResponse.json({ message: "외부 데이터를 찾을 수 없습니다" }, { status: 404 });
+      return NextResponse.json({ message: "External data not found" }, { status: 404 });
     }
 
     return NextResponse.json(factor);
   } catch {
-    return NextResponse.json({ message: "외부 데이터를 불러오는데 실패했습니다" }, { status: 500 });
+    return NextResponse.json({ message: "Failed to load external data" }, { status: 500 });
   }
 }
 
@@ -33,7 +33,7 @@ export async function POST(_req: NextRequest, { params }: Params) {
     const date = new Date(`${dateParam}T00:00:00.000Z`);
 
     if (isNaN(date.getTime())) {
-      return NextResponse.json({ message: "유효하지 않은 날짜입니다" }, { status: 400 });
+      return NextResponse.json({ message: "Invalid date" }, { status: 400 });
     }
 
     const result = await upsertExternalFactorsByDate(date);
@@ -41,7 +41,7 @@ export async function POST(_req: NextRequest, { params }: Params) {
 
     return NextResponse.json({ result, factor });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "외부 데이터 수집에 실패했습니다";
+    const message = error instanceof Error ? error.message : "External Data Collection failed";
     return NextResponse.json({ message }, { status: 500 });
   }
 }

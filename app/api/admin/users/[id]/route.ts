@@ -10,7 +10,7 @@ const patchSchema = z
     isActive: z.boolean().optional(),
   })
   .refine((d) => d.role !== undefined || d.isActive !== undefined, {
-    message: "role 또는 isActive 중 하나는 반드시 제공해야 합니다",
+    message: "At least one of role or isActive must be provided",
   });
 
 export async function PATCH(
@@ -28,13 +28,13 @@ export async function PATCH(
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ message: "요청 본문이 올바르지 않습니다" }, { status: 400 });
+    return NextResponse.json({ message: "Invalid request body" }, { status: 400 });
   }
 
   const parsed = patchSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { message: "입력값이 올바르지 않습니다", errors: parsed.error.flatten() },
+      { message: "Invalid input", errors: parsed.error.flatten() },
       { status: 400 }
     );
   }
@@ -44,7 +44,7 @@ export async function PATCH(
   // Find target user
   const target = await prisma.user.findUnique({ where: { id: targetId } });
   if (!target) {
-    return NextResponse.json({ message: "사용자를 찾을 수 없습니다" }, { status: 404 });
+    return NextResponse.json({ message: "User not found" }, { status: 404 });
   }
 
   // ── Self-protection rules ──────────────────────────────────────────────────
@@ -53,14 +53,14 @@ export async function PATCH(
 
   if (isSelf && newIsActive === false) {
     return NextResponse.json(
-      { message: "자기 자신을 비활성화할 수 없습니다" },
+      { message: "You cannot deactivate yourself" },
       { status: 422 }
     );
   }
 
   if (isSelf && newRole !== undefined && newRole !== Role.ADMIN) {
     return NextResponse.json(
-      { message: "자기 자신의 권한을 ADMIN 아래로 낮출 수 없습니다" },
+      { message: "You cannot lower your own role below ADMIN" },
       { status: 422 }
     );
   }
@@ -75,7 +75,7 @@ export async function PATCH(
     // Deactivating the last active ADMIN
     if (newIsActive === false && activeAdminCount <= 1) {
       return NextResponse.json(
-        { message: "마지막 활성 관리자(ADMIN)는 비활성화할 수 없습니다" },
+        { message: "The last active Admin cannot be deactivated" },
         { status: 422 }
       );
     }
@@ -85,7 +85,7 @@ export async function PATCH(
       const totalAdminCount = await prisma.user.count({ where: { role: Role.ADMIN } });
       if (totalAdminCount <= 1) {
         return NextResponse.json(
-          { message: "마지막 관리자(ADMIN)의 권한을 낮출 수 없습니다" },
+          { message: "Cannot lower the role of the last Admin" },
           { status: 422 }
         );
       }
@@ -149,7 +149,7 @@ export async function PATCH(
     return NextResponse.json({ user: updated });
   } catch (_error) {
     return NextResponse.json(
-      { message: "사용자 정보 업데이트에 실패했습니다" },
+      { message: "Failed to update user info" },
       { status: 500 }
     );
   }

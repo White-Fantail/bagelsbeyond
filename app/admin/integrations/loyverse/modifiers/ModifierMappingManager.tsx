@@ -102,7 +102,7 @@ export default function ModifierMappingManager({
           syncedAt: new Date().toISOString(),
           groupCount: 0,
           optionCount: 0,
-          errorMessage: `서버 오류 (HTTP ${res.status})`,
+          errorMessage: `Server error (HTTP ${res.status})`,
         });
       }
     } catch (err) {
@@ -111,7 +111,7 @@ export default function ModifierMappingManager({
         syncedAt: new Date().toISOString(),
         groupCount: 0,
         optionCount: 0,
-        errorMessage: err instanceof Error ? err.message : "알 수 없는 오류",
+        errorMessage: err instanceof Error ? err.message : "Unknown error",
       });
     } finally {
       setLoadingExternal(false);
@@ -141,7 +141,7 @@ export default function ModifierMappingManager({
         syncedAt: new Date().toISOString(),
         groupCount: 0,
         optionCount: 0,
-        errorMessage: err instanceof Error ? err.message : "알 수 없는 오류",
+        errorMessage: err instanceof Error ? err.message : "Unknown error",
       });
     } finally {
       setSyncingModifiers(false);
@@ -269,7 +269,7 @@ export default function ModifierMappingManager({
       <div className="flex flex-wrap gap-3 items-center">
         <input
           type="text"
-          placeholder="옵션 이름 검색..."
+          placeholder="Options Name Search..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="px-3 py-1.5 border border-gray-300 rounded-md text-sm text-gray-900 bg-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500"
@@ -279,7 +279,7 @@ export default function ModifierMappingManager({
           onChange={(e) => setFilterProductId(e.target.value)}
           className="px-3 py-1.5 border border-gray-300 rounded-md text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500"
         >
-          <option value="all">전체 상품</option>
+          <option value="all">All Products</option>
           {allProducts.map((p) => (
             <option key={p.id} value={p.id}>{p.name}</option>
           ))}
@@ -296,7 +296,7 @@ export default function ModifierMappingManager({
                   : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
               }`}
             >
-              {mode === "all" ? "전체" : mode === "unmapped" ? "미매핑" : "재고 추적"}
+              {mode === "all" ? "All" : mode === "unmapped" ? "Unmapped" : "Inventory Tracking"}
             </button>
           ))}
         </div>
@@ -319,10 +319,10 @@ export default function ModifierMappingManager({
           <table className="w-full text-left">
             <thead>
               <tr className="border-b border-gray-200 bg-gray-50">
-                <th className="px-5 py-2 text-xs font-medium text-gray-500">옵션</th>
+                <th className="px-5 py-2 text-xs font-medium text-gray-500">Options</th>
                 <th className="px-5 py-2 text-xs font-medium text-gray-500">Loyverse Modifier</th>
-                <th className="px-5 py-2 text-xs font-medium text-gray-500">마지막 동기화</th>
-                <th className="px-5 py-2 text-xs font-medium text-gray-500">작업</th>
+                <th className="px-5 py-2 text-xs font-medium text-gray-500">Last Sync</th>
+                <th className="px-5 py-2 text-xs font-medium text-gray-500">Task</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -375,7 +375,7 @@ export default function ModifierMappingManager({
                               }
                               className="rounded border border-gray-200 px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-amber-400 max-w-[260px]"
                             >
-                              <option value="">-- Loyverse modifier 선택 --</option>
+                              <option value="">-- Select Loyverse modifier --</option>
                               {externalOptions.map((ext) => (
                                 <option key={ext.optionId} value={ext.optionId}>
                                   [{ext.groupName}] {ext.optionName}
@@ -386,7 +386,7 @@ export default function ModifierMappingManager({
                           ) : (
                             <input
                               type="text"
-                              placeholder="Loyverse modifier option ID 입력..."
+                              placeholder="Enter Loyverse modifier option ID..."
                               value={selectedExternal[option.id] ?? ""}
                               onChange={(e) =>
                                 setSelectedExternal((prev) => ({
@@ -404,7 +404,7 @@ export default function ModifierMappingManager({
                     {/* Last synced */}
                     <td className="px-5 py-3 text-xs text-gray-400">
                       {mapping?.lastSyncedAt
-                        ? new Date(mapping.lastSyncedAt).toLocaleString("ko-KR")
+                        ? new Date(mapping.lastSyncedAt).toLocaleString("en-NZ")
                         : "-"}
                     </td>
 
@@ -430,14 +430,14 @@ export default function ModifierMappingManager({
                             }}
                             className="px-2 py-1 text-xs rounded border border-amber-200 text-amber-700 hover:bg-amber-50 transition-colors"
                           >
-                            수정
+                            Edit
                           </button>
                           <button
                             onClick={() => void deleteMapping(option, mapping.id)}
                             disabled={isDeleting}
                             className="px-2 py-1 text-xs rounded border border-red-200 text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
                           >
-                            {isDeleting ? "..." : "해제"}
+                            {isDeleting ? "..." : "Unlinked"}
                           </button>
                         </div>
                       ) : (
@@ -446,7 +446,7 @@ export default function ModifierMappingManager({
                           disabled={isSaving || !selectedExternal[option.id] || isPending}
                           className="px-3 py-1 text-xs rounded bg-amber-500 text-white hover:bg-amber-600 transition-colors disabled:opacity-40"
                         >
-                          {isSaving ? "저장 중..." : "매핑 저장"}
+                          {isSaving ? "Saving..." : "Save Mapping"}
                         </button>
                       )}
                     </td>
@@ -479,25 +479,25 @@ function ModifierSyncStatusPanel({
   onToggleManualFallback: () => void;
 }) {
   const syncedAtLabel = syncMeta?.syncedAt
-    ? new Date(syncMeta.syncedAt).toLocaleString("ko-KR")
+    ? new Date(syncMeta.syncedAt).toLocaleString("en-NZ")
     : null;
 
   // ── Human-readable error message ─────────────────────────────────────────
   function errorLabel(meta: ModifierSyncMeta): string {
-    if (meta.status === "never") return "아직 modifier 동기화가 실행된 적 없습니다.";
-    if (meta.status === "empty") return "Loyverse modifier API 응답이 비어 있습니다. (modifier 0개)";
+    if (meta.status === "never") return "Modifier sync has never been run.";
+    if (meta.status === "empty") return "Loyverse modifier API response is empty. (modifier 0)";
     if (meta.status !== "failed") return "";
 
     const code = meta.errorCode;
-    if (code === 401 || code === 403) return `Loyverse 인증 실패 (HTTP ${code}) — LOYVERSE_API_TOKEN을 확인하세요.`;
-    if (code === 404) return `Modifier 엔드포인트를 찾을 수 없습니다 (HTTP 404).`;
-    if (code === 429) return "Loyverse API 요청 한도 초과 (HTTP 429) — 잠시 후 다시 시도하세요.";
-    if (code && code >= 500) return `Loyverse 서버 오류 (HTTP ${code}) — 잠시 후 다시 시도하세요.`;
+    if (code === 401 || code === 403) return `Loyverse authentication Failed (HTTP ${code}) — Please check your LOYVERSE_API_TOKEN.`;
+    if (code === 404) return `Modifier endpoint not found (HTTP 404).`;
+    if (code === 429) return "Loyverse API rate limit exceeded (HTTP 429) — Please try again later.";
+    if (code && code >= 500) return `Loyverse Server error (HTTP ${code}) — Please try again later.`;
     if (meta.errorMessage?.toLowerCase().includes("parse") || meta.errorMessage?.toLowerCase().includes("json"))
-      return `Modifier 응답 파싱에 실패했습니다: ${meta.errorMessage}`;
+      return `Modifier response parsing failed: ${meta.errorMessage}`;
     if (meta.errorMessage?.toLowerCase().includes("network") || meta.errorMessage?.toLowerCase().includes("fetch"))
-      return `네트워크 오류로 Loyverse에 연결할 수 없습니다: ${meta.errorMessage}`;
-    return meta.errorMessage ?? "알 수 없는 오류가 발생했습니다.";
+      return `Network error — cannot connect to Loyverse: ${meta.errorMessage}`;
+    return meta.errorMessage ?? "An unknown error occurred.";
   }
 
   const isSuccess = syncMeta?.status === "success";
@@ -518,11 +518,11 @@ function ModifierSyncStatusPanel({
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2">
           {isSuccess ? (
-            <span className="text-sm font-semibold text-blue-800">✓ Modifier 동기화 완료</span>
+            <span className="text-sm font-semibold text-blue-800">✓ Modifier Sync Complete</span>
           ) : isFailed ? (
-            <span className="text-sm font-semibold text-red-700">✗ Modifier 동기화 실패</span>
+            <span className="text-sm font-semibold text-red-700">✗ Modifier Sync Failed</span>
           ) : (
-            <span className="text-sm font-semibold text-amber-800">⚠ Modifier 미동기화</span>
+            <span className="text-sm font-semibold text-amber-800">⚠ Modifier Not Synced</span>
           )}
           {syncedAtLabel && (
             <span className="text-xs text-gray-500">({syncedAtLabel})</span>
@@ -535,7 +535,7 @@ function ModifierSyncStatusPanel({
           className="px-3 py-1.5 rounded-lg bg-white border border-gray-200 hover:bg-gray-50 text-sm text-gray-700 transition-colors disabled:opacity-50 flex items-center gap-1.5"
         >
           <span className={loading ? "animate-spin inline-block" : ""}>🔄</span>
-          {loading ? "동기화 중..." : "Loyverse 새로고침"}
+          {loading ? "Syncing..." : "Loyverse Refresh"}
         </button>
       </div>
 
@@ -543,10 +543,10 @@ function ModifierSyncStatusPanel({
       {isSuccess && syncMeta && (
         <div className="flex flex-wrap gap-3 text-xs">
           <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-blue-100 text-blue-700">
-            그룹 <strong>{syncMeta.groupCount}개</strong>
+            Groups <strong>{syncMeta.groupCount}</strong>
           </span>
           <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-blue-100 text-blue-700">
-            옵션 <strong>{syncMeta.optionCount}개</strong>
+            Options <strong>{syncMeta.optionCount}</strong>
           </span>
         </div>
       )}
@@ -567,13 +567,13 @@ function ModifierSyncStatusPanel({
             className="text-xs text-gray-500 hover:text-gray-700 underline"
           >
             {showManualFallback
-              ? "▲ 수동 입력 숨기기"
-              : "▼ 수동 modifier ID 입력 (비상 fallback)"}
+              ? "▲ Hide manual input"
+              : "▼ Manually enter modifier ID (emergency fallback)"}
           </button>
           {showManualFallback && (
             <p className="mt-1 text-xs text-gray-400">
-              아래 테이블의 &ldquo;Loyverse Modifier&rdquo; 열에서 modifier option ID를 직접 입력할 수
-              있습니다. Loyverse 동기화가 성공하면 이 모드를 닫고 드롭다운에서 선택하세요.
+              You can directly enter the modifier option ID in the &ldquo;Loyverse Modifier&rdquo; column of the table below
+              After successful Loyverse sync, close this mode and select from the dropdown.
             </p>
           )}
         </div>

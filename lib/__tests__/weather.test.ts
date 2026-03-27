@@ -93,7 +93,7 @@ describe("OpenMeteoWeatherProvider — timezone URL encoding", () => {
     const result = await provider.fetchWeatherByDate(date);
 
     expect(result).not.toBeNull();
-    expect(result!.summary).toBe("구름 조금"); // WMO code 1
+    expect(result!.summary).toBe("Partly Cloudy"); // WMO code 1
     expect(result!.maxTemp).toBe(18.5);
     expect(result!.minTemp).toBe(10.2);
     expect(result!.rainMm).toBe(0);

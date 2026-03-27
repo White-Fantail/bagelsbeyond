@@ -30,7 +30,7 @@ export async function GET(
   });
 
   if (!group) {
-    return NextResponse.json({ message: "모디파이어 그룹을 찾을 수 없습니다" }, { status: 404 });
+    return NextResponse.json({ message: "Modifier group not found" }, { status: 404 });
   }
 
   return NextResponse.json({ group });
@@ -50,7 +50,7 @@ export async function PATCH(
     include: { externalMapping: { select: { externalOptionGroupId: true } } },
   });
   if (!group) {
-    return NextResponse.json({ message: "모디파이어 그룹을 찾을 수 없습니다" }, { status: 404 });
+    return NextResponse.json({ message: "Modifier group not found" }, { status: 404 });
   }
 
   // Loyverse-synced groups: name is read-only
@@ -60,13 +60,13 @@ export async function PATCH(
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ message: "요청 본문이 올바르지 않습니다" }, { status: 400 });
+    return NextResponse.json({ message: "Invalid request body" }, { status: 400 });
   }
 
   const parsed = updateSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { message: "입력값이 올바르지 않습니다", errors: parsed.error.flatten() },
+      { message: "Invalid input", errors: parsed.error.flatten() },
       { status: 400 }
     );
   }
@@ -84,7 +84,7 @@ export async function PATCH(
     });
     return NextResponse.json({ group: updated });
   } catch {
-    return NextResponse.json({ message: "모디파이어 그룹 수정에 실패했습니다" }, { status: 500 });
+    return NextResponse.json({ message: "Failed to edit modifier group" }, { status: 500 });
   }
 }
 
@@ -102,12 +102,12 @@ export async function DELETE(
     include: { externalMapping: { select: { externalOptionGroupId: true } } },
   });
   if (!group) {
-    return NextResponse.json({ message: "모디파이어 그룹을 찾을 수 없습니다" }, { status: 404 });
+    return NextResponse.json({ message: "Modifier group not found" }, { status: 404 });
   }
 
   if (group.externalMapping !== null) {
     return NextResponse.json(
-      { message: "Loyverse sync된 그룹은 삭제할 수 없습니다" },
+      { message: "Cannot delete Loyverse-synced groups" },
       { status: 403 }
     );
   }
@@ -130,6 +130,6 @@ export async function DELETE(
     await prisma.productOptionGroup.delete({ where: { id } });
     return NextResponse.json({ ok: true });
   } catch {
-    return NextResponse.json({ message: "모디파이어 그룹 삭제에 실패했습니다" }, { status: 500 });
+    return NextResponse.json({ message: "Failed to delete modifier group" }, { status: 500 });
   }
 }

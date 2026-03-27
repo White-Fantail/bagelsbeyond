@@ -149,7 +149,7 @@ export async function syncAllLoyverse(adapter: LoyverseAdapter): Promise<MirrorS
       `usingFallback=false usingCache=false`
     );
 
-    // ── Stage A: JSON.parse 직후 (before deleted_at filter) ───────────────────
+    // ── Stage A: After JSON.parse (before deleted_at filter) ───────────────────
     // NOTE: this stage operates on the already-JSON.parsed LoyverseRawItem[].
     // The HTTP raw body text check above is the true "before JSON.parse" stage.
     const rawItemsWithField = items.filter(
@@ -159,7 +159,7 @@ export async function syncAllLoyverse(adapter: LoyverseAdapter): Promise<MirrorS
     result.rawItemsWithModifiersIds = rawItemsWithField.length;
     result.rawItemsWithoutModifiersIds = items.length - rawItemsWithField.length;
     console.info(
-      `[STAGE A: JSON.parse 직후] total=${result.rawItemsTotal} ` +
+      `[STAGE A: after JSON.parse] total=${result.rawItemsTotal} ` +
       `with_modifier_ids=${result.rawItemsWithModifiersIds} ` +
       `without_modifier_ids=${result.rawItemsWithoutModifiersIds}`
     );
