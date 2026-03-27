@@ -37,6 +37,21 @@ export interface MirrorSyncResult {
   itemModifierLinksSynced: number;
   variantsSynced: number;
   inventoryLevelsSynced: number;
+  // ── HTTP pipeline diagnostics (populated from adapter.itemsDiagnostics) ───────
+  /** Whether LOYVERSE_MOCK mode was active — no real HTTP request was made */
+  loyverseMock: boolean;
+  /** Actual /items URL that was called (null in mock mode) */
+  itemsFetchUrl: string | null;
+  /** HTTP response status from the /items call (null in mock mode) */
+  itemsFetchHttpStatus: number | null;
+  /** Whether the literal string `"modifiers_ids"` appears in the raw HTTP body text */
+  rawBodyContainsModifiersIds: boolean | null;
+  /** First 10 000 characters of the raw HTTP body (null in mock mode) */
+  rawBodyPreview: string | null;
+  /** Always false — no fallback payload is used */
+  usingFallback: boolean;
+  /** Always false — no in-memory cache is used */
+  usingCache: boolean;
   // ── Stage A: Raw API response (before deleted_at filter) ─────────────────────
   /** Total items returned by the Loyverse API (including deleted) */
   rawItemsTotal: number;
@@ -75,6 +90,13 @@ export async function syncAllLoyverse(adapter: LoyverseAdapter): Promise<MirrorS
     itemModifierLinksSynced: 0,
     variantsSynced: 0,
     inventoryLevelsSynced: 0,
+    loyverseMock: false,
+    itemsFetchUrl: null,
+    itemsFetchHttpStatus: null,
+    rawBodyContainsModifiersIds: null,
+    rawBodyPreview: null,
+    usingFallback: false,
+    usingCache: false,
     rawItemsTotal: 0,
     rawItemsWithModifiersIds: 0,
     rawItemsWithoutModifiersIds: 0,
@@ -107,9 +129,29 @@ export async function syncAllLoyverse(adapter: LoyverseAdapter): Promise<MirrorS
     console.info("[mirror-sync] Step 3: Syncing items…");
     const items = await adapter.fetchItems();
 
-    // ── Stage A: Raw payload diagnostics (before any filtering) ───────────────
-    // This shows whether `modifiers_ids` is present in the raw API response,
-    // BEFORE the deleted_at filter is applied.
+    // ── HTTP pipeline diagnostics (populated by fetchItems) ───────────────────
+    // These fields reveal what was in the actual HTTP body text, before any
+    // JavaScript transformation, so we can determine at which stage
+    // `modifiers_ids` is present or absent.
+    const diag = adapter.itemsDiagnostics;
+    result.loyverseMock = diag?.loyverseMock ?? false;
+    result.itemsFetchUrl = diag?.requestUrl ?? null;
+    result.itemsFetchHttpStatus = diag?.httpStatus ?? null;
+    result.rawBodyContainsModifiersIds = diag?.rawBodyContainsModifiersIds ?? null;
+    result.rawBodyPreview = diag?.rawBodyPreview ?? null;
+    result.usingFallback = false;
+    result.usingCache = false;
+    console.info(
+      `[HTTP PIPELINE] LOYVERSE_MOCK=${result.loyverseMock} ` +
+      `url=${result.itemsFetchUrl ?? "N/A"} ` +
+      `httpStatus=${result.itemsFetchHttpStatus ?? "N/A"} ` +
+      `rawBodyContainsModifiersIds=${result.rawBodyContainsModifiersIds ?? "N/A"} ` +
+      `usingFallback=false usingCache=false`
+    );
+
+    // ── Stage A: JSON.parse 직후 (before deleted_at filter) ───────────────────
+    // NOTE: this stage operates on the already-JSON.parsed LoyverseRawItem[].
+    // The HTTP raw body text check above is the true "before JSON.parse" stage.
     const rawItemsWithField = items.filter(
       (i) => "modifiers_ids" in (i as unknown as Record<string, unknown>)
     );
@@ -117,7 +159,7 @@ export async function syncAllLoyverse(adapter: LoyverseAdapter): Promise<MirrorS
     result.rawItemsWithModifiersIds = rawItemsWithField.length;
     result.rawItemsWithoutModifiersIds = items.length - rawItemsWithField.length;
     console.info(
-      `[STAGE A: RAW] total=${result.rawItemsTotal} ` +
+      `[STAGE A: JSON.parse 직후] total=${result.rawItemsTotal} ` +
       `with_modifiers_ids=${result.rawItemsWithModifiersIds} ` +
       `without_modifiers_ids=${result.rawItemsWithoutModifiersIds}`
     );
@@ -199,6 +241,7 @@ export async function syncAllLoyverse(adapter: LoyverseAdapter): Promise<MirrorS
       `options=${result.modifierOptionsSynced} items=${result.itemsSynced} ` +
       `links=${result.itemModifierLinksSynced} variants=${result.variantsSynced} ` +
       `inventory=${result.inventoryLevelsSynced} errors=${result.errorCount} ` +
+      `[HTTP] mock=${result.loyverseMock} httpStatus=${result.itemsFetchHttpStatus ?? "N/A"} rawContainsModifiersIds=${result.rawBodyContainsModifiersIds ?? "N/A"} ` +
       `[A] rawTotal=${result.rawItemsTotal} rawWithField=${result.rawItemsWithModifiersIds} rawWithoutField=${result.rawItemsWithoutModifiersIds} ` +
       `[B] noModifierField=${result.itemsWithoutModifierField} emptyModifiers=${result.itemsWithEmptyModifiers} ` +
       `[C] modifierNotFound=${result.modifierNotFoundLocally} linkInsertErrors=${result.linkInsertErrors}`
