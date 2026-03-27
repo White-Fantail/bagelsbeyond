@@ -16,19 +16,25 @@ export default async function LoyverseIntegrationPage() {
   const baseUrl =
     process.env.LOYVERSE_API_BASE_URL ?? "https://api.loyverse.com/v1.0";
 
-  const [mappedCount, lastSyncEntry, lastModifierSync] = await Promise.all([
+  const [mappedCount, lastFullSync, categoryCount] = await Promise.all([
     prisma.externalProductMap.count({
       where: { source: IntegrationSource.LOYVERSE },
     }),
-    prisma.externalProductMap.findFirst({
-      where: { source: IntegrationSource.LOYVERSE },
-      orderBy: { lastSyncedAt: "desc" },
-      select: { lastSyncedAt: true },
-    }),
-    prisma.loyverseModifierSyncLog.findFirst({
+    prisma.loyverseFullSyncLog.findFirst({
       orderBy: { syncedAt: "desc" },
-      select: { syncedAt: true, status: true, groupCount: true, optionCount: true, errorMessage: true, errorCode: true },
+      select: {
+        syncedAt: true,
+        status: true,
+        categoriesUpserted: true,
+        productsCreated: true,
+        productsUpdated: true,
+        modifierGroupsUpserted: true,
+        modifierOptionsUpserted: true,
+        modifierLinksUpdated: true,
+        errorMessage: true,
+      },
     }),
+    prisma.loyverseCategory.count({ where: { isActive: true } }),
   ]);
 
   return (
@@ -48,7 +54,7 @@ export default async function LoyverseIntegrationPage() {
         </div>
         <h1 className="text-2xl font-bold text-gray-900">Loyverse POS 연동</h1>
         <p className="text-gray-500 mt-0.5 text-sm">
-          Loyverse 카탈로그를 내부 상품 구조로 동기화합니다
+          Loyverse 카탈로그(카테고리·모디파이어·상품)를 한 번에 동기화합니다
         </p>
       </div>
 
@@ -113,12 +119,8 @@ export default async function LoyverseIntegrationPage() {
             <dd className="font-medium text-gray-900">{mappedCount}개</dd>
           </div>
           <div className="flex items-center justify-between pb-2">
-            <dt className="text-gray-500">마지막 동기화</dt>
-            <dd className="font-medium text-gray-900">
-              {lastSyncEntry?.lastSyncedAt
-                ? lastSyncEntry.lastSyncedAt.toLocaleString("ko-KR")
-                : "없음"}
-            </dd>
+            <dt className="text-gray-500">동기화된 카테고리 수</dt>
+            <dd className="font-medium text-gray-900">{categoryCount}개</dd>
           </div>
         </dl>
 
@@ -131,71 +133,71 @@ export default async function LoyverseIntegrationPage() {
         )}
       </div>
 
-      {/* Sync control */}
+      {/* Full sync control */}
       <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
         <div>
-          <h2 className="font-semibold text-gray-900">카탈로그 동기화</h2>
+          <h2 className="font-semibold text-gray-900">Loyverse 전체 동기화</h2>
           <p className="text-sm text-gray-500 mt-0.5">
-            Loyverse의 상품·카테고리·모디파이어를 내부 상품 구조로 가져옵니다.
+            카테고리 → 모디파이어 그룹/옵션 → 상품 → 연결 관계를 한 번에 동기화합니다.
             {mockMode && " (현재 Mock 데이터 사용)"}
           </p>
         </div>
 
         <div className="rounded-lg border border-gray-100 bg-gray-50 p-3 text-xs text-gray-600 space-y-1">
-          <p className="font-medium text-gray-700">동기화 정책</p>
-          <ul className="space-y-0.5 list-disc list-inside">
-            <li>외부 항목 1개 → 내부 상품 1개 매핑</li>
-            <li>덮어쓰는 필드: 이름, 설명, 가격, 활성상태, 카테고리</li>
-            <li>보호되는 필드: 슬러그, 정렬순서, 구독가능여부</li>
-            <li>모디파이어 그룹 → 옵션 그룹으로 생성/업데이트 (1차 초안)</li>
-          </ul>
+          <p className="font-medium text-gray-700">동기화 순서</p>
+          <ol className="space-y-0.5 list-decimal list-inside">
+            <li>Loyverse 카테고리 조회 → 로컬 DB upsert</li>
+            <li>Loyverse 모디파이어 그룹/옵션 조회 → 로컬 DB upsert</li>
+            <li>Loyverse 상품 조회 → 로컬 DB upsert + 카테고리 연결 + 모디파이어 연결</li>
+            <li>Loyverse에서 제거된 상품-모디파이어 연결 정리</li>
+          </ol>
         </div>
+
+        {/* Last full sync status */}
+        {lastFullSync && (
+          <div
+            className={`rounded-lg border p-3 text-xs space-y-1.5 ${
+              lastFullSync.status === "success"
+                ? "border-green-200 bg-green-50 text-green-800"
+                : lastFullSync.status === "partial"
+                ? "border-amber-200 bg-amber-50 text-amber-800"
+                : "border-red-200 bg-red-50 text-red-700"
+            }`}
+          >
+            <p className="font-semibold">
+              {lastFullSync.status === "success"
+                ? "✓ 마지막 전체 동기화 성공"
+                : lastFullSync.status === "partial"
+                ? "⚠ 마지막 전체 동기화 부분 완료"
+                : "✗ 마지막 전체 동기화 실패"}
+            </p>
+            <p>{lastFullSync.syncedAt.toLocaleString("ko-KR")}</p>
+            {lastFullSync.status !== "failed" && (
+              <div className="grid grid-cols-3 gap-1 text-xs">
+                <span>카테고리 {lastFullSync.categoriesUpserted}개</span>
+                <span>신규상품 {lastFullSync.productsCreated}개</span>
+                <span>업데이트상품 {lastFullSync.productsUpdated}개</span>
+                <span>모디파이어그룹 {lastFullSync.modifierGroupsUpserted}개</span>
+                <span>모디파이어옵션 {lastFullSync.modifierOptionsUpserted}개</span>
+                <span>상품-모디파이어링크 {lastFullSync.modifierLinksUpdated}개</span>
+              </div>
+            )}
+            {lastFullSync.errorMessage && (
+              <p className="text-red-600 font-mono break-all">{lastFullSync.errorMessage}</p>
+            )}
+          </div>
+        )}
 
         <LoyverseSyncButton />
       </div>
 
-      {/* Docs link */}
+      {/* Modifier mapping link */}
       <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
         <h2 className="font-semibold text-gray-900">Modifier 매핑</h2>
         <p className="text-sm text-gray-500">
           베이글 종류(Plain / Sesame / Blueberry / Everything)는 <strong>modifier 기준</strong>으로
           관리됩니다. 주문 전송 전에 내부 옵션과 Loyverse modifier를 연결해야 합니다.
         </p>
-
-        {/* Modifier sync status summary */}
-        {lastModifierSync ? (
-          <div
-            className={`rounded-lg border p-3 text-xs space-y-1 ${
-              lastModifierSync.status === "success"
-                ? "border-green-200 bg-green-50 text-green-800"
-                : lastModifierSync.status === "failed"
-                ? "border-red-200 bg-red-50 text-red-700"
-                : "border-amber-200 bg-amber-50 text-amber-700"
-            }`}
-          >
-            <p className="font-semibold">
-              {lastModifierSync.status === "success"
-                ? "✓ Modifier 동기화 완료"
-                : lastModifierSync.status === "failed"
-                ? "✗ Modifier 동기화 실패"
-                : "⚠ Modifier 데이터 없음"}
-            </p>
-            <p>
-              마지막 시도: {lastModifierSync.syncedAt.toLocaleString("ko-KR")}
-              {lastModifierSync.status === "success" && (
-                <> &middot; 그룹 {lastModifierSync.groupCount}개 &middot; 옵션 {lastModifierSync.optionCount}개</>
-              )}
-            </p>
-            {lastModifierSync.errorMessage && (
-              <p className="text-red-600 font-mono break-all">{lastModifierSync.errorMessage}</p>
-            )}
-          </div>
-        ) : (
-          <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 text-xs text-gray-500">
-            아직 modifier 동기화가 실행된 적 없습니다.
-            Modifier 매핑 페이지에서 &ldquo;Loyverse 새로고침&rdquo; 버튼을 눌러 동기화하세요.
-          </div>
-        )}
 
         <Link
           href="/admin/integrations/loyverse/modifiers"
@@ -227,3 +229,4 @@ LOYVERSE_API_BASE_URL=https://api.loyverse.com/v1.0
     </div>
   );
 }
+

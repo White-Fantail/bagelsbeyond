@@ -53,7 +53,7 @@ export default async function AdminModifiersPage({ searchParams }: { searchParam
 
   const hasFilters = !!(sp.search || sp.groupId || sp.source || sp.tracksInventory || sp.isActive);
 
-  const [rawGroups, allGroups, lastModifierSync] = await Promise.all([
+  const [rawGroups, allGroups, lastFullSync] = await Promise.all([
     // Groups matching the filter
     prisma.productOptionGroup.findMany({
       where: groupWhere,
@@ -98,10 +98,17 @@ export default async function AdminModifiersPage({ searchParams }: { searchParam
       orderBy: { name: "asc" },
       select: { id: true, name: true },
     }),
-    // Latest modifier sync status
-    prisma.loyverseModifierSyncLog.findFirst({
+    // Latest full sync status
+    prisma.loyverseFullSyncLog.findFirst({
       orderBy: { syncedAt: "desc" },
-      select: { syncedAt: true, status: true, groupCount: true, optionCount: true, errorMessage: true },
+      select: {
+        syncedAt: true,
+        status: true,
+        modifierGroupsUpserted: true,
+        modifierOptionsUpserted: true,
+        modifierLinksUpdated: true,
+        errorMessage: true,
+      },
     }),
   ]);
 
@@ -200,38 +207,38 @@ export default async function AdminModifiersPage({ searchParams }: { searchParam
         </Link>
       </div>
 
-      {/* Last modifier sync status */}
-      {lastModifierSync ? (
+      {/* Last full sync status */}
+      {lastFullSync ? (
         <div
           className={`rounded-lg border p-4 text-sm space-y-1 ${
-            lastModifierSync.status === "success"
+            lastFullSync.status === "success"
               ? "border-green-200 bg-green-50 text-green-800"
-              : lastModifierSync.status === "failed"
-              ? "border-red-200 bg-red-50 text-red-700"
-              : "border-amber-200 bg-amber-50 text-amber-700"
+              : lastFullSync.status === "partial"
+              ? "border-amber-200 bg-amber-50 text-amber-700"
+              : "border-red-200 bg-red-50 text-red-700"
           }`}
         >
           <p className="font-semibold">
-            {lastModifierSync.status === "success"
-              ? "✓ Loyverse Modifier 마지막 동기화 성공"
-              : lastModifierSync.status === "failed"
-              ? "✗ Loyverse Modifier 마지막 동기화 실패"
-              : "⚠ Modifier 데이터 없음"}
+            {lastFullSync.status === "success"
+              ? "✓ Loyverse 마지막 전체 동기화 성공"
+              : lastFullSync.status === "partial"
+              ? "⚠ Loyverse 마지막 전체 동기화 부분 완료"
+              : "✗ Loyverse 마지막 전체 동기화 실패"}
           </p>
           <p className="text-xs">
-            {lastModifierSync.syncedAt.toLocaleString("ko-KR")}
-            {lastModifierSync.status === "success" && (
-              <> · 그룹 {lastModifierSync.groupCount}개 · 옵션 {lastModifierSync.optionCount}개</>
+            {lastFullSync.syncedAt.toLocaleString("ko-KR")}
+            {lastFullSync.status !== "failed" && (
+              <> · 그룹 {lastFullSync.modifierGroupsUpserted}개 · 옵션 {lastFullSync.modifierOptionsUpserted}개 · 링크 {lastFullSync.modifierLinksUpdated}건</>
             )}
-            {lastModifierSync.errorMessage && (
-              <span className="text-red-600 ml-2 font-mono">{lastModifierSync.errorMessage}</span>
+            {lastFullSync.errorMessage && (
+              <span className="text-red-600 ml-2 font-mono">{lastFullSync.errorMessage}</span>
             )}
           </p>
         </div>
       ) : (
         <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-          <p className="font-semibold">⚠ Modifier 동기화 이력 없음</p>
-          <p className="text-xs mt-0.5">아직 Loyverse Modifier 동기화가 실행된 적 없습니다. 아래 버튼으로 동기화하세요.</p>
+          <p className="font-semibold">⚠ 동기화 이력 없음</p>
+          <p className="text-xs mt-0.5">아직 Loyverse 전체 동기화가 실행된 적 없습니다. 아래 버튼으로 동기화하세요.</p>
         </div>
       )}
 
@@ -247,15 +254,10 @@ export default async function AdminModifiersPage({ searchParams }: { searchParam
       {/* Modifier sync button */}
       <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-3">
         <div>
-          <h2 className="font-semibold text-gray-900 text-sm">Loyverse Modifier 동기화</h2>
+          <h2 className="font-semibold text-gray-900 text-sm">Loyverse 전체 동기화</h2>
           <p className="text-xs text-gray-500 mt-0.5">
-            Loyverse에서 modifier 그룹·옵션 목록을 가져와 내부 매핑 데이터를 업데이트합니다.
-            이미 매핑된 그룹은 이름·옵션이 즉시 갱신되며, 아직 내부 DB에 없는 그룹은 연결된 상품이 이미 동기화된 경우 자동 생성됩니다.
-            상품이 아직 내부 DB에 없다면{" "}
-            <Link href="/admin/integrations/loyverse" className="underline hover:text-amber-600">
-              Loyverse 연동 페이지
-            </Link>
-            에서 전체 카탈로그 sync를 먼저 실행하세요.
+            카테고리·모디파이어 그룹·옵션·상품을 한 번에 동기화합니다.
+            상품과 모디파이어 그룹의 연결 관계도 같이 업데이트됩니다.
           </p>
         </div>
         <ModifierSyncButton />
