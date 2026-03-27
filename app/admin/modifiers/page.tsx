@@ -8,7 +8,9 @@ import { Suspense } from "react";
 import ModifierFilters from "./ModifierFilters";
 import ModifierSyncButton from "./ModifierSyncButton";
 import ModifierGroupList from "./ModifierGroupList";
+import ModifierGroupManager from "./ModifierGroupManager";
 import type { ModifierGroupRow } from "./ModifierGroupList";
+import type { EditableModifierGroup } from "./ModifierGroupManager";
 
 type SearchParams = {
   search?: string;
@@ -62,6 +64,7 @@ export default async function AdminModifiersPage({ searchParams }: { searchParam
         minSelect: true,
         maxSelect: true,
         isRequired: true,
+        sortOrder: true,
         updatedAt: true,
         product: { select: { id: true, name: true } },
         assignments: { include: { product: { select: { id: true, name: true } } } },
@@ -111,22 +114,60 @@ export default async function AdminModifiersPage({ searchParams }: { searchParam
     0
   );
 
-  // ── Serialise for client component ────────────────────────────────────────
-  const groups: ModifierGroupRow[] = rawGroups.map((g) => ({
+  // ── Serialise for client components ──────────────────────────────────────
+  const groups: ModifierGroupRow[] = rawGroups.map((g) => {
+    const primaryProduct = g.product;
+    const allProducts = [
+      ...(primaryProduct ? [primaryProduct] : []),
+      ...g.assignments
+        .map((a) => a.product)
+        .filter((p) => !primaryProduct || p.id !== primaryProduct.id),
+    ];
+    return {
+      id: g.id,
+      name: g.name,
+      minSelect: g.minSelect,
+      maxSelect: g.maxSelect,
+      isRequired: g.isRequired,
+      updatedAt: g.updatedAt.toISOString(),
+      product: primaryProduct ?? { id: "", name: "–" },
+      sharedProducts: allProducts.slice(1),
+      externalMapping: g.externalMapping
+        ? {
+            externalOptionGroupId: g.externalMapping.externalOptionGroupId,
+            lastSyncedAt: g.externalMapping.lastSyncedAt?.toISOString() ?? null,
+          }
+        : null,
+      options: g.options.map((o) => ({
+        id: o.id,
+        name: o.name,
+        priceDelta: o.priceDelta,
+        isActive: o.isActive,
+        tracksInventory: o.tracksInventory,
+        sortOrder: o.sortOrder,
+        sku: o.sku,
+        externalOptionMappings: o.externalOptionMappings.map((m) => ({
+          externalOptionId: m.externalOptionId,
+          lastSyncedAt: m.lastSyncedAt?.toISOString() ?? null,
+        })),
+        todayInventory: o.dailyOptionInventory[0]
+          ? {
+              reservedQty: o.dailyOptionInventory[0].reservedQty,
+              isSoldOut: o.dailyOptionInventory[0].isSoldOut,
+            }
+          : null,
+      })),
+    };
+  });
+
+  const editableGroups: EditableModifierGroup[] = rawGroups.map((g) => ({
     id: g.id,
     name: g.name,
     minSelect: g.minSelect,
     maxSelect: g.maxSelect,
     isRequired: g.isRequired,
-    updatedAt: g.updatedAt.toISOString(),
-    product: g.product,
-    sharedProducts: g.assignments.map((a) => a.product).filter((p) => p.id !== g.product.id),
-    externalMapping: g.externalMapping
-      ? {
-          externalOptionGroupId: g.externalMapping.externalOptionGroupId,
-          lastSyncedAt: g.externalMapping.lastSyncedAt?.toISOString() ?? null,
-        }
-      : null,
+    sortOrder: g.sortOrder,
+    isLoyverseSynced: g.externalMapping !== null,
     options: g.options.map((o) => ({
       id: o.id,
       name: o.name,
@@ -135,16 +176,7 @@ export default async function AdminModifiersPage({ searchParams }: { searchParam
       tracksInventory: o.tracksInventory,
       sortOrder: o.sortOrder,
       sku: o.sku,
-      externalOptionMappings: o.externalOptionMappings.map((m) => ({
-        externalOptionId: m.externalOptionId,
-        lastSyncedAt: m.lastSyncedAt?.toISOString() ?? null,
-      })),
-      todayInventory: o.dailyOptionInventory[0]
-        ? {
-            reservedQty: o.dailyOptionInventory[0].reservedQty,
-            isSoldOut: o.dailyOptionInventory[0].isSoldOut,
-          }
-        : null,
+      isLoyverseSynced: o.externalOptionMappings.length > 0,
     })),
   }));
 
@@ -160,7 +192,7 @@ export default async function AdminModifiersPage({ searchParams }: { searchParam
           </div>
           <h1 className="text-2xl font-bold text-gray-900">모디파이어 관리</h1>
           <p className="text-gray-500 mt-0.5 text-sm">
-            Loyverse sync 기반 Modifier 그룹·옵션 목록 및 재고추적 설정을 관리합니다
+            모디파이어 그룹과 옵션을 생성·수정하고, 상품에서 연결할 수 있습니다
           </p>
         </div>
         <Link href="/admin/inventory" className="px-3 py-2 bg-amber-500 text-white rounded-lg text-sm font-medium hover:bg-amber-600 whitespace-nowrap">
@@ -270,8 +302,11 @@ export default async function AdminModifiersPage({ searchParams }: { searchParam
         )}
       </div>
 
-      {/* Group list with expandable options */}
-      <ModifierGroupList groups={groups} />
+      {/* Modifier group management (create/edit/delete for internal groups) */}
+      <ModifierGroupManager initialGroups={editableGroups} />
+
+      {/* Read-only overview table (shown as reference; expandable rows) */}
+      {hasFilters && <ModifierGroupList groups={groups} />}
     </div>
   );
 }

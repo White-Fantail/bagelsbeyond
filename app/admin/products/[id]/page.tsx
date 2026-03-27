@@ -15,6 +15,38 @@ export default async function EditProductPage({
 
   const { id } = await params;
 
+  const optionGroupSelect = {
+    id: true,
+    name: true,
+    minSelect: true,
+    maxSelect: true,
+    isRequired: true,
+    sortOrder: true,
+    externalMapping: {
+      select: { externalOptionGroupId: true },
+    },
+    options: {
+      orderBy: { sortOrder: "asc" as const },
+      select: {
+        id: true,
+        name: true,
+        priceDelta: true,
+        isActive: true,
+        sortOrder: true,
+        sku: true,
+        tracksInventory: true,
+        externalOptionMappings: {
+          where: { source: IntegrationSource.LOYVERSE },
+          select: {
+            id: true,
+            externalOptionId: true,
+            externalName: true,
+          },
+        },
+      },
+    },
+  } as const;
+
   const product = await prisma.product.findUnique({
     where: { id },
     select: {
@@ -31,35 +63,15 @@ export default async function EditProductPage({
         where: { source: IntegrationSource.LOYVERSE },
         select: { id: true, externalProductId: true },
       },
+      // Direct (primary) option groups
       optionGroups: {
         orderBy: { sortOrder: "asc" },
+        select: optionGroupSelect,
+      },
+      // Groups assigned via ProductOptionGroupAssignment
+      optionGroupAssignments: {
         select: {
-          id: true,
-          name: true,
-          minSelect: true,
-          maxSelect: true,
-          isRequired: true,
-          sortOrder: true,
-          options: {
-            orderBy: { sortOrder: "asc" },
-            select: {
-              id: true,
-              name: true,
-              priceDelta: true,
-              isActive: true,
-              sortOrder: true,
-              sku: true,
-              tracksInventory: true,
-              externalOptionMappings: {
-                where: { source: IntegrationSource.LOYVERSE },
-                select: {
-                  id: true,
-                  externalOptionId: true,
-                  externalName: true,
-                },
-              },
-            },
-          },
+          optionGroup: { select: optionGroupSelect },
         },
       },
     },
@@ -93,7 +105,7 @@ export default async function EditProductPage({
     );
   }
 
-  const { optionGroups, externalMappings, ...productFields } = product;
+  const { optionGroups, optionGroupAssignments, externalMappings, ...productFields } = product;
 
   const isLoyverseSynced = externalMappings.length > 0;
   const externalProductId = externalMappings[0]?.externalProductId ?? null;
@@ -105,8 +117,16 @@ export default async function EditProductPage({
     externalProductId,
   };
 
+  // Combine direct groups and assignment groups, deduplicate by id
+  const assignmentGroups = optionGroupAssignments.map((a) => a.optionGroup);
+  const directGroupIds = new Set(optionGroups.map((g) => g.id));
+  const allGroups = [
+    ...optionGroups,
+    ...assignmentGroups.filter((g) => !directGroupIds.has(g.id)),
+  ].sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name, "ko"));
+
   // Count modifier mapping status
-  const allOptions = optionGroups.flatMap((g) => g.options);
+  const allOptions = allGroups.flatMap((g) => g.options);
   const mappedCount = allOptions.filter((o) => o.externalOptionMappings.length > 0).length;
   const unmappedActiveCount = allOptions.filter(
     (o) => o.isActive && o.externalOptionMappings.length === 0
@@ -135,7 +155,7 @@ export default async function EditProductPage({
 
       <ProductForm product={formProduct} mode="edit" />
 
-      <OptionGroupManager productId={product.id} initialGroups={optionGroups} />
+      <OptionGroupManager productId={product.id} initialGroups={allGroups} />
 
       {/* Modifier Mapping Status */}
       {allOptions.length > 0 && (
@@ -171,7 +191,7 @@ export default async function EditProductPage({
             )}
           </div>
 
-          {optionGroups.map((group) => (
+          {allGroups.map((group) => (
             <div key={group.id} className="rounded-lg border border-gray-100 overflow-hidden">
               <div className="bg-gray-50 border-b border-gray-100 px-4 py-2 text-xs font-semibold text-gray-600">
                 {group.name}
