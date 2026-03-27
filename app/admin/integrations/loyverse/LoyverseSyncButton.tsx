@@ -99,6 +99,29 @@ export default function LoyverseSyncButton() {
             )}
           </div>
 
+          {/* Modifier link diagnostics — always shown so 0-link causes are visible */}
+          <div className="rounded-lg border border-amber-100 bg-amber-50/50 p-3 space-y-1.5">
+            <p className="text-xs font-semibold text-amber-800">상품-모디파이어 연결 진단</p>
+            <ul className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-amber-700">
+              <li>
+                <span className="font-medium">Modifier 필드 없음:</span>{" "}
+                {result.itemsWithoutModifierField ?? 0}
+              </li>
+              <li>
+                <span className="font-medium">Modifier 없음:</span>{" "}
+                {result.itemsWithEmptyModifiers ?? 0}
+              </li>
+              <li>
+                <span className="font-medium">Modifier 매칭 실패:</span>{" "}
+                {result.modifierNotFoundLocally ?? 0}
+              </li>
+              <li>
+                <span className="font-medium">링크 생성 실패:</span>{" "}
+                {result.linkInsertErrors ?? 0}
+              </li>
+            </ul>
+          </div>
+
           {result.errors && result.errors.length > 0 && (
             <div className="rounded-lg border border-red-200 bg-red-50 p-3 space-y-1">
               <p className="text-xs font-medium text-red-700">오류 상세 (최대 5건)</p>
