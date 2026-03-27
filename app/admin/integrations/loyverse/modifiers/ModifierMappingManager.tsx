@@ -26,7 +26,7 @@ interface InternalOption {
 interface InternalGroup {
   id: string;
   name: string;
-  product: { id: string; name: string };
+  product: { id: string; name: string } | null;
   options: InternalOption[];
 }
 
@@ -163,11 +163,15 @@ export default function ModifierMappingManager({
 
   // ── Compute filtered groups ────────────────────────────────────────────────
   const products = Array.from(
-    new Map(groups.map((g) => [g.product.id, g.product])).values()
+    new Map(
+      groups
+        .filter((g) => g.product !== null)
+        .map((g) => [g.product!.id, g.product!])
+    ).values()
   );
 
   const visibleGroups = groups
-    .filter((g) => filterProductId === "all" || g.product.id === filterProductId)
+    .filter((g) => filterProductId === "all" || g.product?.id === filterProductId)
     .map((g) => ({
       ...g,
       options: g.options.filter((o) => {
@@ -361,13 +365,19 @@ export default function ModifierMappingManager({
               <span className="ml-2 text-xs text-gray-400">그룹</span>
             </div>
             <div className="flex items-center gap-2 text-xs text-gray-500">
-              <span>상품: </span>
-              <Link
-                href={`/admin/products/${group.product.id}`}
-                className="text-amber-600 hover:underline font-medium"
-              >
-                {group.product.name}
-              </Link>
+              {group.product ? (
+                <>
+                  <span>상품: </span>
+                  <Link
+                    href={`/admin/products/${group.product.id}`}
+                    className="text-amber-600 hover:underline font-medium"
+                  >
+                    {group.product.name}
+                  </Link>
+                </>
+              ) : (
+                <span className="text-gray-400">상품 미연결</span>
+              )}
             </div>
           </div>
 

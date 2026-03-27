@@ -122,7 +122,7 @@ function OptionRow({ opt }: { opt: ModifierGroupRow["options"][number] }) {
 function GroupRow({ group }: { group: ModifierGroupRow }) {
   const [expanded, setExpanded] = useState(false);
   const isSynced = group.externalMapping !== null;
-  const allProducts = [group.product, ...group.sharedProducts];
+  const allProducts = [group.product, ...group.sharedProducts].filter((p) => p.id !== "");
   const tracksCount = group.options.filter((o) => o.tracksInventory).length;
   const activeCount = group.options.filter((o) => o.isActive).length;
 

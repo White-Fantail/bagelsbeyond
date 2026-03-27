@@ -363,17 +363,19 @@ model ProductVariant {
 }
 
 // ─── ProductOptionGroup ───────────────────────────────────────────────────────
-// Groups of selectable options attached to a Product.
-// e.g. "Bagel Type" (min 1, max 1), "Add-ons" (min 0, max 3)
+// A standalone modifier group (e.g. "Bagel Type", "Add-ons") that can be
+// assigned to one or more Products via ProductOptionGroupAssignment.
 //
-// Bagel choice policy: "Bagel Type" is managed as a modifier group, NOT as
-// product variants. One modifier group can be shared across multiple products
-// (e.g. Bagel, Sandwich) via ProductOptionGroupAssignment.
+// productId is nullable so that groups can be managed independently from the
+// modifier menu before being linked to any product.
+//
+// Loyverse-synced groups keep productId set to the primary product that was
+// originally synced, for backward compatibility.
 // See docs/bagel-modifier-policy.md for full rationale.
 
 model ProductOptionGroup {
   id         String          @id @default(cuid())
-  productId  String
+  productId  String?
   name       String
   minSelect  Int             @default(0)
   maxSelect  Int             @default(1)
@@ -382,10 +384,10 @@ model ProductOptionGroup {
   createdAt  DateTime        @default(now())
   updatedAt  DateTime        @updatedAt
 
-  product         Product                        @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product         Product?                       @relation(fields: [productId], references: [id], onDelete: SetNull)
   options         ProductOption[]
   externalMapping ExternalOptionGroupMap?
-  // Cross-product sharing: additional products that also use this group
+  // All products that use this modifier group
   assignments     ProductOptionGroupAssignment[]
 
   @@index([productId])

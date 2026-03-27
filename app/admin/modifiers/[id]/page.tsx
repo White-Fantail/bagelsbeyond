@@ -56,7 +56,10 @@ export default async function ModifierDetailPage({ params }: { params: Promise<{
   // Collect all products connected via group (direct + assignments)
   const directProduct = option.optionGroup.product;
   const assignedProducts = option.optionGroup.assignments.map((a) => a.product);
-  const allProducts = [directProduct, ...assignedProducts.filter((p) => p.id !== directProduct.id)];
+  const allProducts = [
+    ...(directProduct ? [directProduct] : []),
+    ...assignedProducts.filter((p) => !directProduct || p.id !== directProduct.id),
+  ];
 
   return (
     <div className="space-y-6">
