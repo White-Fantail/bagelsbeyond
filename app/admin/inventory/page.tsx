@@ -14,9 +14,9 @@ export default async function InventoryPage() {
             Admin Dashboard
           </Link>
           <span>/</span>
-          <span className="text-gray-700 font-medium">daily Inventory Management</span>
+          <span className="text-gray-700 font-medium">Daily Inventory Management</span>
         </div>
-        <h1 className="text-2xl font-bold text-gray-900">daily Inventory Management</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Daily Inventory Management</h1>
         <p className="text-gray-500 mt-0.5 text-sm">
           Manage daily product production and inventory status
         </p>

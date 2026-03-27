@@ -40,7 +40,7 @@ export default async function MonthlyAnalyticsPage({
       <div>
         <h1 className="text-2xl font-bold text-gray-900">🗓️ monthly Analytics</h1>
         <p className="text-gray-500 mt-1">
-          Full Period ({months.length}months)
+          Full Period ({months.length} months)
         </p>
       </div>
 

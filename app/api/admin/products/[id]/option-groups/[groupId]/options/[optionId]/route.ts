@@ -50,7 +50,7 @@ export async function PATCH(
     });
     return NextResponse.json({ option: updated });
   } catch (_error) {
-    return NextResponse.json({ message: "Options Edit failed" }, { status: 500 });
+    return NextResponse.json({ message: "Failed to edit option" }, { status: 500 });
   }
 }
 
@@ -74,6 +74,6 @@ export async function DELETE(
     await prisma.productOption.delete({ where: { id: optionId } });
     return NextResponse.json({ message: "Option deleted" });
   } catch (_error) {
-    return NextResponse.json({ message: "Options Delete failed" }, { status: 500 });
+    return NextResponse.json({ message: "Failed to delete option" }, { status: 500 });
   }
 }

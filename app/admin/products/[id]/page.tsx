@@ -147,7 +147,7 @@ export default async function EditProductPage({
             <span>/</span>
             <span className="text-gray-700 font-medium">{product.name}</span>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">Products Edit</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Edit Product</h1>
           <p className="text-gray-500 mt-0.5 text-sm">Edit product information</p>
         </div>
         <DeleteProductButton productId={product.id} productName={product.name} />
@@ -164,8 +164,8 @@ export default async function EditProductPage({
             <div>
               <h2 className="font-semibold text-gray-900">Loyverse Modifier Mapping Status</h2>
               <p className="text-sm text-gray-500 mt-0.5">
-                Bagel types (Bagel Type) are managed by modifier, not variant..
-                All options must be mapped before sending orders..
+                Bagel types (Bagel Type) are managed by modifier, not variant.
+                All options must be mapped before sending orders.
               </p>
             </div>
             <Link

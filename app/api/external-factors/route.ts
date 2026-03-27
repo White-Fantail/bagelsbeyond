@@ -25,6 +25,6 @@ export async function GET(request: Request) {
 
     return NextResponse.json(factors);
   } catch {
-    return NextResponse.json({ message: "External Failed to load data" }, { status: 500 });
+    return NextResponse.json({ message: "Failed to load external data" }, { status: 500 });
   }
 }

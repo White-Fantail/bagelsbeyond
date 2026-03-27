@@ -6,7 +6,7 @@ import { apiRequireAuth, isNextResponse } from "@/lib/auth/dal";
 
 const passwordSchema = z
   .object({
-    currentPassword: z.string().min(1, "Current Please enter your password"),
+    currentPassword: z.string().min(1, "Please enter your current password"),
     newPassword: z
       .string()
       .min(8, "Password must be at least 8 characters")

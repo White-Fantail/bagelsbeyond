@@ -7,7 +7,7 @@ import OccurrencesAdminActions from "./OccurrencesAdminActions";
 
 const OCC_STATUS_LABEL: Record<string, string> = {
   SCHEDULED: "Scheduled",
-  ORDER_CREATED: "OrdersCreate",
+  ORDER_CREATED: "Order Created",
   SKIPPED: "Skipped",
   CANCELLED: "Cancelled",
 };

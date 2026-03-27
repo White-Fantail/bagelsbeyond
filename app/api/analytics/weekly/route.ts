@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
   } catch (_error) {
     console.error(_error);
     return NextResponse.json(
-      { message: "Weekly Analysis Failed to load data" },
+      { message: "Failed to load weekly analytics data" },
       { status: 500 }
     );
   }

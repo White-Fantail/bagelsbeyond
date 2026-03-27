@@ -92,7 +92,7 @@ export default function OccurrencesAdminActions({ date, occurrenceId, status }: 
         disabled={isPending}
         className="px-4 py-2 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700 disabled:opacity-60 transition-colors"
       >
-        {isPending ? "Processing..." : "Orders Create"}
+        {isPending ? "Processing..." : "Create Order"}
       </button>
     </div>
   );

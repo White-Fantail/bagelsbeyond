@@ -705,7 +705,7 @@ export default function ModifierGroupManager({
                     }}
                     saving={newOptionSaving}
                     error={newOptionError}
-                    saveLabel="Options Add"
+                    saveLabel="Add Option"
                   />
                 </div>
               ) : (

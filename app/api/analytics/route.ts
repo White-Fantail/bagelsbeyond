@@ -55,7 +55,7 @@ export async function GET(req: NextRequest) {
   } catch (_error) {
     console.error(_error);
     return NextResponse.json(
-      { message: "Analytics Failed to load data" },
+      { message: "Failed to load analytics data" },
       { status: 500 }
     );
   }

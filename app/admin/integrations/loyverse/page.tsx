@@ -138,7 +138,7 @@ export default async function LoyverseIntegrationPage() {
         <div>
           <h2 className="font-semibold text-gray-900">Loyverse All Sync</h2>
           <p className="text-sm text-gray-500 mt-0.5">
-            Syncs categories → modifier groups/options → products → links all at once..
+            Syncs categories → modifier groups/options → products → links all at once.
             {mockMode && " (Mock Data in use)"}
           </p>
         </div>
@@ -209,7 +209,7 @@ LOYVERSE_API_BASE_URL=https://api.loyverse.com/v1.0
 # LOYVERSE_MOCK=true`}
         </pre>
         <p className="text-xs text-gray-400">
-          ⚠ Never commit actual tokens to source code or a repository..
+          ⚠ Never commit actual tokens to source code or a repository.
         </p>
       </div>
     </div>

@@ -132,11 +132,11 @@ export default function OptionGroupManager({ productId, initialGroups }: Props) 
         <div>
           <h2 className="text-base font-semibold text-gray-900">Modifier Groups</h2>
           <p className="text-xs text-gray-500 mt-0.5">
-            List of modifier groups linked to this product..{" "}
+            List of modifier groups linked to this product.{" "}
             <Link href="/admin/modifiers" className="text-amber-600 hover:underline">
               Modifier Management
             </Link>
-            to create or edit groups and options..
+            to create or edit groups and options.
           </p>
         </div>
         {!showPicker && (
@@ -188,7 +188,7 @@ export default function OptionGroupManager({ productId, initialGroups }: Props) 
                     disabled={assigningGroupId === g.id}
                     className="px-3 py-1 text-xs bg-amber-500 text-white rounded-md hover:bg-amber-600 transition-colors disabled:opacity-50"
                   >
-                    {assigningGroupId === g.id ? "Connecting......" : "Link"}
+                    {assigningGroupId === g.id ? "Connecting..." : "Link"}
                   </button>
                 </div>
               ))
@@ -223,7 +223,7 @@ export default function OptionGroupManager({ productId, initialGroups }: Props) 
             <Link href="/admin/modifiers" className="text-amber-600 hover:underline">
               Modifier Management
             </Link>
-            Create a new group there..
+            Create a new group there.
           </p>
         </div>
       )}
@@ -273,7 +273,7 @@ export default function OptionGroupManager({ productId, initialGroups }: Props) 
                     disabled={removingGroupId === group.id}
                     className="px-2.5 py-1 text-xs text-red-600 border border-red-200 rounded-md hover:bg-red-50 transition-colors disabled:opacity-50"
                   >
-                    {removingGroupId === group.id ? "Removing......" : "Remove"}
+                    {removingGroupId === group.id ? "Removing..." : "Remove"}
                   </button>
                 </div>
               </div>

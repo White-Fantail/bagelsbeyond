@@ -89,7 +89,7 @@ export default async function SegmentsPage({
             </h2>
             {result.segment.recordCount === 0 ? (
               <div className="bg-gray-50 rounded-lg border border-gray-200 p-4 text-sm text-gray-400 text-center">
-                No data for this segment..
+                No data for this segment.
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

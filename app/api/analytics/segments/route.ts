@@ -40,7 +40,7 @@ export async function GET(req: NextRequest) {
   } catch (_error) {
     console.error(_error);
     return NextResponse.json(
-      { message: "segments Analytics Failed to load data" },
+      { message: "Failed to load segment analytics data" },
       { status: 500 }
     );
   }

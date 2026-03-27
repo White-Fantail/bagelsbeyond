@@ -4,7 +4,7 @@ import { apiRequireAdmin, isNextResponse } from "@/lib/auth/dal";
 import { z } from "zod";
 
 const optionGroupPatchSchema = z.object({
-  name: z.string().min(1, "Options Please enter a group name").optional(),
+  name: z.string().min(1, "Please enter an option group name").optional(),
   minSelect: z.number().int().min(0).optional(),
   maxSelect: z.number().int().min(1).optional(),
   isRequired: z.boolean().optional(),

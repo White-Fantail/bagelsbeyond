@@ -5,7 +5,7 @@ import { IntegrationSource } from "@/app/generated/prisma/enums";
 import { z } from "zod";
 
 const productPatchSchema = z.object({
-  name: z.string().min(1, "Product Please enter your name").optional(),
+  name: z.string().min(1, "Please enter a product name").optional(),
   slug: z
     .string()
     .min(1, "Please enter a slug")
@@ -141,7 +141,7 @@ export async function PATCH(
     return NextResponse.json({ product });
   } catch (_error) {
     return NextResponse.json(
-      { message: "Products Edit failed" },
+      { message: "Failed to edit product" },
       { status: 500 }
     );
   }
@@ -166,7 +166,7 @@ export async function DELETE(
     return NextResponse.json({ message: "Product deleted" });
   } catch (_error) {
     return NextResponse.json(
-      { message: "Products Delete failed" },
+      { message: "Failed to delete product" },
       { status: 500 }
     );
   }

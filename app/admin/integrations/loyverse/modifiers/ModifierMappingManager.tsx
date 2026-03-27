@@ -573,7 +573,7 @@ function ModifierSyncStatusPanel({
           {showManualFallback && (
             <p className="mt-1 text-xs text-gray-400">
               You can directly enter the modifier option ID in the &ldquo;Loyverse Modifier&rdquo; column of the table below
-              After successful Loyverse sync, close this mode and select from the dropdown..
+              After successful Loyverse sync, close this mode and select from the dropdown.
             </p>
           )}
         </div>

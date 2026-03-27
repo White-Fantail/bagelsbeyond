@@ -43,7 +43,7 @@ export default async function ModifierDetailPage({ params }: { params: Promise<{
         </div>
         <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
           <p className="text-lg font-medium text-gray-700">Modifier not found</p>
-          <Link href="/admin/modifiers" className="mt-4 inline-block px-4 py-2 bg-amber-500 text-white rounded-lg text-sm font-medium hover:bg-amber-600">Back to List Back</Link>
+          <Link href="/admin/modifiers" className="mt-4 inline-block px-4 py-2 bg-amber-500 text-white rounded-lg text-sm font-medium hover:bg-amber-600">Back to List</Link>
         </div>
       </div>
     );
@@ -148,7 +148,7 @@ export default async function ModifierDetailPage({ params }: { params: Promise<{
               <div className={`rounded-lg p-3 ${todayInventory.isSoldOut ? "bg-red-50" : "bg-green-50"}`}>
                 <p className="text-xs text-gray-500">Out of Stock</p>
                 <p className={`text-xl font-bold mt-0.5 ${todayInventory.isSoldOut ? "text-red-600" : "text-green-600"}`}>
-                  {todayInventory.isSoldOut ? "Out of Stock" : "InventoryYes"}
+                  {todayInventory.isSoldOut ? "Out of Stock" : "In Stock"}
                 </p>
               </div>
             </div>

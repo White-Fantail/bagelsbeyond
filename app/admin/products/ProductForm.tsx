@@ -8,7 +8,7 @@ import { z } from "zod";
 import Link from "next/link";
 
 const productFormSchema = z.object({
-  name: z.string().min(1, "Product Please enter your name"),
+  name: z.string().min(1, "Please enter a product name"),
   slug: z
     .string()
     .min(1, "Please enter a slug")

@@ -22,7 +22,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
 
     return NextResponse.json(factor);
   } catch {
-    return NextResponse.json({ message: "External Failed to load data" }, { status: 500 });
+    return NextResponse.json({ message: "Failed to load external data" }, { status: 500 });
   }
 }
 

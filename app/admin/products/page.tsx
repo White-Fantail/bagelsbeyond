@@ -167,7 +167,7 @@ export default async function AdminProductsPage({
                   <th className="text-center px-4 py-3 font-medium text-gray-600">Modifiers</th>
                   <th className="text-right px-4 py-3 font-medium text-gray-600">Price</th>
                   <th className="text-center px-4 py-3 font-medium text-gray-600">Active</th>
-                  <th className="text-center px-4 py-3 font-medium text-gray-600">SubscriptionsAvailable</th>
+                  <th className="text-center px-4 py-3 font-medium text-gray-600">Subscription Available</th>
                   <th className="text-right px-4 py-3 font-medium text-gray-600">Sort Order</th>
                   <th className="text-right px-4 py-3 font-medium text-gray-600">Last Edit Date</th>
                 </tr>

@@ -147,7 +147,7 @@ export async function PATCH(
     return NextResponse.json({ option });
   } catch (_error) {
     return NextResponse.json(
-      { message: "Modifier Edit failed" },
+      { message: "Failed to edit modifier" },
       { status: 500 }
     );
   }

@@ -243,7 +243,7 @@ export default function InventoryManager() {
           className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent hover:border-amber-300 transition"
         />
         <span className="text-xs text-gray-400">
-          Changing the date will automatically load inventory for that date..
+          Changing the date will automatically load inventory for that date.
         </span>
       </div>
 

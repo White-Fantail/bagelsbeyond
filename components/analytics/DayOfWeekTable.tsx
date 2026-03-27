@@ -9,7 +9,7 @@ export default function DayOfWeekTable({ data }: Props) {
   if (data.every((d) => d.recordCount === 0)) {
     return (
       <p className="text-sm text-gray-500 py-4 text-center">
-        No data for this period..
+        No data for this period.
       </p>
     );
   }

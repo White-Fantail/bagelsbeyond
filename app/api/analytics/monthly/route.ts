@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
   } catch (_error) {
     console.error(_error);
     return NextResponse.json(
-      { message: "monthly Analytics Failed to load data" },
+      { message: "Failed to load monthly analytics data" },
       { status: 500 }
     );
   }

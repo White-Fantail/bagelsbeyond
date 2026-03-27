@@ -112,7 +112,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ dailyInventory });
   } catch (_error) {
     return NextResponse.json(
-      { message: "Inventory Info Save failed" },
+      { message: "Failed to save inventory info" },
       { status: 500 }
     );
   }
