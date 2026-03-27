@@ -141,7 +141,7 @@ Loyverse는 `modifier_id`를 요구합니다. 내부에서 `ExternalOptionMap`�
 - 주문 전송 preflight validation (`order-sync.ts`)
   - product mapping 검증
   - modifier mapping 검증 (누락 시 전송 차단)
-- Loyverse Modifier Mapping 관리 UI (`/admin/integrations/loyverse/modifiers`)
+- (구) Loyverse Modifier Mapping 관리 UI (삭제됨)
   - 내부 옵션 목록 + 매핑 상태 표시
   - Loyverse modifier 목록 드롭다운
   - 매핑 저장 / 수정 / 해제
@@ -192,8 +192,8 @@ Loyverse는 `modifier_id`를 요구합니다. 내부에서 `ExternalOptionMap`�
 | `app/api/admin/integrations/loyverse/option-maps/route.ts` | ExternalOptionMap CRUD API |
 | `app/api/admin/integrations/loyverse/external-modifiers/route.ts` | 저장된 modifier sync 결과 조회 API |
 | `app/api/admin/integrations/loyverse/modifier-sync/route.ts` | Loyverse modifier 동기화 트리거 + 결과 저장 |
-| `app/admin/integrations/loyverse/modifiers/page.tsx` | Modifier 매핑 UI |
-| `app/admin/integrations/loyverse/modifiers/ModifierMappingManager.tsx` | 매핑 관리 클라이언트 컴포넌트 |
+| (구) `app/admin/integrations/loyverse/modifiers/page.tsx` | (삭제됨) Modifier 매핑 UI |
+| (구) `app/admin/integrations/loyverse/modifiers/ModifierMappingManager.tsx` | (삭제됨) 매핑 관리 클라이언트 컴포넌트 |
 | `app/admin/products/[id]/page.tsx` | 상품 상세 (modifier 매핑 상태 포함) |
 | `app/actions/order.ts` | 주문 생성 액션 (productOptionId 저장) |
 

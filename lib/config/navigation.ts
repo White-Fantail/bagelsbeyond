@@ -185,7 +185,7 @@ export const ADMIN_NAV: RoleNavConfig = {
         { href: "/admin/users", label: "사용자 관리" },
         { href: "/admin/sync/orders", label: "주문 자동 전송 현황" },
         { href: "/admin/integrations", label: "외부 연동" },
-        { href: "/admin/integrations/loyverse/modifiers", label: "Loyverse Modifier 매핑" },
+        // Loyverse Modifier 매핑 메뉴 제거됨
         { href: "/settings", label: "설정" },
       ],
     },

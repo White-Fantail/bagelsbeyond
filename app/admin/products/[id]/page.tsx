@@ -169,7 +169,7 @@ export default async function EditProductPage({
               </p>
             </div>
             <Link
-              href="/admin/integrations/loyverse/modifiers"
+              // Loyverse Modifier 매핑 링크 제거됨
               className="shrink-0 px-3 py-1.5 rounded-lg text-sm bg-amber-500 text-white hover:bg-amber-600 transition-colors"
             >
               매핑 관리 →
