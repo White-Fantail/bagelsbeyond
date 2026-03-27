@@ -28,6 +28,7 @@ export interface LoyverseRawVariant {
   option2_val: string | null;
   option3_name: string | null;
   option3_val: string | null;
+  updated_at?: string;
 }
 
 export interface LoyverseRawItem {
@@ -72,12 +73,23 @@ export interface LoyverseRawModifierOption {
 export interface LoyverseRawModifier {
   id: string;
   name: string;
+  min_select?: number | null;
+  max_select?: number | null;
+  required?: boolean;
   /** Selectable options within this modifier (e.g. milk choices, toppings).
    * The Loyverse API may omit this field for modifiers with no options. */
   options?: LoyverseRawModifierOption[];
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
+}
+
+/** Inventory level for a variant at a specific store, from GET /inventory. */
+export interface LoyverseRawInventoryLevel {
+  variant_id: string;
+  store_id: string;
+  in_stock: number | null;
+  updated_at: string;
 }
 
 /** Full normalised catalogue from Loyverse (raw + cross-referenced) */

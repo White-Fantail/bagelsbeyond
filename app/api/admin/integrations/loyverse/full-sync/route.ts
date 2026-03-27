@@ -1,21 +1,23 @@
 /**
  * POST /api/admin/integrations/loyverse/full-sync
  *
- * Runs a full, unified Loyverse sync in a single pass:
- *   1. Categories → LoyverseCategory upsert
- *   2. Modifier groups + options → ProductOptionGroup / ProductOption upsert
- *   3. Products → Product upsert + category link + modifier group assignments
- *   4. Stale modifier link cleanup
+ * Runs a full Loyverse mirror sync in sequence:
+ *   1. Categories  → loyverse_categories
+ *   2. Modifiers + options → loyverse_modifiers / loyverse_modifier_options
+ *   3. Items → loyverse_items
+ *   4. Item-Modifier links → loyverse_item_modifiers
+ *   5. Variants → loyverse_variants
+ *   6. Inventory → loyverse_inventory_levels
  *
  * ADMIN only.
  *
- * Response: FullSyncResult
+ * Response: MirrorSyncResult
  */
 
 import { NextResponse } from "next/server";
 import { apiRequireAdmin, isNextResponse } from "@/lib/auth/dal";
 import { createLoyverseAdapter } from "@/lib/integrations/adapters/pos/loyverse";
-import { runLoyverseFullSync } from "@/lib/integrations/services/loyverse-full-sync";
+import { syncAllLoyverse } from "@/lib/integrations/services/loyverse-mirror-sync";
 
 export const dynamic = "force-dynamic";
 
@@ -25,7 +27,7 @@ export async function POST() {
 
   try {
     const adapter = createLoyverseAdapter();
-    const result = await runLoyverseFullSync(adapter);
+    const result = await syncAllLoyverse(adapter);
     return NextResponse.json(result);
   } catch (err) {
     console.error("[/api/admin/integrations/loyverse/full-sync] Unexpected error:", err);

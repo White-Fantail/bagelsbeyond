@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import type { FullSyncResult } from "@/lib/integrations/services/loyverse-full-sync";
+import type { MirrorSyncResult } from "@/lib/integrations/services/loyverse-mirror-sync";
 
 export default function LoyverseSyncButton() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<FullSyncResult | null>(null);
+  const [result, setResult] = useState<MirrorSyncResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   async function handleSync() {
@@ -18,7 +18,7 @@ export default function LoyverseSyncButton() {
       const res = await fetch("/api/admin/integrations/loyverse/full-sync", {
         method: "POST",
       });
-      const data = (await res.json()) as FullSyncResult & { message?: string };
+      const data = (await res.json()) as MirrorSyncResult & { message?: string };
       if (!res.ok || data.status === "failed") {
         setError(
           data.errors?.[0] ?? (data as { message?: string }).message ?? "동기화 중 오류가 발생했습니다"
@@ -65,38 +65,31 @@ export default function LoyverseSyncButton() {
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-sm">
             <div className="bg-blue-50 rounded-lg p-2.5 text-center">
               <dt className="text-xs text-blue-600">카테고리</dt>
-              <dd className="text-lg font-bold text-blue-700 mt-0.5">{result.categoriesUpserted}</dd>
-              <dd className="text-xs text-blue-500">/{result.categoriesFetched} fetched</dd>
-            </div>
-            <div className="bg-green-50 rounded-lg p-2.5 text-center">
-              <dt className="text-xs text-green-600">신규 상품</dt>
-              <dd className="text-lg font-bold text-green-700 mt-0.5">{result.productsCreated}</dd>
-            </div>
-            <div className="bg-sky-50 rounded-lg p-2.5 text-center">
-              <dt className="text-xs text-sky-600">업데이트 상품</dt>
-              <dd className="text-lg font-bold text-sky-700 mt-0.5">{result.productsUpdated}</dd>
+              <dd className="text-lg font-bold text-blue-700 mt-0.5">{result.categoriesSynced}</dd>
             </div>
             <div className="bg-purple-50 rounded-lg p-2.5 text-center">
-              <dt className="text-xs text-purple-600">모디파이어 그룹</dt>
-              <dd className="text-lg font-bold text-purple-700 mt-0.5">{result.modifierGroupsUpserted}</dd>
-              <dd className="text-xs text-purple-500">/{result.modifierGroupsFetched} fetched</dd>
+              <dt className="text-xs text-purple-600">모디파이어</dt>
+              <dd className="text-lg font-bold text-purple-700 mt-0.5">{result.modifiersSynced}</dd>
             </div>
             <div className="bg-violet-50 rounded-lg p-2.5 text-center">
               <dt className="text-xs text-violet-600">모디파이어 옵션</dt>
-              <dd className="text-lg font-bold text-violet-700 mt-0.5">{result.modifierOptionsUpserted}</dd>
-              <dd className="text-xs text-violet-500">/{result.modifierOptionsFetched} fetched</dd>
+              <dd className="text-lg font-bold text-violet-700 mt-0.5">{result.modifierOptionsSynced}</dd>
+            </div>
+            <div className="bg-green-50 rounded-lg p-2.5 text-center">
+              <dt className="text-xs text-green-600">상품</dt>
+              <dd className="text-lg font-bold text-green-700 mt-0.5">{result.itemsSynced}</dd>
             </div>
             <div className="bg-amber-50 rounded-lg p-2.5 text-center">
               <dt className="text-xs text-amber-600">상품-모디파이어 연결</dt>
-              <dd className="text-lg font-bold text-amber-700 mt-0.5">{result.modifierLinksUpdated}</dd>
+              <dd className="text-lg font-bold text-amber-700 mt-0.5">{result.itemModifierLinksSynced}</dd>
+            </div>
+            <div className="bg-sky-50 rounded-lg p-2.5 text-center">
+              <dt className="text-xs text-sky-600">Variants</dt>
+              <dd className="text-lg font-bold text-sky-700 mt-0.5">{result.variantsSynced}</dd>
             </div>
             <div className="bg-teal-50 rounded-lg p-2.5 text-center">
-              <dt className="text-xs text-teal-600">카테고리 연결</dt>
-              <dd className="text-lg font-bold text-teal-700 mt-0.5">{result.categoryLinksUpdated}</dd>
-            </div>
-            <div className="bg-gray-50 rounded-lg p-2.5 text-center">
-              <dt className="text-xs text-gray-500">제거된 stale 링크</dt>
-              <dd className="text-lg font-bold text-gray-700 mt-0.5">{result.staleLinksRemoved}</dd>
+              <dt className="text-xs text-teal-600">재고 수준</dt>
+              <dd className="text-lg font-bold text-teal-700 mt-0.5">{result.inventoryLevelsSynced}</dd>
             </div>
             {result.errorCount > 0 && (
               <div className="bg-red-50 rounded-lg p-2.5 text-center">
@@ -110,7 +103,7 @@ export default function LoyverseSyncButton() {
             <div className="rounded-lg border border-red-200 bg-red-50 p-3 space-y-1">
               <p className="text-xs font-medium text-red-700">오류 상세 (최대 5건)</p>
               <ul className="space-y-1">
-                {result.errors.slice(0, 5).map((e, i) => (
+                {result.errors.slice(0, 5).map((e: string, i: number) => (
                   <li key={i} className="text-xs text-red-600">
                     • {e}
                   </li>
@@ -123,4 +116,3 @@ export default function LoyverseSyncButton() {
     </div>
   );
 }
-

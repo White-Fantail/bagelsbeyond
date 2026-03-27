@@ -807,6 +807,88 @@ model SubscriptionOccurrence {
   @@map("subscription_occurrences")
 }
 
+// ─── Loyverse Mirror Tables ───────────────────────────────────────────────────
+// These tables are a direct mirror of the Loyverse data structure.
+// All data is synced from Loyverse as the single source of truth.
+// Primary keys are the Loyverse IDs (not internal cuids).
+
+model LoyverseModifier {
+  id        String   @id  // Loyverse modifier ID
+  name      String
+  minSelect Int?
+  maxSelect Int?
+  required  Boolean  @default(false)
+  updatedAt DateTime
+
+  options   LoyverseModifierOption[]
+  items     LoyverseItemModifier[]
+
+  @@map("loyverse_modifiers")
+}
+
+model LoyverseModifierOption {
+  id         String   @id  // Loyverse option ID
+  modifierId String
+  name       String
+  price      Float
+  updatedAt  DateTime
+
+  modifier   LoyverseModifier @relation(fields: [modifierId], references: [id], onDelete: Cascade)
+
+  @@map("loyverse_modifier_options")
+}
+
+model LoyverseItem {
+  id          String   @id  // Loyverse item ID
+  name        String
+  description String?
+  categoryId  String?       // Raw Loyverse category ID string
+  price       Float?
+  updatedAt   DateTime
+
+  variants    LoyverseVariant[]
+  modifiers   LoyverseItemModifier[]
+
+  @@map("loyverse_items")
+}
+
+model LoyverseItemModifier {
+  id         String @id @default(cuid())
+  itemId     String
+  modifierId String
+
+  item       LoyverseItem     @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  modifier   LoyverseModifier @relation(fields: [modifierId], references: [id], onDelete: Cascade)
+
+  @@unique([itemId, modifierId])
+  @@map("loyverse_item_modifiers")
+}
+
+model LoyverseVariant {
+  id        String   @id  // Loyverse variant_id
+  itemId    String
+  sku       String?
+  price     Float?
+  updatedAt DateTime
+
+  item            LoyverseItem             @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  inventoryLevels LoyverseInventoryLevel[]
+
+  @@map("loyverse_variants")
+}
+
+model LoyverseInventoryLevel {
+  id        String   @id @default(cuid())
+  variantId String
+  inStock   Float?
+  updatedAt DateTime
+
+  variant   LoyverseVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  @@unique([variantId])
+  @@map("loyverse_inventory_levels")
+}
+
 // ─── LoyverseModifierSyncLog ──────────────────────────────────────────────────
 // Records each attempt to sync modifier groups from the Loyverse API.
 // The most recent successful entry is used as the cached modifier list in the
