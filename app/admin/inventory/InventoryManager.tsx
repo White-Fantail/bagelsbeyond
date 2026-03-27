@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback } from "react";
 type InventoryRow = {
   productId: string;
   productName: string;
-  category: string;
+  categoryName: string | null;
   plannedQty: number;
   bakedQty: number;
   reservedQty: number;
@@ -13,22 +13,6 @@ type InventoryRow = {
   isSoldOut: boolean;
   note: string;
   existingId: string | null;
-};
-
-const CATEGORY_LABELS: Record<string, string> = {
-  BAGEL: "베이글",
-  SANDWICH: "샌드위치",
-  SPREAD: "스프레드",
-  DRINK: "음료",
-  OTHER: "기타",
-};
-
-const CATEGORY_COLORS: Record<string, string> = {
-  BAGEL: "bg-amber-100 text-amber-700",
-  SANDWICH: "bg-green-100 text-green-700",
-  SPREAD: "bg-orange-100 text-orange-700",
-  DRINK: "bg-blue-100 text-blue-700",
-  OTHER: "bg-gray-100 text-gray-600",
 };
 
 function SkeletonRow() {
@@ -103,7 +87,7 @@ export default function InventoryManager() {
         return;
       }
       const items: Array<{
-        product: { id: string; name: string; category: string };
+        product: { id: string; name: string; loyverseCategory?: { name: string } | null };
         dailyInventory: {
           id: string;
           plannedQty: number;
@@ -119,7 +103,7 @@ export default function InventoryManager() {
         items.map((item) => ({
           productId: item.product.id,
           productName: item.product.name,
-          category: item.product.category,
+          categoryName: item.product.loyverseCategory?.name ?? null,
           plannedQty: item.dailyInventory?.plannedQty ?? 0,
           bakedQty: item.dailyInventory?.bakedQty ?? 0,
           reservedQty: item.dailyInventory?.reservedQty ?? 0,
@@ -322,13 +306,11 @@ export default function InventoryManager() {
                         <span className="font-medium text-gray-900">
                           {row.productName}
                         </span>
-                        <span
-                          className={`ml-2 inline-block text-xs px-1.5 py-0.5 rounded-full font-medium ${
-                            CATEGORY_COLORS[row.category] ?? "bg-gray-100 text-gray-600"
-                          }`}
-                        >
-                          {CATEGORY_LABELS[row.category] ?? row.category}
-                        </span>
+                        {row.categoryName && (
+                          <span className="ml-2 inline-block text-xs px-1.5 py-0.5 rounded-full font-medium bg-blue-100 text-blue-700">
+                            {row.categoryName}
+                          </span>
+                        )}
                       </td>
                       {/* plannedQty */}
                       <td className="px-4 py-3 text-center">
@@ -425,13 +407,11 @@ export default function InventoryManager() {
                   <span className="font-semibold text-gray-900">
                     {row.productName}
                   </span>
-                  <span
-                    className={`inline-block text-xs px-1.5 py-0.5 rounded-full font-medium ${
-                      CATEGORY_COLORS[row.category] ?? "bg-gray-100 text-gray-600"
-                    }`}
-                  >
-                    {CATEGORY_LABELS[row.category] ?? row.category}
-                  </span>
+                  {row.categoryName && (
+                    <span className="inline-block text-xs px-1.5 py-0.5 rounded-full font-medium bg-blue-100 text-blue-700">
+                      {row.categoryName}
+                    </span>
+                  )}
                 </div>
 
                 {/* Qty grid */}

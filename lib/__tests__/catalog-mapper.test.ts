@@ -2,69 +2,9 @@
 import { describe, it, expect } from "vitest";
 import {
   normalizeLoyverseCatalog,
-  mapExternalCategory,
   buildSyncedProductFields,
 } from "../integrations/services/catalog-mapper";
 import type { LoyverseCatalogRaw, ExternalProduct } from "../integrations/adapters/pos/types";
-import { ProductCategory } from "@/app/generated/prisma/enums";
-
-// ─── mapExternalCategory ──────────────────────────────────────────────────────
-
-describe("mapExternalCategory", () => {
-  it("returns BAGEL for 'Bagels'", () => {
-    expect(mapExternalCategory("Bagels")).toBe(ProductCategory.BAGEL);
-  });
-  it("returns BAGEL for 'fresh bagel'", () => {
-    expect(mapExternalCategory("fresh bagel")).toBe(ProductCategory.BAGEL);
-  });
-
-  it("returns SANDWICH for 'Sandwiches'", () => {
-    expect(mapExternalCategory("Sandwiches")).toBe(ProductCategory.SANDWICH);
-  });
-  it("returns SANDWICH for 'Wrap'", () => {
-    expect(mapExternalCategory("Wrap")).toBe(ProductCategory.SANDWICH);
-  });
-  it("returns SANDWICH for 'Sub'", () => {
-    expect(mapExternalCategory("Sub")).toBe(ProductCategory.SANDWICH);
-  });
-  it("returns SANDWICH for 'Panini'", () => {
-    expect(mapExternalCategory("Panini")).toBe(ProductCategory.SANDWICH);
-  });
-
-  it("returns SPREAD for 'Spreads'", () => {
-    expect(mapExternalCategory("Spreads")).toBe(ProductCategory.SPREAD);
-  });
-  it("returns SPREAD for 'cream cheese'", () => {
-    expect(mapExternalCategory("cream cheese")).toBe(ProductCategory.SPREAD);
-  });
-
-  it("returns DRINK for 'Drinks'", () => {
-    expect(mapExternalCategory("Drinks")).toBe(ProductCategory.DRINK);
-  });
-  it("returns DRINK for 'Coffee'", () => {
-    expect(mapExternalCategory("Coffee")).toBe(ProductCategory.DRINK);
-  });
-  it("returns DRINK for 'Tea'", () => {
-    expect(mapExternalCategory("Tea")).toBe(ProductCategory.DRINK);
-  });
-  it("returns DRINK for 'Fresh Juice'", () => {
-    expect(mapExternalCategory("Fresh Juice")).toBe(ProductCategory.DRINK);
-  });
-  it("returns DRINK for 'Sparkling Water'", () => {
-    expect(mapExternalCategory("Sparkling Water")).toBe(ProductCategory.DRINK);
-  });
-
-  it("returns OTHER for unknown category", () => {
-    expect(mapExternalCategory("Snacks")).toBe(ProductCategory.OTHER);
-  });
-  it("returns OTHER for empty string", () => {
-    expect(mapExternalCategory("")).toBe(ProductCategory.OTHER);
-  });
-  it("returns OTHER for undefined", () => {
-    expect(mapExternalCategory(undefined)).toBe(ProductCategory.OTHER);
-  });
-});
-
 // ─── buildSyncedProductFields ─────────────────────────────────────────────────
 
 describe("buildSyncedProductFields", () => {
@@ -83,7 +23,6 @@ describe("buildSyncedProductFields", () => {
       description: "A fresh bagel",
       basePrice: 4.5,
       isActive: true,
-      category: ProductCategory.BAGEL,
     });
   });
 
@@ -98,7 +37,7 @@ describe("buildSyncedProductFields", () => {
     expect(fields.description).toBeNull();
   });
 
-  it("falls back to OTHER when category is undefined", () => {
+  it("maps isActive correctly when false", () => {
     const ext: ExternalProduct = {
       externalId: "ext-003",
       name: "Mystery Item",
@@ -106,7 +45,7 @@ describe("buildSyncedProductFields", () => {
       isActive: false,
     };
     const fields = buildSyncedProductFields(ext);
-    expect(fields.category).toBe(ProductCategory.OTHER);
+    expect(fields.isActive).toBe(false);
   });
 });
 

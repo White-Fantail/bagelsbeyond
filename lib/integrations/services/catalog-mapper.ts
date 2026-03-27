@@ -11,7 +11,7 @@
 //   • description  — kept in sync; set to null if absent externally
 //   • basePrice    — the "default" variant price from POS
 //   • isActive     — reflects POS availability (deleted_at / available_for_sale)
-//   • category     — mapped from Loyverse category name → ProductCategory
+//   • loyverseCategoryId — linked from LoyverseCategory via Loyverse category_id
 //
 // Fields NEVER overwritten (managed internally only):
 //   • slug                  — unique URL key, set on creation only
@@ -28,9 +28,6 @@
 //   • Option.name       — overwritten from POS modifier name
 //   • Option.priceDelta — overwritten from POS modifier price
 //   • Option.isActive   — always true on sync; deactivate manually if needed
-//
-// NOTE: The first sync of a new item sets category to OTHER when no matching
-//       ProductCategory is found. Operators can update the category manually.
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import type {
@@ -42,7 +39,6 @@ import type {
   ExternalModifierGroup,
   ExternalModifier,
 } from "../adapters/pos/types";
-import { ProductCategory } from "@/app/generated/prisma/enums";
 
 // ─── Loyverse → ExternalProduct mapping ──────────────────────────────────────
 
@@ -132,47 +128,25 @@ export function normalizeLoyverseCatalog(raw: LoyverseCatalogRaw): ExternalProdu
 // ─── ExternalProduct → internal Product field mapping ─────────────────────────
 
 /**
- * Map an external category name to the nearest internal ProductCategory.
- * Returns OTHER when no match is found.
- */
-export function mapExternalCategory(externalCategoryName?: string): ProductCategory {
-  if (!externalCategoryName) return ProductCategory.OTHER;
-
-  const name = externalCategoryName.toLowerCase();
-  if (name.includes("bagel")) return ProductCategory.BAGEL;
-  if (name.includes("sandwich") || name.includes("wrap") || name.includes("sub") || name.includes("panini")) return ProductCategory.SANDWICH;
-  if (name.includes("spread") || name.includes("cream")) return ProductCategory.SPREAD;
-  if (
-    name.includes("drink") ||
-    name.includes("coffee") ||
-    name.includes("tea") ||
-    name.includes("juice") ||
-    name.includes("water")
-  )
-    return ProductCategory.DRINK;
-  return ProductCategory.OTHER;
-}
-
-/**
  * Build the set of Product fields that should be written/updated on every sync.
  * Fields NOT included here are never touched by catalog sync.
  *
  * Sync policy summary (see file header for details):
- *   Overwritten: name, description, basePrice, isActive, category
+ *   Overwritten: name, description, basePrice, isActive
  *   Protected:   slug, sortOrder, isSubscriptionEligible
+ *
+ * Category is linked separately via loyverseCategoryId in the full-sync service.
  */
 export function buildSyncedProductFields(ext: ExternalProduct): {
   name: string;
   description: string | null;
   basePrice: number;
   isActive: boolean;
-  category: ProductCategory;
 } {
   return {
     name: ext.name,
     description: ext.description ?? null,
     basePrice: ext.price,
     isActive: ext.isActive,
-    category: mapExternalCategory(ext.category),
   };
 }

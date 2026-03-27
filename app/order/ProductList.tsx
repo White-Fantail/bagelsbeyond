@@ -6,17 +6,13 @@ import type { CartItem, SelectedOption } from "@/types/cart";
 
 const CART_KEY = "beyond_cart";
 
-const CATEGORY_LABELS: Record<string, string> = {
-  BAGEL: "베이글", SANDWICH: "샌드위치", SPREAD: "스프레드", DRINK: "음료", OTHER: "기타",
-};
-
 interface Option { id: string; name: string; priceDelta: number; }
 interface OptionGroup {
   id: string; name: string; minSelect: number; maxSelect: number;
   isRequired: boolean; options: Option[];
 }
 interface Product {
-  id: string; name: string; description: string | null; category: string;
+  id: string; name: string; description: string | null; category: string | null;
   basePrice: number; isSubscriptionEligible: boolean; isSoldOut: boolean;
   optionGroups: OptionGroup[];
 }
@@ -117,7 +113,7 @@ export default function ProductList({ products }: Props) {
                 </div>
                 <div className="flex flex-col items-end gap-1 shrink-0">
                   <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">
-                    {CATEGORY_LABELS[product.category] ?? product.category}
+                    {product.category ?? "기타"}
                   </span>
                   {product.isSubscriptionEligible && (
                     <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">구독 가능</span>

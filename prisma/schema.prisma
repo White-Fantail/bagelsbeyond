@@ -269,13 +269,6 @@ model AdminActionLog {
 
 // ─── Enums ────────────────────────────────────────────────────────────────────
 
-enum ProductCategory {
-  BAGEL
-  SANDWICH
-  SPREAD
-  DRINK
-  OTHER
-}
 
 enum OrderStatus {
   DRAFT
@@ -343,7 +336,6 @@ model Product {
   name                  String
   slug                  String          @unique
   description           String?
-  category              ProductCategory @default(OTHER)
   loyverseCategoryId    String?
   basePrice             Float
   isActive              Boolean         @default(true)
@@ -364,7 +356,6 @@ model Product {
   subscriptionItems          SubscriptionItem[]
 
   @@index([isActive])
-  @@index([category])
   @@index([loyverseCategoryId])
   @@map("products")
 }

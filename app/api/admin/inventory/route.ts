@@ -41,6 +41,9 @@ export async function GET(req: NextRequest) {
     const products = await prisma.product.findMany({
       where: { isActive: true },
       orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
+      include: {
+        loyverseCategory: { select: { name: true } },
+      },
     });
 
     if (products.length === 0) {

@@ -435,7 +435,6 @@ async function seedProducts() {
       slug: "plain-bagel",
       name: "Plain Bagel",
       description: "Classic plain bagel, perfectly chewy",
-      category: "BAGEL" as const,
       basePrice: 3.5,
       isActive: true,
       isSubscriptionEligible: true,
@@ -445,7 +444,6 @@ async function seedProducts() {
       slug: "sesame-bagel",
       name: "Sesame Bagel",
       description: "Topped with toasted sesame seeds",
-      category: "BAGEL" as const,
       basePrice: 3.5,
       isActive: true,
       isSubscriptionEligible: true,
@@ -455,7 +453,6 @@ async function seedProducts() {
       slug: "blueberry-bagel",
       name: "Blueberry Bagel",
       description: "Sweet blueberry bagel with dried blueberries",
-      category: "BAGEL" as const,
       basePrice: 4.0,
       isActive: true,
       isSubscriptionEligible: true,
@@ -465,7 +462,6 @@ async function seedProducts() {
       slug: "everything-bagel",
       name: "Everything Bagel",
       description: "Loaded with sesame, poppy, onion, garlic, and salt",
-      category: "BAGEL" as const,
       basePrice: 3.5,
       isActive: true,
       isSubscriptionEligible: false,
@@ -475,7 +471,6 @@ async function seedProducts() {
       slug: "salmon-bagel-sandwich",
       name: "Salmon Bagel Sandwich",
       description: "Fresh smoked salmon with cream cheese on your choice of bagel",
-      category: "SANDWICH" as const,
       basePrice: 12.5,
       isActive: true,
       isSubscriptionEligible: false,
@@ -485,7 +480,6 @@ async function seedProducts() {
       slug: "classic-bagel-sandwich",
       name: "Classic Bagel Sandwich",
       description: "Choose your bagel, spread, and fillings",
-      category: "SANDWICH" as const,
       basePrice: 9.5,
       isActive: true,
       isSubscriptionEligible: false,
@@ -495,7 +489,6 @@ async function seedProducts() {
       slug: "cream-cheese-plain",
       name: "Cream Cheese – Plain",
       description: "Classic plain cream cheese spread",
-      category: "SPREAD" as const,
       basePrice: 1.5,
       isActive: true,
       isSubscriptionEligible: false,
@@ -505,7 +498,6 @@ async function seedProducts() {
       slug: "cream-cheese-chive",
       name: "Cream Cheese – Chive & Onion",
       description: "Chive and onion cream cheese",
-      category: "SPREAD" as const,
       basePrice: 1.5,
       isActive: true,
       isSubscriptionEligible: false,
@@ -530,7 +522,6 @@ async function seedProducts() {
         name: p.name,
         slug: p.slug,
         description: p.description,
-        category: p.category,
         basePrice: p.basePrice,
         isActive: p.isActive,
         isSubscriptionEligible: p.isSubscriptionEligible,
@@ -538,7 +529,7 @@ async function seedProducts() {
       },
     });
     createdProducts[p.slug] = { id: product.id };
-    console.log(`  🏷️  ${p.category}: ${p.name}`);
+    console.log(`  📦 ${p.name}`);
   }
 
   // ── Option groups for Salmon Bagel Sandwich ─────────────────────────────────

@@ -2,18 +2,10 @@ export const dynamic = "force-dynamic";
 
 import { requireAdmin } from "@/lib/auth/dal";
 import { prisma } from "@/lib/db";
-import { IntegrationSource, ProductCategory } from "@/app/generated/prisma/enums";
+import { IntegrationSource } from "@/app/generated/prisma/enums";
 import Link from "next/link";
 import { Suspense } from "react";
 import ProductFilters from "./ProductFilters";
-
-const CATEGORY_LABELS: Record<string, string> = {
-  BAGEL: "베이글",
-  SANDWICH: "샌드위치",
-  SPREAD: "스프레드",
-  DRINK: "음료",
-  OTHER: "기타",
-};
 
 type SearchParams = {
   search?: string;
@@ -46,8 +38,8 @@ export default async function AdminProductsPage({
     where.name = { contains: search, mode: "insensitive" };
   }
 
-  if (categoryFilter !== "ALL" && Object.values(ProductCategory).includes(categoryFilter as ProductCategory)) {
-    where.category = categoryFilter as ProductCategory;
+  if (categoryFilter !== "ALL") {
+    where.loyverseCategoryId = categoryFilter;
   }
 
   if (activeFilter === "ACTIVE") where.isActive = true;
@@ -70,7 +62,6 @@ export default async function AdminProductsPage({
       select: {
         id: true,
         name: true,
-        category: true,
         basePrice: true,
         isActive: true,
         isSubscriptionEligible: true,
@@ -184,9 +175,7 @@ export default async function AdminProductsPage({
               <tbody className="divide-y divide-gray-100">
                 {products.map((product) => {
                   const isLoyverseSynced = product.externalMappings.length > 0;
-                  const categoryLabel = product.loyverseCategory?.name
-                    ?? CATEGORY_LABELS[product.category]
-                    ?? product.category;
+                  const categoryLabel = product.loyverseCategory?.name ?? null;
                   const modifierCount = product.optionGroupAssignments.length;
                   return (
                     <tr key={product.id} className="hover:bg-amber-50 transition-colors">
@@ -199,13 +188,13 @@ export default async function AdminProductsPage({
                         </Link>
                       </td>
                       <td className="px-4 py-3 text-gray-600">
-                        {product.loyverseCategory ? (
+                        {categoryLabel ? (
                           <span className="inline-flex items-center gap-1">
                             <span className="w-1.5 h-1.5 rounded-full bg-blue-400 inline-block" />
                             {categoryLabel}
                           </span>
                         ) : (
-                          categoryLabel
+                          <span className="text-xs text-gray-400">–</span>
                         )}
                       </td>
                       <td className="px-4 py-3">
