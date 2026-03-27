@@ -233,7 +233,7 @@ export function applyExternalFactorAdjustments(
     const dowImpact = roundSalesValue(adjustedSales * dowWeight);
     factors.push({
       factorKey: dowKey,
-      factorLabel: `요일 (${dowLabel})`,
+      factorLabel: `Day (${dowLabel})`,
       factorValue: dowLabel,
       appliedWeight: dowWeight,
       impactScore: dowImpact,
@@ -241,9 +241,9 @@ export function applyExternalFactorAdjustments(
     adjustedSales += dowImpact;
     adjustedBagels *= 1 + dowWeight;
     if (dowWeight > 0) {
-      adjustmentTexts.push(`${dowLabel}은 평균보다 매출이 높은 요일로 상향 반영됨 (+${(dowWeight * 100).toFixed(0)}%)`);
+      adjustmentTexts.push(`${dowLabel} is above average, adjusted up (+${(dowWeight * 100).toFixed(0)}%)`);
     } else {
-      adjustmentTexts.push(`${dowLabel}은 평균보다 매출이 낮은 요일로 하향 반영됨 (${(dowWeight * 100).toFixed(0)}%)`);
+      adjustmentTexts.push(`${dowLabel} is below average, adjusted down (${(dowWeight * 100).toFixed(0)}%)`);
     }
   }
 
@@ -254,14 +254,14 @@ export function applyExternalFactorAdjustments(
     const rainImpact = roundSalesValue(adjustedSales * rainWeight);
     factors.push({
       factorKey: "weather_rain",
-      factorLabel: "비 (강수량)",
+      factorLabel: "Rain (Rainfall)",
       factorValue: `${rainMm.toFixed(1)}mm`,
       appliedWeight: rainWeight,
       impactScore: rainImpact,
     });
     adjustedSales += rainImpact;
     adjustedBagels *= 1 + rainWeight;
-    adjustmentTexts.push(`비 예보 (${rainMm.toFixed(1)}mm)로 인해 매출이 하향 조정됨 (${(rainWeight * 100).toFixed(0)}%)`);
+    adjustmentTexts.push(`Rain forecast (${rainMm.toFixed(1)}mm) — Sales adjusted down (${(rainWeight * 100).toFixed(0)}%)`);
   }
 
   // Hot weather
@@ -271,14 +271,14 @@ export function applyExternalFactorAdjustments(
     const hotImpact = roundSalesValue(adjustedSales * hotWeight);
     factors.push({
       factorKey: "weather_hot",
-      factorLabel: "더위 (기온)",
+      factorLabel: "Heat (temperature)",
       factorValue: `${maxTemp.toFixed(1)}°C`,
       appliedWeight: hotWeight,
       impactScore: hotImpact,
     });
     adjustedSales += hotImpact;
     adjustedBagels *= 1 + hotWeight;
-    adjustmentTexts.push(`높은 기온 (${maxTemp.toFixed(1)}°C)으로 인해 매출이 소폭 하향 조정됨`);
+    adjustmentTexts.push(`High temperature (${maxTemp.toFixed(1)}°C) — Sales slightly adjusted down`);
   }
 
   // Holiday
@@ -287,14 +287,14 @@ export function applyExternalFactorAdjustments(
     const holidayImpact = roundSalesValue(adjustedSales * holidayWeight);
     factors.push({
       factorKey: "holiday",
-      factorLabel: "공휴일",
+      factorLabel: "Holiday",
       factorValue: externalFactors.holidayName,
       appliedWeight: holidayWeight,
       impactScore: holidayImpact,
     });
     adjustedSales += holidayImpact;
     adjustedBagels *= 1 + holidayWeight;
-    adjustmentTexts.push(`공휴일 (${externalFactors.holidayName}) 효과로 판매량이 상향 조정됨 (+${(holidayWeight * 100).toFixed(0)}%)`);
+    adjustmentTexts.push(`Holiday (${externalFactors.holidayName}) Effect — Sold qty adjusted up (+${(holidayWeight * 100).toFixed(0)}%)`);
   }
 
   // Local event
@@ -303,14 +303,14 @@ export function applyExternalFactorAdjustments(
     const eventImpact = roundSalesValue(adjustedSales * eventWeight);
     factors.push({
       factorKey: "local_event",
-      factorLabel: "지역 이벤트",
+      factorLabel: "Local Event",
       factorValue: externalFactors.localEventName,
       appliedWeight: eventWeight,
       impactScore: eventImpact,
     });
     adjustedSales += eventImpact;
     adjustedBagels *= 1 + eventWeight;
-    adjustmentTexts.push(`지역 이벤트 (${externalFactors.localEventName}) 효과로 매출이 상향 조정됨`);
+    adjustmentTexts.push(`Local Event (${externalFactors.localEventName}) Effect — Sales adjusted up`);
   }
 
   // School holiday
@@ -319,14 +319,14 @@ export function applyExternalFactorAdjustments(
     const schoolImpact = roundSalesValue(adjustedSales * schoolWeight);
     factors.push({
       factorKey: "school_holiday",
-      factorLabel: "학교 방학",
-      factorValue: "방학 중",
+      factorLabel: "School Holiday",
+      factorValue: "During School Holiday",
       appliedWeight: schoolWeight,
       impactScore: schoolImpact,
     });
     adjustedSales += schoolImpact;
     adjustedBagels *= 1 + schoolWeight;
-    adjustmentTexts.push(`학교 방학 기간으로 가족 고객 증가 가능성 반영됨 (+${(schoolWeight * 100).toFixed(0)}%)`);
+    adjustmentTexts.push(`School Holiday Period — family customer demand increase reflected (+${(schoolWeight * 100).toFixed(0)}%)`);
   }
 
   // News impact
@@ -337,14 +337,14 @@ export function applyExternalFactorAdjustments(
       const newsImpact = roundSalesValue(adjustedSales * newsWeight);
       factors.push({
         factorKey: "nz_news",
-        factorLabel: "뉴질랜드 뉴스",
-        factorValue: "부정적 뉴스 영향",
+        factorLabel: "NZ News",
+        factorValue: "negative News impact",
         appliedWeight: newsWeight,
         impactScore: newsImpact,
       });
       adjustedSales += newsImpact;
       adjustedBagels *= 1 + newsWeight;
-      adjustmentTexts.push(`뉴스 영향으로 인해 매출이 소폭 하향 반영됨`);
+      adjustmentTexts.push(`News impact slightly reduced sales`);
     }
   }
 
@@ -421,30 +421,30 @@ export function buildPredictionExplanation(
 
   // Baseline info
   if (metrics.dataPointCount === 0) {
-    items.push({ type: "info", text: "데이터가 충분하지 않아 기본값을 사용했습니다." });
+    items.push({ type: "info", text: "Insufficient data — using default value." });
   } else {
     items.push({
       type: "baseline",
-      text: `최근 ${metrics.dataPointCount}일 평균 매출(${Math.round(metrics.avgSales).toLocaleString("ko-KR")}원)이 기준값으로 사용됨`,
+      text: `Recent ${metrics.dataPointCount}-day avg. sales ($${Math.round(metrics.avgSales).toLocaleString("en-NZ")}) used as baseline`,
     });
   }
 
   if (metrics.sameDayDataPointCount > 0) {
     const diff = metrics.sameDayAvgSales - metrics.avgSales;
-    const direction = diff >= 0 ? "높아 상향" : "낮아 하향";
+    const direction = diff >= 0 ? "above, adjusted up" : "below, adjusted down";
     items.push({
       type: "weekday",
-      text: `같은 요일 평균이 전체 평균보다 ${Math.abs(diff).toFixed(0)}원 ${direction} 반영됨 (${metrics.sameDayDataPointCount}건 참고)`,
+      text: `Same-day average is $${Math.abs(diff).toFixed(0)} ${direction} vs. overall average (${metrics.sameDayDataPointCount} data points)`,
     });
   }
 
   // Adjustments
   for (const text of adjustmentTexts) {
-    const type = text.includes("비") || text.includes("기온") ? "weather"
-      : text.includes("공휴일") ? "holiday"
-      : text.includes("이벤트") ? "event"
-      : text.includes("방학") ? "school"
-      : text.includes("뉴스") ? "news"
+    const type = text.includes("Rain") || text.includes("temperature") ? "weather"
+      : text.includes("Holiday") ? "holiday"
+      : text.includes("Event") ? "event"
+      : text.includes("School Holiday") ? "school"
+      : text.includes("News") ? "news"
       : "weekday";
     items.push({ type, text });
   }
@@ -453,18 +453,18 @@ export function buildPredictionExplanation(
   const bufferPct = Math.round((production.recommendedBagelsToBake / Math.max(1, predictedBagelsSold) - 1) * 100);
   items.push({
     type: "production",
-    text: `최근 폐기율(${(metrics.avgWasteRate * 100).toFixed(1)}%)을 고려해 예상 판매량 대비 ${bufferPct}% 버퍼를 적용한 생산량 추천`,
+    text: `${bufferPct}% buffer over estimated sold qty based on Waste Rate (${(metrics.avgWasteRate * 100).toFixed(1)}%)`,
   });
 
   items.push({
     type: "production",
-    text: `추천 생산량: ${production.recommendedBagelsToBake}개 (예상 잔여: ${production.predictedLeftovers}개, 예상 판매율: ${(production.projectedSellThroughRate * 100).toFixed(1)}%)`,
+    text: `Recommended Production: ${production.recommendedBagelsToBake} (Predicted Remaining: ${production.predictedLeftovers}, Estimated Sell-through Rate: ${(production.projectedSellThroughRate * 100).toFixed(1)}%)`,
   });
 
   const summary =
-    `예상 매출 ${Math.round(predictedSales).toLocaleString("ko-KR")}원, ` +
-    `판매 ${predictedBagelsSold}개 기준으로 ` +
-    `${production.recommendedBagelsToBake}개 생산을 추천합니다.`;
+    `Predicted Sales ${Math.round(predictedSales).toLocaleString("en-NZ")}, ` +
+    `Based on Sold: ${predictedBagelsSold} baseline — ` +
+    `Recommended production: ${production.recommendedBagelsToBake}.`;
 
   return { items, summary };
 }
@@ -518,12 +518,12 @@ export function calculateRuleBasedPrediction(input: PredictionInput): Prediction
 
   const adjustmentSummary = adjustmentTexts.length > 0
     ? adjustmentTexts.join("; ")
-    : "추가 조정 없음";
+    : "No adjustment added";
 
   const noteParts = [
-    `기준 데이터: 최근 ${metrics.dataPointCount}일`,
-    metrics.sameDayDataPointCount > 0 ? `같은 요일 ${metrics.sameDayDataPointCount}건 참고` : null,
-    `적용 요인: ${factors.length}개`,
+    `baseline Data: recent ${metrics.dataPointCount} days`,
+    metrics.sameDayDataPointCount > 0 ? `same-day ${metrics.sameDayDataPointCount} data points` : null,
+    `Applied Factor: ${factors.length}`,
   ].filter(Boolean);
 
   return {

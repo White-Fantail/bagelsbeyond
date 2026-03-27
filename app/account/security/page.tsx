@@ -10,13 +10,13 @@ export default async function SecurityPage() {
       <div>
         <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
           <Link href="/account" className="hover:text-amber-600 transition-colors">
-            내 계정
+            My Account
           </Link>
           <span>/</span>
-          <span className="text-gray-700">비밀번호 변경</span>
+          <span className="text-gray-700">Change Password</span>
         </div>
-        <h1 className="text-2xl font-bold text-gray-900">비밀번호 변경</h1>
-        <p className="text-gray-500 mt-1">계정 보안을 위해 주기적으로 비밀번호를 변경하세요</p>
+        <h1 className="text-2xl font-bold text-gray-900">Change Password</h1>
+        <p className="text-gray-500 mt-1">Change your password regularly to keep your account secure</p>
       </div>
 
       <div className="bg-white rounded-xl border border-gray-200 p-6">

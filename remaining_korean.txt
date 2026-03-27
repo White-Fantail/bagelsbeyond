@@ -1,0 +1,1551 @@
+./components/TaskActionButton.tsx:30:        throw new Error(data.error ?? "작업 실Rows에 실패했습니다");
+./components/TaskActionButton.tsx:35:      setError(err instanceof Error ? err.message : "오류가 발생했습니다");
+./components/TaskActionButton.tsx:54:      {loading ? "실Rows 중…" : done ? "✓ Done" : error ? `✗ ${error}` : label}
+./components/WeightsManager.tsx:20:  { key: "weekday", label: "요일", icon: "📅", prefix: ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"] },
+./components/WeightsManager.tsx:24:  { key: "news", label: "뉴스", icon: "📰", prefix: ["nz_news", "world_news"] },
+./components/WeightsManager.tsx:107:        throw new Error(err.message || "Edit에 실패했습니다");
+./components/WeightsManager.tsx:113:      setError(e instanceof Error ? e.message : "Edit에 실패했습니다");
+./components/WeightsManager.tsx:124:      if (!res.ok) throw new Error("Delete에 실패했습니다");
+./components/WeightsManager.tsx:128:      setError(e instanceof Error ? e.message : "Delete에 실패했습니다");
+./components/WeightsManager.tsx:150:        throw new Error(err.message || "Save에 실패했습니다");
+./components/WeightsManager.tsx:156:      setError(e instanceof Error ? e.message : "Save에 실패했습니다");
+./components/WeightsManager.tsx:210:        <strong>💡 Weights 안내:</strong> Weights는 Predicted Sales 대비 비율입니다. <code>+0.2</code> = 20% 증가, <code>-0.15</code> = 15% 감소.
+./components/WeightsManager.tsx:211:        일반적으로 <strong>-1.0 ~ +1.0</strong> 범위 권장.
+./components/WeightsManager.tsx:219:              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">요인 키</th>
+./components/WeightsManager.tsx:220:              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">설명</th>
+./components/WeightsManager.tsx:222:              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">효과</th>
+./components/WeightsManager.tsx:224:              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">액션</th>
+./components/WeightsManager.tsx:308:                      {w.isActive ? "Active" : "비Active"}
+./components/WeightsManager.tsx:336:        <h3 className="text-sm font-semibold text-gray-900 mb-3">새 항목 Add</h3>
+./components/WeightsManager.tsx:339:            <label className="text-xs text-gray-600">요인 키 *</label>
+./components/WeightsManager.tsx:365:            <label className="text-xs text-gray-600">설명</label>
+./components/WeightsManager.tsx:369:              placeholder="요인 설명 (선택)"
+./components/Navigation.tsx:15:  STAFF: "직원",
+./components/Navigation.tsx:16:  CUSTOMER: "고객",
+./components/Navigation.tsx:65:        aria-label="상단 바"
+./components/Navigation.tsx:73:            aria-label="Menu 열기"
+./components/Navigation.tsx:129:                {isPending ? "…" : "로그아웃"}
+./components/DeletePredictionButton.tsx:20:      if (!res.ok) throw new Error("Delete에 실패했습니다");
+./components/DeletePredictionButton.tsx:25:      alert("Delete에 실패했습니다.");
+./components/CalendarView.tsx:42:  const dayLabels = ["일", "월", "화", "수", "목", "금", "토"];
+./components/CalendarView.tsx:63:        <h2 className="text-lg font-semibold text-gray-900">{year}년 {month}월</h2>
+./components/CalendarView.tsx:127:                  ? `${year}년 ${month}월 ${day}일${record ? " 실적 Yes" : ""}${prediction ? " Has Prediction" : ""}`
+./components/CalendarView.tsx:190:                        🔮{prediction.recommendedBagelsToBake}굽
+./components/FilterBar.tsx:34:          <label className="text-xs font-medium text-gray-600">시작일</label>
+./components/FilterBar.tsx:43:          <label className="text-xs font-medium text-gray-600">종료일</label>
+./components/FilterBar.tsx:52:          <label className="text-xs font-medium text-gray-600">키워드</label>
+./components/FilterBar.tsx:57:            placeholder="메모, Event, Holiday Search..."
+./components/CollectExternalButton.tsx:24:      if (!res.ok) throw new Error(data.message ?? "수집에 실패했습니다");
+./components/CollectExternalButton.tsx:28:      setError(err instanceof Error ? err.message : "오류가 발생했습니다");
+./components/CollectExternalButton.tsx:41:        {loading ? "수집 중..." : "🔄 External Data 수집"}
+./components/CollectExternalButton.tsx:52:                <p className="text-gray-500">수집: {result.collectedFields.join(", ")}</p>
+./components/CollectExternalButton.tsx:58:                <p className="text-gray-400">items너뜀: {result.skippedProviders.join(", ")}</p>
+./components/CollectExternalButton.tsx:62:            <p className="text-red-600">❌ 수집 실패</p>
+./components/DeleteRecordButton.tsx:20:      if (!res.ok) throw new Error("Delete에 실패했습니다");
+./components/DeleteRecordButton.tsx:25:      alert("Delete에 실패했습니다.");
+./components/analytics/PeriodComparisonSection.tsx:74:          label="총 Sold 베이글"
+./components/analytics/PeriodComparisonSection.tsx:75:          currentValue={`${current.totalBagelsSold}개`}
+./components/analytics/PeriodComparisonSection.tsx:76:          previousValue={`${previous.totalBagelsSold}개`}
+./components/analytics/PeriodComparisonSection.tsx:89:          label="Store Sales 비중"
+./components/analytics/PeriodComparisonSection.tsx:96:          label="Uber이츠 비중"
+./components/analytics/PeriodComparisonSection.tsx:103:          label="DoorDash 비중"
+./components/analytics/DayOfWeekTable.tsx:24:            <th className="text-left py-2 pr-3 font-medium text-gray-500 whitespace-nowrap">요일</th>
+./components/analytics/DayOfWeekTable.tsx:25:            <th className="text-right py-2 px-2 font-medium text-gray-500 whitespace-nowrap">일수</th>
+./components/analytics/DayOfWeekTable.tsx:26:            <th className="text-right py-2 px-2 font-medium text-gray-500 whitespace-nowrap">평균 Sales</th>
+./components/analytics/DayOfWeekTable.tsx:28:            <th className="text-right py-2 px-2 font-medium text-gray-500 whitespace-nowrap hidden sm:table-cell">평균 Sold</th>
+./components/analytics/DayOfWeekTable.tsx:29:            <th className="text-right py-2 px-2 font-medium text-gray-500 whitespace-nowrap">All 대비</th>
+./components/analytics/DayOfWeekTable.tsx:30:            <th className="py-2 pl-2 font-medium text-gray-500 w-28 hidden md:table-cell">비중</th>
+./components/analytics/DayOfWeekTable.tsx:52:                <td className="py-2.5 px-2 text-right text-gray-600">{row.recordCount}일</td>
+./components/analytics/DayOfWeekTable.tsx:60:                  {row.recordCount > 0 ? `${Math.round(row.avgBagelsSold)}개` : "—"}
+./components/analytics/ComparisonCard.tsx:55:          {diffPercent.toFixed(1)}% (세그먼트 기준)
+./components/analytics/AnalyticsSubNav.tsx:19:    <nav className="flex gap-1 flex-wrap" aria-label="Analytics 서브 네비게이션">
+./components/analytics/ChannelBar.tsx:27:          title={`Uber이츠 ${uberPercent.toFixed(1)}%`}
+./components/navigation/Sidebar.tsx:17:      aria-label="사이드바 네비게이션"
+./components/navigation/MobileDrawer.tsx:18:  STAFF: "직원",
+./components/navigation/MobileDrawer.tsx:19:  CUSTOMER: "고객",
+./components/navigation/MobileDrawer.tsx:115:          aria-label="모바일 네비게이션"
+./components/navigation/MobileDrawer.tsx:156:              {isPending ? "로그아웃 중…" : "로그아웃"}
+./components/RetryTaskButton.tsx:28:        throw new Error(data.error ?? "재시도에 실패했습니다");
+./components/RetryTaskButton.tsx:33:      setError(err instanceof Error ? err.message : "오류가 발생했습니다");
+./components/RetryTaskButton.tsx:46:        {loading ? "재시도 중…" : done ? "✓ 재시도 완료" : "🔄 재시도"}
+./components/ConfirmDeleteDialog.tsx:18:        <p className="text-gray-600 text-sm mb-6">Delete하시겠습니까? 이 작업은 되돌릴 수 없습니다.</p>
+./components/RefreshExternalFactorButton.tsx:26:      if (!res.ok) throw new Error(data.message ?? "수집에 실패했습니다");
+./components/RefreshExternalFactorButton.tsx:30:      setError(err instanceof Error ? err.message : "오류가 발생했습니다");
+./components/RefreshExternalFactorButton.tsx:43:        {loading ? "수집 중..." : "🔄 External Data 수집"}
+./components/RefreshExternalFactorButton.tsx:61:            <span className="text-red-600">❌ 수집 실패</span>
+./components/SettingsForm.tsx:45:        throw new Error(err.message || "Save에 실패했습니다");
+./components/SettingsForm.tsx:51:      setErrorMessage(e instanceof Error ? e.message : "Save에 실패했습니다");
+./components/SettingsForm.tsx:69:        <h2 className="text-base font-semibold text-gray-900 border-b border-gray-100 pb-2">가게 정보</h2>
+./components/SettingsForm.tsx:72:          <label className="block text-sm font-medium text-gray-700 mb-1">상점 Name</label>
+./components/SettingsForm.tsx:97:          <p className="mt-1 text-xs text-gray-400">예: 0.05 = 5% 폐기 허용</p>
+./components/SettingsForm.tsx:104:          <label className="block text-sm font-medium text-gray-700 mb-1">기본 생산 버퍼</label>
+./components/SettingsForm.tsx:114:          <p className="mt-1 text-xs text-gray-400">예: 1.1 = Predictions 수량의 10% Add 생산</p>
+./components/SettingsForm.tsx:122:        <h2 className="text-base font-semibold text-gray-900 border-b border-gray-100 pb-2">지역 Settings (External Data 수집용)</h2>
+./components/SettingsForm.tsx:126:            <label className="block text-sm font-medium text-gray-700 mb-1">기본 지역 (Region)</label>
+./components/SettingsForm.tsx:133:            <p className="mt-1 text-xs text-gray-400">예: Canterbury, Auckland</p>
+./components/SettingsForm.tsx:137:            <label className="block text-sm font-medium text-gray-700 mb-1">기본 도시 (City)</label>
+./components/SettingsForm.tsx:147:            <label className="block text-sm font-medium text-gray-700 mb-1">국가 코드 (Country Code)</label>
+./components/SettingsForm.tsx:154:            <p className="mt-1 text-xs text-gray-400">Holiday View에 사용됩니다 (예: NZ, AU)</p>
+./components/SettingsForm.tsx:158:            <label className="block text-sm font-medium text-gray-700 mb-1">Event Search 지역</label>
+./components/SettingsForm.tsx:175:            <span className="text-sm font-medium text-gray-700">Predictions/Sales Create 시 External Data 자동 수집</span>
+./components/SettingsForm.tsx:177:          <p className="mt-1 text-xs text-gray-400 ml-5">Activate 시 새 Sales/Predictions Create 때 External Data를 자동으로 수집합니다.</p>
+./components/SalesForm.tsx:51:        throw new Error(err.message || "Save에 실패했습니다");
+./components/SalesForm.tsx:63:      setErrorMessage(e instanceof Error ? e.message : "Save에 실패했습니다");
+./components/SalesForm.tsx:80:      {/* 기본 정보 */}
+./components/SalesForm.tsx:81:      <Section title="기본 정보">
+./components/SalesForm.tsx:85:        <Field label="Bagels Baked 수 *" error={errors.bagelsBaked?.message}>
+./components/SalesForm.tsx:88:        <Field label="Bagels Left 수 *" error={errors.bagelsLeft?.message}>
+./components/SalesForm.tsx:93:      {/* Sales 정보 */}
+./components/SalesForm.tsx:94:      <Section title="Sales 정보 (NZD)">
+./components/SalesForm.tsx:110:      <Section title="External Factors (선택)">
+./components/SalesForm.tsx:111:        <Field label="Weather 요약" error={errors.weatherSummary?.message}>
+./components/SalesForm.tsx:112:          <input type="text" placeholder="예: 맑음, 비, 흐림" {...register("weatherSummary")} className={inputClass(false)} />
+./components/SalesForm.tsx:115:          <Field label="최저 기온 (°C)" error={errors.minTemp?.message}>
+./components/SalesForm.tsx:118:          <Field label="최고 기온 (°C)" error={errors.maxTemp?.message}>
+./components/SalesForm.tsx:123:          <Field label="강수량 (mm)" error={errors.rainMm?.message}>
+./components/SalesForm.tsx:126:          <Field label="바람 (kph)" error={errors.windKph?.message}>
+./components/SalesForm.tsx:131:          <input type="text" placeholder="예: Christmas Day" {...register("holidayName")} className={inputClass(false)} />
+./components/SalesForm.tsx:133:        <Field label="인근 Event명" error={errors.localEventName?.message}>
+./components/SalesForm.tsx:134:          <input type="text" placeholder="예: 지역 마켓" {...register("localEventName")} className={inputClass(false)} />
+./components/SalesForm.tsx:136:        <Field label="School Holiday 여부" error={errors.schoolHoliday?.message}>
+./components/SalesForm.tsx:139:            <span className="text-sm text-gray-700">School Holiday Period입니다</span>
+./components/SalesForm.tsx:144:      {/* 뉴스 요약 */}
+./components/SalesForm.tsx:145:      <Section title="뉴스 요약 (선택)">
+./components/SalesForm.tsx:146:        <Field label="NZ News 요약" error={errors.nzNewsSummary?.message}>
+./components/SalesForm.tsx:149:            placeholder="주요 NZ News..."
+./components/SalesForm.tsx:154:        <Field label="World News 요약" error={errors.worldNewsSummary?.message}>
+./components/SalesForm.tsx:157:            placeholder="주요 World News..."
+./components/SalesForm.tsx:164:      {/* 메모 */}
+./components/SalesForm.tsx:165:      <Section title="메모 (선택)">
+./components/SalesForm.tsx:166:        <Field label="메모" error={errors.notes?.message}>
+./components/SalesForm.tsx:169:            placeholder="Other 메모..."
+./app/admin/products/ProductForm.tsx:11:  name: z.string().min(1, "Products명을 입력해주세요"),
+./app/admin/products/ProductForm.tsx:14:    .min(1, "슬러그를 입력해주세요")
+./app/admin/products/ProductForm.tsx:15:    .regex(/^[a-z0-9-]+$/, "슬러그는 소문자, 숫자, 하이픈만 사용할 수 있습니다"),
+./app/admin/products/ProductForm.tsx:18:  basePrice: z.coerce.number().min(0, "가격은 0 이상이어야 합니다"),
+./app/admin/products/ProductForm.tsx:126:        throw new Error(err.message || "Save에 실패했습니다");
+./app/admin/products/ProductForm.tsx:134:      setErrorMessage(e instanceof Error ? e.message : "Save에 실패했습니다");
+./app/admin/products/ProductForm.tsx:158:              이 Products은 Loyverse에서 Sync된 Data입니다. 원본 필드(Name, 슬러그, 설명,
+./app/admin/products/ProductForm.tsx:159:              base price)는 Edit할 수 없으며 Internal 운영 필드만 Edit Available합니다.
+./app/admin/products/ProductForm.tsx:170:      {/* 기본 정보 */}
+./app/admin/products/ProductForm.tsx:173:          <h2 className="text-base font-semibold text-gray-900">기본 정보</h2>
+./app/admin/products/ProductForm.tsx:181:        <Field label="Products명 *" error={errors.name?.message}>
+./app/admin/products/ProductForm.tsx:184:            placeholder="예: 플레인 베이글"
+./app/admin/products/ProductForm.tsx:190:            <p className="mt-1 text-xs text-blue-500">🔒 Loyverse 원본 필드 — Edit Unavailable</p>
+./app/admin/products/ProductForm.tsx:195:          label="슬러그 *"
+./app/admin/products/ProductForm.tsx:197:          hint={isLoyverseSynced ? undefined : "영소문자, 숫자, 하이픈만 사용 (예: plain-bagel)"}
+./app/admin/products/ProductForm.tsx:207:            <p className="mt-1 text-xs text-blue-500">🔒 Loyverse 원본 필드 — Edit Unavailable</p>
+./app/admin/products/ProductForm.tsx:211:        <Field label="설명" error={errors.description?.message}>
+./app/admin/products/ProductForm.tsx:214:            placeholder="Products 설명을 입력하세요 (선택)"
+./app/admin/products/ProductForm.tsx:220:            <p className="mt-1 text-xs text-blue-500">🔒 Loyverse 원본 필드 — Edit Unavailable</p>
+./app/admin/products/ProductForm.tsx:238:            <p className="mt-1 text-xs text-blue-500">🔒 Loyverse 원본 필드 — Edit Unavailable</p>
+./app/admin/products/ProductForm.tsx:243:      {/* 가격 및 Status */}
+./app/admin/products/ProductForm.tsx:246:          <h2 className="text-base font-semibold text-gray-900">가격 및 Status</h2>
+./app/admin/products/ProductForm.tsx:266:            <p className="mt-1 text-xs text-blue-500">🔒 Loyverse 원본 필드 — Edit Unavailable</p>
+./app/admin/products/ProductForm.tsx:270:        <Field label="정렬 순서" error={errors.sortOrder?.message}>
+./app/admin/products/ProductForm.tsx:279:            <p className="mt-1 text-xs text-green-600">✏️ Internal 운영 필드 — Edit Available</p>
+./app/admin/products/new/page.tsx:20:          <span className="text-gray-700 font-medium">새 Products Add</span>
+./app/admin/products/new/page.tsx:22:        <h1 className="text-2xl font-bold text-gray-900">새 Products Add</h1>
+./app/admin/products/new/page.tsx:23:        <p className="text-gray-500 mt-0.5 text-sm">새로운 Products 정보를 입력하세요</p>
+./app/admin/products/page.tsx:108:            + 새 Products Add
+./app/admin/products/page.tsx:124:          <p className="text-xs text-gray-500">비Active Products</p>
+./app/admin/products/page.tsx:138:            Search 결과 <strong className="text-gray-700">{products.length}</strong>개
+./app/admin/products/page.tsx:139:            <span className="text-gray-400"> (All {total}개)</span>
+./app/admin/products/page.tsx:143:            All <strong className="text-gray-700">{products.length}</strong>개 Products
+./app/admin/products/page.tsx:153:              {hasFilters ? "Search 결과가 없습니다" : "등록된 Products이 없습니다"}
+./app/admin/products/page.tsx:156:              {hasFilters ? "Filter 조items을 변경해보세요." : "새 Products을 Add해보세요."}
+./app/admin/products/page.tsx:166:                  <th className="text-left px-4 py-3 font-medium text-gray-600">출처</th>
+./app/admin/products/page.tsx:168:                  <th className="text-right px-4 py-3 font-medium text-gray-600">가격</th>
+./app/admin/products/page.tsx:171:                  <th className="text-right px-4 py-3 font-medium text-gray-600">정렬순서</th>
+./app/admin/products/page.tsx:172:                  <th className="text-right px-4 py-3 font-medium text-gray-600">마지막Edit일</th>
+./app/admin/products/page.tsx:214:                            {modifierCount}개
+./app/admin/products/page.tsx:230:                            비Active
+./app/admin/products/[id]/OptionGroupManager.tsx:58:      if (!res.ok) throw new Error("불러오기 실패");
+./app/admin/products/[id]/OptionGroupManager.tsx:85:        throw new Error(err.message || "Link에 실패했습니다");
+./app/admin/products/[id]/OptionGroupManager.tsx:97:      setAssignError(e instanceof Error ? e.message : "Link에 실패했습니다");
+./app/admin/products/[id]/OptionGroupManager.tsx:105:      `"${group.name}" 그룹을 이 Products에서 Remove하시겠습니까?\n\n그룹 자체는 Delete되지 않으며, 이 Products에서만 Link이 해제됩니다.`
+./app/admin/products/[id]/OptionGroupManager.tsx:117:        throw new Error(err.message || "Remove에 실패했습니다");
+./app/admin/products/[id]/OptionGroupManager.tsx:121:      alert(e instanceof Error ? e.message : "Remove에 실패했습니다");
+./app/admin/products/[id]/OptionGroupManager.tsx:133:          <h2 className="text-base font-semibold text-gray-900">Modifiers 그룹</h2>
+./app/admin/products/[id]/OptionGroupManager.tsx:151:            + 그룹 Link
+./app/admin/products/[id]/OptionGroupManager.tsx:159:          <p className="text-sm font-medium text-amber-800">Modifiers 그룹 선택</p>
+./app/admin/products/[id]/OptionGroupManager.tsx:165:            placeholder="그룹명으로 Search..."
+./app/admin/products/[id]/OptionGroupManager.tsx:170:              <p className="text-xs text-gray-400 text-center py-3">불러오는 중...</p>
+./app/admin/products/[id]/OptionGroupManager.tsx:173:                {pickerSearch ? "Search 결과가 없습니다" : "Link Available한 그룹이 없습니다"}
+./app/admin/products/[id]/OptionGroupManager.tsx:219:          <p>Link된 Modifiers 그룹이 없습니다.</p>
+./app/admin/products/[id]/OptionGroupManager.tsx:221:            위의 <strong className="text-amber-600">+ 그룹 Link</strong> 버튼으로 기존 그룹을
+./app/admin/products/[id]/OptionGroupManager.tsx:222:            Link하거나,{" "}
+./app/admin/products/[id]/OptionGroupManager.tsx:259:                    선택 {group.minSelect}~{group.maxSelect}개 · {group.options.length} options
+./app/admin/products/[id]/OptionGroupManager.tsx:309:                              비Active
+./app/admin/products/[id]/page.tsx:95:          <p className="text-lg font-medium text-gray-700">Products을 Not found</p>
+./app/admin/products/[id]/page.tsx:96:          <p className="text-sm text-gray-400 mt-1">Delete되었거나 존재하지 않는 Products입니다</p>
+./app/admin/products/[id]/page.tsx:151:          <p className="text-gray-500 mt-0.5 text-sm">Products 정보를 Edit합니다</p>
+./app/admin/products/[id]/page.tsx:165:              <h2 className="font-semibold text-gray-900">Loyverse Modifier 매핑 Status</h2>
+./app/admin/products/[id]/page.tsx:181:              ✓ Mapped {mappedCount}개
+./app/admin/products/[id]/page.tsx:185:                ✗ Unmapped (Active) {unmappedActiveCount}개
+./app/admin/products/[id]/page.tsx:233:                            비Active
+./app/admin/products/[id]/DeleteProductButton.tsx:19:      `"${productName}" Products을 Delete하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.`
+./app/admin/products/[id]/DeleteProductButton.tsx:31:        throw new Error(data.message || "Delete에 실패했습니다");
+./app/admin/products/[id]/DeleteProductButton.tsx:36:      setError(e instanceof Error ? e.message : "Delete에 실패했습니다");
+./app/admin/products/ProductFilters.tsx:9:  { value: "ALL", label: "All 출처" },
+./app/admin/products/ProductFilters.tsx:17:  { value: "INACTIVE", label: "비Active" },
+./app/admin/products/ProductFilters.tsx:21:  { value: "ALL", label: "Subscriptions 여부 All" },
+./app/admin/products/ProductFilters.tsx:96:            placeholder="Products명 Search..."
+./app/admin/products/ProductFilters.tsx:123:          <label className="text-xs font-medium text-gray-600">출처</label>
+./app/admin/categories/CatalogSyncButton.tsx:29:        setError(data.message ?? "Sync 중 오류가 발생했습니다");
+./app/admin/categories/CatalogSyncButton.tsx:34:      setError(err instanceof Error ? err.message : "네트워크 오류가 발생했습니다");
+./app/admin/categories/CatalogSyncButton.tsx:47:        {loading ? "Sync 중…" : "🔄 Loyverse 카탈로그 Sync"}
+./app/admin/categories/CatalogSyncButton.tsx:67:            가져옴 {result.fetched}개 · 신규 {result.created}개 · 업데이트 {result.updated}개
+./app/admin/categories/CatalogSyncButton.tsx:69:              <span className="text-red-600"> · 오류 {result.errors.length}개</span>
+./app/admin/categories/page.tsx:68:            Loyverse 카탈로그 sync 기반으로 Products을 Categories별로 관리합니다
+./app/admin/categories/page.tsx:75:        <p className="font-semibold mb-1">🔗 Loyverse Sync 기반 Categories 운영</p>
+./app/admin/categories/page.tsx:77:          <li>Categories는 Loyverse에서 그대로 가져옵니다 — 로컬에서 Categories를 정의하지 않습니다</li>
+./app/admin/categories/page.tsx:78:          <li>Categories를 직접 Create하거나 수동으로 관리하지 말고, Loyverse Sync를 기본으로 사용하세요</li>
+./app/admin/categories/page.tsx:79:          <li>Products은 Loyverse category id 기준으로 Link됩니다</li>
+./app/admin/categories/page.tsx:94:          <p className="text-xs text-blue-600">Loyverse 연동</p>
+./app/admin/categories/page.tsx:98:          <p className="text-xs text-gray-500">마지막 카탈로그 Sync</p>
+./app/admin/categories/page.tsx:110:          <h2 className="font-semibold text-gray-900">Loyverse 카탈로그 Sync</h2>
+./app/admin/categories/page.tsx:112:            Loyverse에서 Products·Categories·Modifiers를 가져옵니다. Categories는 Sync 시 자동으로 업데이트됩니다.
+./app/admin/categories/page.tsx:120:        <h2 className="font-semibold text-gray-900 text-base">Categories별 Products 현황</h2>
+./app/admin/categories/page.tsx:123:            <p>아직 Sync된 Categories가 없습니다. Loyverse Sync를 실Rows하세요.</p>
+./app/admin/categories/page.tsx:136:                    <span>{cat.products.length}개 Products</span>
+./app/admin/categories/page.tsx:137:                    <span>{activeCount}개 Active</span>
+./app/admin/categories/page.tsx:140:                        🔗 Loyverse {loyverseCount}개
+./app/admin/categories/page.tsx:159:                        {!p.isActive && <span className="text-xs opacity-60">(비Active)</span>}
+./app/admin/categories/page.tsx:174:              <span className="text-xs text-gray-500">{uncategorisedCount}개 Products</span>
+./app/admin/categories/page.tsx:177:              Loyverse Categories에 Link되지 않은 Products입니다. Sync 후 자동으로 Link됩니다.
+./app/admin/integrations/page.tsx:35:        <h1 className="text-2xl font-bold text-gray-900">외부 POS 연동</h1>
+./app/admin/integrations/page.tsx:59:                  비Active
+./app/admin/integrations/page.tsx:71:            <dt className="text-gray-500">연동 Products 수</dt>
+./app/admin/integrations/page.tsx:72:            <dd className="font-medium text-gray-900 text-right">{loyverseMappedCount}개</dd>
+./app/admin/integrations/page.tsx:73:            <dt className="text-gray-500">마지막 Sync</dt>
+./app/admin/integrations/page.tsx:85:            Loyverse Settings 및 Sync →
+./app/admin/integrations/page.tsx:91:          <p className="text-sm font-medium text-gray-400">추후 Add 예정</p>
+./app/admin/integrations/page.tsx:92:          <p className="text-xs text-gray-400">Square, Toast 등 다른 POS 연동</p>
+./app/admin/integrations/loyverse/LoyverseSyncButton.tsx:24:          data.errors?.[0] ?? (data as { message?: string }).message ?? "Sync 중 오류가 발생했습니다"
+./app/admin/integrations/loyverse/LoyverseSyncButton.tsx:31:      setError(err instanceof Error ? err.message : "네트워크 오류가 발생했습니다");
+./app/admin/integrations/loyverse/LoyverseSyncButton.tsx:44:        {loading ? "Sync 중…" : "🔄 Loyverse All Sync"}
+./app/admin/integrations/loyverse/LoyverseSyncButton.tsx:49:          <p className="text-sm text-red-700 font-medium">Sync 실패</p>
+./app/admin/integrations/loyverse/LoyverseSyncButton.tsx:57:            {result.status === "success" ? "✓ Sync complete" : "⚠ 부분 Sync Complete"}
+./app/admin/integrations/loyverse/LoyverseSyncButton.tsx:75:              <dt className="text-xs text-violet-600">Modifiers 옵션</dt>
+./app/admin/integrations/loyverse/LoyverseSyncButton.tsx:91:              <dt className="text-xs text-teal-600">Inventory 수준</dt>
+./app/admin/integrations/loyverse/LoyverseSyncButton.tsx:96:                <dt className="text-xs text-red-600">오류</dt>
+./app/admin/integrations/loyverse/LoyverseSyncButton.tsx:104:            <p className="text-xs font-semibold text-amber-800">Products-Modifiers Link 진단</p>
+./app/admin/integrations/loyverse/LoyverseSyncButton.tsx:106:            {/* Stage A: HTTP 원문 응답 */}
+./app/admin/integrations/loyverse/LoyverseSyncButton.tsx:108:              <p className="text-xs font-medium text-amber-700">[A] HTTP 원문 응답</p>
+./app/admin/integrations/loyverse/LoyverseSyncButton.tsx:112:                  {result.loyverseMock ? "예 (실제 HTTP None)" : "No"}
+./app/admin/integrations/loyverse/LoyverseSyncButton.tsx:131:                  <span className="font-medium">Fallback 사용:</span> No
+./app/admin/integrations/loyverse/LoyverseSyncButton.tsx:134:                  <span className="font-medium">Cache 사용:</span> No
+./app/admin/integrations/loyverse/LoyverseSyncButton.tsx:139:            {/* Stage B: JSON.parse 직후 */}
+./app/admin/integrations/loyverse/LoyverseSyncButton.tsx:141:              <p className="text-xs font-medium text-amber-700">[B] JSON.parse 직후 (deleted_at Filter 전)</p>
+./app/admin/integrations/loyverse/LoyverseSyncButton.tsx:154:            {/* Stage C: Parsed DTO (Active Products만) */}
+./app/admin/integrations/loyverse/LoyverseSyncButton.tsx:156:              <p className="text-xs font-medium text-amber-700">[C] Parsed DTO (Active Products만)</p>
+./app/admin/integrations/loyverse/LoyverseSyncButton.tsx:159:                  <span className="font-medium">modifier_ids 필드 None:</span>{" "}
+./app/admin/integrations/loyverse/LoyverseSyncButton.tsx:169:            {/* Stage D: 링크 Create 결과 */}
+./app/admin/integrations/loyverse/LoyverseSyncButton.tsx:171:              <p className="text-xs font-medium text-amber-700">[D] 링크 Create 결과</p>
+./app/admin/integrations/loyverse/LoyverseSyncButton.tsx:174:                  <span className="font-medium">modifier 매칭 Failed:</span>{" "}
+./app/admin/integrations/loyverse/LoyverseSyncButton.tsx:182:                  <span className="font-medium">링크 Create Failed:</span>{" "}
+./app/admin/integrations/loyverse/LoyverseSyncButton.tsx:191:              <p className="text-xs font-medium text-red-700">오류 Details (최대 5items)</p>
+./app/admin/integrations/loyverse/page.tsx:55:        <h1 className="text-2xl font-bold text-gray-900">Loyverse POS 연동</h1>
+./app/admin/integrations/loyverse/page.tsx:57:          Loyverse 카탈로그(Categories·Modifiers·Products)를 한 번에 Sync합니다
+./app/admin/integrations/loyverse/page.tsx:63:        <h2 className="font-semibold text-gray-900">연동 Settings Status</h2>
+./app/admin/integrations/loyverse/page.tsx:68:              {process.env.POS_PROVIDER ?? "(미Settings)"}
+./app/admin/integrations/loyverse/page.tsx:72:            <dt className="text-gray-500">API 토큰</dt>
+./app/admin/integrations/loyverse/page.tsx:86:            <dt className="text-gray-500">동작 모드</dt>
+./app/admin/integrations/loyverse/page.tsx:90:                  Mock mode (개발/테스트)
+./app/admin/integrations/loyverse/page.tsx:100:            <dt className="text-gray-500">Active 여부</dt>
+./app/admin/integrations/loyverse/page.tsx:108:                  비Active
+./app/admin/integrations/loyverse/page.tsx:118:            <dt className="text-gray-500">연동된 Products 수</dt>
+./app/admin/integrations/loyverse/page.tsx:119:            <dd className="font-medium text-gray-900">{mappedCount}개</dd>
+./app/admin/integrations/loyverse/page.tsx:122:            <dt className="text-gray-500">Sync된 Categories 수</dt>
+./app/admin/integrations/loyverse/page.tsx:123:            <dd className="font-medium text-gray-900">{categoryCount}개</dd>
+./app/admin/integrations/loyverse/page.tsx:129:            <strong>⚠ API 토큰이 없습니다.</strong> Mock mode로 동작합니다.
+./app/admin/integrations/loyverse/page.tsx:131:            실제 연동을 위해 <code className="font-mono text-xs">LOYVERSE_API_TOKEN</code> 환경변수를 Settings하세요.
+./app/admin/integrations/loyverse/page.tsx:142:            {mockMode && " (현재 Mock Data 사용)"}
+./app/admin/integrations/loyverse/page.tsx:147:          <p className="font-medium text-gray-700">Sync 순서</p>
+./app/admin/integrations/loyverse/page.tsx:149:            <li>Loyverse Categories View → 로컬 DB upsert</li>
+./app/admin/integrations/loyverse/page.tsx:150:            <li>Loyverse Modifiers 그룹/옵션 View → 로컬 DB upsert</li>
+./app/admin/integrations/loyverse/page.tsx:151:            <li>Loyverse Products View → 로컬 DB upsert + Categories Link + Modifiers Link</li>
+./app/admin/integrations/loyverse/page.tsx:152:            <li>Loyverse에서 Remove된 Products-Modifiers Link 정리</li>
+./app/admin/integrations/loyverse/page.tsx:169:                ? "✓ 마지막 All Sync 성공"
+./app/admin/integrations/loyverse/page.tsx:171:                ? "⚠ 마지막 All Sync 부분 완료"
+./app/admin/integrations/loyverse/page.tsx:172:                : "✗ 마지막 All Sync 실패"}
+./app/admin/integrations/loyverse/page.tsx:177:                <span>Categories {lastFullSync.categoriesUpserted}개</span>
+./app/admin/integrations/loyverse/page.tsx:178:                <span>신규Products {lastFullSync.productsCreated}개</span>
+./app/admin/integrations/loyverse/page.tsx:179:                <span>업데이트Products {lastFullSync.productsUpdated}개</span>
+./app/admin/integrations/loyverse/page.tsx:180:                <span>Modifiers그룹 {lastFullSync.modifierGroupsUpserted}개</span>
+./app/admin/integrations/loyverse/page.tsx:181:                <span>Modifiers옵션 {lastFullSync.modifierOptionsUpserted}개</span>
+./app/admin/integrations/loyverse/page.tsx:182:                <span>Products-Modifiers링크 {lastFullSync.modifierLinksUpdated}개</span>
+./app/admin/integrations/loyverse/page.tsx:194:      {/* Modifier 매핑 안내 및 링크 Remove됨 */}
+./app/admin/integrations/loyverse/page.tsx:198:        <h2 className="font-semibold text-gray-900">환경변수 Settings 가이드</h2>
+./app/admin/integrations/loyverse/page.tsx:200:          <code className="font-mono text-xs bg-gray-100 px-1 py-0.5 rounded">.env</code> 파일 또는 배포 환경에 아래 변수를 Settings하세요.
+./app/admin/integrations/loyverse/page.tsx:203:{`# Loyverse POS 연동
+./app/admin/integrations/loyverse/page.tsx:208:# 개발 환경에서 실제 API 없이 Mock Data 사용:
+./app/admin/integrations/loyverse/modifiers/ModifierMappingManager.tsx:114:        errorMessage: err instanceof Error ? err.message : "알 수 없는 오류",
+./app/admin/integrations/loyverse/modifiers/ModifierMappingManager.tsx:144:        errorMessage: err instanceof Error ? err.message : "알 수 없는 오류",
+./app/admin/integrations/loyverse/modifiers/ModifierMappingManager.tsx:272:          placeholder="옵션 Name Search..."
+./app/admin/integrations/loyverse/modifiers/ModifierMappingManager.tsx:299:              {mode === "all" ? "All" : mode === "unmapped" ? "Unmapped" : "Inventory 추적"}
+./app/admin/integrations/loyverse/modifiers/ModifierMappingManager.tsx:322:                <th className="px-5 py-2 text-xs font-medium text-gray-500">옵션</th>
+./app/admin/integrations/loyverse/modifiers/ModifierMappingManager.tsx:324:                <th className="px-5 py-2 text-xs font-medium text-gray-500">마지막 Sync</th>
+./app/admin/integrations/loyverse/modifiers/ModifierMappingManager.tsx:325:                <th className="px-5 py-2 text-xs font-medium text-gray-500">작업</th>
+./app/admin/integrations/loyverse/modifiers/ModifierMappingManager.tsx:440:                            {isDeleting ? "..." : "해제"}
+./app/admin/integrations/loyverse/modifiers/ModifierMappingManager.tsx:487:    if (meta.status === "never") return "아직 modifier Sync가 실Rows된 적 없습니다.";
+./app/admin/integrations/loyverse/modifiers/ModifierMappingManager.tsx:488:    if (meta.status === "empty") return "Loyverse modifier API 응답이 비어 있습니다. (modifier 0개)";
+./app/admin/integrations/loyverse/modifiers/ModifierMappingManager.tsx:492:    if (code === 401 || code === 403) return `Loyverse 인증 실패 (HTTP ${code}) — LOYVERSE_API_TOKEN을 Confirm하세요.`;
+./app/admin/integrations/loyverse/modifiers/ModifierMappingManager.tsx:493:    if (code === 404) return `Modifier 엔드포인트를 Not found (HTTP 404).`;
+./app/admin/integrations/loyverse/modifiers/ModifierMappingManager.tsx:494:    if (code === 429) return "Loyverse API 요청 한도 초과 (HTTP 429) — 잠시 후 다시 시도하세요.";
+./app/admin/integrations/loyverse/modifiers/ModifierMappingManager.tsx:495:    if (code && code >= 500) return `Loyverse Server error (HTTP ${code}) — 잠시 후 다시 시도하세요.`;
+./app/admin/integrations/loyverse/modifiers/ModifierMappingManager.tsx:497:      return `Modifier 응답 파싱에 실패했습니다: ${meta.errorMessage}`;
+./app/admin/integrations/loyverse/modifiers/ModifierMappingManager.tsx:499:      return `네트워크 오류로 Loyverse에 Link할 수 없습니다: ${meta.errorMessage}`;
+./app/admin/integrations/loyverse/modifiers/ModifierMappingManager.tsx:500:    return meta.errorMessage ?? "알 수 없는 오류가 발생했습니다.";
+./app/admin/integrations/loyverse/modifiers/ModifierMappingManager.tsx:523:            <span className="text-sm font-semibold text-red-700">✗ Modifier Sync 실패</span>
+./app/admin/integrations/loyverse/modifiers/ModifierMappingManager.tsx:525:            <span className="text-sm font-semibold text-amber-800">⚠ Modifier 미Sync</span>
+./app/admin/integrations/loyverse/modifiers/ModifierMappingManager.tsx:538:          {loading ? "Sync 중..." : "Loyverse 새로고침"}
+./app/admin/integrations/loyverse/modifiers/ModifierMappingManager.tsx:546:            그룹 <strong>{syncMeta.groupCount}개</strong>
+./app/admin/integrations/loyverse/modifiers/ModifierMappingManager.tsx:549:            옵션 <strong>{syncMeta.optionCount}개</strong>
+./app/admin/integrations/loyverse/modifiers/ModifierMappingManager.tsx:570:              ? "▲ 수동 입력 숨기기"
+./app/admin/integrations/loyverse/modifiers/ModifierMappingManager.tsx:571:              : "▼ 수동 modifier ID 입력 (비상 fallback)"}
+./app/admin/integrations/loyverse/modifiers/ModifierMappingManager.tsx:575:              아래 테이블의 &ldquo;Loyverse Modifier&rdquo; 열에서 modifier option ID를 직접 입력할 수
+./app/admin/integrations/loyverse/modifiers/page.tsx:1:// Loyverse Modifier 매핑 페이지 Remove됨
+./app/admin/sync/orders/RetryButton.tsx:26:        setMessage("재전송 성공");
+./app/admin/sync/orders/RetryButton.tsx:29:        setMessage(data.result?.error ?? data.error ?? "재전송 실패");
+./app/admin/sync/orders/RetryButton.tsx:33:      setMessage(err instanceof Error ? err.message : "네트워크 오류");
+./app/admin/sync/orders/RetryButton.tsx:50:        title={`Orders ${orderNumber} 재전송`}
+./app/admin/sync/orders/RetryButton.tsx:52:        {state === "loading" ? "전송 중…" : state === "success" ? "✓ 성공" : "재시도"}
+./app/admin/sync/orders/page.tsx:90:              Today({todayStr}) Pickup 예정 Orders의 Loyverse 자동 전송 Status
+./app/admin/sync/orders/page.tsx:111:        <span>🕐 마지막 전송: <strong>
+./app/admin/sync/orders/page.tsx:120:        <StatCard label="웹 Orders (INTERNAL)" value={internalCount} color="blue" />
+./app/admin/sync/orders/page.tsx:122:        <StatCard label="전송 성공" value={successOrders.length} color="green" />
+./app/admin/sync/orders/page.tsx:123:        <StatCard label="전송 실패" value={failedOrders.length} color="red" />
+./app/admin/sync/orders/page.tsx:125:        <StatCard label="미전송" value={notSentOrders.length} color="gray" />
+./app/admin/sync/orders/page.tsx:132:            ❌ 전송 실패 Orders ({failedOrders.length}items)
+./app/admin/sync/orders/page.tsx:138:                  <th className="pb-2 pr-4">Orders번호</th>
+./app/admin/sync/orders/page.tsx:141:                  {isAdmin && <th className="pb-2">재시도</th>}
+./app/admin/sync/orders/page.tsx:194:            {isAdmin && " 아래에서 수동 전송하거나 상단 버튼으로 All 재실Rows하세요."}
+./app/admin/sync/orders/page.tsx:200:                  <th className="pb-2 pr-4">Orders번호</th>
+./app/admin/sync/orders/page.tsx:202:                  <th className="pb-2 pr-4">Pickup 시간대</th>
+./app/admin/sync/orders/page.tsx:203:                  {isAdmin && <th className="pb-2">전송</th>}
+./app/admin/sync/orders/page.tsx:252:            ✅ 전송 성공 Orders ({successOrders.length}items)
+./app/admin/sync/orders/page.tsx:258:                  <th className="pb-2 pr-4">Orders번호</th>
+./app/admin/sync/orders/page.tsx:305:        <h2 className="font-semibold text-gray-900">자동 전송 정책</h2>
+./app/admin/sync/orders/page.tsx:307:          <li>Today Pickup 예정인 INTERNAL + SUBSCRIPTION Orders만 자동 전송</li>
+./app/admin/sync/orders/page.tsx:308:          <li>미래 Date Orders은 미리 POS에 전송하지 않음</li>
+./app/admin/sync/orders/page.tsx:309:          <li>성공 전송된 Orders은 기본적으로 재전송하지 않음 (중복 방지)</li>
+./app/admin/sync/orders/page.tsx:310:          <li>Cancel(CANCELLED) Orders은 전송 대상에서 제외</li>
+./app/admin/sync/orders/page.tsx:311:          <li>Products Loyverse 매핑 누락 시 전송 실패로 기록</li>
+./app/admin/sync/orders/page.tsx:312:          <li>Internal Orders은 전송 실패와 무관하게 정상 유지됨</li>
+./app/admin/sync/orders/page.tsx:315:            (APP_TIMEZONE 환경변수로 변경)
+./app/admin/sync/orders/RunSyncButton.tsx:34:        setErrorMsg(data.error ?? "알 수 없는 오류");
+./app/admin/sync/orders/RunSyncButton.tsx:38:      setErrorMsg(err instanceof Error ? err.message : "네트워크 오류");
+./app/admin/sync/orders/RunSyncButton.tsx:54:        {state === "loading" ? "실Rows 중…" : "지금 자동 전송 실Rows"}
+./app/admin/sync/orders/RunSyncButton.tsx:58:          ✓ Done — 성공 {result.pushSucceeded ?? 0}items / 실패 {result.pushFailed ?? 0}items / 이미 전송됨{" "}
+./app/admin/sync/orders/RunSyncButton.tsx:63:        <p className="text-sm text-green-600">✓ 실Rows 완료</p>
+./app/admin/sync/orders/RunSyncButton.tsx:66:        <p className="text-sm text-red-500">오류: {errorMsg}</p>
+./app/admin/orders/[orderNumber]/page.tsx:10:  DRAFT: "임시", PENDING: "접수됨", CONFIRMED: "Confirm됨",
+./app/admin/orders/[orderNumber]/page.tsx:11:  PREPARING: "준비중", READY: "준비완료", COMPLETED: "완료", CANCELLED: "Cancel됨",
+./app/admin/orders/[orderNumber]/page.tsx:70:        <h2 className="font-semibold text-gray-800">Orders 정보</h2>
+./app/admin/orders/[orderNumber]/page.tsx:73:            <p className="text-gray-500">고객명</p>
+./app/admin/orders/[orderNumber]/page.tsx:81:            <p className="text-gray-500">전화</p>
+./app/admin/orders/[orderNumber]/page.tsx:85:            <p className="text-gray-500">출처</p>
+./app/admin/orders/[orderNumber]/page.tsx:93:            <p className="text-gray-500">Pickup 시간</p>
+./app/admin/orders/[orderNumber]/page.tsx:97:            <p className="text-gray-500">결제 Status</p>
+./app/admin/orders/[orderNumber]/page.tsx:101:            <p className="text-gray-500">Orders일</p>
+./app/admin/orders/[orderNumber]/page.tsx:107:            <p className="text-gray-500">메모</p>
+./app/admin/orders/[orderNumber]/page.tsx:122:            <p className="text-xs text-gray-500">단가: ${item.unitPriceSnapshot.toFixed(2)}</p>
+./app/admin/orders/[orderNumber]/page.tsx:132:          <span>합계</span>
+./app/admin/orders/[orderNumber]/page.tsx:139:        <p className="font-medium text-gray-700 mb-1">🔌 외부 POS 전송 (추후)</p>
+./app/admin/orders/[orderNumber]/page.tsx:141:          <p>외부 ID: {order.externalMapping.externalOrderId} | Status: {order.externalMapping.syncStatus}</p>
+./app/admin/orders/[orderNumber]/page.tsx:143:          <p>아직 외부 POS로 전송되지 않았습니다. 향후 Loyverse 연동 시 여기서 Confirm Available합니다.</p>
+./app/admin/orders/[orderNumber]/OrderStatusChanger.tsx:9:  { value: "PENDING", label: "접수됨" },
+./app/admin/orders/[orderNumber]/OrderStatusChanger.tsx:10:  { value: "CONFIRMED", label: "Confirm됨" },
+./app/admin/orders/[orderNumber]/OrderStatusChanger.tsx:11:  { value: "PREPARING", label: "준비중" },
+./app/admin/orders/[orderNumber]/OrderStatusChanger.tsx:12:  { value: "READY", label: "준비완료" },
+./app/admin/orders/[orderNumber]/OrderStatusChanger.tsx:13:  { value: "COMPLETED", label: "완료" },
+./app/admin/orders/[orderNumber]/OrderStatusChanger.tsx:14:  { value: "CANCELLED", label: "Cancel됨" },
+./app/admin/orders/[orderNumber]/OrderStatusChanger.tsx:34:        setMessage({ type: "success", text: "Status가 변경되었습니다" });
+./app/admin/orders/[orderNumber]/OrderStatusChanger.tsx:37:        setMessage({ type: "error", text: result.message ?? "오류가 발생했습니다" });
+./app/admin/orders/[orderNumber]/OrderStatusChanger.tsx:45:        <label className="text-sm font-medium text-gray-700">Status 변경</label>
+./app/admin/orders/[orderNumber]/OrderStatusChanger.tsx:61:          {isPending ? "Processing..." : "변경"}
+./app/admin/orders/page.tsx:8:  DRAFT: "임시", PENDING: "접수됨", CONFIRMED: "Confirm됨",
+./app/admin/orders/page.tsx:9:  PREPARING: "준비중", READY: "준비완료", COMPLETED: "완료", CANCELLED: "Cancel됨",
+./app/admin/orders/page.tsx:73:          <p className="text-gray-500 text-sm mt-0.5">All Orders View 및 Status 관리 (STAFF 이상)</p>
+./app/admin/orders/page.tsx:83:          placeholder="Orders번호 / 고객명 / Email"
+./app/admin/orders/page.tsx:113:          <div className="p-10 text-center text-gray-500">조items에 맞는 Orders이 없습니다</div>
+./app/admin/orders/page.tsx:119:                  <th className="px-4 py-3 text-left">Orders번호</th>
+./app/admin/orders/page.tsx:120:                  <th className="px-4 py-3 text-left">고객</th>
+./app/admin/orders/page.tsx:122:                  <th className="px-4 py-3 text-left">Pickup일</th>
+./app/admin/orders/page.tsx:123:                  <th className="px-4 py-3 text-right">금액</th>
+./app/admin/orders/page.tsx:124:                  <th className="px-4 py-3 text-left">출처</th>
+./app/admin/orders/page.tsx:125:                  <th className="px-4 py-3 text-left">Orders일</th>
+./app/admin/page.tsx:30:          <p className="text-sm text-gray-500">Sales Records 수</p>
+./app/admin/page.tsx:38:          <p className="text-sm text-gray-500">Inventory 입력 수</p>
+./app/admin/page.tsx:49:        <h2 className="font-semibold text-gray-900">Admin 전용 Menu</h2>
+./app/admin/page.tsx:53:              → Order Management (Pickup Orders View·Status 변경)
+./app/admin/page.tsx:58:              → Integrations (Loyverse POS 카탈로그 Sync)
+./app/admin/page.tsx:63:              → Users (권한·Active Status 변경)
+./app/admin/page.tsx:68:              → Product Management (Products·옵션 등록 및 Edit)
+./app/admin/page.tsx:73:              → 일별 Inventory Management (생산량·Sold량 입력)
+./app/admin/page.tsx:78:              → All Sales Analytics (ADMIN 전용)
+./app/admin/page.tsx:93:              → 앱 Settings
+./app/admin/users/UserFilters.tsx:7:  { value: "ALL", label: "All 권한" },
+./app/admin/users/UserFilters.tsx:16:  { value: "INACTIVE", label: "비Active" },
+./app/admin/users/UserFilters.tsx:20:  { value: "createdAt_desc", label: "최신 가입순" },
+./app/admin/users/UserFilters.tsx:21:  { value: "createdAt_asc", label: "오래된 가입순" },
+./app/admin/users/UserFilters.tsx:22:  { value: "email_asc", label: "Email 오름차순" },
+./app/admin/users/UserFilters.tsx:23:  { value: "email_desc", label: "Email 내림차순" },
+./app/admin/users/UserFilters.tsx:24:  { value: "name_asc", label: "Name 오름차순" },
+./app/admin/users/UserFilters.tsx:72:            placeholder="Name 또는 Email..."
+./app/admin/users/UserFilters.tsx:79:          <label className="text-xs font-medium text-gray-600">권한</label>
+./app/admin/users/UserFilters.tsx:113:          <label className="text-xs font-medium text-gray-600">정렬</label>
+./app/admin/users/UserTable.tsx:53:        setMessage({ type: "error", text: data.message ?? "처리에 실패했습니다" });
+./app/admin/users/UserTable.tsx:55:        setMessage({ type: "success", text: "변경사항이 Save되었습니다" });
+./app/admin/users/UserTable.tsx:61:      setMessage({ type: "error", text: "서버 Link에 실패했습니다" });
+./app/admin/users/UserTable.tsx:95:          <p className="text-gray-400 text-sm">Search 결과가 없습니다.</p>
+./app/admin/users/UserTable.tsx:96:          <p className="text-gray-400 text-xs mt-1">Search어 또는 Filter를 변경해 보세요.</p>
+./app/admin/users/UserTable.tsx:107:                  <th className="text-left px-4 py-3 font-medium text-gray-600">권한</th>
+./app/admin/users/UserTable.tsx:109:                  <th className="text-left px-4 py-3 font-medium text-gray-600">가입일</th>
+./app/admin/users/UserTable.tsx:110:                  <th className="text-right px-4 py-3 font-medium text-gray-600">액션</th>
+./app/admin/users/UserTable.tsx:147:                          {user.isActive ? "Active" : "비Active"}
+./app/admin/users/UserTable.tsx:164:                          {isActing ? "Processing..." : user.isActive ? "비Activate" : "Activate"}
+./app/admin/users/UserTable.tsx:196:                      {user.isActive ? "Active" : "비Active"}
+./app/admin/users/UserTable.tsx:220:                      {isActing ? "Processing..." : user.isActive ? "비Activate" : "Activate"}
+./app/admin/users/page.tsx:111:          <p className="text-gray-500 mt-0.5 text-sm">All Users List 및 권한/Active Status를 관리합니다</p>
+./app/admin/users/page.tsx:134:          <p className="text-xs text-orange-500">비Active</p>
+./app/admin/users/page.tsx:149:              Search 결과 <strong className="text-gray-700">{users.length}</strong>명
+./app/admin/users/page.tsx:150:              <span className="text-gray-400"> (All {summary.total}명)</span>
+./app/admin/users/page.tsx:154:              All <strong className="text-gray-700">{users.length}</strong>명
+./app/admin/subscriptions/page.tsx:7:const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
+./app/admin/subscriptions/page.tsx:12:  CANCELLED: "Cancel됨",
+./app/admin/subscriptions/page.tsx:55:          <p className="text-gray-500 text-sm mt-0.5">All Subscriptions View (STAFF 이상)</p>
+./app/admin/subscriptions/page.tsx:82:          <div className="p-10 text-center text-gray-500">조items에 맞는 Subscriptions이 없습니다</div>
+./app/admin/subscriptions/page.tsx:88:                  <th className="px-4 py-3 text-left">고객</th>
+./app/admin/subscriptions/page.tsx:90:                  <th className="px-4 py-3 text-left">요일</th>
+./app/admin/subscriptions/page.tsx:92:                  <th className="px-4 py-3 text-left">시작일</th>
+./app/admin/subscriptions/page.tsx:109:                      Every {WEEKDAYS[sub.pickupWeekday]}요일
+./app/admin/subscriptions/[id]/AdminSubscriptionStatusForm.tsx:28:      <span className="text-xs text-gray-500 self-center">Status 변경:</span>
+./app/admin/subscriptions/[id]/AdminSubscriptionStatusForm.tsx:49:          if (!confirm("Subscriptions을 Cancel하시겠습니까?")) return;
+./app/admin/subscriptions/[id]/AdminSubscriptionStatusForm.tsx:55:        {isPending ? "처리중..." : "Cancel"}
+./app/admin/subscriptions/[id]/page.tsx:9:const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
+./app/admin/subscriptions/[id]/page.tsx:14:  CANCELLED: "Cancel됨",
+./app/admin/subscriptions/[id]/page.tsx:24:  SCHEDULED: "예약됨",
+./app/admin/subscriptions/[id]/page.tsx:26:  SKIPPED: "items너뜀",
+./app/admin/subscriptions/[id]/page.tsx:27:  CANCELLED: "Cancel됨",
+./app/admin/subscriptions/[id]/page.tsx:69:          <span className="font-semibold text-gray-900">Every {WEEKDAYS[sub.pickupWeekday]}요일</span>
+./app/admin/subscriptions/[id]/page.tsx:75:            <p className="text-gray-500 text-xs">고객</p>
+./app/admin/subscriptions/[id]/page.tsx:80:            <p className="text-gray-500 text-xs">시작일</p>
+./app/admin/subscriptions/[id]/page.tsx:85:              <p className="text-gray-500 text-xs">종료일</p>
+./app/admin/subscriptions/[id]/page.tsx:93:            <p className="text-gray-500 text-xs">메모</p>
+./app/admin/subscriptions/[id]/page.tsx:119:            <h2 className="font-semibold text-gray-800 text-sm">발생 내역</h2>
+./app/admin/inventory/InventoryManager.tsx:85:        setFetchError(data.message ?? "Inventory 정보를 불러오는데 실패했습니다");
+./app/admin/inventory/InventoryManager.tsx:117:      setFetchError("서버 Link에 실패했습니다");
+./app/admin/inventory/InventoryManager.tsx:176:          [row.productId]: data.message ?? "Save에 실패했습니다",
+./app/admin/inventory/InventoryManager.tsx:193:        [row.productId]: "서버 Link에 실패했습니다",
+./app/admin/inventory/InventoryManager.tsx:263:                <th className="px-4 py-3 text-left font-semibold text-gray-700">Products명</th>
+./app/admin/inventory/page.tsx:17:          <span className="text-gray-700 font-medium">일별 Inventory Management</span>
+./app/admin/inventory/page.tsx:19:        <h1 className="text-2xl font-bold text-gray-900">일별 Inventory Management</h1>
+./app/admin/subscription-occurrences/OccurrencesAdminActions.tsx:79:        {isPending ? "처리중..." : "발생 Create"}
+./app/admin/subscription-occurrences/OccurrencesAdminActions.tsx:95:        {isPending ? "처리중..." : "Orders Create"}
+./app/admin/subscription-occurrences/page.tsx:9:  SCHEDULED: "예약됨",
+./app/admin/subscription-occurrences/page.tsx:11:  SKIPPED: "items너뜀",
+./app/admin/subscription-occurrences/page.tsx:12:  CANCELLED: "Cancel됨",
+./app/admin/subscription-occurrences/page.tsx:69:          <span className="text-gray-700 font-medium">Subscriptions 발생 관리</span>
+./app/admin/subscription-occurrences/page.tsx:71:        <h1 className="text-2xl font-bold text-gray-900">Subscriptions 발생 관리</h1>
+./app/admin/subscription-occurrences/page.tsx:72:        <p className="text-gray-500 text-sm mt-0.5">Date별 Subscriptions 발생 View 및 Orders Create (STAFF 이상)</p>
+./app/admin/subscription-occurrences/page.tsx:95:          <div className="p-10 text-center text-gray-500">해당 Date에 Subscriptions 발생이 없습니다</div>
+./app/admin/subscription-occurrences/page.tsx:101:                  <th className="px-4 py-3 text-left">고객</th>
+./app/admin/subscription-occurrences/page.tsx:104:                  <th className="px-4 py-3 text-left">Orders번호</th>
+./app/admin/subscription-occurrences/page.tsx:105:                  <th className="px-4 py-3 text-left">작업</th>
+./app/admin/modifiers/ModifierFilters.tsx:7:  { value: "ALL", label: "All 출처" },
+./app/admin/modifiers/ModifierFilters.tsx:21:  { value: "INACTIVE", label: "비Active" },
+./app/admin/modifiers/ModifierFilters.tsx:66:          <label className="text-xs font-medium text-gray-600">그룹</label>
+./app/admin/modifiers/ModifierFilters.tsx:68:            <option value="">All 그룹</option>
+./app/admin/modifiers/ModifierFilters.tsx:73:          <label className="text-xs font-medium text-gray-600">출처</label>
+./app/admin/modifiers/ModifierGroupList.tsx:90:            비Active
+./app/admin/modifiers/ModifierGroupList.tsx:100:            {opt.todayInventory.isSoldOut ? "Out of Stock" : `예약 ${opt.todayInventory.reservedQty}`}
+./app/admin/modifiers/ModifierGroupList.tsx:140:              aria-label={expanded ? "접기" : "펼치기"}
+./app/admin/modifiers/ModifierGroupList.tsx:177:            <span className="text-xs text-gray-400">옵션</span>
+./app/admin/modifiers/ModifierGroupList.tsx:183:              {tracksCount}개 Inventory Tracking
+./app/admin/modifiers/ModifierGroupList.tsx:211:        <p className="text-lg font-medium">등록된 Modifier 그룹이 없습니다</p>
+./app/admin/modifiers/ModifierGroupList.tsx:213:          Loyverse 카탈로그 Sync를 실Rows하면 Modifier 그룹이 자동으로 Create됩니다.
+./app/admin/modifiers/ModifierGroupList.tsx:225:              <th className="text-left px-4 py-3 font-medium text-gray-600">그룹 Name</th>
+./app/admin/modifiers/ModifierGroupList.tsx:226:              <th className="text-left px-4 py-3 font-medium text-gray-600">출처</th>
+./app/admin/modifiers/ModifierGroupList.tsx:228:              <th className="text-center px-4 py-3 font-medium text-gray-600">옵션</th>
+./app/admin/modifiers/ModifierGroupList.tsx:231:              <th className="text-right px-4 py-3 font-medium text-gray-600">Edit일</th>
+./app/admin/modifiers/ModifierSyncButton.tsx:24:          data.errors?.[0] ?? (data as { message?: string }).message ?? "Loyverse All Sync 중 오류가 발생했습니다"
+./app/admin/modifiers/ModifierSyncButton.tsx:31:      setError(err instanceof Error ? err.message : "네트워크 오류가 발생했습니다");
+./app/admin/modifiers/ModifierSyncButton.tsx:44:        {loading ? "Sync 중…" : "🔄 Loyverse All Sync"}
+./app/admin/modifiers/ModifierSyncButton.tsx:56:            {result.status === "success" ? "✓ All Sync Complete" : "⚠ 부분 Sync Complete"}
+./app/admin/modifiers/ModifierSyncButton.tsx:62:            Modifiers 그룹 {result.modifierGroupsUpserted}개 · 옵션 {result.modifierOptionsUpserted}개
+./app/admin/modifiers/ModifierSyncButton.tsx:69:              Remove된 stale 링크: {result.staleLinksRemoved}items
+./app/admin/modifiers/ModifierSyncButton.tsx:74:              ⚠ 오류: {result.errorCount}items
+./app/admin/modifiers/page.tsx:223:              ? "✓ Loyverse 마지막 All Sync 성공"
+./app/admin/modifiers/page.tsx:225:              ? "⚠ Loyverse 마지막 All Sync 부분 완료"
+./app/admin/modifiers/page.tsx:226:              : "✗ Loyverse 마지막 All Sync 실패"}
+./app/admin/modifiers/page.tsx:231:              <> · 그룹 {lastFullSync.modifierGroupsUpserted}개 · 옵션 {lastFullSync.modifierOptionsUpserted}개 · 링크 {lastFullSync.modifierLinksUpdated}items</>
+./app/admin/modifiers/page.tsx:240:          <p className="font-semibold">⚠ Sync 이력 None</p>
+./app/admin/modifiers/page.tsx:241:          <p className="text-xs mt-0.5">아직 Loyverse All Sync가 실Rows된 적 없습니다. 아래 버튼으로 Sync하세요.</p>
+./app/admin/modifiers/page.tsx:247:        <p className="font-semibold">💡 Modifier는 공용 Inventory 단위입니다</p>
+./app/admin/modifiers/page.tsx:249:          <code className="bg-purple-100 rounded px-1">tracksInventory=true</code>인 Modifier Option은 여러 Products에서 공유되어도 Inventory는 옵션 1개 기준으로만 관리됩니다.
+./app/admin/modifiers/page.tsx:250:          예: &quot;Plain Bagel&quot; 옵션이 베이글 Products·샌드위치 Products에 모두 사용되어도 DailyOptionInventory는 하나만 존재합니다.
+./app/admin/modifiers/page.tsx:269:          <p className="text-xs text-gray-500">All 그룹</p>
+./app/admin/modifiers/page.tsx:277:          <p className="text-xs text-purple-600">Inventory Tracking 옵션</p>
+./app/admin/modifiers/page.tsx:281:          <p className="text-xs text-green-600">All 옵션</p>
+./app/admin/modifiers/page.tsx:295:            Search 결과 <strong className="text-gray-700">{groups.length}</strong>개 그룹
+./app/admin/modifiers/page.tsx:297:            {" "}<span className="text-gray-400">(All {totalGroups}개 그룹)</span>
+./app/admin/modifiers/page.tsx:301:            All <strong className="text-gray-700">{groups.length}</strong>개 그룹
+./app/admin/modifiers/[id]/ModifierEditForm.tsx:21:      if (!res.ok) { const d = await res.json(); throw new Error(d.message || "Save 실패"); }
+./app/admin/modifiers/[id]/ModifierEditForm.tsx:24:    } catch (e) { setStatus("error"); setErr(e instanceof Error ? e.message : "Save 실패"); }
+./app/admin/modifiers/[id]/ModifierEditForm.tsx:32:        <h2 className="font-semibold text-gray-900">Internal 운영 Settings</h2>
+./app/admin/modifiers/[id]/ModifierEditForm.tsx:35:      {status === "success" && <div className="p-3 bg-green-50 border border-green-200 rounded text-green-700 text-sm">✅ Save되었습니다.</div>}
+./app/admin/modifiers/[id]/ModifierEditForm.tsx:39:          <label className="block text-sm font-medium text-gray-700 mb-1">정렬 순서</label>
+./app/admin/modifiers/[id]/ModifierEditForm.tsx:44:          <input type="text" value={state.sku} onChange={(e) => setState(s => ({ ...s, sku: e.target.value }))} placeholder="선택 입력" className={inp} />
+./app/admin/modifiers/[id]/ModifierEditForm.tsx:50:          <span className="text-sm font-medium text-gray-700">Inventory 추적 (tracksInventory)</span>
+./app/admin/modifiers/[id]/page.tsx:42:          <Link href="/admin/modifiers" className="hover:text-amber-600">Modifier 관리</Link>
+./app/admin/modifiers/[id]/page.tsx:45:          <p className="text-lg font-medium text-gray-700">Modifier를 Not found</p>
+./app/admin/modifiers/[id]/page.tsx:71:            <Link href="/admin/modifiers" className="hover:text-amber-600">Modifier 관리</Link>
+./app/admin/modifiers/[id]/page.tsx:76:          <p className="text-gray-500 mt-0.5 text-sm">그룹: {option.optionGroup.name}</p>
+./app/admin/modifiers/[id]/page.tsx:87:            <p className="mt-0.5 text-blue-700">Name·가격은 Loyverse 원본 필드로 Edit Unavailable입니다. Internal 운영 필드(Inventory Tracking, Active, 정렬)만 Edit Available합니다.</p>
+./app/admin/modifiers/[id]/page.tsx:91:                {mapping.lastSyncedAt && <> · 마지막 sync: {new Date(mapping.lastSyncedAt).toLocaleString("ko-KR")}</>}
+./app/admin/modifiers/[id]/page.tsx:101:          <h2 className="font-semibold text-gray-900">원본 정보</h2>
+./app/admin/modifiers/[id]/page.tsx:110:            <p className="text-xs text-gray-500 mb-1">가격차</p>
+./app/admin/modifiers/[id]/page.tsx:114:            <p className="text-xs text-gray-500 mb-1">그룹</p>
+./app/admin/modifiers/[id]/page.tsx:132:            <Link href="/admin/inventory" className="text-xs text-amber-600 hover:underline">Inventory Management 페이지 →</Link>
+./app/admin/modifiers/[id]/page.tsx:156:            <p className="text-sm text-gray-500">Today Inventory Data가 없습니다.</p>
+./app/admin/modifiers/[id]/page.tsx:173:        <h2 className="font-semibold text-gray-900 border-b border-gray-100 pb-2">Link된 Products</h2>
+./app/admin/modifiers/ModifierGroupManager.tsx:80:          <label className="block text-xs font-medium text-gray-600 mb-1">그룹명 *</label>
+./app/admin/modifiers/ModifierGroupManager.tsx:85:            placeholder="예: 베이글 선택"
+./app/admin/modifiers/ModifierGroupManager.tsx:90:          <label className="block text-xs font-medium text-gray-600 mb-1">정렬 순서</label>
+./app/admin/modifiers/ModifierGroupManager.tsx:100:          <label className="block text-xs font-medium text-gray-600 mb-1">최소 선택</label>
+./app/admin/modifiers/ModifierGroupManager.tsx:111:          <label className="block text-xs font-medium text-gray-600 mb-1">최대 선택</label>
+./app/admin/modifiers/ModifierGroupManager.tsx:174:          <label className="block text-xs font-medium text-gray-600 mb-1">옵션명 *</label>
+./app/admin/modifiers/ModifierGroupManager.tsx:179:            placeholder="예: 플레인 베이글"
+./app/admin/modifiers/ModifierGroupManager.tsx:184:          <label className="block text-xs font-medium text-gray-600 mb-1">Add금액 ($)</label>
+./app/admin/modifiers/ModifierGroupManager.tsx:195:          <label className="block text-xs font-medium text-gray-600 mb-1">정렬 순서</label>
+./app/admin/modifiers/ModifierGroupManager.tsx:210:            placeholder="선택"
+./app/admin/modifiers/ModifierGroupManager.tsx:232:          Inventory 추적
+./app/admin/modifiers/ModifierGroupManager.tsx:308:        throw new Error(err.message || "Create에 실패했습니다");
+./app/admin/modifiers/ModifierGroupManager.tsx:326:      setNewGroupError(e instanceof Error ? e.message : "Create에 실패했습니다");
+./app/admin/modifiers/ModifierGroupManager.tsx:350:        throw new Error(err.message || "Edit에 실패했습니다");
+./app/admin/modifiers/ModifierGroupManager.tsx:362:      setEditGroupError(e instanceof Error ? e.message : "Edit에 실패했습니다");
+./app/admin/modifiers/ModifierGroupManager.tsx:370:      `"${groupName}" Modifiers 그룹을 Delete하시겠습니까?\n\n그룹 내 모든 옵션도 함께 Delete되며, Link된 Products에서도 Remove됩니다.`
+./app/admin/modifiers/ModifierGroupManager.tsx:378:        throw new Error(err.message || "Delete에 실패했습니다");
+./app/admin/modifiers/ModifierGroupManager.tsx:382:      alert(e instanceof Error ? e.message : "Delete에 실패했습니다");
+./app/admin/modifiers/ModifierGroupManager.tsx:408:        throw new Error(err.message || "Create에 실패했습니다");
+./app/admin/modifiers/ModifierGroupManager.tsx:420:      setNewOptionError(e instanceof Error ? e.message : "Create에 실패했습니다");
+./app/admin/modifiers/ModifierGroupManager.tsx:448:        throw new Error(err.message || "Edit에 실패했습니다");
+./app/admin/modifiers/ModifierGroupManager.tsx:466:      setEditOptionError(e instanceof Error ? e.message : "Edit에 실패했습니다");
+./app/admin/modifiers/ModifierGroupManager.tsx:473:    const confirmed = window.confirm(`"${optionName}" 옵션을 Delete하시겠습니까?`);
+./app/admin/modifiers/ModifierGroupManager.tsx:483:        throw new Error(err.message || "Delete에 실패했습니다");
+./app/admin/modifiers/ModifierGroupManager.tsx:491:      alert(e instanceof Error ? e.message : "Delete에 실패했습니다");
+./app/admin/modifiers/ModifierGroupManager.tsx:500:        <h2 className="text-base font-semibold text-gray-900">Modifiers 그룹 관리</h2>
+./app/admin/modifiers/ModifierGroupManager.tsx:511:            + 그룹 Add
+./app/admin/modifiers/ModifierGroupManager.tsx:524:          saveLabel="그룹 Add"
+./app/admin/modifiers/ModifierGroupManager.tsx:565:                    선택 {group.minSelect}~{group.maxSelect}개
+./app/admin/modifiers/ModifierGroupManager.tsx:567:                  <span className="text-xs text-gray-400">정렬: {group.sortOrder}</span>
+./app/admin/modifiers/ModifierGroupManager.tsx:640:                            비Active
+./app/admin/modifiers/ModifierGroupManager.tsx:708:                    saveLabel="옵션 Add"
+./app/signup/page.tsx:19:          <p className="text-gray-500 mt-1">새 계정을 만들어 시작하세요</p>
+./app/signup/page.tsx:46:                placeholder="홍길동"
+./app/signup/page.tsx:90:                placeholder="8자 이상, 영문+숫자 포함"
+./app/signup/page.tsx:127:              {isPending ? "가입 중…" : "Sign Up"}
+./app/sales/new/page.tsx:7:        <h1 className="text-2xl font-bold text-gray-900">새 Enter Sales</h1>
+./app/sales/new/page.tsx:8:        <p className="text-gray-500 mt-1">일별 Sales Data를 입력합니다</p>
+./app/sales/page.tsx:58:          <p className="text-gray-500 mt-1">일별 Sales Records ({records.length}items)</p>
+./app/sales/page.tsx:64:          + 새 Enter Sales
+./app/sales/page.tsx:75:          <p className="text-gray-500 mb-4">Search 결과가 없습니다.</p>
+./app/sales/page.tsx:101:                    <span>Sold {sold}개</span>
+./app/sales/page.tsx:102:                    <span>Remaining {record.bagelsLeft}개</span>
+./app/sales/page.tsx:118:                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">채널별</th>
+./app/sales/page.tsx:138:                        {getSoldBagels(record)}개
+./app/sales/page.tsx:141:                        {record.bagelsLeft}개
+./app/sales/[id]/edit/page.tsx:19:        <p className="text-gray-600">기록을 Not found.</p>
+./app/sales/[id]/edit/page.tsx:21:          ← Sales List으로
+./app/sales/[id]/edit/page.tsx:53:          ← Details 페이지로
+./app/sales/[id]/edit/page.tsx:56:        <p className="text-gray-500 mt-1">일별 Sales Data를 Edit합니다</p>
+./app/sales/[id]/page.tsx:21:        <p className="text-gray-600">기록을 Not found.</p>
+./app/sales/[id]/page.tsx:23:          ← Sales List으로
+./app/sales/[id]/page.tsx:60:        <h2 className="text-base font-semibold text-gray-900 border-b border-gray-100 pb-2">기본 정보</h2>
+./app/sales/[id]/page.tsx:62:          <InfoItem label="Bagels Baked" value={`${record.bagelsBaked}개`} />
+./app/sales/[id]/page.tsx:63:          <InfoItem label="Bagels Left" value={`${record.bagelsLeft}개`} />
+./app/sales/[id]/page.tsx:64:          <InfoItem label="Sold 베이글" value={`${sold}개`} />
+./app/sales/[id]/page.tsx:72:              <InfoItem label="메모" value={record.notes} />
+./app/sales/[id]/page.tsx:92:                <InfoItem label="최저 기온" value={`${record.externalFactor.minTemp}°C`} />
+./app/sales/[id]/page.tsx:95:                <InfoItem label="최고 기온" value={`${record.externalFactor.maxTemp}°C`} />
+./app/sales/[id]/page.tsx:98:                <InfoItem label="강수량" value={`${record.externalFactor.rainMm}mm`} />
+./app/sales/[id]/page.tsx:101:                <InfoItem label="바람" value={`${record.externalFactor.windKph}kph`} />
+./app/sales/[id]/page.tsx:107:                <InfoItem label="지역 Event" value={record.externalFactor.localEventName} />
+./app/sales/[id]/page.tsx:111:                value={record.externalFactor.schoolHoliday ? "예" : "No"}
+./app/sales/[id]/page.tsx:133:                <span>수집: {new Date(record.externalFactor.collectedAt).toLocaleString("ko-KR")}</span>
+./app/sales/[id]/page.tsx:136:                <span>갱신: {new Date(record.externalFactor.lastRefreshedAt).toLocaleString("ko-KR")}</span>
+./app/sales/[id]/page.tsx:148:            <p>이 Date의 External Data가 없습니다.</p>
+./app/sales/[id]/page.tsx:149:            <p className="mt-1">위 &apos;External Data 수집&apos; 버튼을 눌러 Data를 가져올 수 있습니다.</p>
+./app/sales/[id]/page.tsx:156:        <h2 className="text-base font-semibold text-gray-900 border-b border-gray-100 pb-2">파생 지표</h2>
+./app/sales/[id]/page.tsx:158:          <InfoItem label="Sold율" value={`${(sellThrough * 100).toFixed(1)}%`} />
+./app/sales/[id]/page.tsx:160:          <InfoItem label="폐기 베이글" value={`${record.bagelsLeft}개`} />
+./app/sales/[id]/page.tsx:163:              <InfoItem label="Store 비중" value={`${breakdown.store.percent.toFixed(1)}%`} />
+./app/sales/[id]/page.tsx:164:              <InfoItem label="Uber 비중" value={`${breakdown.uber.percent.toFixed(1)}%`} />
+./app/sales/[id]/page.tsx:165:              <InfoItem label="DoorDash 비중" value={`${breakdown.doordash.percent.toFixed(1)}%`} />
+./app/sales/[id]/page.tsx:166:              <InfoItem label="Other 비중" value={`${breakdown.other.percent.toFixed(1)}%`} />
+./app/calendar/page.tsx:56:        <h1 className="text-2xl font-bold text-gray-900">Calendar 보기</h1>
+./app/calendar/page.tsx:57:        <p className="text-gray-500 mt-1">월별 Sales 실적 및 Predictions 현황</p>
+./app/calendar/page.tsx:64:          실제 Sales Records
+./app/predictions/new/page.tsx:10:  targetDate: z.string().min(1, "Date를 Please select"),
+./app/predictions/new/page.tsx:85:        throw new Error(json.message ?? "Predictions Create에 실패했습니다");
+./app/predictions/new/page.tsx:91:      setError(err instanceof Error ? err.message : "오류가 발생했습니다");
+./app/predictions/new/page.tsx:100:        <h1 className="text-2xl font-bold text-gray-900">새 Predictions 만들기</h1>
+./app/predictions/new/page.tsx:101:        <p className="text-gray-500 mt-1">Date를 입력하면 External Factors이 자동으로 수집됩니다. 필요 시 직접 입력할 수도 있습니다.</p>
+./app/predictions/new/page.tsx:129:          <h2 className="text-base font-semibold text-gray-900">External Factors (선택)</h2>
+./app/predictions/new/page.tsx:133:              <label className="block text-sm font-medium text-gray-700 mb-1">Weather 요약</label>
+./app/predictions/new/page.tsx:137:                placeholder="예: 맑음, 흐림, 비"
+./app/predictions/new/page.tsx:143:              <label className="block text-sm font-medium text-gray-700 mb-1">최저 기온 (°C)</label>
+./app/predictions/new/page.tsx:153:              <label className="block text-sm font-medium text-gray-700 mb-1">최고 기온 (°C)</label>
+./app/predictions/new/page.tsx:163:              <label className="block text-sm font-medium text-gray-700 mb-1">강수량 (mm)</label>
+./app/predictions/new/page.tsx:174:              <label className="block text-sm font-medium text-gray-700 mb-1">풍속 (kph)</label>
+./app/predictions/new/page.tsx:189:                placeholder="예: 크리스마스"
+./app/predictions/new/page.tsx:195:              <label className="block text-sm font-medium text-gray-700 mb-1">로컬 Event</label>
+./app/predictions/new/page.tsx:199:                placeholder="예: 지역 마켓"
+./app/predictions/new/page.tsx:216:              <label className="block text-sm font-medium text-gray-700 mb-1">NZ News 요약</label>
+./app/predictions/new/page.tsx:220:                placeholder="주요 NZ News..."
+./app/predictions/new/page.tsx:226:              <label className="block text-sm font-medium text-gray-700 mb-1">World News 요약</label>
+./app/predictions/new/page.tsx:230:                placeholder="주요 World News..."
+./app/predictions/new/page.tsx:243:            {isSubmitting ? "Predictions 실Rows 중..." : "🔮 Predictions 실Rows"}
+./app/predictions/page.tsx:19:  rule_based_v1: "규칙 기반 v1",
+./app/predictions/page.tsx:20:  rule_based_v2: "규칙 기반 v2",
+./app/predictions/page.tsx:21:  weighted_v1: "Weights 기반 v1",
+./app/predictions/page.tsx:22:  manual: "수동 입력",
+./app/predictions/page.tsx:33:          <p className="text-gray-500 mt-1">Sales Predictions 결과 ({predictions.length}items)</p>
+./app/predictions/page.tsx:46:            + 새 Predictions 만들기
+./app/predictions/page.tsx:54:          <p className="text-gray-500 mb-4">아직 Create된 Predictions이 없습니다.</p>
+./app/predictions/page.tsx:82:                  <span>베이글 {p.predictedBagelsSold}개</span>
+./app/predictions/page.tsx:83:                  <span>Recommended Production {p.recommendedBagelsToBake}개</span>
+./app/predictions/page.tsx:99:                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">예상 Sold량</th>
+./app/predictions/page.tsx:102:                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Create일</th>
+./app/predictions/page.tsx:114:                    <td className="px-4 py-3 text-sm text-gray-900 text-right">{p.predictedBagelsSold}개</td>
+./app/predictions/page.tsx:115:                    <td className="px-4 py-3 text-sm text-gray-900 text-right">{p.recommendedBagelsToBake}개</td>
+./app/predictions/performance/page.tsx:87:          <p className="text-gray-500 mt-1">Predictions 결과와 실제 실적 비교 (최근 30items)</p>
+./app/predictions/performance/page.tsx:100:            + 새 Predictions
+./app/predictions/performance/page.tsx:108:          title="총 Predictions items수"
+./app/predictions/performance/page.tsx:110:          sub="최근 30items 기준"
+./app/predictions/performance/page.tsx:114:          title="비교 Available"
+./app/predictions/performance/page.tsx:116:          sub="실제 Data Yes"
+./app/predictions/performance/page.tsx:120:          title="정확 Predictions"
+./app/predictions/performance/page.tsx:122:          sub={`Error율 5% 이내 · ${stats.accuracyRate}%`}
+./app/predictions/performance/page.tsx:126:          title="평균 Sales Error율"
+./app/predictions/performance/page.tsx:128:          sub={`절대 Error ${formatCurrency(stats.avgSalesError)}`}
+./app/predictions/performance/page.tsx:132:          title="평균 Sales Error"
+./app/predictions/performance/page.tsx:134:          sub="평균 절대 Error"
+./app/predictions/performance/page.tsx:138:          title="평균 베이글 Error"
+./app/predictions/performance/page.tsx:139:          value={`${stats.avgBagelsError.toFixed(1)}개`}
+./app/predictions/performance/page.tsx:140:          sub="Sold량 절대 Error"
+./app/predictions/performance/page.tsx:148:          <strong>💡 안내:</strong> Predictions이 있지만 비교할 실제 Data가 아직 없습니다. Predictions Date의 Actual Sales을 입력하면 Performance를 비교할 수 있습니다.
+./app/predictions/performance/page.tsx:154:          <p className="text-gray-500 mb-4">아직 Create된 Predictions이 없습니다.</p>
+./app/predictions/performance/page.tsx:168:            <h2 className="text-sm font-semibold text-gray-700">Predictions vs 실제 비교 List</h2>
+./app/predictions/performance/page.tsx:169:            <p className="text-xs text-gray-400">최신 순</p>
+./app/predictions/performance/page.tsx:183:                  <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">베이글 Error</th>
+./app/predictions/performance/page.tsx:210:                      {prediction.predictedBagelsSold}개
+./app/predictions/performance/page.tsx:213:                      {comparison ? `${comparison.actualBagelsSold}개` : <span className="text-gray-300">-</span>}
+./app/predictions/performance/page.tsx:267:                    <p className="text-gray-600">{prediction.predictedBagelsSold}개</p>
+./app/predictions/performance/page.tsx:272:                      <p className="font-medium text-gray-900">{comparison.actualBagelsSold}개</p>
+./app/predictions/performance/page.tsx:290:        <p className="font-semibold mb-2">📌 Accuracy 기준 안내</p>
+./app/predictions/performance/page.tsx:292:          <li>• <strong>정확</strong>: Error율 ±5% 이내</li>
+./app/predictions/performance/page.tsx:293:          <li>• <strong>약간 높게/낮게 Predictions</strong>: Error율 ±5~10%</li>
+./app/predictions/performance/page.tsx:294:          <li>• <strong>높게/낮게 Predictions</strong>: Error율 ±10~20%</li>
+./app/predictions/performance/page.tsx:295:          <li>• <strong>크게 높게/낮게 Predictions</strong>: Error율 20% 초과</li>
+./app/predictions/performance/page.tsx:348:    : `${isPositive ? "+" : ""}${value.toFixed(1)}개`;
+./app/predictions/[id]/page.tsx:10:  rule_based_v1: "규칙 기반 v1",
+./app/predictions/[id]/page.tsx:11:  rule_based_v2: "규칙 기반 v2",
+./app/predictions/[id]/page.tsx:12:  weighted_v1: "Weights 기반 v1",
+./app/predictions/[id]/page.tsx:13:  manual: "수동 입력",
+./app/predictions/[id]/page.tsx:87:        <ResultCard title="예상 Total Sales" value={formatCurrency(prediction.predictedSales)} highlight />
+./app/predictions/[id]/page.tsx:88:        <ResultCard title="예상 Sold 베이글" value={`${prediction.predictedBagelsSold}개`} />
+./app/predictions/[id]/page.tsx:89:        <ResultCard title="Recommended Production" value={`${prediction.recommendedBagelsToBake}개`} highlight />
+./app/predictions/[id]/page.tsx:90:        <ResultCard title="예상 Remaining량" value={`${prediction.predictedLeftovers}개`} />
+./app/predictions/[id]/page.tsx:98:              label="기준 Sales"
+./app/predictions/[id]/page.tsx:100:              sub="최근 평균 기준값"
+./app/predictions/[id]/page.tsx:105:              label="예상 Sold율"
+./app/predictions/[id]/page.tsx:107:              sub="추천 생산 대비"
+./app/predictions/[id]/page.tsx:112:              label="예상 Waste Rate"
+./app/predictions/[id]/page.tsx:114:              sub="추천 생산 대비"
+./app/predictions/[id]/page.tsx:144:          <h2 className="text-sm font-semibold text-blue-900 mb-3">💡 Predictions 근거</h2>
+./app/predictions/[id]/page.tsx:158:            <h2 className="text-sm font-semibold text-gray-700">반영된 요인별 영향</h2>
+./app/predictions/[id]/page.tsx:163:                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">요인</th>
+./app/predictions/[id]/page.tsx:164:                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">값</th>
+./app/predictions/[id]/page.tsx:166:                <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">영향 (Sales)</th>
+./app/predictions/[id]/page.tsx:195:            <h2 className="text-sm font-semibold text-blue-800">📊 Predictions vs 실제 비교</h2>
+./app/predictions/[id]/page.tsx:208:                label="Sold 베이글"
+./app/predictions/[id]/page.tsx:209:                predicted={`${comparison.predictedBagelsSold}개`}
+./app/predictions/[id]/page.tsx:210:                actual={`${comparison.actualBagelsSold}개`}
+./app/predictions/[id]/page.tsx:211:                error={`${comparison.bagelsError >= 0 ? "+" : ""}${comparison.bagelsError}개`}
+./app/predictions/[id]/page.tsx:215:                label="Remaining 베이글"
+./app/predictions/[id]/page.tsx:216:                predicted={`${comparison.predictedLeftovers}개`}
+./app/predictions/[id]/page.tsx:217:                actual={`${comparison.actualLeftovers}개`}
+./app/predictions/[id]/page.tsx:218:                error={`${comparison.leftoversError >= 0 ? "+" : ""}${comparison.leftoversError}개`}
+./app/predictions/[id]/page.tsx:229:            이 Date({formatDate(prediction.targetDate)})의 실제 Sales Records이 없습니다.
+./app/predictions/[id]/page.tsx:235:            Enter Sales하기 →
+./app/predictions/[id]/page.tsx:305:        <span className="text-gray-600 font-medium">실제</span>
+./app/layout.tsx:8:  title: "Bagels Beyond Sales 관리",
+./app/layout.tsx:9:  description: "Bagels Beyond Sales 관리 대장",
+./app/settings/page.tsx:25:        <p className="text-gray-500 mt-1">기본 Settings을 관리합니다</p>
+./app/login/page.tsx:22:          <p className="text-gray-500 mt-1">Login하여 계속하세요</p>
+./app/login/page.tsx:90:              {isPending ? "Login 중…" : "Login"}
+./app/order/ProductList.tsx:55:        setFeedback((f) => ({ ...f, [product.id]: `"${group.name}" 옵션을 Please select` }));
+./app/order/ProductList.tsx:89:    setFeedback((f) => ({ ...f, [product.id]: "장바구니에 담겼습니다 ✓" }));
+./app/order/ProductList.tsx:179:                  {isSoldOut ? "Out of Stock" : "장바구니 담기"}
+./app/order/ProductList.tsx:194:          <span className="font-medium">장바구니 {cartCount}개</span>
+./app/order/cart/page.tsx:55:        <h1 className="text-xl font-semibold text-gray-800">장바구니가 비어 있습니다</h1>
+./app/order/cart/page.tsx:66:        <h1 className="text-2xl font-bold text-gray-900">장바구니</h1>
+./app/order/cart/page.tsx:67:        <p className="text-gray-500 text-sm mt-1">Orders 전 내용을 Confirm해주세요</p>
+./app/order/cart/page.tsx:85:                    ${item.selectedOptions.reduce((s, o) => s + o.priceDelta, 0).toFixed(2)} (옵션)
+./app/order/cart/page.tsx:105:          <span>소계</span>
+./app/order/cart/page.tsx:108:        <p className="text-xs text-gray-500 mt-1">최종 금액은 서버에서 Recalculate됩니다</p>
+./app/order/cart/page.tsx:113:          ← 쇼핑 계속하기
+./app/order/success/[orderNumber]/page.tsx:9:  DRAFT: "임시", PENDING: "접수됨", CONFIRMED: "Confirm됨",
+./app/order/success/[orderNumber]/page.tsx:10:  PREPARING: "준비중", READY: "준비완료", COMPLETED: "완료", CANCELLED: "Cancel됨",
+./app/order/success/[orderNumber]/page.tsx:40:        <h1 className="text-2xl font-bold text-gray-900">Orders이 완료되었습니다!</h1>
+./app/order/success/[orderNumber]/page.tsx:41:        <p className="text-gray-500 mt-2 text-sm">Orders을 접수했습니다. Pickup Date에 방문해주세요.</p>
+./app/order/success/[orderNumber]/page.tsx:46:          <span className="text-gray-500">Orders번호</span>
+./app/order/success/[orderNumber]/page.tsx:59:            <span className="text-gray-500">Pickup 시간</span>
+./app/order/success/[orderNumber]/page.tsx:64:          <span className="text-gray-500">총 금액</span>
+./app/order/success/[orderNumber]/page.tsx:68:          <span className="text-gray-500">결제</span>
+./app/order/success/[orderNumber]/page.tsx:69:          <span className="text-gray-700">현장 결제</span>
+./app/order/checkout/page.tsx:19:        <p className="text-gray-500 text-sm mt-1">Pickup Date와 시간을 선택하고 Orders을 완료하세요</p>
+./app/order/checkout/CheckoutForm.tsx:51:        <p className="text-gray-500">장바구니가 비어 있습니다</p>
+./app/order/checkout/CheckoutForm.tsx:66:        <h2 className="font-semibold text-gray-800 text-sm">Orders자 정보</h2>
+./app/order/checkout/CheckoutForm.tsx:70:          {customerPhone && <p><span className="text-gray-500 w-16 inline-block">전화</span>{customerPhone}</p>}
+./app/order/checkout/CheckoutForm.tsx:76:        <h2 className="font-semibold text-gray-800 text-sm">Pickup 정보</h2>
+./app/order/checkout/CheckoutForm.tsx:86:          <p className="text-xs text-gray-400 mt-1">영업일(월~토) 기준, 최소 1일 전 Orders</p>
+./app/order/checkout/CheckoutForm.tsx:89:          <label className="block text-xs font-medium text-gray-700 mb-1">Pickup 시간 <span className="text-red-500">*</span></label>
+./app/order/checkout/CheckoutForm.tsx:95:            <option value="">시간 선택</option>
+./app/order/checkout/CheckoutForm.tsx:105:        <label className="block text-xs font-medium text-gray-700">Orders 메모 (선택)</label>
+./app/order/checkout/CheckoutForm.tsx:109:          placeholder="특별 요청사항을 입력해주세요"
+./app/order/checkout/CheckoutForm.tsx:116:        <h2 className="font-semibold text-gray-800 text-sm">Orders 요약</h2>
+./app/order/checkout/CheckoutForm.tsx:128:          <span>예상 합계</span>
+./app/order/checkout/CheckoutForm.tsx:131:        <p className="text-xs text-gray-400">최종 금액은 서버에서 Recalculate됩니다. 결제는 현장에서 이루어집니다.</p>
+./app/actions/auth.ts:13:  email: z.string().email("올바른 Email을 입력해주세요"),
+./app/actions/auth.ts:14:  password: z.string().min(1, "Password를 입력해주세요"),
+./app/actions/auth.ts:19:    name: z.string().min(1, "Name을 입력해주세요").max(100, "Name이 너무 깁니다"),
+./app/actions/auth.ts:20:    email: z.string().email("올바른 Email을 입력해주세요"),
+./app/actions/auth.ts:23:      .min(8, "Password는 8자 이상이어야 합니다")
+./app/actions/auth.ts:24:      .regex(/[A-Za-z]/, "Password에 영문자가 포함되어야 합니다")
+./app/actions/auth.ts:25:      .regex(/[0-9]/, "Password에 숫자가 포함되어야 합니다"),
+./app/actions/auth.ts:26:    passwordConfirm: z.string().min(1, "Confirm Password을 입력해주세요"),
+./app/actions/auth.ts:29:    message: "Password가 일치하지 않습니다",
+./app/actions/auth.ts:68:    return { message: "Email 또는 Password가 올바르지 않습니다" };
+./app/actions/auth.ts:73:    return { message: "Email 또는 Password가 올바르지 않습니다" };
+./app/actions/auth.ts:121:    return { errors: { email: ["이미 사용 중인 Email입니다"] } };
+./app/actions/order.ts:24:  cartJson: z.string().min(1, "장바구니가 비어 있습니다"),
+./app/actions/order.ts:25:  pickupDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date 형식이 올바르지 않습니다"),
+./app/actions/order.ts:26:  pickupTimeSlot: z.string().min(1, "Pickup 시간을 Please select"),
+./app/actions/order.ts:49:    return { success: false, message: parsed.error.issues[0]?.message ?? "입력 오류" };
+./app/actions/order.ts:56:    return { success: false, message: "올바르지 않은 Pickup 시간입니다" };
+./app/actions/order.ts:62:    return { success: false, message: "올바르지 않은 Pickup Date입니다. 영업일(월~토)을 Please select" };
+./app/actions/order.ts:70:    return { success: false, message: "장바구니 Data가 올바르지 않습니다" };
+./app/actions/order.ts:74:    return { success: false, message: "장바구니가 비어 있습니다" };
+./app/actions/order.ts:80:      return { success: false, message: "수량이 올바르지 않습니다" };
+./app/actions/order.ts:96:    return { success: false, message: "Orders할 수 없는 Products이 포함되어 있습니다" };
+./app/actions/order.ts:122:      return { success: false, message: `Products을 Not found: ${cartItem.productId}` };
+./app/actions/order.ts:133:        return { success: false, message: `옵션 그룹을 Not found: ${sel.optionGroupId}` };
+./app/actions/order.ts:137:        return { success: false, message: `옵션을 Not found: ${sel.optionId}` };
+./app/actions/order.ts:155:          message: `"${product.name}"의 "${group.name}" 옵션을 Please select`,
+./app/actions/order.ts:251:    return { success: false, message: "Orders Create 중 오류가 발생했습니다" };
+./app/actions/order.ts:273:    return { success: false, message: "Orders을 Not found" };
+./app/actions/order.ts:277:    return { success: false, message: "Cancel할 수 없는 Orders Status입니다" };
+./app/actions/order.ts:287:      return { success: false, message: "Pickup 2시간 이내에는 Cancel할 수 없습니다" };
+./app/actions/order.ts:317:    return { success: false, message: "Cancel Processing... 오류가 발생했습니다" };
+./app/actions/order.ts:341:    return { success: false, message: "Orders을 Not found" };
+./app/actions/order.ts:347:      return { success: false, message: "이미 완료되거나 Cancel된 Orders입니다" };
+./app/actions/order.ts:354:      return { success: false, message: "이전 Status로 되돌릴 수 없습니다" };
+./app/actions/order.ts:384:    return { success: false, message: "Status 변경 중 오류가 발생했습니다" };
+./app/actions/subscription.ts:45:    return { success: false, message: parsed.error.issues[0]?.message ?? "입력 오류" };
+./app/actions/subscription.ts:54:    return { success: false, message: "Products 정보가 올바르지 않습니다" };
+./app/actions/subscription.ts:58:    return { success: false, message: "최소 1개 이상의 Products을 Please select" };
+./app/actions/subscription.ts:63:      return { success: false, message: "수량이 올바르지 않습니다" };
+./app/actions/subscription.ts:80:    return { success: false, message: "Subscriptions Create 중 오류가 발생했습니다" };
+./app/actions/subscription.ts:94:    return { success: false, message: err instanceof Error ? err.message : "오류가 발생했습니다" };
+./app/actions/subscription.ts:108:    return { success: false, message: err instanceof Error ? err.message : "오류가 발생했습니다" };
+./app/actions/subscription.ts:122:    return { success: false, message: err instanceof Error ? err.message : "오류가 발생했습니다" };
+./app/actions/subscription.ts:136:    return { success: false, message: err instanceof Error ? err.message : "오류가 발생했습니다" };
+./app/imports/new/page.tsx:25:      setError("CSV 파일만 업로드할 수 있습니다 (.csv)");
+./app/imports/new/page.tsx:63:      setError("클립보드 복사에 실패했습니다. 템플릿 다운로드를 이용해주세요.");
+./app/imports/new/page.tsx:70:      setError("CSV 파일을 선택하거나 아래 텍스트 영역에 CSV 내용을 붙여넣으세요");
+./app/imports/new/page.tsx:92:        throw new Error(json.message ?? "Imports 작업 Create에 실패했습니다");
+./app/imports/new/page.tsx:98:      setError(err instanceof Error ? err.message : "오류가 발생했습니다");
+./app/imports/new/page.tsx:109:        <h1 className="text-2xl font-bold text-gray-900">새 CSV Imports</h1>
+./app/imports/new/page.tsx:110:        <p className="text-gray-500 mt-1">CSV 파일을 업로드하거나, 아래에 CSV 내용을 직접 붙여넣으세요.</p>
+./app/imports/new/page.tsx:123:            <p className="font-semibold mb-1">CSV 파일 형식</p>
+./app/imports/new/page.tsx:124:            <p className="text-xs">Required 컬럼: <code className="bg-amber-100 px-1 rounded">date</code></p>
+./app/imports/new/page.tsx:142:              {templateCopied ? "✅ 복사됨!" : "📋 템플릿 복사"}
+./app/imports/new/page.tsx:151:          <h2 className="text-base font-semibold text-gray-900">① CSV 파일 업로드</h2>
+./app/imports/new/page.tsx:162:              CSV 파일을 드래그하거나 클릭하여 선택
+./app/imports/new/page.tsx:174:              <p className="mt-3 text-sm text-gray-700 font-medium">선택됨: {fileName}</p>
+./app/imports/new/page.tsx:181:          <h2 className="text-base font-semibold text-gray-900">② CSV 내용 직접 붙여넣기</h2>
+./app/imports/new/page.tsx:185:              <span className="ml-1 text-purple-600 font-medium">이 내용이 업로드 파일보다 우선 적용됩니다.</span>
+./app/imports/new/page.tsx:191:            placeholder={`date,bagelsBaked,bagelsLeft,storeSales,uberSales,doordashSales,otherSales,notes\n2024-01-15,80,5,250.00,80.00,50.00,10.00,평일 보통\n2024-01-20,100,3,320.00,110.00,70.00,15.00,토요일 많음`}
+./app/imports/new/page.tsx:204:              Preview{pastedCsvText.trim() ? " (붙여넣기 내용)" : " (업로드 파일)"}
+./app/imports/new/page.tsx:219:            {isSubmitting ? "Processing......" : "📤 업로드 및 검증"}
+./app/imports/page.tsx:8:  pending:    { label: "대기중",   color: "bg-yellow-100 text-yellow-700" },
+./app/imports/page.tsx:9:  validating: { label: "검증중",   color: "bg-blue-100 text-blue-700" },
+./app/imports/page.tsx:10:  ready:      { label: "준비완료", color: "bg-green-100 text-green-700" },
+./app/imports/page.tsx:11:  imported:   { label: "임포트됨", color: "bg-purple-100 text-purple-700" },
+./app/imports/page.tsx:12:  failed:     { label: "실패",     color: "bg-red-100 text-red-700" },
+./app/imports/page.tsx:34:          <p className="text-gray-500 mt-1">Internal Sales Data CSV 임포트 ({jobs.length}items)</p>
+./app/imports/page.tsx:40:          + 새 CSV Imports
+./app/imports/page.tsx:47:          <p className="text-gray-500 mb-4">아직 Imports 작업이 없습니다.</p>
+./app/imports/page.tsx:60:                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">파일명</th>
+./app/imports/page.tsx:62:                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">총 Rows</th>
+./app/imports/page.tsx:63:                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">성공</th>
+./app/imports/page.tsx:64:                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">실패</th>
+./app/imports/page.tsx:65:                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Create일</th>
+./app/imports/[id]/page.tsx:9:  pending:    { label: "대기중",   color: "bg-yellow-100 text-yellow-700" },
+./app/imports/[id]/page.tsx:10:  validating: { label: "검증중",   color: "bg-blue-100 text-blue-700" },
+./app/imports/[id]/page.tsx:11:  ready:      { label: "준비완료", color: "bg-green-100 text-green-700" },
+./app/imports/[id]/page.tsx:12:  imported:   { label: "임포트됨", color: "bg-purple-100 text-purple-700" },
+./app/imports/[id]/page.tsx:13:  failed:     { label: "실패",     color: "bg-red-100 text-red-700" },
+./app/imports/[id]/page.tsx:17:  pending:  { label: "대기중",   color: "bg-yellow-100 text-yellow-700" },
+./app/imports/[id]/page.tsx:18:  valid:    { label: "유효",     color: "bg-green-100 text-green-700" },
+./app/imports/[id]/page.tsx:19:  invalid:  { label: "오류",     color: "bg-red-100 text-red-700" },
+./app/imports/[id]/page.tsx:20:  imported: { label: "완료",     color: "bg-purple-100 text-purple-700" },
+./app/imports/[id]/page.tsx:21:  skipped:  { label: "items너뜀",   color: "bg-gray-100 text-gray-700" },
+./app/imports/[id]/page.tsx:55:      .catch(() => setError("Data를 불러오는데 실패했습니다"));
+./app/imports/[id]/page.tsx:73:      if (!res.ok) throw new Error(data.message ?? "임포트에 실패했습니다");
+./app/imports/[id]/page.tsx:88:          externalCollect = { errors: [err instanceof Error ? err.message : "External Data 수집 중 오류 발생"] };
+./app/imports/[id]/page.tsx:97:      setError(err instanceof Error ? err.message : "오류가 발생했습니다");
+./app/imports/[id]/page.tsx:112:      if (!res.ok) throw new Error(data.message ?? "External Data 수집에 실패했습니다");
+./app/imports/[id]/page.tsx:116:      alert(`External Data 수집 완료: ${processed}items 처리${failed > 0 ? `, ${failed}items 실패` : ""}${errors.length > 0 ? `\nError: ${errors.slice(0, 3).join("\n")}` : ""}`);
+./app/imports/[id]/page.tsx:118:      alert(err instanceof Error ? err.message : "External Data 수집에 실패했습니다");
+./app/imports/[id]/page.tsx:124:  if (loading) return <div className="text-center py-12 text-gray-500">로딩 중...</div>;
+./app/imports/[id]/page.tsx:133:      <p className="text-gray-500">작업을 Not found</p>
+./app/imports/[id]/page.tsx:152:              총 {job.totalRows}Rows · 유효 {validRows}Rows
+./app/imports/[id]/page.tsx:166:          오류: {job.errorMessage}
+./app/imports/[id]/page.tsx:178:          <p className="font-semibold">임포트 완료</p>
+./app/imports/[id]/page.tsx:179:          <p>성공: {importResult.successRows}items · Failed: {importResult.failedRows}items · items너뜀: {importResult.skippedRows}items</p>
+./app/imports/[id]/page.tsx:189:              <p className="font-semibold">External Data 자동 수집</p>
+./app/imports/[id]/page.tsx:191:                <p>수집 중...</p>
+./app/imports/[id]/page.tsx:194:                  대상 Date {importResult.externalCollect.totalDates ?? 0}items ·{" "}
+./app/imports/[id]/page.tsx:195:                  처리 {importResult.externalCollect.processedDates ?? 0}items
+./app/imports/[id]/page.tsx:215:          <h2 className="text-sm font-semibold text-gray-900">임포트 실Rows</h2>
+./app/imports/[id]/page.tsx:231:              {importing ? "임포트 중..." : `✅ ${validRows}개 Rows 임포트 실Rows`}
+./app/imports/[id]/page.tsx:240:          <p className="text-sm font-semibold text-blue-800">External Data 수집</p>
+./app/imports/[id]/page.tsx:241:          <p className="text-xs text-blue-600">임포트된 Date 범위의 Weather·Holiday·Event Data를 다시 수집할 수 있습니다.</p>
+./app/imports/[id]/page.tsx:247:            {collecting ? "수집 중..." : "🌐 External Data 재수집"}
+./app/imports/[id]/page.tsx:259:          <div className="p-8 text-center text-gray-500 text-sm">파싱된 Rows이 없습니다.</div>
+./app/subscribe/SubscribeForm.tsx:8:const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
+./app/subscribe/SubscribeForm.tsx:44:        <h2 className="font-semibold text-gray-800 text-sm">Products 선택</h2>
+./app/subscribe/SubscribeForm.tsx:46:          <p className="text-sm text-gray-500">Subscribable한 Products이 없습니다</p>
+./app/subscribe/SubscribeForm.tsx:78:        <h2 className="font-semibold text-gray-800 text-sm">Pickup 요일 <span className="text-red-500">*</span></h2>
+./app/subscribe/SubscribeForm.tsx:93:        <h2 className="font-semibold text-gray-800 text-sm">Pickup 시간 (선택)</h2>
+./app/subscribe/SubscribeForm.tsx:98:          <option value="">시간 선택 안함</option>
+./app/subscribe/SubscribeForm.tsx:107:        <h2 className="font-semibold text-gray-800 text-sm">시작일 <span className="text-red-500">*</span></h2>
+./app/subscribe/SubscribeForm.tsx:120:        <h2 className="font-semibold text-gray-800 text-sm">종료일 (선택)</h2>
+./app/subscribe/SubscribeForm.tsx:131:        <h2 className="font-semibold text-gray-800 text-sm">메모 (선택)</h2>
+./app/subscribe/SubscribeForm.tsx:136:          placeholder="특별 요청사항 등"
+./app/subscribe/page.tsx:19:        <h1 className="text-2xl font-bold text-gray-900">정기 Subscriptions 신청</h1>
+./app/subscribe/page.tsx:20:        <p className="text-gray-500 mt-1">Every 원하는 요일에 Pickup할 Products을 Subscriptions하세요</p>
+./app/tasks/page.tsx:36:          <h1 className="text-2xl font-bold text-gray-900">Automation 작업 List</h1>
+./app/tasks/page.tsx:37:          <p className="text-gray-500 mt-1">스케줄된 작업과 실Rows Status를 관리합니다.</p>
+./app/tasks/page.tsx:42:            label="▶ 대기 작업 실Rows"
+./app/tasks/page.tsx:47:            label="📡 외부요인 수집"
+./app/tasks/page.tsx:52:            label="🔮 내일 Predictions"
+./app/tasks/page.tsx:74:          <p className="text-gray-500">아직 스케줄된 작업이 없습니다.</p>
+./app/tasks/page.tsx:75:          <p className="text-gray-400 text-sm mt-1">위 버튼을 눌러 작업을 실Rows해보세요.</p>
+./app/tasks/page.tsx:82:                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">작업 유형</th>
+./app/tasks/page.tsx:83:                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">대상 Date</th>
+./app/tasks/page.tsx:85:                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">시작</th>
+./app/tasks/page.tsx:86:                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">완료</th>
+./app/tasks/page.tsx:87:                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">재시도</th>
+./app/tasks/page.tsx:88:                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">로그</th>
+./app/tasks/[id]/page.tsx:50:            ← 작업 List
+./app/tasks/[id]/page.tsx:68:          <p className="text-xs text-gray-500">대상 Date</p>
+./app/tasks/[id]/page.tsx:77:          <p className="text-xs text-gray-500">시작 시각</p>
+./app/tasks/[id]/page.tsx:84:          <p className="text-xs text-gray-500">완료 시각</p>
+./app/tasks/[id]/page.tsx:92:            <p className="text-xs text-gray-500">소요 시간</p>
+./app/tasks/[id]/page.tsx:93:            <p className="text-sm font-medium text-gray-800 mt-1">{(durationMs / 1000).toFixed(2)}초</p>
+./app/tasks/[id]/page.tsx:98:          <p className="text-xs text-gray-500">재시도 횟수</p>
+./app/tasks/[id]/page.tsx:104:            <p className="text-xs text-gray-500">결과 요약</p>
+./app/tasks/[id]/page.tsx:111:            <p className="text-xs text-gray-500">오류 메시지</p>
+./app/tasks/[id]/page.tsx:121:        <h2 className="text-lg font-semibold text-gray-900 mb-3">📋 작업 로그</h2>
+./app/tasks/[id]/page.tsx:124:            <p className="text-gray-400 text-sm">로그가 없습니다.</p>
+./app/page.tsx:8: * Home page routing policy (B안):
+./app/page.tsx:55:        <h2 className="text-xl font-bold text-gray-800 mb-6 text-center">주요 기능</h2>
+./app/page.tsx:87:    title: "일별 Sales Records",
+./app/page.tsx:88:    description: "Store, Uber Eats, DoorDash, Other 채널별 Sales과 생산량을 Date별로 간편하게 기록하세요.",
+./app/page.tsx:92:    title: "External Data 자동 수집",
+./app/page.tsx:93:    description: "Weather, Holiday, School Holiday, 지역 Event, 뉴스 Data를 자동으로 수집해 Analytics에 반영합니다.",
+./app/page.tsx:98:    description: "과거 Data와 External Factors Weights를 활용한 규칙 기반 Predictions 엔진으로 내일 Sales을 미리 알아보세요.",
+./app/page.tsx:102:    title: "생산량 추천",
+./app/page.tsx:103:    description: "Predictions Sold량과 과거 소진율을 기반으로 최적의 Bagels Baked량을 추천해드립니다.",
+./app/page.tsx:107:    title: "Analytics 리포트",
+./app/page.tsx:108:    description: "일별·주별·월별·Day-of-Week Analysis과 Holiday·Weather 세그먼트 비교로 패턴을 파악하세요.",
+./app/page.tsx:112:    title: "Calendar 시각화",
+./app/page.tsx:113:    description: "Actual Sales과 Predictions을 Calendar 형태로 한눈에 보고, Weather 아이콘으로 External Factors도 Confirm하세요.",
+./app/analytics/layout.tsx:5:  { href: "/analytics/daily", label: "일별" },
+./app/analytics/layout.tsx:6:  { href: "/analytics/weekly", label: "주별" },
+./app/analytics/layout.tsx:7:  { href: "/analytics/monthly", label: "월별" },
+./app/analytics/layout.tsx:8:  { href: "/analytics/segments", label: "세그먼트" },
+./app/analytics/weekly/page.tsx:46:          {" "}({weeks.length}주)
+./app/analytics/weekly/page.tsx:54:            <p className="text-xs text-green-600 font-medium mb-1">🏆 최고 주</p>
+./app/analytics/weekly/page.tsx:60:              {bestWeek.recordCount}일 · Daily Avg. {formatCurrencyNZD(bestWeek.averageDailySales)}
+./app/analytics/weekly/page.tsx:64:            <p className="text-xs text-red-600 font-medium mb-1">📉 최저 주</p>
+./app/analytics/weekly/page.tsx:70:              {worstWeek.recordCount}일 · Daily Avg. {formatCurrencyNZD(worstWeek.averageDailySales)}
+./app/analytics/weekly/page.tsx:84:            <h3 className="text-sm font-semibold text-gray-700 mb-4">주별 Total Sales</h3>
+./app/analytics/weekly/page.tsx:117:                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">주</th>
+./app/analytics/weekly/page.tsx:120:                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Sold 베이글</th>
+./app/analytics/weekly/page.tsx:122:                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">전주 대비</th>
+./app/analytics/weekly/page.tsx:145:                        <span className="text-xs text-gray-400 ml-2">({week.recordCount}일)</span>
+./app/analytics/weekly/page.tsx:154:                        {week.totalBagelsSold}개
+./app/analytics/segments/page.tsx:47:      title: "Holiday vs 일반일",
+./app/analytics/segments/page.tsx:48:      segmentLabel: `Holiday (${holiday.segment.recordCount}일)`,
+./app/analytics/segments/page.tsx:49:      baselineLabel: `일반일 (${holiday.baseline.recordCount}일)`,
+./app/analytics/segments/page.tsx:54:      title: "School Holiday vs 학기 중",
+./app/analytics/segments/page.tsx:55:      segmentLabel: `School Holiday (${schoolHoliday.segment.recordCount}일)`,
+./app/analytics/segments/page.tsx:56:      baselineLabel: `학기 중 (${schoolHoliday.baseline.recordCount}일)`,
+./app/analytics/segments/page.tsx:61:      title: "비 오는 날 vs 맑은 날",
+./app/analytics/segments/page.tsx:62:      segmentLabel: `비 오는 날 (${rain.segment.recordCount}일)`,
+./app/analytics/segments/page.tsx:63:      baselineLabel: `맑은 날 (${rain.baseline.recordCount}일)`,
+./app/analytics/segments/page.tsx:68:      title: "Event 있는 날 vs 일반일",
+./app/analytics/segments/page.tsx:69:      segmentLabel: `Event (${event.segment.recordCount}일)`,
+./app/analytics/segments/page.tsx:70:      baselineLabel: `일반일 (${event.baseline.recordCount}일)`,
+./app/analytics/segments/page.tsx:77:        <h1 className="text-2xl font-bold text-gray-900">🔍 세그먼트 Analytics</h1>
+./app/analytics/segments/page.tsx:97:                  title="평균 일 Sales"
+./app/analytics/segments/page.tsx:106:                  title="평균 일 Sold 베이글"
+./app/analytics/segments/page.tsx:112:                  unit="개"
+./app/analytics/segments/page.tsx:133:          <h2 className="text-base font-semibold text-gray-900 mb-3">🎌 Holiday별 Details</h2>
+./app/analytics/segments/page.tsx:139:                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">기록 수</th>
+./app/analytics/segments/page.tsx:140:                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">평균 Sales</th>
+./app/analytics/segments/page.tsx:141:                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">평균 Sold</th>
+./app/analytics/segments/page.tsx:149:                    <td className="px-4 py-3 text-right text-gray-700">{h.recordCount}일</td>
+./app/analytics/segments/page.tsx:154:                      {Math.round(h.avgBagelsSold)}개
+./app/analytics/daily/page.tsx:41:        <h1 className="text-2xl font-bold text-gray-900">📅 일별 Analytics</h1>
+./app/analytics/daily/page.tsx:44:          {" "}({items.length}일)
+./app/analytics/daily/page.tsx:63:          <p className="text-sm text-gray-500">총 Sold 베이글</p>
+./app/analytics/daily/page.tsx:64:          <p className="text-xl font-bold text-gray-900 mt-1">{summary.totalBagelsSold}개</p>
+./app/analytics/daily/page.tsx:82:            <h3 className="text-sm font-semibold text-gray-700 mb-4">Sales 추이</h3>
+./app/analytics/daily/page.tsx:130:                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">채널</th>
+./app/analytics/daily/page.tsx:131:                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">외부요인</th>
+./app/analytics/daily/page.tsx:144:                      {item.bagelsSold}개
+./app/analytics/daily/page.tsx:194:                            비 {item.rainMm}mm
+./app/analytics/daily/page.tsx:226:                  <span>Sold {item.bagelsSold}개</span>
+./app/analytics/daily/page.tsx:249:                        비 {item.rainMm}mm
+./app/analytics/page.tsx:55:  { value: "7d", label: "최근 7일" },
+./app/analytics/page.tsx:56:  { value: "30d", label: "최근 30일" },
+./app/analytics/page.tsx:57:  { value: "90d", label: "최근 90일" },
+./app/analytics/page.tsx:58:  { value: "thisMonth", label: "이번 달" },
+./app/analytics/page.tsx:59:  { value: "lastMonth", label: "지난 달" },
+./app/analytics/page.tsx:122:          <p className="text-xs text-gray-400 mt-1">{summary.recordCount}일 기록</p>
+./app/analytics/page.tsx:129:          <p className="text-xs text-gray-400 mt-1">Period 평균</p>
+./app/analytics/page.tsx:132:          <p className="text-sm text-gray-500">총 Sold 베이글</p>
+./app/analytics/page.tsx:134:            {summary.totalBagelsSold}개
+./app/analytics/page.tsx:137:            Daily Avg. {Math.round(summary.averageBagelsSold)}개
+./app/analytics/page.tsx:146:            Sold율 {formatPercentage(summary.sellThroughRate)}
+./app/analytics/page.tsx:153:        <h3 className="text-sm font-semibold text-gray-700 mb-4">채널별 Sales 비중</h3>
+./app/analytics/page.tsx:163:            { label: "Uber이츠", amount: summary.uberSales, pct: summary.uberPercent, color: "bg-green-500" },
+./app/analytics/page.tsx:189:            <h3 className="text-sm font-semibold text-gray-700">주별 Sales 추이 (최근 8주)</h3>
+./app/analytics/page.tsx:216:            <h3 className="text-sm font-semibold text-gray-700 mb-2">🎌 Holiday 영향</h3>
+./app/analytics/page.tsx:218:              <span className="text-gray-500">Holiday 평균 Sales</span>
+./app/analytics/page.tsx:224:              <span className="text-gray-500">일반일 평균 Sales</span>
+./app/analytics/page.tsx:235:              {holidaySeg.salesDiffPercent.toFixed(1)}% 차이
+./app/analytics/page.tsx:244:            <h3 className="text-sm font-semibold text-gray-700 mb-2">🏫 School Holiday 영향</h3>
+./app/analytics/page.tsx:246:              <span className="text-gray-500">School Holiday Period 평균 Sales</span>
+./app/analytics/page.tsx:252:              <span className="text-gray-500">학기 중 평균 Sales</span>
+./app/analytics/page.tsx:263:              {schoolHolidaySeg.salesDiffPercent.toFixed(1)}% 차이
+./app/analytics/page.tsx:277:            <p className="text-xs text-gray-400 mt-0.5">선택 Period 내 요일별 평균 Sales 및 Sold량</p>
+./app/analytics/page.tsx:282:          * All 대비: 해당 Period Daily Avg. Sales 대비 각 요일 평균 Sales의 증감률
+./app/analytics/page.tsx:289:          { href: "/analytics/daily", label: "📅 일별 Analytics", desc: "Date별 Details" },
+./app/analytics/page.tsx:290:          { href: "/analytics/weekly", label: "📆 Weekly Analysis", desc: "주간 트렌드" },
+./app/analytics/page.tsx:291:          { href: "/analytics/monthly", label: "🗓️ 월별 Analytics", desc: "월간 요약" },
+./app/analytics/page.tsx:292:          { href: "/analytics/segments", label: "🔍 세그먼트", desc: "조items별 비교" },
+./app/analytics/monthly/page.tsx:41:        <h1 className="text-2xl font-bold text-gray-900">🗓️ 월별 Analytics</h1>
+./app/analytics/monthly/page.tsx:51:            <p className="text-xs text-green-600 font-medium mb-1">🏆 최고 월</p>
+./app/analytics/monthly/page.tsx:57:              {bestMonth.recordCount}일 · Daily Avg. {formatCurrencyNZD(bestMonth.averageDailySales)}
+./app/analytics/monthly/page.tsx:61:            <p className="text-xs text-red-600 font-medium mb-1">📉 최저 월</p>
+./app/analytics/monthly/page.tsx:67:              {worstMonth.recordCount}일 · Daily Avg. {formatCurrencyNZD(worstMonth.averageDailySales)}
+./app/analytics/monthly/page.tsx:75:          <p className="text-gray-400">Data가 없습니다.</p>
+./app/analytics/monthly/page.tsx:81:            <h3 className="text-sm font-semibold text-gray-700 mb-4">월별 Total Sales</h3>
+./app/analytics/monthly/page.tsx:114:                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">월</th>
+./app/analytics/monthly/page.tsx:117:                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Sold 베이글</th>
+./app/analytics/monthly/page.tsx:119:                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">전월 대비</th>
+./app/analytics/monthly/page.tsx:120:                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">채널 비중</th>
+./app/analytics/monthly/page.tsx:143:                        <span className="text-xs text-gray-400 ml-2">({month.recordCount}일)</span>
+./app/analytics/monthly/page.tsx:152:                        {month.totalBagelsSold}개
+./app/weights/page.tsx:16:        description="요인별 Sales Predictions Weights를 관리합니다"
+./app/account/profile/page.tsx:17:      <div className="text-center py-12 text-gray-500">Users 정보를 불러올 수 없습니다.</div>
+./app/account/profile/page.tsx:32:        <p className="text-gray-500 mt-1">기본 프로필 정보를 Edit하세요</p>
+./app/account/profile/ProfileForm.tsx:30:          setMessage({ type: "error", text: data.message ?? "Edit에 실패했습니다" });
+./app/account/profile/ProfileForm.tsx:32:          setMessage({ type: "success", text: "프로필이 업데이트되었습니다" });
+./app/account/profile/ProfileForm.tsx:35:        setMessage({ type: "error", text: "요청 중 오류가 발생했습니다" });
+./app/account/profile/ProfileForm.tsx:67:          placeholder="Name을 입력하세요"
+./app/account/profile/ProfileForm.tsx:75:          <span className="ml-2 text-xs text-gray-400 font-normal">(변경 Unavailable)</span>
+./app/account/orders/[orderNumber]/CancelOrderButton.tsx:22:        setError(result.message ?? "Cancel Processing... 오류가 발생했습니다");
+./app/account/orders/[orderNumber]/CancelOrderButton.tsx:44:      <p className="text-sm text-red-700 font-medium">정말 Orders을 Cancel하시겠습니까?</p>
+./app/account/orders/[orderNumber]/CancelOrderButton.tsx:45:      <p className="text-xs text-red-500">Cancel 후에는 되돌릴 수 없습니다.</p>
+./app/account/orders/[orderNumber]/page.tsx:10:  DRAFT: "임시", PENDING: "접수됨", CONFIRMED: "Confirm됨",
+./app/account/orders/[orderNumber]/page.tsx:11:  PREPARING: "준비중", READY: "준비완료", COMPLETED: "완료", CANCELLED: "Cancel됨",
+./app/account/orders/[orderNumber]/page.tsx:72:            <p className="text-gray-500">Pickup 시간</p>
+./app/account/orders/[orderNumber]/page.tsx:76:            <p className="text-gray-500">결제 Status</p>
+./app/account/orders/[orderNumber]/page.tsx:77:            <p className="font-medium">{order.paymentStatus === "UNPAID" ? "현장 결제 예정" : order.paymentStatus}</p>
+./app/account/orders/[orderNumber]/page.tsx:80:            <p className="text-gray-500">Orders일</p>
+./app/account/orders/[orderNumber]/page.tsx:86:            <p className="text-gray-500">메모</p>
+./app/account/orders/[orderNumber]/page.tsx:110:          <span>합계</span>
+./app/account/orders/page.tsx:8:  DRAFT: "임시", PENDING: "접수됨", CONFIRMED: "Confirm됨",
+./app/account/orders/page.tsx:9:  PREPARING: "준비중", READY: "준비완료", COMPLETED: "완료", CANCELLED: "Cancel됨",
+./app/account/orders/page.tsx:54:          <p className="text-gray-500">아직 Orders 내역이 없습니다</p>
+./app/account/page.tsx:22:      <div className="text-center py-12 text-gray-500">Users 정보를 불러올 수 없습니다.</div>
+./app/account/page.tsx:28:    STAFF: "스태프",
+./app/account/page.tsx:29:    CUSTOMER: "고객",
+./app/account/page.tsx:42:        <p className="text-gray-500 mt-1">계정 정보 및 Settings을 관리하세요</p>
+./app/account/page.tsx:61:            <p className="text-gray-500">권한</p>
+./app/account/page.tsx:69:              {user.isActive ? "Active" : "비Active"}
+./app/account/page.tsx:73:            <p className="text-gray-500">가입일</p>
+./app/account/page.tsx:91:            Password 변경
+./app/account/page.tsx:104:          <p className="text-sm text-gray-500">Orders 내역 및 Status를 Confirm할 수 있습니다.</p>
+./app/account/page.tsx:105:          <p className="mt-3 text-xs text-amber-600 font-medium">Orders List 보기 →</p>
+./app/account/page.tsx:112:            <h2 className="font-semibold text-gray-900">내 Subscriptions</h2>
+./app/account/page.tsx:114:          <p className="text-sm text-gray-500">정기 Subscriptions 및 플랜을 관리할 수 있습니다.</p>
+./app/account/page.tsx:115:          <p className="mt-3 text-xs text-amber-600 font-medium">Subscriptions List 보기 →</p>
+./app/account/page.tsx:122:            <h2 className="font-semibold text-gray-900">Pickup 정보</h2>
+./app/account/page.tsx:124:          <p className="text-sm text-gray-500">Save된 Pickup 메모 및 연락 정보를 관리합니다.</p>
+./app/account/page.tsx:125:          <p className="mt-3 text-xs text-amber-600 font-medium">곧 Link될 예정</p>
+./app/account/page.tsx:132:            <h2 className="font-semibold text-gray-900">결제 수단</h2>
+./app/account/page.tsx:134:          <p className="text-sm text-gray-500">등록된 결제 수단을 Confirm하고 관리합니다.</p>
+./app/account/page.tsx:135:          <p className="mt-3 text-xs text-amber-600 font-medium">곧 Link될 예정</p>
+./app/account/security/page.tsx:16:          <span className="text-gray-700">Password 변경</span>
+./app/account/security/page.tsx:18:        <h1 className="text-2xl font-bold text-gray-900">Password 변경</h1>
+./app/account/security/page.tsx:19:        <p className="text-gray-500 mt-1">계정 보안을 위해 주기적으로 Password를 변경하세요</p>
+./app/account/security/PasswordForm.tsx:17:      setMessage({ type: "error", text: "New Password가 일치하지 않습니다" });
+./app/account/security/PasswordForm.tsx:32:          setMessage({ type: "error", text: data.message ?? "변경에 실패했습니다" });
+./app/account/security/PasswordForm.tsx:34:          setMessage({ type: "success", text: "Password가 변경되었습니다" });
+./app/account/security/PasswordForm.tsx:40:        setMessage({ type: "error", text: "요청 중 오류가 발생했습니다" });
+./app/account/security/PasswordForm.tsx:95:          placeholder="8자 이상, 영문+숫자 포함"
+./app/account/security/PasswordForm.tsx:105:          새 Confirm Password
+./app/account/security/PasswordForm.tsx:115:          placeholder="New Password 재입력"
+./app/account/security/PasswordForm.tsx:124:        {isPending ? "변경 중…" : "Password 변경"}
+./app/account/subscriptions/page.tsx:7:const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
+./app/account/subscriptions/page.tsx:12:  CANCELLED: "Cancel됨",
+./app/account/subscriptions/page.tsx:29:          <h1 className="text-2xl font-bold text-gray-900">내 Subscriptions</h1>
+./app/account/subscriptions/page.tsx:30:          <p className="text-gray-500 mt-1">정기 Subscriptions List을 Confirm하세요</p>
+./app/account/subscriptions/page.tsx:42:          <p className="text-gray-500">아직 Subscriptions이 없습니다</p>
+./app/account/subscriptions/page.tsx:62:                      Every {WEEKDAYS[sub.pickupWeekday]}요일
+./app/account/subscriptions/[id]/page.tsx:9:const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
+./app/account/subscriptions/[id]/page.tsx:14:  CANCELLED: "Cancel됨",
+./app/account/subscriptions/[id]/page.tsx:24:  SCHEDULED: "예약됨",
+./app/account/subscriptions/[id]/page.tsx:26:  SKIPPED: "items너뜀",
+./app/account/subscriptions/[id]/page.tsx:27:  CANCELLED: "Cancel됨",
+./app/account/subscriptions/[id]/page.tsx:58:          <Link href="/account/subscriptions" className="hover:text-amber-600">내 Subscriptions</Link>
+./app/account/subscriptions/[id]/page.tsx:71:          <span className="font-semibold text-gray-900">Every {WEEKDAYS[sub.pickupWeekday]}요일</span>
+./app/account/subscriptions/[id]/page.tsx:77:            <p className="text-gray-500 text-xs">시작일</p>
+./app/account/subscriptions/[id]/page.tsx:82:              <p className="text-gray-500 text-xs">종료일</p>
+./app/account/subscriptions/[id]/page.tsx:90:            <p className="text-gray-500 text-xs">메모</p>
+./app/account/subscriptions/[id]/page.tsx:117:            <h2 className="font-semibold text-gray-800 text-sm">발생 내역</h2>
+./app/account/subscriptions/[id]/SubscriptionActions.tsx:40:        {isPending ? "처리중..." : "Skip"}
+./app/account/subscriptions/[id]/SubscriptionActions.tsx:60:          {isPending ? "처리중..." : "Pause"}
+./app/account/subscriptions/[id]/SubscriptionActions.tsx:74:          {isPending ? "처리중..." : "재개하기"}
+./app/account/subscriptions/[id]/SubscriptionActions.tsx:79:          if (!confirm("Subscriptions을 Cancel하시겠습니까?")) return;
+./app/account/subscriptions/[id]/SubscriptionActions.tsx:88:        {isPending ? "처리중..." : "Subscriptions Cancel"}
+./app/external-factors/page.tsx:36:          <h1 className="text-2xl font-bold text-gray-900">External Data 관리</h1>
+./app/external-factors/page.tsx:37:          <p className="text-gray-500 mt-1">Date별 자동 수집된 External Factors Data</p>
+./app/external-factors/page.tsx:48:          <p className="text-gray-500 mt-2">수집된 External Data가 없습니다.</p>
+./app/external-factors/page.tsx:49:          <p className="text-gray-400 text-sm mt-1">Sales Records 또는 Predictions Create 시 자동 수집됩니다.</p>
+./app/external-factors/page.tsx:61:                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">수집 시각</th>
+./app/external-factors/page.tsx:132:        <label className="block text-xs font-medium text-gray-600 mb-1">시작일</label>
+./app/external-factors/page.tsx:141:        <label className="block text-xs font-medium text-gray-600 mb-1">종료일</label>
+./app/external-factors/[date]/page.tsx:21:        <p className="text-red-600">유효하지 않은 Date입니다: {dateParam}</p>
+./app/external-factors/[date]/page.tsx:59:                <span>Weather 수집 실패 — 수집 버튼을 다시 눌러 재시도하세요.</span>
+./app/external-factors/[date]/page.tsx:65:                <span>Weather Data가 없습니다. 수집 버튼을 눌러 수집하세요.</span>
+./app/external-factors/[date]/page.tsx:69:              <InfoItem label="Weather 요약" value={factor.weatherSummary ?? "—"} />
+./app/external-factors/[date]/page.tsx:70:              <InfoItem label="최저 기온" value={factor.minTemp != null ? `${factor.minTemp}°C` : "—"} />
+./app/external-factors/[date]/page.tsx:71:              <InfoItem label="최고 기온" value={factor.maxTemp != null ? `${factor.maxTemp}°C` : "—"} />
+./app/external-factors/[date]/page.tsx:72:              <InfoItem label="강수량" value={factor.rainMm != null ? `${factor.rainMm}mm` : "—"} />
+./app/external-factors/[date]/page.tsx:73:              <InfoItem label="풍속" value={factor.windKph != null ? `${factor.windKph}kph` : "—"} />
+./app/external-factors/[date]/page.tsx:84:              <InfoItem label="School Holiday" value={factor.schoolHoliday ? "예" : "No"} />
+./app/external-factors/[date]/page.tsx:90:            <h2 className="text-base font-semibold text-gray-900 border-b border-gray-100 pb-2">Event &amp; 뉴스</h2>
+./app/external-factors/[date]/page.tsx:92:              <InfoItem label="지역 Event" value={factor.localEventName ?? "None"} />
+./app/external-factors/[date]/page.tsx:104:              {factor.sourceNews && <InfoItem label="뉴스 Source" value={factor.sourceNews} />}
+./app/external-factors/[date]/page.tsx:110:            <InfoItem label="수집 시각" value={factor.collectedAt ? new Date(factor.collectedAt).toLocaleString("ko-KR") : "—"} />
+./app/external-factors/[date]/page.tsx:111:            <InfoItem label="마지막 갱신" value={factor.lastRefreshedAt ? new Date(factor.lastRefreshedAt).toLocaleString("ko-KR") : "—"} />
+./app/external-factors/[date]/page.tsx:112:            <InfoItem label="Create일" value={new Date(factor.createdAt).toLocaleString("ko-KR")} />
+./app/external-factors/[date]/page.tsx:119:          <p className="text-gray-600 mt-3 font-medium">이 Date의 External Data가 없습니다.</p>
+./app/external-factors/[date]/page.tsx:120:          <p className="text-gray-400 text-sm mt-1">위 &apos;External Data 수집&apos; 버튼을 눌러 수집을 시작하세요.</p>
+./app/external-factors/[date]/page.tsx:127:          <h2 className="text-base font-semibold text-gray-900 border-b border-gray-100 pb-2">Link된 Data</h2>
+./app/external-factors/[date]/page.tsx:133:                  {formatDate(new Date(dailyRecord.date))} 보기 →
+./app/external-factors/[date]/page.tsx:141:                  {new Date(p.createdAt).toLocaleString("ko-KR")} 보기 →
+./app/staff/page.tsx:17:        <h1 className="text-2xl font-bold text-gray-900">스태프 Dashboard</h1>
+./app/staff/page.tsx:42:            <p className="text-xs text-blue-600">내일 Sold Predictions 실Rows</p>
+./app/staff/page.tsx:49:        <h2 className="font-semibold text-gray-900 mb-4">최근 Sales Records</h2>
+./app/staff/page.tsx:51:          <p className="text-sm text-gray-500">기록이 없습니다.</p>
+./app/dashboard/page.tsx:201:        <p className="text-gray-500 mt-1">Bagels Beyond — 매일 운영 현황을 한눈에</p>
+./app/dashboard/page.tsx:206:        <h2 className="text-lg font-semibold text-gray-900 mb-3">📅 내일 Predictions</h2>
+./app/dashboard/page.tsx:224:              <PredCard icon="��" label="예상 Sold" value={`${tomorrowPrediction.predictedBagelsSold}개`} />
+./app/dashboard/page.tsx:225:              <PredCard icon="🔥" label="추천 생산" value={`${tomorrowPrediction.recommendedBagelsToBake}개`} highlight />
+./app/dashboard/page.tsx:226:              <PredCard icon="📦" label="예상 Remaining" value={`${tomorrowPrediction.predictedLeftovers}개`} />
+./app/dashboard/page.tsx:228:                <PredCard icon="📈" label="예상 Sold율" value={`${(tomorrowPrediction.projectedSellThroughRate * 100).toFixed(1)}%`} />
+./app/dashboard/page.tsx:244:              <p className="text-gray-500 text-sm">내일({tomorrowStr}) Predictions이 아직 없습니다.</p>
+./app/dashboard/page.tsx:245:              <p className="text-gray-400 text-xs mt-1">지금 Predictions을 Create하면 생산량 추천을 받을 수 있습니다.</p>
+./app/dashboard/page.tsx:259:        <h2 className="text-lg font-semibold text-gray-900 mb-3">📊 최근 7일 실적</h2>
+./app/dashboard/page.tsx:262:            <StatCard title="7일 Total Sales" value={formatCurrency(totalSalesSum)} sub={`${recentRecords.length}일 기록`} />
+./app/dashboard/page.tsx:263:            <StatCard title="Daily Avg. Sales" value={formatCurrency(avgDailySales)} sub="최근 7일 기준" />
+./app/dashboard/page.tsx:264:            <StatCard title="Daily Avg. Sold량" value={`${Math.round(avgBagelsSold)}개`} sub="베이글" />
+./app/dashboard/page.tsx:268:              sub="베이글 기준"
+./app/dashboard/page.tsx:274:            <p className="text-gray-400 text-sm">최근 7일 Sales Data가 없습니다.</p>
+./app/dashboard/page.tsx:276:              Enter Sales하기 →
+./app/dashboard/page.tsx:285:          <h2 className="text-lg font-semibold text-gray-900 mb-3">🎯 최근 Predictions Accuracy</h2>
+./app/dashboard/page.tsx:289:                <p className="text-sm text-gray-500">최근 {comparableCount}items 비교 Available</p>
+./app/dashboard/page.tsx:291:                  {accurateCount}items 정확 <span className="text-lg font-normal text-gray-500">/ {comparableCount}items</span>
+./app/dashboard/page.tsx:293:                <p className="text-sm text-gray-500 mt-1">Error율 5% 이내 기준</p>
+./app/dashboard/page.tsx:311:          <h2 className="text-lg font-semibold text-gray-900">📊 Analytics 요약</h2>
+./app/dashboard/page.tsx:320:              <p className="text-xs font-medium text-gray-500 mb-3">최근 7일 vs 이전 7일</p>
+./app/dashboard/page.tsx:365:              <p className="text-xs font-medium text-gray-500 mb-3">이번 달 vs 지난 달</p>
+./app/dashboard/page.tsx:396:                    {monthComparison.current.recordCount}일
+./app/dashboard/page.tsx:408:              Enter Sales하기 →
+./app/dashboard/page.tsx:416:        <h2 className="text-lg font-semibold text-gray-900 mb-3">⚡ 빠른 액션</h2>
+./app/dashboard/page.tsx:418:          <QuickAction href="/sales/new" label="새 Enter Sales" icon="➕" color="amber" />
+./app/dashboard/page.tsx:420:          <QuickAction href="/predictions/new" label="새 Predictions 만들기" icon="🔮" color="blue" />
+./app/dashboard/page.tsx:422:          <QuickAction href="/calendar" label="Calendar 보기" icon="📅" color="gray" />
+./app/dashboard/page.tsx:430:            <h2 className="text-lg font-semibold text-gray-900">최근 Sales Records</h2>
+./app/dashboard/page.tsx:455:                      <td className="px-4 py-3 text-sm text-gray-900 text-right">{getSoldBagels(record)}개</td>
+./app/dashboard/page.tsx:456:                      <td className="px-4 py-3 text-sm text-gray-900 text-right">{record.bagelsLeft}개</td>
+./app/dashboard/page.tsx:473:            <h2 className="text-base font-semibold text-gray-900 mb-2">최근 CSV Imports</h2>
+./app/dashboard/page.tsx:479:                    총 {latestImportJob.totalRows}Rows · 성공 {latestImportJob.successRows} · 실패 {latestImportJob.failedRows}
+./app/dashboard/page.tsx:492:            <h2 className="text-base font-semibold text-gray-900 mb-2">External Data 수집 현황</h2>
+./app/dashboard/page.tsx:495:                최근 수집일: {latestExternalFactor.dailyRecord ? formatDate((latestExternalFactor.dailyRecord as { date: Date }).date) : "-"}
+./app/dashboard/page.tsx:508:          <h2 className="text-lg font-semibold text-gray-900">🤖 Automation 작업 현황</h2>
+./app/dashboard/page.tsx:517:            <p className="text-xs text-gray-500">실패한 작업</p>
+./app/dashboard/page.tsx:523:            <p className="text-xs text-gray-500">진Rows 중</p>
+./app/dashboard/page.tsx:529:            <p className="text-xs text-gray-500">대기 중</p>
+./app/dashboard/page.tsx:533:            <p className="text-xs text-gray-500">성공</p>
+./app/dashboard/page.tsx:541:            <p className="text-xs text-gray-500 mb-1">마지막 외부요인 수집</p>
+./app/dashboard/page.tsx:545:                : "아직 None"}
+./app/dashboard/page.tsx:549:            <p className="text-xs text-gray-500 mb-1">마지막 Predictions Create</p>
+./app/dashboard/page.tsx:553:                : "아직 None"}
+./app/dashboard/page.tsx:564:                  <th className="px-4 py-2 text-left text-xs text-gray-500 font-medium">작업 유형</th>
+./app/dashboard/page.tsx:565:                  <th className="px-4 py-2 text-left text-xs text-gray-500 font-medium">대상 Date</th>
+./app/dashboard/page.tsx:567:                  <th className="px-4 py-2 text-left text-xs text-gray-500 font-medium">Create일시</th>
+./app/dashboard/page.tsx:602:            label="▶ 외부요인 수집"
+./app/dashboard/page.tsx:607:            label="🔮 내일 Predictions Create"
+./app/dashboard/page.tsx:612:            label="⟳ 대기 작업 실Rows"
+./app/dashboard/page.tsx:621:          <p className="text-gray-500 mb-4">아직 입력된 Sales Data가 없습니다.</p>
+./app/dashboard/page.tsx:712:    imported: "임포트됨",
+./app/dashboard/page.tsx:713:    ready: "준비완료",
+./app/dashboard/page.tsx:714:    failed: "실패",
+./app/dashboard/page.tsx:715:    pending: "대기중",
+./app/dashboard/page.tsx:716:    validating: "검증중",
+./app/api/admin/products/route.ts:7:  name: z.string().min(1, "Products명을 입력해주세요"),
+./app/api/admin/products/route.ts:10:    .min(1, "슬러그를 입력해주세요")
+./app/api/admin/products/route.ts:11:    .regex(/^[a-z0-9-]+$/, "슬러그는 소문자, 숫자, 하이픈만 사용할 수 있습니다"),
+./app/api/admin/products/route.ts:14:  basePrice: z.number().min(0, "가격은 0 이상이어야 합니다"),
+./app/api/admin/products/route.ts:40:      { message: "Products List을 불러오는데 실패했습니다" },
+./app/api/admin/products/route.ts:54:    return NextResponse.json({ message: "요청 본문이 올바르지 않습니다" }, { status: 400 });
+./app/api/admin/products/route.ts:60:      { message: "입력값이 올바르지 않습니다", errors: parsed.error.flatten() },
+./app/api/admin/products/route.ts:70:      { message: "이미 사용 중인 슬러그입니다" },
+./app/api/admin/products/route.ts:91:      { message: "Products Create에 실패했습니다" },
+./app/api/admin/products/[id]/route.ts:8:  name: z.string().min(1, "Products명을 입력해주세요").optional(),
+./app/api/admin/products/[id]/route.ts:11:    .min(1, "슬러그를 입력해주세요")
+./app/api/admin/products/[id]/route.ts:12:    .regex(/^[a-z0-9-]+$/, "슬러그는 소문자, 숫자, 하이픈만 사용할 수 있습니다")
+./app/api/admin/products/[id]/route.ts:16:  basePrice: z.number().min(0, "가격은 0 이상이어야 합니다").optional(),
+./app/api/admin/products/[id]/route.ts:48:      return NextResponse.json({ message: "Products을 Not found" }, { status: 404 });
+./app/api/admin/products/[id]/route.ts:54:      { message: "Products 정보를 불러오는데 실패했습니다" },
+./app/api/admin/products/[id]/route.ts:73:    return NextResponse.json({ message: "요청 본문이 올바르지 않습니다" }, { status: 400 });
+./app/api/admin/products/[id]/route.ts:79:      { message: "입력값이 올바르지 않습니다", errors: parsed.error.flatten() },
+./app/api/admin/products/[id]/route.ts:96:    return NextResponse.json({ message: "Products을 Not found" }, { status: 404 });
+./app/api/admin/products/[id]/route.ts:109:          message: `Loyverse sync Products의 원본 필드는 Edit할 수 없습니다: ${attemptedReadOnly.join(", ")}`,
+./app/api/admin/products/[id]/route.ts:121:        { message: "이미 사용 중인 슬러그입니다" },
+./app/api/admin/products/[id]/route.ts:144:      { message: "Products Edit에 실패했습니다" },
+./app/api/admin/products/[id]/route.ts:161:    return NextResponse.json({ message: "Products을 Not found" }, { status: 404 });
+./app/api/admin/products/[id]/route.ts:166:    return NextResponse.json({ message: "Products이 Delete되었습니다" });
+./app/api/admin/products/[id]/route.ts:169:      { message: "Products Delete에 실패했습니다" },
+./app/api/admin/products/[id]/option-groups/[groupId]/route.ts:7:  name: z.string().min(1, "옵션 그룹명을 입력해주세요").optional(),
+./app/api/admin/products/[id]/option-groups/[groupId]/route.ts:27:    return NextResponse.json({ message: "옵션 그룹을 Not found" }, { status: 404 });
+./app/api/admin/products/[id]/option-groups/[groupId]/route.ts:34:    return NextResponse.json({ message: "요청 본문이 올바르지 않습니다" }, { status: 400 });
+./app/api/admin/products/[id]/option-groups/[groupId]/route.ts:40:      { message: "입력값이 올바르지 않습니다", errors: parsed.error.flatten() },
+./app/api/admin/products/[id]/option-groups/[groupId]/route.ts:53:    return NextResponse.json({ message: "옵션 그룹 Edit에 실패했습니다" }, { status: 500 });
+./app/api/admin/products/[id]/option-groups/[groupId]/route.ts:70:    return NextResponse.json({ message: "옵션 그룹을 Not found" }, { status: 404 });
+./app/api/admin/products/[id]/option-groups/[groupId]/route.ts:75:    return NextResponse.json({ message: "옵션 그룹이 Delete되었습니다" });
+./app/api/admin/products/[id]/option-groups/[groupId]/route.ts:77:    return NextResponse.json({ message: "옵션 그룹 Delete에 실패했습니다" }, { status: 500 });
+./app/api/admin/products/[id]/option-groups/[groupId]/options/route.ts:7:  name: z.string().min(1, "옵션명을 입력해주세요"),
+./app/api/admin/products/[id]/option-groups/[groupId]/options/route.ts:28:    return NextResponse.json({ message: "옵션 그룹을 Not found" }, { status: 404 });
+./app/api/admin/products/[id]/option-groups/[groupId]/options/route.ts:35:    return NextResponse.json({ message: "요청 본문이 올바르지 않습니다" }, { status: 400 });
+./app/api/admin/products/[id]/option-groups/[groupId]/options/route.ts:41:      { message: "입력값이 올바르지 않습니다", errors: parsed.error.flatten() },
+./app/api/admin/products/[id]/option-groups/[groupId]/options/route.ts:52:    return NextResponse.json({ message: "옵션 Create에 실패했습니다" }, { status: 500 });
+./app/api/admin/products/[id]/option-groups/[groupId]/options/[optionId]/route.ts:7:  name: z.string().min(1, "옵션명을 입력해주세요").optional(),
+./app/api/admin/products/[id]/option-groups/[groupId]/options/[optionId]/route.ts:28:    return NextResponse.json({ message: "옵션을 Not found" }, { status: 404 });
+./app/api/admin/products/[id]/option-groups/[groupId]/options/[optionId]/route.ts:35:    return NextResponse.json({ message: "요청 본문이 올바르지 않습니다" }, { status: 400 });
+./app/api/admin/products/[id]/option-groups/[groupId]/options/[optionId]/route.ts:41:      { message: "입력값이 올바르지 않습니다", errors: parsed.error.flatten() },
+./app/api/admin/products/[id]/option-groups/[groupId]/options/[optionId]/route.ts:53:    return NextResponse.json({ message: "옵션 Edit에 실패했습니다" }, { status: 500 });
+./app/api/admin/products/[id]/option-groups/[groupId]/options/[optionId]/route.ts:70:    return NextResponse.json({ message: "옵션을 Not found" }, { status: 404 });
+./app/api/admin/products/[id]/option-groups/[groupId]/options/[optionId]/route.ts:75:    return NextResponse.json({ message: "옵션이 Delete되었습니다" });
+./app/api/admin/products/[id]/option-groups/[groupId]/options/[optionId]/route.ts:77:    return NextResponse.json({ message: "옵션 Delete에 실패했습니다" }, { status: 500 });
+./app/api/admin/products/[id]/option-groups/route.ts:7:  name: z.string().min(1, "옵션 그룹명을 입력해주세요"),
+./app/api/admin/products/[id]/option-groups/route.ts:25:    return NextResponse.json({ message: "Products을 Not found" }, { status: 404 });
+./app/api/admin/products/[id]/option-groups/route.ts:32:    return NextResponse.json({ message: "요청 본문이 올바르지 않습니다" }, { status: 400 });
+./app/api/admin/products/[id]/option-groups/route.ts:38:      { message: "입력값이 올바르지 않습니다", errors: parsed.error.flatten() },
+./app/api/admin/products/[id]/option-groups/route.ts:50:    return NextResponse.json({ message: "옵션 그룹 Create에 실패했습니다" }, { status: 500 });
+./app/api/admin/products/[id]/modifier-group-assignments/[groupId]/route.ts:20:    return NextResponse.json({ message: "Modifiers 그룹 Link 해제에 실패했습니다" }, { status: 500 });
+./app/api/admin/products/[id]/modifier-group-assignments/route.ts:7:  groupId: z.string().min(1, "Modifiers 그룹 ID를 입력해주세요"),
+./app/api/admin/products/[id]/modifier-group-assignments/route.ts:21:    return NextResponse.json({ message: "Products을 Not found" }, { status: 404 });
+./app/api/admin/products/[id]/modifier-group-assignments/route.ts:28:    return NextResponse.json({ message: "요청 본문이 올바르지 않습니다" }, { status: 400 });
+./app/api/admin/products/[id]/modifier-group-assignments/route.ts:34:      { message: "입력값이 올바르지 않습니다", errors: parsed.error.flatten() },
+./app/api/admin/products/[id]/modifier-group-assignments/route.ts:43:    return NextResponse.json({ message: "Modifiers 그룹을 Not found" }, { status: 404 });
+./app/api/admin/products/[id]/modifier-group-assignments/route.ts:79:    return NextResponse.json({ message: "Modifiers 그룹 Link에 실패했습니다" }, { status: 500 });
+./app/api/admin/modifier-groups/route.ts:7:  name: z.string().min(1, "그룹명을 입력해주세요"),
+./app/api/admin/modifier-groups/route.ts:36:    return NextResponse.json({ message: "Modifiers 그룹 List을 불러오는데 실패했습니다" }, { status: 500 });
+./app/api/admin/modifier-groups/route.ts:48:    return NextResponse.json({ message: "요청 본문이 올바르지 않습니다" }, { status: 400 });
+./app/api/admin/modifier-groups/route.ts:54:      { message: "입력값이 올바르지 않습니다", errors: parsed.error.flatten() },
+./app/api/admin/modifier-groups/route.ts:66:    return NextResponse.json({ message: "Modifiers 그룹 Create에 실패했습니다" }, { status: 500 });
+./app/api/admin/modifier-groups/[id]/route.ts:33:    return NextResponse.json({ message: "Modifiers 그룹을 Not found" }, { status: 404 });
+./app/api/admin/modifier-groups/[id]/route.ts:53:    return NextResponse.json({ message: "Modifiers 그룹을 Not found" }, { status: 404 });
+./app/api/admin/modifier-groups/[id]/route.ts:63:    return NextResponse.json({ message: "요청 본문이 올바르지 않습니다" }, { status: 400 });
+./app/api/admin/modifier-groups/[id]/route.ts:69:      { message: "입력값이 올바르지 않습니다", errors: parsed.error.flatten() },
+./app/api/admin/modifier-groups/[id]/route.ts:87:    return NextResponse.json({ message: "Modifiers 그룹 Edit에 실패했습니다" }, { status: 500 });
+./app/api/admin/modifier-groups/[id]/route.ts:105:    return NextResponse.json({ message: "Modifiers 그룹을 Not found" }, { status: 404 });
+./app/api/admin/modifier-groups/[id]/route.ts:133:    return NextResponse.json({ message: "Modifiers 그룹 Delete에 실패했습니다" }, { status: 500 });
+./app/api/admin/modifier-groups/[id]/options/route.ts:7:  name: z.string().min(1, "옵션명을 입력해주세요"),
+./app/api/admin/modifier-groups/[id]/options/route.ts:26:    return NextResponse.json({ message: "Modifiers 그룹을 Not found" }, { status: 404 });
+./app/api/admin/modifier-groups/[id]/options/route.ts:33:    return NextResponse.json({ message: "요청 본문이 올바르지 않습니다" }, { status: 400 });
+./app/api/admin/modifier-groups/[id]/options/route.ts:39:      { message: "입력값이 올바르지 않습니다", errors: parsed.error.flatten() },
+./app/api/admin/modifier-groups/[id]/options/route.ts:50:    return NextResponse.json({ message: "옵션 Create에 실패했습니다" }, { status: 500 });
+./app/api/admin/modifier-groups/[id]/options/[optionId]/route.ts:35:    return NextResponse.json({ message: "옵션을 Not found" }, { status: 404 });
+./app/api/admin/modifier-groups/[id]/options/[optionId]/route.ts:42:    return NextResponse.json({ message: "요청 본문이 올바르지 않습니다" }, { status: 400 });
+./app/api/admin/modifier-groups/[id]/options/[optionId]/route.ts:48:      { message: "입력값이 올바르지 않습니다", errors: parsed.error.flatten() },
+./app/api/admin/modifier-groups/[id]/options/[optionId]/route.ts:65:    return NextResponse.json({ message: "옵션 Edit에 실패했습니다" }, { status: 500 });
+./app/api/admin/modifier-groups/[id]/options/[optionId]/route.ts:88:    return NextResponse.json({ message: "옵션을 Not found" }, { status: 404 });
+./app/api/admin/modifier-groups/[id]/options/[optionId]/route.ts:102:    return NextResponse.json({ message: "옵션 Delete에 실패했습니다" }, { status: 500 });
+./app/api/admin/categories/route.ts:19:      { message: "Categories List을 불러오는데 실패했습니다" },
+./app/api/admin/integrations/loyverse/sync/route.ts:27:      { message: err instanceof Error ? err.message : "Sync 중 오류가 발생했습니다" },
+./app/api/admin/integrations/loyverse/full-sync/route.ts:35:      { message: err instanceof Error ? err.message : "Sync 중 오류가 발생했습니다" },
+./app/api/admin/sync/orders/retry/route.ts:27:        { error: "orderId가 필요합니다" },
+./app/api/admin/sync/orders/retry/route.ts:33:    return NextResponse.json({ error: "잘못된 요청 형식" }, { status: 400 });
+./app/api/admin/users/route.ts:82:      { message: "Users List을 불러오는데 실패했습니다" },
+./app/api/admin/users/[id]/route.ts:13:    message: "role 또는 isActive 중 하나는 반드시 제공해야 합니다",
+./app/api/admin/users/[id]/route.ts:31:    return NextResponse.json({ message: "요청 본문이 올바르지 않습니다" }, { status: 400 });
+./app/api/admin/users/[id]/route.ts:37:      { message: "입력값이 올바르지 않습니다", errors: parsed.error.flatten() },
+./app/api/admin/users/[id]/route.ts:47:    return NextResponse.json({ message: "Users를 Not found" }, { status: 404 });
+./app/api/admin/users/[id]/route.ts:56:      { message: "자기 자신을 비Activate할 수 없습니다" },
+./app/api/admin/users/[id]/route.ts:63:      { message: "자기 자신의 권한을 ADMIN 아래로 낮출 수 없습니다" },
+./app/api/admin/users/[id]/route.ts:78:        { message: "마지막 Active Admin(ADMIN)는 비Activate할 수 없습니다" },
+./app/api/admin/users/[id]/route.ts:88:          { message: "마지막 Admin(ADMIN)의 권한을 낮출 수 없습니다" },
+./app/api/admin/users/[id]/route.ts:152:      { message: "Users 정보 업데이트에 실패했습니다" },
+./app/api/admin/subscriptions/route.ts:32:    return NextResponse.json({ message: "Subscriptions List을 불러오지 못했습니다" }, { status: 500 });
+./app/api/admin/subscriptions/[id]/route.ts:16:  if (!sub) return NextResponse.json({ message: "Subscriptions을 Not found" }, { status: 404 });
+./app/api/admin/subscriptions/[id]/route.ts:38:    return NextResponse.json({ message: "요청 본문이 올바르지 않습니다" }, { status: 400 });
+./app/api/admin/subscriptions/[id]/route.ts:43:    return NextResponse.json({ message: parsed.error.issues[0]?.message ?? "입력 오류" }, { status: 400 });
+./app/api/admin/subscriptions/[id]/route.ts:51:      { message: err instanceof Error ? err.message : "오류가 발생했습니다" },
+./app/api/admin/inventory/route.ts:7:  productId: z.string().min(1, "Products ID를 입력해주세요"),
+./app/api/admin/inventory/route.ts:10:    .regex(/^\d{4}-\d{2}-\d{2}$/, "Date 형식은 YYYY-MM-DD 이어야 합니다"),
+./app/api/admin/inventory/route.ts:11:  plannedQty: z.number().int().min(0, "수량은 0 이상이어야 합니다"),
+./app/api/admin/inventory/route.ts:12:  bakedQty: z.number().int().min(0, "수량은 0 이상이어야 합니다"),
+./app/api/admin/inventory/route.ts:13:  reservedQty: z.number().int().min(0, "수량은 0 이상이어야 합니다"),
+./app/api/admin/inventory/route.ts:14:  soldQty: z.number().int().min(0, "수량은 0 이상이어야 합니다"),
+./app/api/admin/inventory/route.ts:26:      { message: "Date 파라미터(date)가 필요합니다" },
+./app/api/admin/inventory/route.ts:33:      { message: "Date 형식은 YYYY-MM-DD 이어야 합니다" },
+./app/api/admin/inventory/route.ts:72:      { message: "Inventory 정보를 불러오는데 실패했습니다" },
+./app/api/admin/inventory/route.ts:86:    return NextResponse.json({ message: "요청 본문이 올바르지 않습니다" }, { status: 400 });
+./app/api/admin/inventory/route.ts:92:      { message: "입력값이 올바르지 않습니다", errors: parsed.error.flatten() },
+./app/api/admin/inventory/route.ts:102:    return NextResponse.json({ message: "Products을 Not found" }, { status: 404 });
+./app/api/admin/inventory/route.ts:115:      { message: "Inventory 정보 Save에 실패했습니다" },
+./app/api/admin/subscription-occurrences/route.ts:13:    return NextResponse.json({ message: "Date를 입력해주세요 (YYYY-MM-DD)" }, { status: 400 });
+./app/api/admin/subscription-occurrences/route.ts:34:    return NextResponse.json({ message: "발생 List을 불러오지 못했습니다" }, { status: 500 });
+./app/api/admin/subscription-occurrences/route.ts:51:    return NextResponse.json({ message: "요청 본문이 올바르지 않습니다" }, { status: 400 });
+./app/api/admin/subscription-occurrences/route.ts:56:    return NextResponse.json({ message: parsed.error.issues[0]?.message ?? "입력 오류" }, { status: 400 });
+./app/api/admin/subscription-occurrences/route.ts:69:    return NextResponse.json({ message: "발생 Create 중 오류가 발생했습니다" }, { status: 500 });
+./app/api/admin/subscription-occurrences/[id]/route.ts:23:    return NextResponse.json({ message: "요청 본문이 올바르지 않습니다" }, { status: 400 });
+./app/api/admin/subscription-occurrences/[id]/route.ts:28:    return NextResponse.json({ message: parsed.error.issues[0]?.message ?? "입력 오류" }, { status: 400 });
+./app/api/admin/subscription-occurrences/[id]/route.ts:40:      { message: err instanceof Error ? err.message : "오류가 발생했습니다" },
+./app/api/admin/modifiers/route.ts:78:      { message: "Modifier List을 불러오는데 실패했습니다" },
+./app/api/admin/modifiers/[id]/route.ts:70:      return NextResponse.json({ message: "Modifier를 Not found" }, { status: 404 });
+./app/api/admin/modifiers/[id]/route.ts:76:      { message: "Modifier 정보를 불러오는데 실패했습니다" },
+./app/api/admin/modifiers/[id]/route.ts:95:    return NextResponse.json({ message: "요청 본문이 올바르지 않습니다" }, { status: 400 });
+./app/api/admin/modifiers/[id]/route.ts:101:      { message: "입력값이 올바르지 않습니다", errors: parsed.error.flatten() },
+./app/api/admin/modifiers/[id]/route.ts:119:    return NextResponse.json({ message: "Modifier를 Not found" }, { status: 404 });
+./app/api/admin/modifiers/[id]/route.ts:133:          message: `Loyverse sync Modifier의 원본 필드는 Edit할 수 없습니다: ${attemptedReadOnly.join(", ")}`,
+./app/api/admin/modifiers/[id]/route.ts:150:      { message: "Modifier Edit에 실패했습니다" },
+./app/api/sales/route.ts:15:    return NextResponse.json({ message: "Data를 불러오는데 실패했습니다" }, { status: 500 });
+./app/api/sales/route.ts:29:        { message: "입력값이 올바르지 않습니다", errors: parsed.error.flatten() },
+./app/api/sales/route.ts:95:      return NextResponse.json({ message: "이미 해당 Date의 기록이 있습니다. 해당 Date의 기록을 Edit하려면 Edit 페이지를 이용해주세요." }, { status: 409 });
+./app/api/sales/route.ts:97:    return NextResponse.json({ message: "Save에 실패했습니다" }, { status: 500 });
+./app/api/sales/[id]/route.ts:17:      return NextResponse.json({ message: "기록을 Not found" }, { status: 404 });
+./app/api/sales/[id]/route.ts:21:    return NextResponse.json({ message: "Data를 불러오는데 실패했습니다" }, { status: 500 });
+./app/api/sales/[id]/route.ts:36:        { message: "입력값이 올바르지 않습니다", errors: parsed.error.flatten() },
+./app/api/sales/[id]/route.ts:77:      return NextResponse.json({ message: "기록을 Not found" }, { status: 404 });
+./app/api/sales/[id]/route.ts:105:      return NextResponse.json({ message: "이미 해당 Date의 기록이 있습니다. 다른 Date를 Please select." }, { status: 409 });
+./app/api/sales/[id]/route.ts:107:    return NextResponse.json({ message: "Edit에 실패했습니다" }, { status: 500 });
+./app/api/sales/[id]/route.ts:118:    return NextResponse.json({ message: "Delete되었습니다" });
+./app/api/sales/[id]/route.ts:120:    return NextResponse.json({ message: "Delete에 실패했습니다" }, { status: 500 });
+./app/api/sales/[id]/collect-external/route.ts:13:    const message = error instanceof Error ? error.message : "External Data 수집에 실패했습니다";
+./app/api/predictions/route.ts:15:    return NextResponse.json({ message: "Predictions List을 불러오는데 실패했습니다" }, { status: 500 });
+./app/api/predictions/route.ts:20:  targetDate: z.string().min(1, "Date를 입력해주세요"),
+./app/api/predictions/route.ts:43:        { message: "입력값이 올바르지 않습니다", errors: parsed.error.flatten() },
+./app/api/predictions/route.ts:88:    return NextResponse.json({ message: "Predictions Create에 실패했습니다" }, { status: 500 });
+./app/api/predictions/performance/route.ts:9:    return NextResponse.json({ message: "Performance Data를 불러오는데 실패했습니다" }, { status: 500 });
+./app/api/predictions/[id]/route.ts:16:      return NextResponse.json({ message: "Predictions을 Not found" }, { status: 404 });
+./app/api/predictions/[id]/route.ts:33:    return NextResponse.json({ message: "Predictions을 불러오는데 실패했습니다" }, { status: 500 });
+./app/api/predictions/[id]/route.ts:44:    return NextResponse.json({ message: "Delete되었습니다" });
+./app/api/predictions/[id]/route.ts:46:    return NextResponse.json({ message: "Delete에 실패했습니다" }, { status: 500 });
+./app/api/internal/jobs/daily-order-push/route.ts:43:          "INTERNAL_JOB_SECRET 환경변수가 Settings되지 않았습니다. " +
+./app/api/internal/jobs/daily-order-push/route.ts:44:          "보안을 위해 엔드포인트를 사용하기 전에 반드시 Settings하세요.",
+./app/api/settings/route.ts:15:    return NextResponse.json({ message: "Settings을 불러오는데 실패했습니다" }, { status: 500 });
+./app/api/settings/route.ts:26:        { message: "입력값이 올바르지 않습니다", errors: parsed.error.flatten() },
+./app/api/settings/route.ts:43:    return NextResponse.json({ message: "Save에 실패했습니다" }, { status: 500 });
+./app/api/imports/route.ts:9:    return NextResponse.json({ message: "Imports List을 불러오는데 실패했습니다" }, { status: 500 });
+./app/api/imports/route.ts:19:      return NextResponse.json({ message: "CSV 내용이 필요합니다" }, { status: 400 });
+./app/api/imports/route.ts:31:    return NextResponse.json({ message: "Imports 작업 Create에 실패했습니다" }, { status: 500 });
+./app/api/imports/[id]/route.ts:13:      return NextResponse.json({ message: "Imports 작업을 Not found" }, { status: 404 });
+./app/api/imports/[id]/route.ts:18:    return NextResponse.json({ message: "Imports 작업을 불러오는데 실패했습니다" }, { status: 500 });
+./app/api/imports/[id]/execute/route.ts:19:    const message = error instanceof Error ? error.message : "임포트 실Rows에 실패했습니다";
+./app/api/imports/[id]/collect-external/route.ts:19:      return NextResponse.json({ message: "임포트된 Rows이 없습니다", totalDates: 0, processedDates: 0, errors: [] });
+./app/api/imports/[id]/collect-external/route.ts:29:    const message = error instanceof Error ? error.message : "External Data 수집에 실패했습니다";
+./app/api/analytics/route.ts:58:      { message: "Analytics Data를 불러오는데 실패했습니다" },
+./app/api/analytics/weekly/route.ts:32:      { message: "Weekly Analysis Data를 불러오는데 실패했습니다" },
+./app/api/analytics/segments/route.ts:43:      { message: "세그먼트 Analytics Data를 불러오는데 실패했습니다" },
+./app/api/analytics/daily/route.ts:32:      { message: "일별 Analytics Data를 불러오는데 실패했습니다" },
+./app/api/analytics/monthly/route.ts:33:      { message: "월별 Analytics Data를 불러오는데 실패했습니다" },
+./app/api/weights/route.ts:12:    return NextResponse.json({ message: "Data를 불러오는데 실패했습니다" }, { status: 500 });
+./app/api/weights/route.ts:23:        { message: "입력값이 올바르지 않습니다", errors: parsed.error.flatten() },
+./app/api/weights/route.ts:31:    return NextResponse.json({ message: "Save에 실패했습니다" }, { status: 500 });
+./app/api/weights/[id]/route.ts:15:        { message: "입력값이 올바르지 않습니다", errors: parsed.error.flatten() },
+./app/api/weights/[id]/route.ts:26:    return NextResponse.json({ message: "Edit에 실패했습니다" }, { status: 500 });
+./app/api/weights/[id]/route.ts:34:    return NextResponse.json({ message: "Delete되었습니다" });
+./app/api/weights/[id]/route.ts:36:    return NextResponse.json({ message: "Delete에 실패했습니다" }, { status: 500 });
+./app/api/account/profile/route.ts:9:    .min(1, "Name을 입력해주세요")
+./app/api/account/profile/route.ts:10:    .max(100, "Name이 너무 깁니다")
+./app/api/account/profile/route.ts:24:    return NextResponse.json({ message: "요청 본문이 올바르지 않습니다" }, { status: 400 });
+./app/api/account/profile/route.ts:30:      { message: parsed.error.issues[0]?.message ?? "입력값이 올바르지 않습니다" },
+./app/api/account/profile/route.ts:48:      { message: "프로필 업데이트에 실패했습니다" },
+./app/api/account/subscriptions/route.ts:14:    return NextResponse.json({ message: "Subscriptions List을 불러오지 못했습니다" }, { status: 500 });
+./app/api/account/subscriptions/route.ts:35:    return NextResponse.json({ message: "요청 본문이 올바르지 않습니다" }, { status: 400 });
+./app/api/account/subscriptions/route.ts:40:    return NextResponse.json({ message: parsed.error.issues[0]?.message ?? "입력 오류" }, { status: 400 });
+./app/api/account/subscriptions/route.ts:54:    return NextResponse.json({ message: "Subscriptions Create 중 오류가 발생했습니다" }, { status: 500 });
+./app/api/account/subscriptions/[id]/route.ts:16:  if (!sub) return NextResponse.json({ message: "Subscriptions을 Not found" }, { status: 404 });
+./app/api/account/subscriptions/[id]/route.ts:38:    return NextResponse.json({ message: "요청 본문이 올바르지 않습니다" }, { status: 400 });
+./app/api/account/subscriptions/[id]/route.ts:43:    return NextResponse.json({ message: parsed.error.issues[0]?.message ?? "입력 오류" }, { status: 400 });
+./app/api/account/subscriptions/[id]/route.ts:51:      { message: err instanceof Error ? err.message : "오류가 발생했습니다" },
+./app/api/account/password/route.ts:9:    currentPassword: z.string().min(1, "Current Password를 입력해주세요"),
+./app/api/account/password/route.ts:12:      .min(8, "Password는 8자 이상이어야 합니다")
+./app/api/account/password/route.ts:13:      .regex(/[A-Za-z]/, "Password에 영문자가 포함되어야 합니다")
+./app/api/account/password/route.ts:14:      .regex(/[0-9]/, "Password에 숫자가 포함되어야 합니다"),
+./app/api/account/password/route.ts:15:    confirmPassword: z.string().min(1, "Confirm Password을 입력해주세요"),
+./app/api/account/password/route.ts:18:    message: "New Password가 일치하지 않습니다",
+./app/api/account/password/route.ts:32:    return NextResponse.json({ message: "요청 본문이 올바르지 않습니다" }, { status: 400 });
+./app/api/account/password/route.ts:39:      { message: firstError?.message ?? "입력값이 올바르지 않습니다" },
+./app/api/account/password/route.ts:53:    return NextResponse.json({ message: "Users를 Not found" }, { status: 404 });
+./app/api/account/password/route.ts:60:      { message: "Current Password가 올바르지 않습니다" },
+./app/api/account/password/route.ts:69:      { message: "New Password는 Current Password와 달라야 합니다" },
+./app/api/account/password/route.ts:82:    return NextResponse.json({ message: "Password가 변경되었습니다" });
+./app/api/account/password/route.ts:85:      { message: "Password 변경에 실패했습니다" },
+./app/api/external-factors/route.ts:28:    return NextResponse.json({ message: "External Data를 불러오는데 실패했습니다" }, { status: 500 });
+./app/api/external-factors/[date]/route.ts:15:      return NextResponse.json({ message: "유효하지 않은 Date입니다" }, { status: 400 });
+./app/api/external-factors/[date]/route.ts:20:      return NextResponse.json({ message: "External Data를 Not found" }, { status: 404 });
+./app/api/external-factors/[date]/route.ts:25:    return NextResponse.json({ message: "External Data를 불러오는데 실패했습니다" }, { status: 500 });
+./app/api/external-factors/[date]/route.ts:36:      return NextResponse.json({ message: "유효하지 않은 Date입니다" }, { status: 400 });
+./app/api/external-factors/[date]/route.ts:44:    const message = error instanceof Error ? error.message : "External Data 수집에 실패했습니다";
+./prisma/seed.ts:50:    { factorKey: "monday",         weightValue: -0.12, description: "월요일 — 주중 가장 조용한 날" },
+./prisma/seed.ts:51:    { factorKey: "tuesday",        weightValue: -0.06, description: "화요일 — 평균 아래" },
+./prisma/seed.ts:52:    { factorKey: "wednesday",      weightValue:  0.00, description: "수요일 — 기준값" },
+./prisma/seed.ts:53:    { factorKey: "thursday",       weightValue:  0.06, description: "목요일 — Weekend 전 소폭 증가" },
+./prisma/seed.ts:54:    { factorKey: "friday",         weightValue:  0.12, description: "금요일 — Weekend 기대 수요 증가" },
+./prisma/seed.ts:55:    { factorKey: "saturday",       weightValue:  0.22, description: "토요일 — 가장 Sales 높은 날" },
+./prisma/seed.ts:56:    { factorKey: "sunday",         weightValue:  0.18, description: "일요일 — Weekend 브런치 수요" },
+./prisma/seed.ts:58:    { factorKey: "weather_rain",   weightValue: -0.15, description: "비 오는 날 — 방문 고객 감소" },
+./prisma/seed.ts:59:    { factorKey: "weather_hot",    weightValue: -0.05, description: "더운 날 (28°C+) — 소폭 감소" },
+./prisma/seed.ts:61:    { factorKey: "holiday",        weightValue:  0.28, description: "Holiday — 나들이 고객 증가" },
+./prisma/seed.ts:63:    { factorKey: "local_event",    weightValue:  0.20, description: "지역 Event — 유동 인구 증가" },
+./prisma/seed.ts:64:    { factorKey: "school_holiday", weightValue:  0.10, description: "School Holiday — 가족 고객 증가" },
+./prisma/seed.ts:66:    { factorKey: "nz_news",        weightValue: -0.05, description: "부정적 NZ News 영향" },
+./prisma/seed.ts:67:    { factorKey: "world_news",     weightValue: -0.03, description: "부정적 World News 영향" },
+./prisma/seed.ts:82:  const weatherOptions = ["맑음", "흐림", "비", "구름 조금", "맑음", "맑음"];
+./prisma/seed.ts:126:        notes: isHoliday ? "Holiday" : isEvent ? "지역 Event" : null,
+./prisma/seed.ts:130:            weatherSummary: isRainy ? "비" : weatherOptions[rndInt(0, 4)],
+./prisma/seed.ts:177:        { type: "baseline", text: `최근 30일 평균 Sales이 기준값(${Math.round(baselineSales).toLocaleString("ko-KR")}원)으로 사용됨` },
+./prisma/seed.ts:178:        { type: "weekday", text: `${["일요일","월요일","화요일","수요일","목요일","금요일","토요일"][dow]} 요일 Weights가 반영됨` },
+./prisma/seed.ts:179:        { type: "production", text: `최근 Waste Rate을 고려해 Sold량 대비 10% 버퍼 적용 (${predictedBagelsSold}개 × 1.1 = ${recommendedBagelsToBake}개)` },
+./prisma/seed.ts:181:      summary: `Predicted Sales ${Math.round(predictedSales).toLocaleString("ko-KR")}원, Sold: ${predictedBagelsSold} 기준으로 ${recommendedBagelsToBake}개 생산을 추천합니다.`,
+./prisma/seed.ts:197:        notes: `기준 Data: 최근 30일 | 같은 요일 4items 참고 | 적용 요인: 1개`,
+./prisma/seed.ts:198:        adjustmentSummary: `${["일요일","월요일","화요일","수요일","목요일","금요일","토요일"][dow]} 요일 Weights 반영`,
+./prisma/seed.ts:204:              factorLabel:   `요일 (${["일요일","월요일","화요일","수요일","목요일","금요일","토요일"][dow]})`,
+./prisma/seed.ts:205:              factorValue:   ["일요일","월요일","화요일","수요일","목요일","금요일","토요일"][dow],
+./prisma/seed.ts:223:  const futureWeatherOptions = ["맑음", "구름 조금", "흐림"];
+./prisma/seed.ts:316:        resultSummary: "대상: 1일 | 처리: 1일",
+./prisma/seed.ts:322:        { scheduledTaskId: t1.id, message: `외부요인 수집 시작: ${date2DaysAgo.toISOString().split("T")[0]}`, level: "info" },
+./prisma/seed.ts:323:        { scheduledTaskId: t1.id, message: "수집 완료: weather, holiday, schoolHoliday", level: "info" },
+./prisma/seed.ts:337:        resultSummary: "대상: 1일 | 처리: 1일 | 실패 provider: news",
+./prisma/seed.ts:343:        { scheduledTaskId: t2.id, message: `외부요인 수집 시작: ${yesterday.toISOString().split("T")[0]}`, level: "info" },
+./prisma/seed.ts:344:        { scheduledTaskId: t2.id, message: "News provider error: API 키가 Settings되지 않았습니다", level: "warning" },
+./prisma/seed.ts:345:        { scheduledTaskId: t2.id, message: "부분 성공: 1개 provider 실패", level: "warning" },
+./prisma/seed.ts:357:        resultSummary: "Predictions Create 완료 | 예상Sales: 342",
+./prisma/seed.ts:363:        { scheduledTaskId: t3.id, message: `Predictions Create 시작: ${yesterday.toISOString().split("T")[0]}`, level: "info" },
+./prisma/seed.ts:364:        { scheduledTaskId: t3.id, message: "기존 외부요인 사용", level: "info" },
+./prisma/seed.ts:365:        { scheduledTaskId: t3.id, message: "Predictions Create 완료: 예상Sales=342", level: "info" },
+./prisma/seed.ts:379:        errorMessage: "Data 부족: 최근 기록 None",
+./prisma/seed.ts:380:        resultSummary: "Predictions 실패",
+./prisma/seed.ts:386:        { scheduledTaskId: t4.id, message: `Predictions Create 시작: ${date3DaysAgo.toISOString().split("T")[0]}`, level: "info" },
+./prisma/seed.ts:387:        { scheduledTaskId: t4.id, message: "예외 발생: Data 부족: 최근 기록 None", level: "error" },
+./prisma/seed.ts:643:    { date: tomorrow, label: "내일" },
+./prisma/seed.ts:669:          note: label === "내일" ? "Predictions 기반 계획 수량" : null,
+./lib/__tests__/weather.test.ts:96:    expect(result!.summary).toBe("구름 조금"); // WMO code 1
+./lib/__tests__/subscriptionService.test.ts:109:      note: "알레르기 주의",
+./lib/__tests__/subscriptionService.test.ts:115:    expect(callArg.data.note).toBe("알레르기 주의");
+./lib/__tests__/subscriptionService.test.ts:336:    await expect(cancelOccurrence("nonexistent")).rejects.toThrow("발생 항목을 Not found");
+./lib/task-utils.ts:50:  pending:  "대기 중",
+./lib/task-utils.ts:51:  running:  "실Rows 중",
+./lib/task-utils.ts:52:  success:  "성공",
+./lib/task-utils.ts:53:  partial:  "부분 성공",
+./lib/task-utils.ts:54:  failed:   "실패",
+./lib/task-utils.ts:55:  skipped:  "items너뜀",
+./lib/task-utils.ts:76:  collect_external_factors: "외부요인 수집",
+./lib/task-utils.ts:97:  if (input.totalDates != null) parts.push(`대상: ${input.totalDates}일`);
+./lib/task-utils.ts:98:  if (input.processedDates != null) parts.push(`처리: ${input.processedDates}일`);
+./lib/task-utils.ts:99:  if (input.failedDates != null && input.failedDates > 0) parts.push(`Failed: ${input.failedDates}일`);
+./lib/task-utils.ts:100:  if (input.skippedDates != null && input.skippedDates > 0) parts.push(`items너뜀: ${input.skippedDates}일`);
+./lib/task-utils.ts:102:    parts.push(`실패 provider: ${input.failedProviders.join(", ")}`);
+./lib/integrations/services/loyverse-mirror-sync.ts:152:    // ── Stage A: JSON.parse 직후 (before deleted_at filter) ───────────────────
+./lib/integrations/services/loyverse-mirror-sync.ts:162:      `[STAGE A: JSON.parse 직후] total=${result.rawItemsTotal} ` +
+./lib/prediction-utils.ts:23:  const labels = ["일요일", "월요일", "화요일", "수요일", "목요일", "금요일", "토요일"];
+./lib/prediction-utils.ts:118:  if (abs <= 5) return "정확";
+./lib/prediction-utils.ts:119:  if (abs <= 10) return salesErrorPct > 0 ? "약간 낮게 Predictions" : "약간 높게 Predictions";
+./lib/prediction-utils.ts:120:  if (abs <= 20) return salesErrorPct > 0 ? "낮게 Predictions" : "높게 Predictions";
+./lib/prediction-utils.ts:121:  return salesErrorPct > 0 ? "크게 낮게 Predictions" : "크게 높게 Predictions";
+./lib/validations.ts:4:  date: z.string().min(1, "Date를 입력해주세요"),
+./lib/validations.ts:5:  bagelsBaked: z.coerce.number().int().min(0, "0 이상의 정수를 입력해주세요"),
+./lib/validations.ts:6:  bagelsLeft: z.coerce.number().int().min(0, "0 이상의 정수를 입력해주세요"),
+./lib/validations.ts:7:  storeSales: z.coerce.number().min(0, "0 이상의 값을 입력해주세요"),
+./lib/validations.ts:8:  uberSales: z.coerce.number().min(0, "0 이상의 값을 입력해주세요"),
+./lib/validations.ts:9:  doordashSales: z.coerce.number().min(0, "0 이상의 값을 입력해주세요"),
+./lib/validations.ts:10:  otherSales: z.coerce.number().min(0, "0 이상의 값을 입력해주세요"),
+./lib/validations.ts:24:  message: "Bagels Left 수는 Bagels Baked 수보다 클 수 없습니다",
+./lib/validations.ts:31:  shopName: z.string().min(1, "상점 Name을 입력해주세요"),
+./lib/validations.ts:32:  defaultTargetWasteRatio: z.coerce.number().min(0).max(1, "0~1 사이의 값을 입력해주세요"),
+./lib/validations.ts:33:  defaultSafetyBuffer: z.coerce.number().min(1, "1 이상의 값을 입력해주세요"),
+./lib/validations.ts:44:  factorKey: z.string().min(1, "키를 입력해주세요"),
+./lib/config/navigation.ts:188:        // Loyverse Modifier 매핑 Menu Remove됨
+./lib/analytics-utils.ts:78:  return `${year}년 ${month}월`;
+./lib/utils/weather-icon.ts:8: * - 맑음 / sunny / clear → ☀️
+./lib/utils/weather-icon.ts:9: * - 구름 / cloudy / overcast → ☁️
+./lib/utils/weather-icon.ts:10: * - 비 / rain / shower / drizzle → 🌧️
+./lib/utils/weather-icon.ts:11: * - 눈 / snow → ❄️
+./lib/utils/weather-icon.ts:12: * - 바람 / windy → 💨
+./lib/utils/weather-icon.ts:13: * - 안개 / fog → 🌫️
+./lib/utils/weather-icon.ts:14: * - 뇌우 / thunderstorm → ⛈️
+./lib/utils/weather-icon.ts:15: * - 정보 None → null (표시 안 함)
+./lib/utils/weather-icon.ts:25:    patterns: /뇌우|thunderstorm|storm/i,
+./lib/utils/weather-icon.ts:27:    label: "뇌우",
+./lib/utils/weather-icon.ts:30:    patterns: /눈|snow|blizzard/i,
+./lib/utils/weather-icon.ts:32:    label: "눈",
+./lib/utils/weather-icon.ts:35:    patterns: /비|rain|shower|drizzle|소나기|이슬비/i,
+./lib/utils/weather-icon.ts:37:    label: "비",
+./lib/utils/weather-icon.ts:40:    patterns: /안개|fog|mist/i,
+./lib/utils/weather-icon.ts:42:    label: "안개",
+./lib/utils/weather-icon.ts:45:    patterns: /바람|windy|강풍/i,
+./lib/utils/weather-icon.ts:47:    label: "바람",
+./lib/utils/weather-icon.ts:50:    patterns: /흐림|overcast|cloudy|구름많음|대체로흐림|mostly cloudy/i,
+./lib/utils/weather-icon.ts:52:    label: "흐림",
+./lib/utils/weather-icon.ts:55:    patterns: /구름조금|partly cloudy|약간흐림|few clouds/i,
+./lib/utils/weather-icon.ts:57:    label: "구름 조금",
+./lib/utils/weather-icon.ts:60:    patterns: /맑음|sunny|clear|화창/i,
+./lib/utils/weather-icon.ts:62:    label: "맑음",
+./lib/auth/dal.ts:69:    return NextResponse.json({ message: "인증이 필요합니다" }, { status: 401 });
+./lib/auth/dal.ts:79:    return NextResponse.json({ message: "인증이 필요합니다" }, { status: 401 });
+./lib/auth/dal.ts:82:    return NextResponse.json({ message: "접근 Unauthorized" }, { status: 403 });
+./lib/auth/dal.ts:90:    return NextResponse.json({ message: "인증이 필요합니다" }, { status: 401 });
+./lib/auth/dal.ts:93:    return NextResponse.json({ message: "접근 Unauthorized" }, { status: 403 });
+./lib/services/taskService.ts:84:    await markDone(taskId, "failed", { errorMessage: "targetDate가 없습니다." });
+./lib/services/taskService.ts:89:  await addLog(taskId, `외부요인 수집 시작: ${toDateKey(task.targetDate)}`);
+./lib/services/taskService.ts:106:      await addLog(taskId, `수집 Failed: ${result.warnings.join("; ")}`, "error");
+./lib/services/taskService.ts:109:      await addLog(taskId, `부분 성공: ${result.failedProviders.length}개 provider 실패`, "warning");
+./lib/services/taskService.ts:112:      await addLog(taskId, `수집 완료: ${result.collectedFields.join(", ")}`);
+./lib/services/taskService.ts:117:    await addLog(taskId, `예외 발생: ${msg}`, "error");
+./lib/services/taskService.ts:130:    await markDone(taskId, "failed", { errorMessage: "targetDate가 없습니다." });
+./lib/services/taskService.ts:138:  await addLog(taskId, `Predictions Create 시작: ${dateStr}`);
+./lib/services/taskService.ts:148:      await addLog(taskId, `Predictions이 Already exists (id: ${existingPrediction.id}). items너뜀.`);
+./lib/services/taskService.ts:149:      await markDone(taskId, "skipped", { resultSummary: "Predictions 이미 존재" });
+./lib/services/taskService.ts:156:      await addLog(taskId, `외부요인 None → 수집 시도: ${dateStr}`);
+./lib/services/taskService.ts:160:          await addLog(taskId, `외부요인 수집 Failed: ${r.warnings.join("; ")}`, "warning");
+./lib/services/taskService.ts:162:          await addLog(taskId, `외부요인 수집 완료: ${r.collectedFields.join(", ")}`);
+./lib/services/taskService.ts:165:        await addLog(taskId, `외부요인 수집 예외: ${fe instanceof Error ? fe.message : String(fe)}`, "warning");
+./lib/services/taskService.ts:168:      await addLog(taskId, `기존 외부요인 사용: ${dateStr}`);
+./lib/services/taskService.ts:176:    await addLog(taskId, `Predictions Create 완료: id=${savedPrediction.id}, 예상Sales=${result.predictedSales}`);
+./lib/services/taskService.ts:178:      resultSummary: `Predictions id: ${savedPrediction.id} | 예상Sales: ${Math.round(result.predictedSales)}`,
+./lib/services/taskService.ts:182:    await addLog(taskId, `예외 발생: ${msg}`, "error");
+./lib/services/externalFactorService.ts:130:    console.error(`[externalFactor] weather 실패 | date=${dateKey} | reason=${reason}`);
+./lib/services/externalFactorService.ts:135:    console.warn(`[externalFactor] weather No Data (null 반환) | date=${dateKey}`);
+./lib/services/externalFactorService.ts:219:      `[externalFactor] upsert 시작 | date=${dateKey}` +
+./lib/services/importService.ts:38:      errorMessage: totalRows === 0 ? "CSV 파일에 Data Rows이 없습니다" : null,
+./lib/services/importService.ts:67:          ? "CSV 파일에 Data Rows이 없습니다"
+./lib/services/importService.ts:69:          ? "모든 Rows에 오류가 있습니다. CSV 형식을 Confirm해주세요"
+./lib/services/importService.ts:90:    throw new Error("이미 임포트가 완료된 작업입니다");
+./lib/services/importService.ts:104:        data: { status: "invalid", validationErrors: "Date 정보가 없습니다" },
+./lib/services/importService.ts:107:      result.errors.push({ rowNumber: row.rowNumber, error: "Date 정보가 없습니다" });
+./lib/services/importService.ts:165:      const errorMsg = err instanceof Error ? err.message : "알 수 없는 오류";
+./lib/services/predictionService.ts:236:      factorLabel: `요일 (${dowLabel})`,
+./lib/services/predictionService.ts:244:      adjustmentTexts.push(`${dowLabel}은 평균보다 Sales이 높은 요일로 상향 반영됨 (+${(dowWeight * 100).toFixed(0)}%)`);
+./lib/services/predictionService.ts:246:      adjustmentTexts.push(`${dowLabel}은 평균보다 Sales이 낮은 요일로 하향 반영됨 (${(dowWeight * 100).toFixed(0)}%)`);
+./lib/services/predictionService.ts:257:      factorLabel: "비 (강수량)",
+./lib/services/predictionService.ts:264:    adjustmentTexts.push(`비 예보 (${rainMm.toFixed(1)}mm)로 인해 Sales이 하향 조정됨 (${(rainWeight * 100).toFixed(0)}%)`);
+./lib/services/predictionService.ts:274:      factorLabel: "더위 (기온)",
+./lib/services/predictionService.ts:281:    adjustmentTexts.push(`높은 기온 (${maxTemp.toFixed(1)}°C)으로 인해 Sales이 소폭 하향 조정됨`);
+./lib/services/predictionService.ts:297:    adjustmentTexts.push(`Holiday (${externalFactors.holidayName}) 효과로 Sold량이 상향 조정됨 (+${(holidayWeight * 100).toFixed(0)}%)`);
+./lib/services/predictionService.ts:306:      factorLabel: "지역 Event",
+./lib/services/predictionService.ts:313:    adjustmentTexts.push(`지역 Event (${externalFactors.localEventName}) 효과로 Sales이 상향 조정됨`);
+./lib/services/predictionService.ts:323:      factorValue: "School Holiday 중",
+./lib/services/predictionService.ts:329:    adjustmentTexts.push(`School Holiday Period으로 가족 고객 증가 Available성 반영됨 (+${(schoolWeight * 100).toFixed(0)}%)`);
+./lib/services/predictionService.ts:341:        factorValue: "부정적 뉴스 영향",
+./lib/services/predictionService.ts:347:      adjustmentTexts.push(`뉴스 영향으로 인해 Sales이 소폭 하향 반영됨`);
+./lib/services/predictionService.ts:424:    items.push({ type: "info", text: "Data가 충분하지 않아 기본값을 사용했습니다." });
+./lib/services/predictionService.ts:428:      text: `최근 ${metrics.dataPointCount}일 평균 Sales(${Math.round(metrics.avgSales).toLocaleString("ko-KR")}원)이 기준값으로 사용됨`,
+./lib/services/predictionService.ts:434:    const direction = diff >= 0 ? "높아 상향" : "낮아 하향";
+./lib/services/predictionService.ts:437:      text: `같은 요일 평균이 All 평균보다 ${Math.abs(diff).toFixed(0)}원 ${direction} 반영됨 (${metrics.sameDayDataPointCount}items 참고)`,
+./lib/services/predictionService.ts:443:    const type = text.includes("비") || text.includes("기온") ? "weather"
+./lib/services/predictionService.ts:447:      : text.includes("뉴스") ? "news"
+./lib/services/predictionService.ts:456:    text: `최근 Waste Rate(${(metrics.avgWasteRate * 100).toFixed(1)}%)을 고려해 예상 Sold량 대비 ${bufferPct}% 버퍼를 적용한 생산량 추천`,
+./lib/services/predictionService.ts:461:    text: `Recommended Production: ${production.recommendedBagelsToBake}개 (예상 Remaining: ${production.predictedLeftovers}개, 예상 Sold율: ${(production.projectedSellThroughRate * 100).toFixed(1)}%)`,
+./lib/services/predictionService.ts:465:    `Predicted Sales ${Math.round(predictedSales).toLocaleString("ko-KR")}원, ` +
+./lib/services/predictionService.ts:466:    `Sold: ${predictedBagelsSold} 기준으로 ` +
+./lib/services/predictionService.ts:467:    `${production.recommendedBagelsToBake}개 생산을 추천합니다.`;
+./lib/services/predictionService.ts:521:    : "Add 조정 None";
+./lib/services/predictionService.ts:524:    `기준 Data: 최근 ${metrics.dataPointCount}일`,
+./lib/services/predictionService.ts:525:    metrics.sameDayDataPointCount > 0 ? `같은 요일 ${metrics.sameDayDataPointCount}items 참고` : null,
+./lib/services/predictionService.ts:526:    `적용 요인: ${factors.length}개`,
+./lib/services/analytics/index.ts:455:    "비 오는 날",
+./lib/services/analytics/index.ts:479:    "로컬 Event",
+./lib/services/analytics/index.ts:522:  0: "일요일",
+./lib/services/analytics/index.ts:523:  1: "월요일",
+./lib/services/analytics/index.ts:524:  2: "화요일",
+./lib/services/analytics/index.ts:525:  3: "수요일",
+./lib/services/analytics/index.ts:526:  4: "목요일",
+./lib/services/analytics/index.ts:527:  5: "금요일",
+./lib/services/analytics/index.ts:528:  6: "토요일",
+./lib/services/subscriptionService.ts:79:  if (!sub) throw new Error("Subscriptions을 Not found");
+./lib/services/subscriptionService.ts:80:  if (userId && sub.userId !== userId) throw new Error("접근 Unauthorized");
+./lib/services/subscriptionService.ts:215:  if (!occ) throw new Error("발생 항목을 Not found");
+./lib/services/subscriptionService.ts:216:  if (userId && occ.subscription.userId !== userId) throw new Error("접근 Unauthorized");
+./lib/services/subscriptionService.ts:217:  if (occ.status !== OccurrenceStatus.SCHEDULED) throw new Error("예약됨 Status의 항목만 items너뛸 수 있습니다");
+./lib/services/subscriptionService.ts:236:  if (!occ) throw new Error("발생 항목을 Not found");
+./lib/services/daily-order-push.ts:113:      reason: `Subscriptions 발생 Create Failed: ${err instanceof Error ? err.message : String(err)}`,
+./lib/services/schedulerService.ts:45:          resultSummary: "외부요인 이미 존재",
+./lib/services/schedulerService.ts:49:        data: { scheduledTaskId: task.id, message: `외부요인 이미 존재: ${toDateKey(d)}`, level: "info" },
+./lib/services/schedulerService.ts:121:          resultSummary: "Predictions 이미 존재",
+./lib/services/schedulerService.ts:125:        data: { scheduledTaskId: task.id, message: `Predictions 이미 존재: ${toDateKey(d)}`, level: "info" },
+./lib/csv-parser.ts:122:    errors.push("Date 필드가 없거나 파싱에 실패했습니다");
+./lib/csv-parser.ts:126:    errors.push("Bagels Baked 수량은 0 이상이어야 합니다");
+./lib/csv-parser.ts:138:      errors.push(`${f.label}는 0 이상이어야 합니다`);
+./lib/csv-parser.ts:178:    // Bagels Left 수량이 음수인 경우(전날 Inventory 사용 등) 0으로 보정하고 메모에 기록
+./lib/csv-parser.ts:182:      const adjustmentNote = `Bagels Left 수량이 음수(${originalValue})로 기록되어 0으로 처리됨`;
+./lib/csv-parser.ts:224:  const example1 = ["2024-01-15", "80", "5", "250.00", "80.00", "50.00", "10.00", "평일 보통"];
+./lib/csv-parser.ts:225:  const example2 = ["2024-01-20", "100", "3", "320.00", "110.00", "70.00", "15.00", "토요일 많음"];
+./lib/providers/weather/index.ts:26:  if (code === 0) return "맑음";
+./lib/providers/weather/index.ts:27:  if (code <= 2) return "구름 조금";
+./lib/providers/weather/index.ts:28:  if (code === 3) return "흐림";
+./lib/providers/weather/index.ts:29:  if (code <= 49) return "안개";
+./lib/providers/weather/index.ts:30:  if (code <= 59) return "이슬비";
+./lib/providers/weather/index.ts:31:  if (code <= 69) return "비";
+./lib/providers/weather/index.ts:32:  if (code <= 79) return "눈";
+./lib/providers/weather/index.ts:33:  if (code <= 84) return "소나기";
+./lib/providers/weather/index.ts:34:  if (code <= 99) return "천둥번개";
+./lib/providers/weather/index.ts:35:  return "알 수 None";
+./lib/providers/weather/index.ts:74:      `[weather] 요청 시작 | date=${dateStr} | isPast=${isPast} | lat=${lat} | lon=${lon} | tz=${tz} | url=${baseUrl}?${params.toString()}`
+./lib/providers/weather/index.ts:83:      console.log(`[weather] 응답 수신 | date=${dateStr} | status=${res.status}`);
+./lib/providers/weather/index.ts:113:        console.warn(`[weather] 온도 None | date=${dateStr} | maxTemp=${maxTemp} | minTemp=${minTemp}`);
+./lib/providers/weather/index.ts:126:        `[weather] 파싱 완료 | date=${dateStr} | summary=${result.summary} | minTemp=${result.minTemp} | maxTemp=${result.maxTemp} | rainMm=${result.rainMm} | windKph=${result.windKph}`
+./lib/providers/weather/index.ts:133:        `[weather] 오류 | date=${dateStr} | error=${err instanceof Error ? err.message : String(err)}`
+./lib/providers/holiday/index.ts:65:    "01-01": "뉴이어 데이",
+./lib/providers/holiday/index.ts:66:    "02-06": "와이탕이 데이",
+./lib/providers/holiday/index.ts:67:    "04-25": "안작 데이",
+./lib/providers/holiday/index.ts:68:    "12-25": "크리스마스",
+./lib/providers/holiday/index.ts:69:    "12-26": "박싱 데이",

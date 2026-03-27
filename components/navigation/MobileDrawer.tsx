@@ -14,9 +14,9 @@ interface MobileDrawerProps {
 }
 
 const ROLE_LABELS: Record<Role, string> = {
-  ADMIN: "관리자",
-  STAFF: "직원",
-  CUSTOMER: "고객",
+  ADMIN: "Admin",
+  STAFF: "Staff",
+  CUSTOMER: "Customer",
 };
 
 const ROLE_BADGE_CLASS: Record<Role, string> = {
@@ -58,14 +58,14 @@ export default function MobileDrawer({
           <Link href="/" className="flex items-center gap-2" onClick={onClose}>
             <span className="text-xl font-bold text-amber-600">🥯</span>
             <span className="text-lg font-semibold text-gray-900">
-              베이글스 비욘드
+              Bagels Beyond
             </span>
           </Link>
           <button
             type="button"
             onClick={onClose}
             className="p-2 rounded-md text-gray-500 hover:bg-gray-100 transition-colors"
-            aria-label="메뉴 닫기"
+            aria-label="Menu Close"
           >
             <svg
               className="w-5 h-5"
@@ -112,7 +112,7 @@ export default function MobileDrawer({
         {/* Nav sections */}
         <nav
           className="flex-1 p-4 overflow-y-auto"
-          aria-label="모바일 네비게이션"
+          aria-label="mobile navigation"
         >
           {groups.map((group) => (
             <SidebarSection
@@ -132,14 +132,14 @@ export default function MobileDrawer({
                 onClick={onClose}
                 className="flex-1 text-center py-2.5 text-sm font-medium rounded-md border border-gray-200 text-gray-700 hover:bg-gray-100 transition-colors"
               >
-                로그인
+                Login
               </Link>
               <Link
                 href="/signup"
                 onClick={onClose}
                 className="flex-1 text-center py-2.5 text-sm font-medium rounded-md bg-amber-600 text-white hover:bg-amber-700 transition-colors"
               >
-                회원가입
+                Sign Up
               </Link>
             </div>
           </div>
@@ -153,7 +153,7 @@ export default function MobileDrawer({
               disabled={isPending}
               className="w-full text-left px-3 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50"
             >
-              {isPending ? "로그아웃 중…" : "로그아웃"}
+              {isPending ? "Signing out..." : "Sign out"}
             </button>
           </div>
         )}

@@ -27,12 +27,12 @@ export default function TaskActionButton({ href, label, body }: Props) {
       });
       if (!res.ok) {
         const data = await res.json() as { error?: string };
-        throw new Error(data.error ?? "작업 실행에 실패했습니다");
+        throw new Error(data.error ?? "Task failed to execute");
       }
       setDone(true);
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "오류가 발생했습니다");
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setLoading(false);
     }
@@ -51,7 +51,7 @@ export default function TaskActionButton({ href, label, body }: Props) {
         }
         disabled:opacity-50 disabled:cursor-not-allowed`}
     >
-      {loading ? "실행 중…" : done ? "✓ 완료" : error ? `✗ ${error}` : label}
+      {loading ? "Running..." : done ? "✓ Done" : error ? `✗ ${error}` : label}
     </button>
   );
 }

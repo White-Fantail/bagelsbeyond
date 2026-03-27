@@ -53,23 +53,23 @@ export default async function CalendarPage({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">달력 보기</h1>
-        <p className="text-gray-500 mt-1">월별 매출 실적 및 예측 현황</p>
+        <h1 className="text-2xl font-bold text-gray-900">Calendar View</h1>
+        <p className="text-gray-500 mt-1">Monthly sales performance and prediction status</p>
       </div>
       <CalendarView year={year} month={month} records={records} predictions={predictions} externalFactors={externalFactorMap} />
       {/* Legend */}
       <div className="flex flex-wrap gap-4 text-xs text-gray-500">
         <div className="flex items-center gap-1.5">
           <span className="w-3 h-3 rounded bg-amber-400 inline-block"></span>
-          실제 매출 기록
+          Actual Sales Records
         </div>
         <div className="flex items-center gap-1.5">
           <span className="w-3 h-3 rounded bg-blue-400 inline-block"></span>
-          예측만 있음
+          Prediction only
         </div>
         <div className="flex items-center gap-1.5">
           <span className="w-3 h-3 rounded bg-purple-400 inline-block"></span>
-          실적 + 예측 모두 있음
+          Has both actual and predicted
         </div>
       </div>
     </div>

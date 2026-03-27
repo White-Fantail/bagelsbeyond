@@ -16,7 +16,7 @@ export async function GET() {
     return NextResponse.json({ categories });
   } catch (_error) {
     return NextResponse.json(
-      { message: "카테고리 목록을 불러오는데 실패했습니다" },
+      { message: "Failed to load categories list" },
       { status: 500 }
     );
   }

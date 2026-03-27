@@ -15,8 +15,8 @@ export default function SignupPage() {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="text-4xl mb-3">🥯</div>
-          <h1 className="text-2xl font-bold text-gray-900">베이글스 비욘드</h1>
-          <p className="text-gray-500 mt-1">새 계정을 만들어 시작하세요</p>
+          <h1 className="text-2xl font-bold text-gray-900">Bagels Beyond</h1>
+          <p className="text-gray-500 mt-1">Create a new account to get started</p>
         </div>
 
         {/* Card */}
@@ -34,7 +34,7 @@ export default function SignupPage() {
                 htmlFor="name"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
-                이름
+                Name
               </label>
               <input
                 id="name"
@@ -43,7 +43,7 @@ export default function SignupPage() {
                 autoComplete="name"
                 required
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                placeholder="홍길동"
+                placeholder="John Smith"
               />
               {state.errors?.name && (
                 <p className="mt-1 text-xs text-red-600">{state.errors.name[0]}</p>
@@ -56,7 +56,7 @@ export default function SignupPage() {
                 htmlFor="email"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
-                이메일
+                Email
               </label>
               <input
                 id="email"
@@ -78,7 +78,7 @@ export default function SignupPage() {
                 htmlFor="password"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
-                비밀번호
+                Password
               </label>
               <input
                 id="password"
@@ -87,7 +87,7 @@ export default function SignupPage() {
                 autoComplete="new-password"
                 required
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                placeholder="8자 이상, 영문+숫자 포함"
+                placeholder="At least 8 characters, including letters and numbers"
               />
               {state.errors?.password && (
                 <p className="mt-1 text-xs text-red-600">{state.errors.password[0]}</p>
@@ -100,7 +100,7 @@ export default function SignupPage() {
                 htmlFor="passwordConfirm"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
-                비밀번호 확인
+                Confirm Password
               </label>
               <input
                 id="passwordConfirm"
@@ -124,17 +124,17 @@ export default function SignupPage() {
               disabled={isPending}
               className="w-full py-2.5 px-4 bg-amber-600 hover:bg-amber-700 disabled:opacity-60 text-white text-sm font-semibold rounded-lg transition-colors"
             >
-              {isPending ? "가입 중…" : "회원가입"}
+              {isPending ? "Signing up…" : "Sign Up"}
             </button>
           </form>
 
           <p className="mt-6 text-center text-sm text-gray-500">
-            이미 계정이 있으신가요?{" "}
+            Already have an account?{" "}
             <Link
               href="/login"
               className="font-medium text-amber-600 hover:text-amber-700"
             >
-              로그인
+              Login
             </Link>
           </p>
         </div>

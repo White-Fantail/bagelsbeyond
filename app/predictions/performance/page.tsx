@@ -83,21 +83,21 @@ export default async function PredictionPerformancePage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">예측 성과</h1>
-          <p className="text-gray-500 mt-1">예측 결과와 실제 실적 비교 (최근 30건)</p>
+          <h1 className="text-2xl font-bold text-gray-900">Predictions Performance</h1>
+          <p className="text-gray-500 mt-1">Compare prediction results with actual performance (last 30 items)</p>
         </div>
         <div className="flex gap-2">
           <Link
             href="/predictions"
             className="px-3 py-1.5 text-sm border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
           >
-            예측 목록
+            Predictions List
           </Link>
           <Link
             href="/predictions/new"
             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium"
           >
-            + 새 예측
+            + New Prediction
           </Link>
         </div>
       </div>
@@ -105,39 +105,39 @@ export default async function PredictionPerformancePage() {
       {/* Summary Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
         <StatCard
-          title="총 예측 건수"
-          value={`${stats.total}건`}
-          sub="최근 30건 기준"
+          title="Total Predictions"
+          value={`${stats.total}`}
+          sub="Based on last 30 items"
           color="blue"
         />
         <StatCard
-          title="비교 가능"
-          value={`${stats.comparableCount}건`}
-          sub="실제 데이터 있음"
+          title="Comparison Available"
+          value={`${stats.comparableCount}`}
+          sub="Has Actual Data"
           color="gray"
         />
         <StatCard
-          title="정확 예측"
-          value={`${stats.accurateCount}건`}
-          sub={`오차율 5% 이내 · ${stats.accuracyRate}%`}
+          title="accurate Predictions"
+          value={`${stats.accurateCount}`}
+          sub={`Error rate ≤5% · ${stats.accuracyRate}%`}
           color={stats.accuracyRate >= 60 ? "green" : stats.accuracyRate >= 40 ? "yellow" : "red"}
         />
         <StatCard
-          title="평균 매출 오차율"
+          title="Avg. Sales Error Rate"
           value={`${stats.avgSalesErrorPct.toFixed(1)}%`}
-          sub={`절대 오차 ${formatCurrency(stats.avgSalesError)}`}
+          sub={`Avg. absolute error ${formatCurrency(stats.avgSalesError)}`}
           color={stats.avgSalesErrorPct <= 10 ? "green" : stats.avgSalesErrorPct <= 20 ? "yellow" : "red"}
         />
         <StatCard
-          title="평균 매출 오차"
+          title="Avg. Sales Error"
           value={formatCurrency(stats.avgSalesError)}
-          sub="평균 절대 오차"
+          sub="Average Absolute Error"
           color="gray"
         />
         <StatCard
-          title="평균 베이글 오차"
-          value={`${stats.avgBagelsError.toFixed(1)}개`}
-          sub="판매량 절대 오차"
+          title="average Bagel Error"
+          value={`${stats.avgBagelsError.toFixed(1)}`}
+          sub="Absolute Sales Error"
           color="gray"
         />
       </div>
@@ -145,18 +145,18 @@ export default async function PredictionPerformancePage() {
       {/* Guidance */}
       {stats.comparableCount === 0 && stats.total > 0 && (
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm text-amber-800">
-          <strong>💡 안내:</strong> 예측이 있지만 비교할 실제 데이터가 아직 없습니다. 예측 날짜의 실제 매출을 입력하면 성과를 비교할 수 있습니다.
+          <strong>💡 Note:</strong> Predictions exist but no actual data to compare yet. Enter Actual Sales for the prediction date to compare performance.
         </div>
       )}
       {stats.total === 0 && (
         <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
           <p className="text-4xl mb-3">🔮</p>
-          <p className="text-gray-500 mb-4">아직 생성된 예측이 없습니다.</p>
+          <p className="text-gray-500 mb-4">No predictions created yet.</p>
           <Link
             href="/predictions/new"
             className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
           >
-            첫 번째 예측 만들기
+            Create First Prediction
           </Link>
         </div>
       )}
@@ -165,8 +165,8 @@ export default async function PredictionPerformancePage() {
       {results.length > 0 && (
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
           <div className="px-4 py-3 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-gray-700">예측 vs 실제 비교 목록</h2>
-            <p className="text-xs text-gray-400">최신 순</p>
+            <h2 className="text-sm font-semibold text-gray-700">Predictions vs Actual Comparison List</h2>
+            <p className="text-xs text-gray-400">Latest first</p>
           </div>
 
           {/* Desktop */}
@@ -174,14 +174,14 @@ export default async function PredictionPerformancePage() {
             <table className="min-w-full divide-y divide-gray-100">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">날짜</th>
-                  <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">예측 매출</th>
-                  <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">실제 매출</th>
-                  <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">매출 오차</th>
-                  <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">예측 베이글</th>
-                  <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">실제 베이글</th>
-                  <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">베이글 오차</th>
-                  <th className="px-4 py-2 text-center text-xs font-medium text-gray-500">정확도</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Date</th>
+                  <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">Predicted Sales</th>
+                  <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">Actual Sales</th>
+                  <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">Sales Error</th>
+                  <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">Predicted Bagels</th>
+                  <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">Actual Bagels</th>
+                  <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">Bagel Error</th>
+                  <th className="px-4 py-2 text-center text-xs font-medium text-gray-500">Accuracy</th>
                   <th className="px-4 py-2 text-right text-xs font-medium text-gray-500"></th>
                 </tr>
               </thead>
@@ -203,14 +203,14 @@ export default async function PredictionPerformancePage() {
                       {comparison ? (
                         <ErrorBadge value={comparison.salesError} pct={comparison.salesErrorPct} isCurrency />
                       ) : (
-                        <span className="text-xs text-gray-300">데이터 없음</span>
+                        <span className="text-xs text-gray-300">No Data</span>
                       )}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-600 text-right">
-                      {prediction.predictedBagelsSold}개
+                      {prediction.predictedBagelsSold}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-900 text-right font-medium">
-                      {comparison ? `${comparison.actualBagelsSold}개` : <span className="text-gray-300">-</span>}
+                      {comparison ? `${comparison.actualBagelsSold}` : <span className="text-gray-300">-</span>}
                     </td>
                     <td className="px-4 py-3 text-sm text-right">
                       {comparison ? (
@@ -228,7 +228,7 @@ export default async function PredictionPerformancePage() {
                     </td>
                     <td className="px-4 py-3 text-right">
                       <Link href={`/predictions/${prediction.id}`} className="text-xs text-blue-600 hover:underline">
-                        상세
+                        Details
                       </Link>
                     </td>
                   </tr>
@@ -248,33 +248,33 @@ export default async function PredictionPerformancePage() {
                   {comparison ? (
                     <AccuracyBadge direction={comparison.direction} label={comparison.label} />
                   ) : (
-                    <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded">데이터 없음</span>
+                    <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded">No Data</span>
                   )}
                 </div>
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <div>
-                    <p className="text-xs text-gray-500">예측 매출</p>
+                    <p className="text-xs text-gray-500">Predicted Sales</p>
                     <p className="text-gray-600">{formatCurrency(prediction.predictedSales)}</p>
                   </div>
                   {actual && (
                     <div>
-                      <p className="text-xs text-gray-500">실제 매출</p>
+                      <p className="text-xs text-gray-500">Actual Sales</p>
                       <p className="font-medium text-gray-900">{formatCurrency(comparison!.actualSales)}</p>
                     </div>
                   )}
                   <div>
-                    <p className="text-xs text-gray-500">예측 베이글</p>
-                    <p className="text-gray-600">{prediction.predictedBagelsSold}개</p>
+                    <p className="text-xs text-gray-500">Predicted Bagels</p>
+                    <p className="text-gray-600">{prediction.predictedBagelsSold}</p>
                   </div>
                   {comparison && (
                     <div>
-                      <p className="text-xs text-gray-500">실제 베이글</p>
-                      <p className="font-medium text-gray-900">{comparison.actualBagelsSold}개</p>
+                      <p className="text-xs text-gray-500">Actual Bagels</p>
+                      <p className="font-medium text-gray-900">{comparison.actualBagelsSold}</p>
                     </div>
                   )}
                   {comparison && (
                     <div className="col-span-2">
-                      <p className="text-xs text-gray-500">오차</p>
+                      <p className="text-xs text-gray-500">Error</p>
                       <ErrorBadge value={comparison.salesError} pct={comparison.salesErrorPct} isCurrency />
                     </div>
                   )}
@@ -287,12 +287,12 @@ export default async function PredictionPerformancePage() {
 
       {/* Interpretation Guide */}
       <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 text-sm text-blue-800">
-        <p className="font-semibold mb-2">📌 정확도 기준 안내</p>
+        <p className="font-semibold mb-2">📌 Accuracy Baseline Guide</p>
         <ul className="space-y-1 text-xs text-blue-700">
-          <li>• <strong>정확</strong>: 오차율 ±5% 이내</li>
-          <li>• <strong>약간 높게/낮게 예측</strong>: 오차율 ±5~10%</li>
-          <li>• <strong>높게/낮게 예측</strong>: 오차율 ±10~20%</li>
-          <li>• <strong>크게 높게/낮게 예측</strong>: 오차율 20% 초과</li>
+          <li>• <strong>accurate</strong>: Error rate within ±5%</li>
+          <li>• <strong>slightly high/low Predictions</strong>: Error rate ±5~10%</li>
+          <li>• <strong>high/low Predictions</strong>: Error rate ±10~20%</li>
+          <li>• <strong>significantly high/low Predictions</strong>: Error rate &gt; 20%</li>
         </ul>
       </div>
     </div>
@@ -345,7 +345,7 @@ function ErrorBadge({
   const isPositive = value >= 0;
   const display = isCurrency
     ? `${isPositive ? "+" : ""}${new Intl.NumberFormat("en-NZ", { style: "currency", currency: "NZD" }).format(value)}`
-    : `${isPositive ? "+" : ""}${value.toFixed(1)}개`;
+    : `${isPositive ? "+" : ""}${value.toFixed(1)}`;
   return (
     <span className={`text-xs font-medium ${isPositive ? "text-blue-600" : "text-orange-600"}`}>
       {display}

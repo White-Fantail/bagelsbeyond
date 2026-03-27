@@ -67,13 +67,13 @@ export async function GET(
     });
 
     if (!option) {
-      return NextResponse.json({ message: "Modifier를 찾을 수 없습니다" }, { status: 404 });
+      return NextResponse.json({ message: "Modifier not found" }, { status: 404 });
     }
 
     return NextResponse.json({ option });
   } catch (_error) {
     return NextResponse.json(
-      { message: "Modifier 정보를 불러오는데 실패했습니다" },
+      { message: "Failed to load modifier info" },
       { status: 500 }
     );
   }
@@ -92,13 +92,13 @@ export async function PATCH(
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ message: "요청 본문이 올바르지 않습니다" }, { status: 400 });
+    return NextResponse.json({ message: "Invalid request body" }, { status: 400 });
   }
 
   const parsed = modifierPatchSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { message: "입력값이 올바르지 않습니다", errors: parsed.error.flatten() },
+      { message: "Invalid input", errors: parsed.error.flatten() },
       { status: 400 }
     );
   }
@@ -116,7 +116,7 @@ export async function PATCH(
   });
 
   if (!existing) {
-    return NextResponse.json({ message: "Modifier를 찾을 수 없습니다" }, { status: 404 });
+    return NextResponse.json({ message: "Modifier not found" }, { status: 404 });
   }
 
   const isLoyverseSynced = existing.externalOptionMappings.length > 0;
@@ -130,7 +130,7 @@ export async function PATCH(
     if (attemptedReadOnly.length > 0) {
       return NextResponse.json(
         {
-          message: `Loyverse sync Modifier의 원본 필드는 수정할 수 없습니다: ${attemptedReadOnly.join(", ")}`,
+          message: `Loyverse-synced Modifier original fields cannot be edited: ${attemptedReadOnly.join(", ")}`,
           readOnlyFields: attemptedReadOnly,
         },
         { status: 403 }
@@ -147,7 +147,7 @@ export async function PATCH(
     return NextResponse.json({ option });
   } catch (_error) {
     return NextResponse.json(
-      { message: "Modifier 수정에 실패했습니다" },
+      { message: "Modifier Edit failed" },
       { status: 500 }
     );
   }

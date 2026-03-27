@@ -29,6 +29,6 @@ export async function GET(req: NextRequest) {
     });
     return NextResponse.json({ subscriptions });
   } catch {
-    return NextResponse.json({ message: "구독 목록을 불러오지 못했습니다" }, { status: 500 });
+    return NextResponse.json({ message: "Failed to load subscription list" }, { status: 500 });
   }
 }

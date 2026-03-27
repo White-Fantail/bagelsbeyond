@@ -11,7 +11,7 @@ export async function GET() {
     const subscriptions = await getUserSubscriptions(authResult.userId);
     return NextResponse.json({ subscriptions });
   } catch {
-    return NextResponse.json({ message: "구독 목록을 불러오지 못했습니다" }, { status: 500 });
+    return NextResponse.json({ message: "Failed to load subscription list" }, { status: 500 });
   }
 }
 
@@ -32,12 +32,12 @@ export async function POST(req: NextRequest) {
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ message: "요청 본문이 올바르지 않습니다" }, { status: 400 });
+    return NextResponse.json({ message: "Invalid request body" }, { status: 400 });
   }
 
   const parsed = createSchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ message: parsed.error.issues[0]?.message ?? "입력 오류" }, { status: 400 });
+    return NextResponse.json({ message: parsed.error.issues[0]?.message ?? "Input error" }, { status: 400 });
   }
 
   const { startDate, endDate, ...rest } = parsed.data;
@@ -51,6 +51,6 @@ export async function POST(req: NextRequest) {
     });
     return NextResponse.json({ subscription: sub }, { status: 201 });
   } catch {
-    return NextResponse.json({ message: "구독 생성 중 오류가 발생했습니다" }, { status: 500 });
+    return NextResponse.json({ message: "Error creating subscription" }, { status: 500 });
   }
 }

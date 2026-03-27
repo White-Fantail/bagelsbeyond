@@ -4,12 +4,12 @@ import { requireStaffOrAdmin } from "@/lib/auth/dal";
 import { prisma } from "@/lib/db";
 import Link from "next/link";
 
-const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
+const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 const STATUS_LABEL: Record<string, string> = {
-  ACTIVE: "활성",
-  PAUSED: "일시정지",
-  CANCELLED: "취소됨",
+  ACTIVE: "Active",
+  PAUSED: "Pause",
+  CANCELLED: "Cancelled",
 };
 
 const STATUS_COLOR: Record<string, string> = {
@@ -47,12 +47,12 @@ export default async function AdminSubscriptionsPage({
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
           <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
-            <Link href="/admin" className="hover:text-amber-600">관리자 대시보드</Link>
+            <Link href="/admin" className="hover:text-amber-600">Admin Dashboard</Link>
             <span>/</span>
-            <span className="text-gray-700 font-medium">구독 관리</span>
+            <span className="text-gray-700 font-medium">Manage Subscriptions</span>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">구독 관리</h1>
-          <p className="text-gray-500 text-sm mt-0.5">전체 구독 조회 (STAFF 이상)</p>
+          <h1 className="text-2xl font-bold text-gray-900">Manage Subscriptions</h1>
+          <p className="text-gray-500 text-sm mt-0.5">View all subscriptions (STAFF and above)</p>
         </div>
       </div>
 
@@ -63,34 +63,34 @@ export default async function AdminSubscriptionsPage({
           defaultValue={status ?? ""}
           className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
         >
-          <option value="">전체 상태</option>
+          <option value="">All Status</option>
           {Object.entries(STATUS_LABEL).map(([k, v]) => (
             <option key={k} value={k}>{v}</option>
           ))}
         </select>
         <button type="submit" className="px-4 py-2 rounded-lg bg-amber-500 text-white text-sm font-medium hover:bg-amber-600">
-          검색
+          Search
         </button>
         <Link href="/admin/subscriptions" className="px-4 py-2 rounded-lg border border-gray-200 text-gray-600 text-sm hover:bg-gray-50">
-          초기화
+          Reset
         </Link>
       </form>
 
       {/* Table */}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         {subscriptions.length === 0 ? (
-          <div className="p-10 text-center text-gray-500">조건에 맞는 구독이 없습니다</div>
+          <div className="p-10 text-center text-gray-500">No results matching your filters No subscriptions yet</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-gray-50 text-xs text-gray-500 uppercase">
                 <tr>
-                  <th className="px-4 py-3 text-left">고객</th>
-                  <th className="px-4 py-3 text-left">상태</th>
-                  <th className="px-4 py-3 text-left">요일</th>
-                  <th className="px-4 py-3 text-left">상품</th>
-                  <th className="px-4 py-3 text-left">시작일</th>
-                  <th className="px-4 py-3 text-left">상세</th>
+                  <th className="px-4 py-3 text-left">Customer</th>
+                  <th className="px-4 py-3 text-left">Status</th>
+                  <th className="px-4 py-3 text-left">Day</th>
+                  <th className="px-4 py-3 text-left">Products</th>
+                  <th className="px-4 py-3 text-left">Start Date</th>
+                  <th className="px-4 py-3 text-left">Details</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -106,17 +106,17 @@ export default async function AdminSubscriptionsPage({
                       </span>
                     </td>
                     <td className="px-4 py-3 text-gray-700">
-                      매주 {WEEKDAYS[sub.pickupWeekday]}요일
+                      Every {WEEKDAYS[sub.pickupWeekday]}Day
                     </td>
                     <td className="px-4 py-3 text-gray-600 text-xs">
                       {sub.items.map((i) => `${i.product.name}×${i.quantity}`).join(", ")}
                     </td>
                     <td className="px-4 py-3 text-gray-500 text-xs">
-                      {new Date(sub.startDate).toLocaleDateString("ko-KR")}
+                      {new Date(sub.startDate).toLocaleDateString("en-NZ")}
                     </td>
                     <td className="px-4 py-3">
                       <Link href={`/admin/subscriptions/${sub.id}`} className="text-amber-600 hover:underline text-xs">
-                        상세 →
+                        Details →
                       </Link>
                     </td>
                   </tr>

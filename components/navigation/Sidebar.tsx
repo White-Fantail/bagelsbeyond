@@ -14,14 +14,14 @@ export default function Sidebar({ session }: SidebarProps) {
   return (
     <aside
       className="hidden lg:flex flex-col fixed inset-y-0 left-0 w-64 bg-white border-r border-gray-200 z-30"
-      aria-label="사이드바 네비게이션"
+      aria-label="sidebar navigation"
     >
       {/* Logo */}
       <div className="flex items-center h-16 px-4 border-b border-gray-200 flex-shrink-0">
         <Link href="/" className="flex items-center gap-2">
           <span className="text-xl font-bold text-amber-600">🥯</span>
           <span className="text-lg font-semibold text-gray-900 whitespace-nowrap">
-            베이글스 비욘드
+            Bagels Beyond
           </span>
         </Link>
       </div>

@@ -82,7 +82,7 @@ export default function InventoryManager() {
       const res = await fetch(`/api/admin/inventory?date=${d}`);
       const data = await res.json();
       if (!res.ok) {
-        setFetchError(data.message ?? "재고 정보를 불러오는데 실패했습니다");
+        setFetchError(data.message ?? "Failed to load inventory info");
         setRows([]);
         return;
       }
@@ -114,7 +114,7 @@ export default function InventoryManager() {
         }))
       );
     } catch {
-      setFetchError("서버 연결에 실패했습니다");
+      setFetchError("Failed to connect to server");
       setRows([]);
     } finally {
       setLoading(false);
@@ -173,7 +173,7 @@ export default function InventoryManager() {
       if (!res.ok) {
         setRowErrors((prev) => ({
           ...prev,
-          [row.productId]: data.message ?? "저장에 실패했습니다",
+          [row.productId]: data.message ?? "Save failed",
         }));
       } else {
         setSavedIds((prev) => new Set(prev).add(row.productId));
@@ -190,7 +190,7 @@ export default function InventoryManager() {
     } catch {
       setRowErrors((prev) => ({
         ...prev,
-        [row.productId]: "서버 연결에 실패했습니다",
+        [row.productId]: "Failed to connect to server",
       }));
     } finally {
       setSavingId(null);
@@ -233,7 +233,7 @@ export default function InventoryManager() {
           htmlFor="inv-date"
           className="text-sm font-medium text-gray-700 whitespace-nowrap"
         >
-          조회 날짜
+          Query Date
         </label>
         <input
           id="inv-date"
@@ -243,7 +243,7 @@ export default function InventoryManager() {
           className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent hover:border-amber-300 transition"
         />
         <span className="text-xs text-gray-400">
-          날짜를 변경하면 해당 날짜의 재고 현황이 자동으로 불러와집니다.
+          Changing the date will automatically load inventory for that date..
         </span>
       </div>
 
@@ -260,23 +260,23 @@ export default function InventoryManager() {
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="px-4 py-3 text-left font-semibold text-gray-700">상품명</th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-700">Product Name</th>
                 <th className="px-4 py-3 text-center font-semibold text-gray-700">
-                  계획수량
+                  Planned Qty
                 </th>
                 <th className="px-4 py-3 text-center font-semibold text-gray-700">
-                  생산수량
+                  Production Qty
                 </th>
                 <th className="px-4 py-3 text-center font-semibold text-gray-700">
-                  <span className="block">예약수량</span>
-                  <span className="text-xs font-normal text-gray-400">향후 자동 계산</span>
+                  <span className="block">Reserved Qty</span>
+                  <span className="text-xs font-normal text-gray-400">Auto-calculated in the future</span>
                 </th>
                 <th className="px-4 py-3 text-center font-semibold text-gray-700">
-                  판매수량
+                  Sold Qty
                 </th>
-                <th className="px-4 py-3 text-center font-semibold text-gray-700">품절</th>
-                <th className="px-4 py-3 text-left font-semibold text-gray-700">비고</th>
-                <th className="px-4 py-3 text-center font-semibold text-gray-700">저장</th>
+                <th className="px-4 py-3 text-center font-semibold text-gray-700">Out of Stock</th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-700">Notes</th>
+                <th className="px-4 py-3 text-center font-semibold text-gray-700">Save</th>
               </tr>
             </thead>
             <tbody>
@@ -288,7 +288,7 @@ export default function InventoryManager() {
                     colSpan={8}
                     className="px-4 py-12 text-center text-gray-400 text-sm"
                   >
-                    등록된 상품이 없습니다. 먼저 상품을 추가해주세요.
+                    No products registered. Please add a product first.
                   </td>
                 </tr>
               ) : (
@@ -346,7 +346,7 @@ export default function InventoryManager() {
                         <input
                           type="text"
                           value={row.note}
-                          placeholder="선택 사항"
+                          placeholder="Optional"
                           onChange={(e) =>
                             updateRow(row.productId, { note: e.target.value })
                           }
@@ -361,11 +361,11 @@ export default function InventoryManager() {
                             disabled={isSaving || savingId !== null}
                             className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 disabled:bg-amber-200 text-white text-xs font-semibold rounded-lg transition whitespace-nowrap"
                           >
-                            {isSaving ? "저장 중…" : "저장"}
+                            {isSaving ? "Saving..." : "Save"}
                           </button>
                           {isSaved && (
                             <span className="text-xs text-green-600 font-medium">
-                              ✓ 저장됨
+                              ✓ Saved
                             </span>
                           )}
                           {rowError && (
@@ -390,7 +390,7 @@ export default function InventoryManager() {
           Array.from({ length: 3 }).map((_, i) => <SkeletonCard key={i} />)
         ) : rows.length === 0 ? (
           <div className="bg-white rounded-xl border border-gray-200 px-4 py-12 text-center text-gray-400 text-sm">
-            등록된 상품이 없습니다. 먼저 상품을 추가해주세요.
+            No products registered. Please add a product first.
           </div>
         ) : (
           rows.map((row) => {
@@ -417,7 +417,7 @@ export default function InventoryManager() {
                 {/* Qty grid */}
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label className="text-xs text-gray-500 font-medium">계획수량</label>
+                    <label className="text-xs text-gray-500 font-medium">Planned Qty</label>
                     <input
                       type="number"
                       min={0}
@@ -431,7 +431,7 @@ export default function InventoryManager() {
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs text-gray-500 font-medium">생산수량</label>
+                    <label className="text-xs text-gray-500 font-medium">Production Qty</label>
                     <input
                       type="number"
                       min={0}
@@ -446,8 +446,8 @@ export default function InventoryManager() {
                   </div>
                   <div className="space-y-1">
                     <label className="text-xs text-gray-500 font-medium">
-                      예약수량
-                      <span className="ml-1 text-gray-400 font-normal">(자동)</span>
+                      Reserved Qty
+                      <span className="ml-1 text-gray-400 font-normal">(Auto)</span>
                     </label>
                     <input
                       type="number"
@@ -458,7 +458,7 @@ export default function InventoryManager() {
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs text-gray-500 font-medium">판매수량</label>
+                    <label className="text-xs text-gray-500 font-medium">Sold Qty</label>
                     <input
                       type="number"
                       min={0}
@@ -484,15 +484,15 @@ export default function InventoryManager() {
                       }
                       className="w-4 h-4 accent-amber-500"
                     />
-                    <span className="text-sm text-gray-700">품절</span>
+                    <span className="text-sm text-gray-700">Out of Stock</span>
                   </label>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs text-gray-500 font-medium">비고</label>
+                  <label className="text-xs text-gray-500 font-medium">Notes</label>
                   <input
                     type="text"
                     value={row.note}
-                    placeholder="선택 사항"
+                    placeholder="Optional"
                     onChange={(e) =>
                       updateRow(row.productId, { note: e.target.value })
                     }
@@ -507,10 +507,10 @@ export default function InventoryManager() {
                     disabled={isSaving || savingId !== null}
                     className="flex-1 py-2 bg-amber-500 hover:bg-amber-600 disabled:bg-amber-200 text-white text-sm font-semibold rounded-lg transition"
                   >
-                    {isSaving ? "저장 중…" : "저장"}
+                    {isSaving ? "Saving..." : "Save"}
                   </button>
                   {isSaved && (
-                    <span className="text-sm text-green-600 font-medium">✓ 저장됨</span>
+                    <span className="text-sm text-green-600 font-medium">✓ Saved</span>
                   )}
                   {rowError && (
                     <span className="text-sm text-red-500">{rowError}</span>

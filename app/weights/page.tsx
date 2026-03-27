@@ -12,8 +12,8 @@ export default async function WeightsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="예측 가중치"
-        description="요인별 매출 예측 가중치를 관리합니다"
+        title="Predictions Weights"
+        description="Manage sales prediction weights by factor"
       />
       <WeightsManager initialWeights={weights} />
     </div>

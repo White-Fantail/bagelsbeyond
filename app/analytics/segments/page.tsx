@@ -44,39 +44,39 @@ export default async function SegmentsPage({
     {
       result: holiday,
       icon: "🎌",
-      title: "공휴일 vs 일반일",
-      segmentLabel: `공휴일 (${holiday.segment.recordCount}일)`,
-      baselineLabel: `일반일 (${holiday.baseline.recordCount}일)`,
+      title: "Holiday vs Regular days",
+      segmentLabel: `Holiday (${holiday.segment.recordCount} days)`,
+      baselineLabel: `Regular days (${holiday.baseline.recordCount} days)`,
     },
     {
       result: schoolHoliday,
       icon: "🏫",
-      title: "학교 방학 vs 학기 중",
-      segmentLabel: `방학 (${schoolHoliday.segment.recordCount}일)`,
-      baselineLabel: `학기 중 (${schoolHoliday.baseline.recordCount}일)`,
+      title: "School Holiday vs In-term",
+      segmentLabel: `School Holiday (${schoolHoliday.segment.recordCount} days)`,
+      baselineLabel: `In-term (${schoolHoliday.baseline.recordCount} days)`,
     },
     {
       result: rain,
       icon: "🌧️",
-      title: "비 오는 날 vs 맑은 날",
-      segmentLabel: `비 오는 날 (${rain.segment.recordCount}일)`,
-      baselineLabel: `맑은 날 (${rain.baseline.recordCount}일)`,
+      title: "Rainy days vs Clear days",
+      segmentLabel: `Rainy days (${rain.segment.recordCount} days)`,
+      baselineLabel: `Clear days (${rain.baseline.recordCount} days)`,
     },
     {
       result: event,
       icon: "🎪",
-      title: "이벤트 있는 날 vs 일반일",
-      segmentLabel: `이벤트 (${event.segment.recordCount}일)`,
-      baselineLabel: `일반일 (${event.baseline.recordCount}일)`,
+      title: "Days with Event vs Regular days",
+      segmentLabel: `Event (${event.segment.recordCount} days)`,
+      baselineLabel: `Regular days (${event.baseline.recordCount} days)`,
     },
   ];
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">🔍 세그먼트 분석</h1>
+        <h1 className="text-2xl font-bold text-gray-900">🔍 segments Analytics</h1>
         <p className="text-gray-500 mt-1">
-          조건별 매출 및 운영 지표 비교
+          Compare sales and operational metrics by condition
         </p>
       </div>
 
@@ -89,12 +89,12 @@ export default async function SegmentsPage({
             </h2>
             {result.segment.recordCount === 0 ? (
               <div className="bg-gray-50 rounded-lg border border-gray-200 p-4 text-sm text-gray-400 text-center">
-                해당 세그먼트의 데이터가 없습니다.
+                No data for this segment..
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <ComparisonCard
-                  title="평균 일 매출"
+                  title="Daily Avg. Sales"
                   segmentLabel={segmentLabel}
                   baselineLabel={baselineLabel}
                   segmentValue={formatCurrencyNZD(result.segment.averageDailySales)}
@@ -103,17 +103,17 @@ export default async function SegmentsPage({
                   higherIsBetter={true}
                 />
                 <ComparisonCard
-                  title="평균 일 판매 베이글"
+                  title="Daily Avg. Sold Bagels"
                   segmentLabel={segmentLabel}
                   baselineLabel={baselineLabel}
                   segmentValue={`${Math.round(result.segment.averageBagelsSold)}`}
                   baselineValue={`${Math.round(result.baseline.averageBagelsSold)}`}
                   diffPercent={result.bagelsSoldDiffPercent}
-                  unit="개"
+                  unit=""
                   higherIsBetter={true}
                 />
                 <ComparisonCard
-                  title="평균 폐기율"
+                  title="Avg. Waste Rate"
                   segmentLabel={segmentLabel}
                   baselineLabel={baselineLabel}
                   segmentValue={formatPercentage(result.segment.wasteRate)}
@@ -130,28 +130,28 @@ export default async function SegmentsPage({
       {/* Holiday Name Breakdown */}
       {holidayBreakdown.length > 0 && (
         <div>
-          <h2 className="text-base font-semibold text-gray-900 mb-3">🎌 공휴일별 상세</h2>
+          <h2 className="text-base font-semibold text-gray-900 mb-3">🎌 Holiday Details</h2>
           <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
             <table className="min-w-full divide-y divide-gray-200 text-sm">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">공휴일명</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">기록 수</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">평균 매출</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">평균 판매</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">평균 폐기율</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Holiday Name</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Record Count</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Avg. Sales</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Avg. Sold</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Avg. Waste Rate</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {holidayBreakdown.map((h) => (
                   <tr key={h.holidayName} className="hover:bg-gray-50">
                     <td className="px-4 py-3 font-medium text-gray-900">{h.holidayName}</td>
-                    <td className="px-4 py-3 text-right text-gray-700">{h.recordCount}일</td>
+                    <td className="px-4 py-3 text-right text-gray-700">{h.recordCount} days</td>
                     <td className="px-4 py-3 text-right font-medium text-amber-700">
                       {formatCurrencyNZD(h.avgSales)}
                     </td>
                     <td className="px-4 py-3 text-right text-gray-700">
-                      {Math.round(h.avgBagelsSold)}개
+                      {Math.round(h.avgBagelsSold)}
                     </td>
                     <td
                       className={`px-4 py-3 text-right font-medium ${

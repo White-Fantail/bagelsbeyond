@@ -119,23 +119,23 @@ export function validateParsedRow(row: ParsedCsvRow): string[] {
   const errors: string[] = [];
 
   if (!row.parsedDate) {
-    errors.push("날짜 필드가 없거나 파싱에 실패했습니다");
+    errors.push("Date field is missing or failed to parse");
   }
 
   if (row.parsedBagelsBaked !== null && row.parsedBagelsBaked !== undefined && row.parsedBagelsBaked < 0) {
-    errors.push("구운 베이글 수량은 0 이상이어야 합니다");
+    errors.push("Bagels Baked Quantity must be 0 or more");
   }
 
   const salesFields = [
-    { key: "storeSales", label: "매장 매출", value: row.parsedStoreSales },
-    { key: "uberSales", label: "우버 매출", value: row.parsedUberSales },
-    { key: "doordashSales", label: "도어대쉬 매출", value: row.parsedDoordashSales },
-    { key: "otherSales", label: "기타 매출", value: row.parsedOtherSales },
+    { key: "storeSales", label: "Store Sales", value: row.parsedStoreSales },
+    { key: "uberSales", label: "Uber Sales", value: row.parsedUberSales },
+    { key: "doordashSales", label: "DoorDash Sales", value: row.parsedDoordashSales },
+    { key: "otherSales", label: "Other Sales", value: row.parsedOtherSales },
   ];
 
   for (const f of salesFields) {
     if (f.value !== null && f.value !== undefined && f.value < 0) {
-      errors.push(`${f.label}는 0 이상이어야 합니다`);
+      errors.push(`${f.label} must be 0 or more`);
     }
   }
 
@@ -175,11 +175,11 @@ export function parseCsvContent(csvText: string): ParsedCsvRow[] {
     const parsedOtherSales = safeParseFloat(raw["otherSales"]);
     let parsedNotes = raw["notes"] || null;
 
-    // 남은 베이글 수량이 음수인 경우(전날 재고 사용 등) 0으로 보정하고 메모에 기록
+    // If Bagels Left is negative (e.g. previous day inventory used), clamp to 0 and note
     if (parsedBagelsLeft !== null && parsedBagelsLeft < 0) {
       const originalValue = parsedBagelsLeft;
       parsedBagelsLeft = 0;
-      const adjustmentNote = `남은 베이글 수량이 음수(${originalValue})로 기록되어 0으로 처리됨`;
+      const adjustmentNote = `Bagels Left recorded as negative (${originalValue}), clamped to 0`;
       parsedNotes = parsedNotes ? `${parsedNotes} / ${adjustmentNote}` : adjustmentNote;
     }
 
@@ -221,8 +221,8 @@ export function generateCsvTemplate(): string {
     "notes",
   ];
 
-  const example1 = ["2024-01-15", "80", "5", "250.00", "80.00", "50.00", "10.00", "평일 보통"];
-  const example2 = ["2024-01-20", "100", "3", "320.00", "110.00", "70.00", "15.00", "토요일 많음"];
+  const example1 = ["2024-01-15", "80", "5", "250.00", "80.00", "50.00", "10.00", "Normal weekday"];
+  const example2 = ["2024-01-20", "100", "3", "320.00", "110.00", "70.00", "15.00", "Sat busy"];
 
   return [headers.join(","), example1.join(","), example2.join(",")].join("\n");
 }

@@ -4,12 +4,12 @@ import { requireAuth } from "@/lib/auth/dal";
 import { getUserSubscriptions } from "@/lib/services/subscriptionService";
 import Link from "next/link";
 
-const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
+const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 const STATUS_LABEL: Record<string, string> = {
-  ACTIVE: "활성",
-  PAUSED: "일시정지",
-  CANCELLED: "취소됨",
+  ACTIVE: "Active",
+  PAUSED: "Pause",
+  CANCELLED: "Cancelled",
 };
 
 const STATUS_COLOR: Record<string, string> = {
@@ -26,22 +26,22 @@ export default async function AccountSubscriptionsPage() {
     <div className="space-y-6 max-w-2xl">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">내 구독</h1>
-          <p className="text-gray-500 mt-1">정기 구독 목록을 확인하세요</p>
+          <h1 className="text-2xl font-bold text-gray-900">My Subscriptions</h1>
+          <p className="text-gray-500 mt-1">View your recurring subscription list</p>
         </div>
         <Link
           href="/subscribe"
           className="px-4 py-2 rounded-lg bg-amber-600 text-white text-sm font-medium hover:bg-amber-700 transition-colors"
         >
-          구독 추가
+          Add Subscription
         </Link>
       </div>
 
       {subscriptions.length === 0 ? (
         <div className="bg-white rounded-xl border border-gray-200 p-10 text-center space-y-3">
-          <p className="text-gray-500">아직 구독이 없습니다</p>
+          <p className="text-gray-500">No subscriptions yet</p>
           <Link href="/subscribe" className="inline-block px-4 py-2 rounded-lg bg-amber-500 text-white text-sm font-medium">
-            구독 신청하기
+            Subscribe
           </Link>
         </div>
       ) : (
@@ -59,7 +59,7 @@ export default async function AccountSubscriptionsPage() {
                       {STATUS_LABEL[sub.status] ?? sub.status}
                     </span>
                     <span className="text-sm font-semibold text-gray-900">
-                      매주 {WEEKDAYS[sub.pickupWeekday]}요일
+                      Every {WEEKDAYS[sub.pickupWeekday]}Day
                     </span>
                     {sub.pickupTimeSlot && (
                       <span className="text-xs text-gray-500">{sub.pickupTimeSlot}</span>

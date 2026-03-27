@@ -4,7 +4,7 @@ import { apiRequireAdmin, isNextResponse } from "@/lib/auth/dal";
 import { z } from "zod";
 
 const optionGroupPatchSchema = z.object({
-  name: z.string().min(1, "옵션 그룹명을 입력해주세요").optional(),
+  name: z.string().min(1, "Options Please enter a group name").optional(),
   minSelect: z.number().int().min(0).optional(),
   maxSelect: z.number().int().min(1).optional(),
   isRequired: z.boolean().optional(),
@@ -24,20 +24,20 @@ export async function PATCH(
     where: { id: groupId, productId },
   });
   if (!group) {
-    return NextResponse.json({ message: "옵션 그룹을 찾을 수 없습니다" }, { status: 404 });
+    return NextResponse.json({ message: "Option group not found" }, { status: 404 });
   }
 
   let body: unknown;
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ message: "요청 본문이 올바르지 않습니다" }, { status: 400 });
+    return NextResponse.json({ message: "Invalid request body" }, { status: 400 });
   }
 
   const parsed = optionGroupPatchSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { message: "입력값이 올바르지 않습니다", errors: parsed.error.flatten() },
+      { message: "Invalid input", errors: parsed.error.flatten() },
       { status: 400 }
     );
   }
@@ -50,7 +50,7 @@ export async function PATCH(
     });
     return NextResponse.json({ group: updated });
   } catch (_error) {
-    return NextResponse.json({ message: "옵션 그룹 수정에 실패했습니다" }, { status: 500 });
+    return NextResponse.json({ message: "Failed to edit option group" }, { status: 500 });
   }
 }
 
@@ -67,13 +67,13 @@ export async function DELETE(
     where: { id: groupId, productId },
   });
   if (!group) {
-    return NextResponse.json({ message: "옵션 그룹을 찾을 수 없습니다" }, { status: 404 });
+    return NextResponse.json({ message: "Option group not found" }, { status: 404 });
   }
 
   try {
     await prisma.productOptionGroup.delete({ where: { id: groupId } });
-    return NextResponse.json({ message: "옵션 그룹이 삭제되었습니다" });
+    return NextResponse.json({ message: "Option group deleted" });
   } catch (_error) {
-    return NextResponse.json({ message: "옵션 그룹 삭제에 실패했습니다" }, { status: 500 });
+    return NextResponse.json({ message: "Failed to delete option group" }, { status: 500 });
   }
 }

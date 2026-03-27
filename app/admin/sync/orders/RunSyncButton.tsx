@@ -31,11 +31,11 @@ export default function RunSyncButton() {
         setResult(data.result ?? null);
       } else {
         setState("error");
-        setErrorMsg(data.error ?? "알 수 없는 오류");
+        setErrorMsg(data.error ?? "Unknown error");
       }
     } catch (err) {
       setState("error");
-      setErrorMsg(err instanceof Error ? err.message : "네트워크 오류");
+      setErrorMsg(err instanceof Error ? err.message : "Network error");
     }
   }
 
@@ -51,19 +51,19 @@ export default function RunSyncButton() {
             : "bg-amber-500 text-white hover:bg-amber-600")
         }
       >
-        {state === "loading" ? "실행 중…" : "지금 자동 전송 실행"}
+        {state === "loading" ? "Running..." : "Run Auto-Send Now"}
       </button>
       {state === "done" && result && (
         <p className="text-sm text-green-600">
-          ✓ 완료 — 성공 {result.pushSucceeded ?? 0}건 / 실패 {result.pushFailed ?? 0}건 / 이미 전송됨{" "}
-          {result.skippedAlreadySent ?? 0}건
+          ✓ Done — Success {result.pushSucceeded ?? 0} / Failed {result.pushFailed ?? 0} / Already sent{" "}
+          {result.skippedAlreadySent ?? 0}items
         </p>
       )}
       {state === "done" && !result && (
-        <p className="text-sm text-green-600">✓ 실행 완료</p>
+        <p className="text-sm text-green-600">✓ Run complete</p>
       )}
       {state === "error" && (
-        <p className="text-sm text-red-500">오류: {errorMsg}</p>
+        <p className="text-sm text-red-500">Error: {errorMsg}</p>
       )}
     </div>
   );

@@ -5,14 +5,14 @@
  * Supports Korean and English weather descriptions from Open-Meteo WMO codes.
  *
  * Mapping rules:
- * - 맑음 / sunny / clear → ☀️
- * - 구름 / cloudy / overcast → ☁️
- * - 비 / rain / shower / drizzle → 🌧️
- * - 눈 / snow → ❄️
- * - 바람 / windy → 💨
- * - 안개 / fog → 🌫️
- * - 뇌우 / thunderstorm → ⛈️
- * - 정보 없음 → null (표시 안 함)
+ * - sunny / clear → ☀️
+ * - cloud / cloudy / overcast → ☁️
+ * - rain / shower / drizzle → 🌧️
+ * - snow → ❄️
+ * - Wind / windy → 💨
+ * - fog → 🌫️
+ * - thunderstorm → ⛈️
+ * - no info → null (not displayed)
  */
 
 export type WeatherIconInfo = {
@@ -22,44 +22,44 @@ export type WeatherIconInfo = {
 
 const WEATHER_RULES: Array<{ patterns: RegExp; icon: string; label: string }> = [
   {
-    patterns: /뇌우|thunderstorm|storm/i,
+    patterns: /thunderstorm|storm/i,
     icon: "⛈️",
-    label: "뇌우",
+    label: "Thunderstorm",
   },
   {
-    patterns: /눈|snow|blizzard/i,
+    patterns: /snow|blizzard/i,
     icon: "❄️",
-    label: "눈",
+    label: "Snow",
   },
   {
-    patterns: /비|rain|shower|drizzle|소나기|이슬비/i,
+    patterns: /rain|shower|drizzle/i,
     icon: "🌧️",
-    label: "비",
+    label: "Rain",
   },
   {
-    patterns: /안개|fog|mist/i,
+    patterns: /fog|mist/i,
     icon: "🌫️",
-    label: "안개",
+    label: "Foggy",
   },
   {
-    patterns: /바람|windy|강풍/i,
+    patterns: /Wind|windy/i,
     icon: "💨",
-    label: "바람",
+    label: "Wind",
   },
   {
-    patterns: /흐림|overcast|cloudy|구름많음|대체로흐림|mostly cloudy/i,
+    patterns: /overcast|cloudy|mostly cloudy/i,
     icon: "☁️",
-    label: "흐림",
+    label: "Cloudy",
   },
   {
-    patterns: /구름조금|partly cloudy|약간흐림|few clouds/i,
+    patterns: /partly cloudy|slightlyCloudy|few clouds/i,
     icon: "⛅",
-    label: "구름 조금",
+    label: "Partly Cloudy",
   },
   {
-    patterns: /맑음|sunny|clear|화창/i,
+    patterns: /sunny|clear/i,
     icon: "☀️",
-    label: "맑음",
+    label: "Clear",
   },
 ];
 

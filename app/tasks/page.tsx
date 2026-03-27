@@ -33,23 +33,23 @@ export default async function TasksPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">자동화 작업 목록</h1>
-          <p className="text-gray-500 mt-1">스케줄된 작업과 실행 상태를 관리합니다.</p>
+          <h1 className="text-2xl font-bold text-gray-900">Automation Task List</h1>
+          <p className="text-gray-500 mt-1">Manage scheduled tasks and run status.</p>
         </div>
         <div className="flex gap-2">
           <TaskActionButton
             href="/api/cron/run"
-            label="▶ 대기 작업 실행"
+            label="▶ Run Pending Task"
             body={{ action: "run_pending" }}
           />
           <TaskActionButton
             href="/api/cron/run"
-            label="📡 외부요인 수집"
+            label="📡 ExternalFactor Collect"
             body={{ action: "ensure_external_factors" }}
           />
           <TaskActionButton
             href="/api/cron/run"
-            label="🔮 내일 예측"
+            label="🔮 Tomorrow Predictions"
             body={{ action: "schedule_tomorrow_prediction" }}
           />
         </div>
@@ -71,21 +71,21 @@ export default async function TasksPage() {
       {tasks.length === 0 ? (
         <div className="bg-white border border-dashed border-gray-300 rounded-lg p-12 text-center">
           <p className="text-4xl mb-3">📋</p>
-          <p className="text-gray-500">아직 스케줄된 작업이 없습니다.</p>
-          <p className="text-gray-400 text-sm mt-1">위 버튼을 눌러 작업을 실행해보세요.</p>
+          <p className="text-gray-500">No scheduled tasks yet.</p>
+          <p className="text-gray-400 text-sm mt-1">Click the button above to run a task.</p>
         </div>
       ) : (
         <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
           <table className="min-w-full divide-y divide-gray-100 text-sm">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">작업 유형</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">대상 날짜</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">상태</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">시작</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">완료</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">재시도</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">로그</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Task Type</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Target Date</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Status</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Started</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Completed</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Retry</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Log</th>
                 <th className="px-4 py-3"></th>
               </tr>
             </thead>
@@ -95,7 +95,7 @@ export default async function TasksPage() {
                   <td className="px-4 py-3 font-medium text-gray-800">{formatTaskType(task.taskType)}</td>
                   <td className="px-4 py-3 text-gray-600">
                     {task.targetDate
-                      ? new Date(task.targetDate).toLocaleDateString("ko-KR")
+                      ? new Date(task.targetDate).toLocaleDateString("en-NZ")
                       : "-"}
                   </td>
                   <td className="px-4 py-3">
@@ -105,12 +105,12 @@ export default async function TasksPage() {
                   </td>
                   <td className="px-4 py-3 text-xs text-gray-500">
                     {task.startedAt
-                      ? new Date(task.startedAt).toLocaleString("ko-KR")
+                      ? new Date(task.startedAt).toLocaleString("en-NZ")
                       : "-"}
                   </td>
                   <td className="px-4 py-3 text-xs text-gray-500">
                     {task.finishedAt
-                      ? new Date(task.finishedAt).toLocaleString("ko-KR")
+                      ? new Date(task.finishedAt).toLocaleString("en-NZ")
                       : "-"}
                   </td>
                   <td className="px-4 py-3 text-gray-600 text-center">{task.retryCount}</td>
@@ -120,7 +120,7 @@ export default async function TasksPage() {
                       href={`/tasks/${task.id}`}
                       className="text-xs text-indigo-600 hover:underline"
                     >
-                      상세 →
+                      Details →
                     </Link>
                   </td>
                 </tr>

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { createSubscriptionAction, type SubscriptionActionState } from "@/app/actions/subscription";
 import { PICKUP_TIME_SLOTS } from "@/lib/order/pickup-slots";
 
-const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
+const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 interface Product {
   id: string;
@@ -41,9 +41,9 @@ export default function SubscribeForm({ products }: Props) {
 
       {/* Product selection */}
       <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-3">
-        <h2 className="font-semibold text-gray-800 text-sm">상품 선택</h2>
+        <h2 className="font-semibold text-gray-800 text-sm">Products Select</h2>
         {products.length === 0 ? (
-          <p className="text-sm text-gray-500">구독 가능한 상품이 없습니다</p>
+          <p className="text-sm text-gray-500">No subscribable products available</p>
         ) : (
           <div className="space-y-3" id="product-list">
             {products.map((p) => (
@@ -75,7 +75,7 @@ export default function SubscribeForm({ products }: Props) {
 
       {/* Weekday */}
       <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-3">
-        <h2 className="font-semibold text-gray-800 text-sm">픽업 요일 <span className="text-red-500">*</span></h2>
+        <h2 className="font-semibold text-gray-800 text-sm">Pickup Day <span className="text-red-500">*</span></h2>
         <div className="flex flex-wrap gap-2">
           {[1, 2, 3, 4, 5, 6].map((d) => (
             <label key={d} className="cursor-pointer">
@@ -90,12 +90,12 @@ export default function SubscribeForm({ products }: Props) {
 
       {/* Pickup time slot */}
       <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-3">
-        <h2 className="font-semibold text-gray-800 text-sm">픽업 시간 (선택)</h2>
+        <h2 className="font-semibold text-gray-800 text-sm">Pickup Time (Select)</h2>
         <select
           name="pickupTimeSlot"
           className="border border-gray-200 rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-amber-400"
         >
-          <option value="">시간 선택 안함</option>
+          <option value="">No time selected</option>
           {PICKUP_TIME_SLOTS.map((slot) => (
             <option key={slot} value={slot}>{slot}</option>
           ))}
@@ -104,7 +104,7 @@ export default function SubscribeForm({ products }: Props) {
 
       {/* Start date */}
       <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-3">
-        <h2 className="font-semibold text-gray-800 text-sm">시작일 <span className="text-red-500">*</span></h2>
+        <h2 className="font-semibold text-gray-800 text-sm">Start Date <span className="text-red-500">*</span></h2>
         <input
           type="date"
           name="startDate"
@@ -117,7 +117,7 @@ export default function SubscribeForm({ products }: Props) {
 
       {/* End date (optional) */}
       <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-3">
-        <h2 className="font-semibold text-gray-800 text-sm">종료일 (선택)</h2>
+        <h2 className="font-semibold text-gray-800 text-sm">End Date (Select)</h2>
         <input
           type="date"
           name="endDate"
@@ -128,12 +128,12 @@ export default function SubscribeForm({ products }: Props) {
 
       {/* Note */}
       <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-3">
-        <h2 className="font-semibold text-gray-800 text-sm">메모 (선택)</h2>
+        <h2 className="font-semibold text-gray-800 text-sm">Notes (Select)</h2>
         <textarea
           name="note"
           rows={2}
           maxLength={500}
-          placeholder="특별 요청사항 등"
+          placeholder="Special requests, etc."
           className="border border-gray-200 rounded-lg px-3 py-2 text-sm w-full resize-none focus:outline-none focus:ring-2 focus:ring-amber-400"
         />
       </div>
@@ -164,7 +164,7 @@ function SubscribeFormSubmit({ isPending }: { isPending: boolean }) {
         }}
         className="w-full py-3 rounded-xl bg-amber-600 text-white font-semibold text-sm hover:bg-amber-700 disabled:opacity-60 transition-colors"
       >
-        {isPending ? "처리 중..." : "구독 신청하기"}
+        {isPending ? "Processing......" : "Subscribe"}
       </button>
     </div>
   );

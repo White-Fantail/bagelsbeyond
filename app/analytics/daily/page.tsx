@@ -38,33 +38,33 @@ export default async function DailyAnalyticsPage({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">📅 일별 분석</h1>
+        <h1 className="text-2xl font-bold text-gray-900">📅 daily Analytics</h1>
         <p className="text-gray-500 mt-1">
-          {startDate.toLocaleDateString("ko-KR")} ~ {endDate.toLocaleDateString("ko-KR")}
-          {" "}({items.length}일)
+          {startDate.toLocaleDateString("en-NZ")} ~ {endDate.toLocaleDateString("en-NZ")}
+          {" "}({items.length} days)
         </p>
       </div>
 
       {/* Summary Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="bg-white rounded-lg border border-t-4 border-t-amber-500 border-gray-200 p-4">
-          <p className="text-sm text-gray-500">총 매출</p>
+          <p className="text-sm text-gray-500">Total Sales</p>
           <p className="text-xl font-bold text-gray-900 mt-1">
             {formatCurrencyNZD(summary.totalSales)}
           </p>
         </div>
         <div className="bg-white rounded-lg border border-t-4 border-t-blue-500 border-gray-200 p-4">
-          <p className="text-sm text-gray-500">일평균 매출</p>
+          <p className="text-sm text-gray-500">Daily Avg. Sales</p>
           <p className="text-xl font-bold text-gray-900 mt-1">
             {formatCurrencyNZD(summary.averageDailySales)}
           </p>
         </div>
         <div className="bg-white rounded-lg border border-t-4 border-t-green-500 border-gray-200 p-4">
-          <p className="text-sm text-gray-500">총 판매 베이글</p>
-          <p className="text-xl font-bold text-gray-900 mt-1">{summary.totalBagelsSold}개</p>
+          <p className="text-sm text-gray-500">Total Sold Bagels</p>
+          <p className="text-xl font-bold text-gray-900 mt-1">{summary.totalBagelsSold}</p>
         </div>
         <div className="bg-white rounded-lg border border-t-4 border-t-red-500 border-gray-200 p-4">
-          <p className="text-sm text-gray-500">평균 폐기율</p>
+          <p className="text-sm text-gray-500">Avg. Waste Rate</p>
           <p className="text-xl font-bold text-gray-900 mt-1">
             {formatPercentage(summary.wasteRate)}
           </p>
@@ -73,18 +73,18 @@ export default async function DailyAnalyticsPage({
 
       {items.length === 0 ? (
         <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-          <p className="text-gray-400">해당 기간에 데이터가 없습니다.</p>
+          <p className="text-gray-400">No data for this period..</p>
         </div>
       ) : (
         <>
           {/* Sales Trend Bar Chart */}
           <div className="bg-white rounded-lg border border-gray-200 p-5">
-            <h3 className="text-sm font-semibold text-gray-700 mb-4">매출 추이</h3>
+            <h3 className="text-sm font-semibold text-gray-700 mb-4">Sales Trend</h3>
             <div className="space-y-2">
               {items.map((item) => (
                 <div key={item.date} className="flex items-center gap-3">
                   <span className="text-xs text-gray-500 w-20 flex-shrink-0">
-                    {new Date(item.date).toLocaleDateString("ko-KR", {
+                    {new Date(item.date).toLocaleDateString("en-NZ", {
                       month: "2-digit",
                       day: "2-digit",
                     })}
@@ -101,13 +101,13 @@ export default async function DailyAnalyticsPage({
                   </span>
                   <div className="flex gap-1 w-16 flex-shrink-0">
                     {item.isHoliday && (
-                      <span title={item.holidayName ?? "공휴일"} className="text-xs">🎌</span>
+                      <span title={item.holidayName ?? "Holiday"} className="text-xs">🎌</span>
                     )}
                     {item.isSchoolHoliday && (
-                      <span title="학교 방학" className="text-xs">🏫</span>
+                      <span title="School Holiday" className="text-xs">🏫</span>
                     )}
                     {item.isRainy && (
-                      <span title={`비 ${item.rainMm}mm`} className="text-xs">🌧️</span>
+                      <span title={`Rain ${item.rainMm}mm`} className="text-xs">🌧️</span>
                     )}
                     {item.localEventName && (
                       <span title={item.localEventName} className="text-xs">🎪</span>
@@ -123,25 +123,25 @@ export default async function DailyAnalyticsPage({
             <table className="min-w-full divide-y divide-gray-200 text-sm">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">날짜</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">총매출</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">판매</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">폐기율</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">채널</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">외부요인</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Total Sales</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Sold</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Waste Rate</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Channel</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">ExternalFactor</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {items.map((item) => (
                   <tr key={item.date} className="hover:bg-gray-50">
                     <td className="px-4 py-3 font-medium text-gray-900">
-                      {new Date(item.date).toLocaleDateString("ko-KR")}
+                      {new Date(item.date).toLocaleDateString("en-NZ")}
                     </td>
                     <td className="px-4 py-3 text-right font-medium text-gray-900">
                       {formatCurrencyNZD(item.totalSales)}
                     </td>
                     <td className="px-4 py-3 text-right text-gray-700">
-                      {item.bagelsSold}개
+                      {item.bagelsSold}
                     </td>
                     <td
                       className={`px-4 py-3 text-right font-medium ${
@@ -178,20 +178,20 @@ export default async function DailyAnalyticsPage({
                       <div className="flex gap-1">
                         {item.isHoliday && (
                           <span
-                            title={item.holidayName ?? "공휴일"}
+                            title={item.holidayName ?? "Holiday"}
                             className="px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded text-xs"
                           >
-                            {item.holidayName ?? "공휴일"}
+                            {item.holidayName ?? "Holiday"}
                           </span>
                         )}
                         {item.isSchoolHoliday && (
                           <span className="px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded text-xs">
-                            학교방학
+                            School Holiday
                           </span>
                         )}
                         {item.isRainy && (
                           <span className="px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded text-xs">
-                            비 {item.rainMm}mm
+                            Rain {item.rainMm}mm
                           </span>
                         )}
                         {item.localEventName && (
@@ -216,15 +216,15 @@ export default async function DailyAnalyticsPage({
               >
                 <div className="flex justify-between items-start mb-2">
                   <span className="font-medium text-gray-900">
-                    {new Date(item.date).toLocaleDateString("ko-KR")}
+                    {new Date(item.date).toLocaleDateString("en-NZ")}
                   </span>
                   <span className="font-semibold text-amber-700">
                     {formatCurrencyNZD(item.totalSales)}
                   </span>
                 </div>
                 <div className="text-sm text-gray-500 flex gap-3 mb-2">
-                  <span>판매 {item.bagelsSold}개</span>
-                  <span>폐기율 {formatPercentage(item.wasteRate)}</span>
+                  <span>Sold {item.bagelsSold}</span>
+                  <span>Waste Rate {formatPercentage(item.wasteRate)}</span>
                 </div>
                 <ChannelBar
                   storePercent={item.totalSales > 0 ? (item.storeSales / item.totalSales) * 100 : 0}
@@ -236,17 +236,17 @@ export default async function DailyAnalyticsPage({
                   <div className="flex flex-wrap gap-1 mt-2">
                     {item.isHoliday && (
                       <span className="px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded text-xs">
-                        {item.holidayName ?? "공휴일"}
+                        {item.holidayName ?? "Holiday"}
                       </span>
                     )}
                     {item.isSchoolHoliday && (
                       <span className="px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded text-xs">
-                        학교방학
+                        School Holiday
                       </span>
                     )}
                     {item.isRainy && (
                       <span className="px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded text-xs">
-                        비 {item.rainMm}mm
+                        Rain {item.rainMm}mm
                       </span>
                     )}
                     {item.localEventName && (

@@ -12,12 +12,12 @@ export async function GET() {
     });
     return NextResponse.json(predictions);
   } catch (_error) {
-    return NextResponse.json({ message: "예측 목록을 불러오는데 실패했습니다" }, { status: 500 });
+    return NextResponse.json({ message: "Failed to load predictions list" }, { status: 500 });
   }
 }
 
 const createPredictionSchema = z.object({
-  targetDate: z.string().min(1, "날짜를 입력해주세요"),
+  targetDate: z.string().min(1, "Please enter a date"),
   autoCollect: z.boolean().optional().default(true),
   externalFactors: z.object({
     weatherSummary: z.string().optional().nullable(),
@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { message: "입력값이 올바르지 않습니다", errors: parsed.error.flatten() },
+        { message: "Invalid input", errors: parsed.error.flatten() },
         { status: 400 }
       );
     }
@@ -85,6 +85,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ...saved, autoCollectResult }, { status: 201 });
   } catch (error) {
     console.error("[prediction] Unhandled error:", error);
-    return NextResponse.json({ message: "예측 생성에 실패했습니다" }, { status: 500 });
+    return NextResponse.json({ message: "Failed to create prediction" }, { status: 500 });
   }
 }

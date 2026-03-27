@@ -14,7 +14,7 @@ export default function PasswordForm() {
     setMessage(null);
 
     if (newPassword !== confirmPassword) {
-      setMessage({ type: "error", text: "새 비밀번호가 일치하지 않습니다" });
+      setMessage({ type: "error", text: "New passwords do not match" });
       return;
     }
 
@@ -29,15 +29,15 @@ export default function PasswordForm() {
         const data = await res.json();
 
         if (!res.ok) {
-          setMessage({ type: "error", text: data.message ?? "변경에 실패했습니다" });
+          setMessage({ type: "error", text: data.message ?? "Change failed" });
         } else {
-          setMessage({ type: "success", text: "비밀번호가 변경되었습니다" });
+          setMessage({ type: "success", text: "Password changed" });
           setCurrentPassword("");
           setNewPassword("");
           setConfirmPassword("");
         }
       } catch {
-        setMessage({ type: "error", text: "요청 중 오류가 발생했습니다" });
+        setMessage({ type: "error", text: "An error occurred while processing" });
       }
     });
   }
@@ -62,7 +62,7 @@ export default function PasswordForm() {
           htmlFor="currentPassword"
           className="block text-sm font-medium text-gray-700 mb-1"
         >
-          현재 비밀번호
+          Current Password
         </label>
         <input
           id="currentPassword"
@@ -72,7 +72,7 @@ export default function PasswordForm() {
           required
           autoComplete="current-password"
           className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-          placeholder="현재 비밀번호"
+          placeholder="Current Password"
         />
       </div>
 
@@ -82,7 +82,7 @@ export default function PasswordForm() {
           htmlFor="newPassword"
           className="block text-sm font-medium text-gray-700 mb-1"
         >
-          새 비밀번호
+          New Password
         </label>
         <input
           id="newPassword"
@@ -92,7 +92,7 @@ export default function PasswordForm() {
           required
           autoComplete="new-password"
           className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-          placeholder="8자 이상, 영문+숫자 포함"
+          placeholder="At least 8 characters, including letters and numbers"
         />
       </div>
 
@@ -102,7 +102,7 @@ export default function PasswordForm() {
           htmlFor="confirmPassword"
           className="block text-sm font-medium text-gray-700 mb-1"
         >
-          새 비밀번호 확인
+          Confirm New Password
         </label>
         <input
           id="confirmPassword"
@@ -112,7 +112,7 @@ export default function PasswordForm() {
           required
           autoComplete="new-password"
           className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-          placeholder="새 비밀번호 재입력"
+          placeholder="Re-enter new password"
         />
       </div>
 
@@ -121,7 +121,7 @@ export default function PasswordForm() {
         disabled={isPending || !currentPassword || !newPassword || !confirmPassword}
         className="w-full py-2.5 px-4 bg-amber-600 hover:bg-amber-700 disabled:opacity-60 text-white text-sm font-semibold rounded-lg transition-colors"
       >
-        {isPending ? "변경 중…" : "비밀번호 변경"}
+        {isPending ? "Changing…" : "Change Password"}
       </button>
     </form>
   );

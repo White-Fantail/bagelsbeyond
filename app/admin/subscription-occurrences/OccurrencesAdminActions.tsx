@@ -32,7 +32,7 @@ export default function OccurrencesAdminActions({ date, occurrenceId, status }: 
             disabled={isPending}
             className="text-xs px-2 py-1 rounded border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-60"
           >
-            건너뛰기
+            Skip
           </button>
         )}
         {(status === "SCHEDULED" || status === "ORDER_CREATED") && (
@@ -50,7 +50,7 @@ export default function OccurrencesAdminActions({ date, occurrenceId, status }: 
             disabled={isPending}
             className="text-xs px-2 py-1 rounded border border-red-200 text-red-600 hover:bg-red-50 disabled:opacity-60"
           >
-            취소
+            Cancel
           </button>
         )}
       </div>
@@ -76,7 +76,7 @@ export default function OccurrencesAdminActions({ date, occurrenceId, status }: 
         disabled={isPending}
         className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-60 transition-colors"
       >
-        {isPending ? "처리중..." : "발생 생성"}
+        {isPending ? "Processing..." : "Create Occurrence"}
       </button>
       <button
         onClick={() =>
@@ -92,7 +92,7 @@ export default function OccurrencesAdminActions({ date, occurrenceId, status }: 
         disabled={isPending}
         className="px-4 py-2 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700 disabled:opacity-60 transition-colors"
       >
-        {isPending ? "처리중..." : "주문 생성"}
+        {isPending ? "Processing..." : "Orders Create"}
       </button>
     </div>
   );

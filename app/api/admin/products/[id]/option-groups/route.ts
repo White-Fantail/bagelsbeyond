@@ -4,7 +4,7 @@ import { apiRequireAdmin, isNextResponse } from "@/lib/auth/dal";
 import { z } from "zod";
 
 const optionGroupCreateSchema = z.object({
-  name: z.string().min(1, "옵션 그룹명을 입력해주세요"),
+  name: z.string().min(1, "Options Please enter a group name"),
   minSelect: z.number().int().min(0).default(0),
   maxSelect: z.number().int().min(1).default(1),
   isRequired: z.boolean().default(false),
@@ -22,20 +22,20 @@ export async function POST(
 
   const product = await prisma.product.findUnique({ where: { id: productId } });
   if (!product) {
-    return NextResponse.json({ message: "상품을 찾을 수 없습니다" }, { status: 404 });
+    return NextResponse.json({ message: "Product not found" }, { status: 404 });
   }
 
   let body: unknown;
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ message: "요청 본문이 올바르지 않습니다" }, { status: 400 });
+    return NextResponse.json({ message: "Invalid request body" }, { status: 400 });
   }
 
   const parsed = optionGroupCreateSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { message: "입력값이 올바르지 않습니다", errors: parsed.error.flatten() },
+      { message: "Invalid input", errors: parsed.error.flatten() },
       { status: 400 }
     );
   }
@@ -47,6 +47,6 @@ export async function POST(
     });
     return NextResponse.json({ group }, { status: 201 });
   } catch (_error) {
-    return NextResponse.json({ message: "옵션 그룹 생성에 실패했습니다" }, { status: 500 });
+    return NextResponse.json({ message: "Failed to create option group" }, { status: 500 });
   }
 }

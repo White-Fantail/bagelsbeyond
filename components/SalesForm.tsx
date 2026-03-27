@@ -48,7 +48,7 @@ export default function SalesForm({
       });
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.message || "저장에 실패했습니다");
+        throw new Error(err.message || "Save failed");
       }
       setStatus("success");
       setTimeout(() => {
@@ -60,7 +60,7 @@ export default function SalesForm({
       }, 1500);
     } catch (e) {
       setStatus("error");
-      setErrorMessage(e instanceof Error ? e.message : "저장에 실패했습니다");
+      setErrorMessage(e instanceof Error ? e.message : "Save failed");
     }
   };
 
@@ -68,7 +68,7 @@ export default function SalesForm({
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
       {status === "success" && (
         <div className="p-4 bg-green-50 border border-green-200 rounded-lg text-green-700">
-          ✅ 저장되었습니다. 목록 페이지로 이동합니다...
+          ✅ Saved. Redirecting to list page...
         </div>
       )}
       {status === "error" && (
@@ -77,96 +77,96 @@ export default function SalesForm({
         </div>
       )}
 
-      {/* 기본 정보 */}
-      <Section title="기본 정보">
-        <Field label="날짜 *" error={errors.date?.message}>
+      {/* Default Info */}
+      <Section title="Default Info">
+        <Field label="Date *" error={errors.date?.message}>
           <input type="date" {...register("date")} className={inputClass(!!errors.date)} />
         </Field>
-        <Field label="구운 베이글 수 *" error={errors.bagelsBaked?.message}>
+        <Field label="Bagels Baked *" error={errors.bagelsBaked?.message}>
           <input type="number" min="0" {...register("bagelsBaked")} onFocus={(e) => e.target.select()} className={inputClass(!!errors.bagelsBaked)} />
         </Field>
-        <Field label="남은 베이글 수 *" error={errors.bagelsLeft?.message}>
+        <Field label="Bagels Left *" error={errors.bagelsLeft?.message}>
           <input type="number" min="0" {...register("bagelsLeft")} onFocus={(e) => e.target.select()} className={inputClass(!!errors.bagelsLeft)} />
         </Field>
       </Section>
 
-      {/* 매출 정보 */}
-      <Section title="매출 정보 (NZD)">
-        <Field label="매장 매출 *" error={errors.storeSales?.message}>
+      {/* Sales Info */}
+      <Section title="Sales Info (NZD)">
+        <Field label="Store Sales *" error={errors.storeSales?.message}>
           <input type="number" step="0.01" min="0" {...register("storeSales")} onFocus={(e) => e.target.select()} className={inputClass(!!errors.storeSales)} />
         </Field>
-        <Field label="우버 매출 *" error={errors.uberSales?.message}>
+        <Field label="Uber Sales *" error={errors.uberSales?.message}>
           <input type="number" step="0.01" min="0" {...register("uberSales")} onFocus={(e) => e.target.select()} className={inputClass(!!errors.uberSales)} />
         </Field>
-        <Field label="도어대쉬 매출 *" error={errors.doordashSales?.message}>
+        <Field label="DoorDash Sales *" error={errors.doordashSales?.message}>
           <input type="number" step="0.01" min="0" {...register("doordashSales")} onFocus={(e) => e.target.select()} className={inputClass(!!errors.doordashSales)} />
         </Field>
-        <Field label="기타 매출 *" error={errors.otherSales?.message}>
+        <Field label="Other Sales *" error={errors.otherSales?.message}>
           <input type="number" step="0.01" min="0" {...register("otherSales")} onFocus={(e) => e.target.select()} className={inputClass(!!errors.otherSales)} />
         </Field>
       </Section>
 
-      {/* 외부 요인 */}
-      <Section title="외부 요인 (선택)">
-        <Field label="날씨 요약" error={errors.weatherSummary?.message}>
-          <input type="text" placeholder="예: 맑음, 비, 흐림" {...register("weatherSummary")} className={inputClass(false)} />
+      {/* External Factors */}
+      <Section title="External Factors (Select)">
+        <Field label="Weather Summary" error={errors.weatherSummary?.message}>
+          <input type="text" placeholder="e.g. Clear, Rain, Cloudy" {...register("weatherSummary")} className={inputClass(false)} />
         </Field>
         <div className="grid grid-cols-2 gap-4">
-          <Field label="최저 기온 (°C)" error={errors.minTemp?.message}>
+          <Field label="Min Temp (°C)" error={errors.minTemp?.message}>
             <input type="number" step="0.1" {...register("minTemp")} onFocus={(e) => e.target.select()} className={inputClass(!!errors.minTemp)} />
           </Field>
-          <Field label="최고 기온 (°C)" error={errors.maxTemp?.message}>
+          <Field label="Max Temp (°C)" error={errors.maxTemp?.message}>
             <input type="number" step="0.1" {...register("maxTemp")} onFocus={(e) => e.target.select()} className={inputClass(!!errors.maxTemp)} />
           </Field>
         </div>
         <div className="grid grid-cols-2 gap-4">
-          <Field label="강수량 (mm)" error={errors.rainMm?.message}>
+          <Field label="Rainfall (mm)" error={errors.rainMm?.message}>
             <input type="number" step="0.1" min="0" {...register("rainMm")} onFocus={(e) => e.target.select()} className={inputClass(!!errors.rainMm)} />
           </Field>
-          <Field label="바람 (kph)" error={errors.windKph?.message}>
+          <Field label="Wind (kph)" error={errors.windKph?.message}>
             <input type="number" step="0.1" min="0" {...register("windKph")} onFocus={(e) => e.target.select()} className={inputClass(!!errors.windKph)} />
           </Field>
         </div>
-        <Field label="공휴일명" error={errors.holidayName?.message}>
-          <input type="text" placeholder="예: Christmas Day" {...register("holidayName")} className={inputClass(false)} />
+        <Field label="Holiday Name" error={errors.holidayName?.message}>
+          <input type="text" placeholder="e.g. Christmas Day" {...register("holidayName")} className={inputClass(false)} />
         </Field>
-        <Field label="인근 이벤트명" error={errors.localEventName?.message}>
-          <input type="text" placeholder="예: 지역 마켓" {...register("localEventName")} className={inputClass(false)} />
+        <Field label="Local Event Name" error={errors.localEventName?.message}>
+          <input type="text" placeholder="e.g. Local Market" {...register("localEventName")} className={inputClass(false)} />
         </Field>
-        <Field label="학교 방학 여부" error={errors.schoolHoliday?.message}>
+        <Field label="School Holiday " error={errors.schoolHoliday?.message}>
           <label className="flex items-center gap-2 cursor-pointer">
             <input type="checkbox" {...register("schoolHoliday")} className="w-4 h-4 rounded border-gray-300" />
-            <span className="text-sm text-gray-700">학교 방학 기간입니다</span>
+            <span className="text-sm text-gray-700">This is a School Holiday Period</span>
           </label>
         </Field>
       </Section>
 
-      {/* 뉴스 요약 */}
-      <Section title="뉴스 요약 (선택)">
-        <Field label="뉴질랜드 뉴스 요약" error={errors.nzNewsSummary?.message}>
+      {/* News Summary */}
+      <Section title="News Summary (Select)">
+        <Field label="NZ News Summary" error={errors.nzNewsSummary?.message}>
           <textarea
             rows={2}
-            placeholder="주요 뉴질랜드 뉴스..."
+            placeholder="Main NZ news..."
             {...register("nzNewsSummary")}
             className={inputClass(false)}
           />
         </Field>
-        <Field label="국제 뉴스 요약" error={errors.worldNewsSummary?.message}>
+        <Field label="World News Summary" error={errors.worldNewsSummary?.message}>
           <textarea
             rows={2}
-            placeholder="주요 국제 뉴스..."
+            placeholder="Main world news..."
             {...register("worldNewsSummary")}
             className={inputClass(false)}
           />
         </Field>
       </Section>
 
-      {/* 메모 */}
-      <Section title="메모 (선택)">
-        <Field label="메모" error={errors.notes?.message}>
+      {/* Notes */}
+      <Section title="Notes (Select)">
+        <Field label="Notes" error={errors.notes?.message}>
           <textarea
             rows={3}
-            placeholder="기타 메모..."
+            placeholder="Other Notes..."
             {...register("notes")}
             className={inputClass(false)}
           />
@@ -179,14 +179,14 @@ export default function SalesForm({
           disabled={status === "loading" || status === "success"}
           className="px-6 py-2 bg-amber-500 text-white rounded-md hover:bg-amber-600 transition-colors font-medium disabled:opacity-50"
         >
-          {status === "loading" ? "저장 중..." : "저장"}
+          {status === "loading" ? "Saving......" : "Save"}
         </button>
         <button
           type="button"
           onClick={() => router.back()}
           className="px-6 py-2 bg-white text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors font-medium"
         >
-          취소
+          Cancel
         </button>
       </div>
     </form>

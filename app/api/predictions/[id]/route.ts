@@ -13,7 +13,7 @@ export async function GET(
     });
 
     if (!prediction) {
-      return NextResponse.json({ message: "예측을 찾을 수 없습니다" }, { status: 404 });
+      return NextResponse.json({ message: "Prediction not found" }, { status: 404 });
     }
 
     // Also fetch actual DailyRecord for same date (for comparison)
@@ -30,7 +30,7 @@ export async function GET(
 
     return NextResponse.json({ prediction, actualRecord });
   } catch (_error) {
-    return NextResponse.json({ message: "예측을 불러오는데 실패했습니다" }, { status: 500 });
+    return NextResponse.json({ message: "Failed to load prediction" }, { status: 500 });
   }
 }
 
@@ -41,8 +41,8 @@ export async function DELETE(
   try {
     const { id } = await params;
     await prisma.salesPrediction.delete({ where: { id } });
-    return NextResponse.json({ message: "삭제되었습니다" });
+    return NextResponse.json({ message: "Deleted" });
   } catch (_error) {
-    return NextResponse.json({ message: "삭제에 실패했습니다" }, { status: 500 });
+    return NextResponse.json({ message: "Delete failed" }, { status: 500 });
   }
 }

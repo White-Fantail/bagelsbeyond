@@ -76,8 +76,8 @@ export async function updateSubscriptionStatus(
   userId?: string
 ) {
   const sub = await prisma.subscription.findUnique({ where: { id } });
-  if (!sub) throw new Error("구독을 찾을 수 없습니다");
-  if (userId && sub.userId !== userId) throw new Error("접근 권한이 없습니다");
+  if (!sub) throw new Error("Subscription not found");
+  if (userId && sub.userId !== userId) throw new Error("Access unauthorized");
 
   return prisma.subscription.update({
     where: { id },
@@ -212,9 +212,9 @@ export async function skipOccurrence(occurrenceId: string, userId?: string) {
     include: { subscription: { select: { userId: true } } },
   });
 
-  if (!occ) throw new Error("발생 항목을 찾을 수 없습니다");
-  if (userId && occ.subscription.userId !== userId) throw new Error("접근 권한이 없습니다");
-  if (occ.status !== OccurrenceStatus.SCHEDULED) throw new Error("예약됨 상태의 항목만 건너뛸 수 있습니다");
+  if (!occ) throw new Error("Occurrence not found");
+  if (userId && occ.subscription.userId !== userId) throw new Error("Access unauthorized");
+  if (occ.status !== OccurrenceStatus.SCHEDULED) throw new Error("Only SCHEDULED status items can be skipped");
 
   return prisma.subscriptionOccurrence.update({
     where: { id: occurrenceId },
@@ -233,7 +233,7 @@ export async function cancelOccurrence(occurrenceId: string) {
     },
   });
 
-  if (!occ) throw new Error("발생 항목을 찾을 수 없습니다");
+  if (!occ) throw new Error("Occurrence not found");
 
   await prisma.$transaction(async (tx) => {
     if (occ.status === OccurrenceStatus.ORDER_CREATED && occ.orderId && occ.order) {

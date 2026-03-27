@@ -18,15 +18,15 @@ export default function LoginPage() {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="text-4xl mb-3">🥯</div>
-          <h1 className="text-2xl font-bold text-gray-900">베이글스 비욘드</h1>
-          <p className="text-gray-500 mt-1">로그인하여 계속하세요</p>
+          <h1 className="text-2xl font-bold text-gray-900">Bagels Beyond</h1>
+          <p className="text-gray-500 mt-1">Log in to continue</p>
         </div>
 
         {/* Card */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
           {isForbidden && (
             <div className="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
-              이 페이지에 접근할 권한이 없습니다.
+              You do not have permission to access this page..
             </div>
           )}
 
@@ -43,7 +43,7 @@ export default function LoginPage() {
                 htmlFor="email"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
-                이메일
+                Email
               </label>
               <input
                 id="email"
@@ -65,7 +65,7 @@ export default function LoginPage() {
                 htmlFor="password"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
-                비밀번호
+                Password
               </label>
               <input
                 id="password"
@@ -87,17 +87,17 @@ export default function LoginPage() {
               disabled={isPending}
               className="w-full py-2.5 px-4 bg-amber-600 hover:bg-amber-700 disabled:opacity-60 text-white text-sm font-semibold rounded-lg transition-colors"
             >
-              {isPending ? "로그인 중…" : "로그인"}
+              {isPending ? "Logging in…" : "Login"}
             </button>
           </form>
 
           <p className="mt-6 text-center text-sm text-gray-500">
-            계정이 없으신가요?{" "}
+            Don&apos;t have an account?{" "}
             <Link
               href="/signup"
               className="font-medium text-amber-600 hover:text-amber-700"
             >
-              회원가입
+              Sign Up
             </Link>
           </p>
         </div>

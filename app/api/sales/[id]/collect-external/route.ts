@@ -10,7 +10,7 @@ export async function POST(
     const result = await refreshExternalFactorsForRecord(id);
     return NextResponse.json(result);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "외부 데이터 수집에 실패했습니다";
+    const message = error instanceof Error ? error.message : "External Data Collection failed";
     return NextResponse.json({ message }, { status: 500 });
   }
 }

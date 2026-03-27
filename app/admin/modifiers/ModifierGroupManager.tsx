@@ -77,17 +77,17 @@ function GroupForm({
       {error && <p className="text-xs text-red-600">❌ {error}</p>}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">그룹명 *</label>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Group Name *</label>
           <input
             type="text"
             value={form.name}
             onChange={(e) => onChange({ ...form, name: e.target.value })}
-            placeholder="예: 베이글 선택"
+            placeholder="e.g. Bagel Selection"
             className={inputCls(!form.name)}
           />
         </div>
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">정렬 순서</label>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Sort Order</label>
           <input
             type="number"
             value={form.sortOrder}
@@ -97,7 +97,7 @@ function GroupForm({
           />
         </div>
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">최소 선택</label>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Min Select</label>
           <input
             type="number"
             min="0"
@@ -108,7 +108,7 @@ function GroupForm({
           />
         </div>
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">최대 선택</label>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Max Select</label>
           <input
             type="number"
             min="1"
@@ -126,7 +126,7 @@ function GroupForm({
           onChange={(e) => onChange({ ...form, isRequired: e.target.checked })}
           className="w-4 h-4 rounded border-gray-300 text-amber-500 focus:ring-amber-500"
         />
-        필수 선택 그룹
+        Required Selection Group
       </label>
       <div className="flex gap-2">
         <button
@@ -135,14 +135,14 @@ function GroupForm({
           disabled={saving || !form.name.trim()}
           className="px-4 py-1.5 bg-amber-500 text-white rounded-md text-sm font-medium hover:bg-amber-600 transition-colors disabled:opacity-50"
         >
-          {saving ? "저장 중..." : saveLabel}
+          {saving ? "Saving......" : saveLabel}
         </button>
         <button
           type="button"
           onClick={onCancel}
           className="px-4 py-1.5 bg-white text-gray-700 border border-gray-300 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors"
         >
-          취소
+          Cancel
         </button>
       </div>
     </div>
@@ -171,17 +171,17 @@ function OptionForm({
       {error && <p className="text-xs text-red-600">❌ {error}</p>}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="sm:col-span-1">
-          <label className="block text-xs font-medium text-gray-600 mb-1">옵션명 *</label>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Option Name *</label>
           <input
             type="text"
             value={form.name}
             onChange={(e) => onChange({ ...form, name: e.target.value })}
-            placeholder="예: 플레인 베이글"
+            placeholder="e.g. Plain Bagel"
             className={inputCls(!form.name)}
           />
         </div>
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">추가금액 ($)</label>
+          <label className="block text-xs font-medium text-gray-600 mb-1">AddAmount ($)</label>
           <input
             type="number"
             step="0.01"
@@ -192,7 +192,7 @@ function OptionForm({
           />
         </div>
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">정렬 순서</label>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Sort Order</label>
           <input
             type="number"
             value={form.sortOrder}
@@ -207,7 +207,7 @@ function OptionForm({
             type="text"
             value={form.sku}
             onChange={(e) => onChange({ ...form, sku: e.target.value })}
-            placeholder="선택"
+            placeholder="Select"
             className={inputCls()}
           />
         </div>
@@ -220,7 +220,7 @@ function OptionForm({
             onChange={(e) => onChange({ ...form, isActive: e.target.checked })}
             className="w-4 h-4 rounded border-gray-300 text-amber-500 focus:ring-amber-500"
           />
-          활성
+          Active
         </label>
         <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-700">
           <input
@@ -229,7 +229,7 @@ function OptionForm({
             onChange={(e) => onChange({ ...form, tracksInventory: e.target.checked })}
             className="w-4 h-4 rounded border-gray-300 text-amber-500 focus:ring-amber-500"
           />
-          재고 추적
+          Inventory Tracking
         </label>
       </div>
       <div className="flex gap-2">
@@ -239,14 +239,14 @@ function OptionForm({
           disabled={saving || !form.name.trim()}
           className="px-3 py-1.5 bg-amber-500 text-white rounded-md text-xs font-medium hover:bg-amber-600 transition-colors disabled:opacity-50"
         >
-          {saving ? "저장 중..." : saveLabel}
+          {saving ? "Saving......" : saveLabel}
         </button>
         <button
           type="button"
           onClick={onCancel}
           className="px-3 py-1.5 bg-white text-gray-700 border border-gray-300 rounded-md text-xs font-medium hover:bg-gray-50 transition-colors"
         >
-          취소
+          Cancel
         </button>
       </div>
     </div>
@@ -305,7 +305,7 @@ export default function ModifierGroupManager({
       });
       if (!res.ok) {
         const err = (await res.json()) as { message?: string };
-        throw new Error(err.message || "생성에 실패했습니다");
+        throw new Error(err.message || "Create failed");
       }
       const { group } = (await res.json()) as {
         group: {
@@ -323,7 +323,7 @@ export default function ModifierGroupManager({
       setAddingGroup(false);
       setNewGroupForm(emptyGroupForm());
     } catch (e) {
-      setNewGroupError(e instanceof Error ? e.message : "생성에 실패했습니다");
+      setNewGroupError(e instanceof Error ? e.message : "Create failed");
     } finally {
       setNewGroupSaving(false);
     }
@@ -347,7 +347,7 @@ export default function ModifierGroupManager({
       });
       if (!res.ok) {
         const err = (await res.json()) as { message?: string };
-        throw new Error(err.message || "수정에 실패했습니다");
+        throw new Error(err.message || "Edit failed");
       }
       const { group: updated } = (await res.json()) as {
         group: { id: string; name: string; minSelect: number; maxSelect: number; isRequired: boolean; sortOrder: number };
@@ -359,7 +359,7 @@ export default function ModifierGroupManager({
       );
       setEditingGroupId(null);
     } catch (e) {
-      setEditGroupError(e instanceof Error ? e.message : "수정에 실패했습니다");
+      setEditGroupError(e instanceof Error ? e.message : "Edit failed");
     } finally {
       setEditGroupSaving(false);
     }
@@ -367,7 +367,7 @@ export default function ModifierGroupManager({
 
   const handleDeleteGroup = async (groupId: string, groupName: string) => {
     const confirmed = window.confirm(
-      `"${groupName}" 모디파이어 그룹을 삭제하시겠습니까?\n\n그룹 내 모든 옵션도 함께 삭제되며, 연결된 상품에서도 제거됩니다.`
+      `Delete "${groupName}" modifier group?\n\nAll options in the group will also be deleted and links from all products will be removed.`
     );
     if (!confirmed) return;
     setDeletingGroupId(groupId);
@@ -375,11 +375,11 @@ export default function ModifierGroupManager({
       const res = await fetch(`/api/admin/modifier-groups/${groupId}`, { method: "DELETE" });
       if (!res.ok) {
         const err = (await res.json()) as { message?: string };
-        throw new Error(err.message || "삭제에 실패했습니다");
+        throw new Error(err.message || "Delete failed");
       }
       setGroups((prev) => prev.filter((g) => g.id !== groupId));
     } catch (e) {
-      alert(e instanceof Error ? e.message : "삭제에 실패했습니다");
+      alert(e instanceof Error ? e.message : "Delete failed");
     } finally {
       setDeletingGroupId(null);
     }
@@ -405,7 +405,7 @@ export default function ModifierGroupManager({
       });
       if (!res.ok) {
         const err = (await res.json()) as { message?: string };
-        throw new Error(err.message || "생성에 실패했습니다");
+        throw new Error(err.message || "Create failed");
       }
       const { option } = (await res.json()) as { option: ProductOption };
       const newOpt = { ...option, isLoyverseSynced: false };
@@ -417,7 +417,7 @@ export default function ModifierGroupManager({
       setAddingOptionGroupId(null);
       setNewOptionForm(emptyOptionForm());
     } catch (e) {
-      setNewOptionError(e instanceof Error ? e.message : "생성에 실패했습니다");
+      setNewOptionError(e instanceof Error ? e.message : "Create failed");
     } finally {
       setNewOptionSaving(false);
     }
@@ -445,7 +445,7 @@ export default function ModifierGroupManager({
       );
       if (!res.ok) {
         const err = (await res.json()) as { message?: string };
-        throw new Error(err.message || "수정에 실패했습니다");
+        throw new Error(err.message || "Edit failed");
       }
       const { option: updated } = (await res.json()) as { option: ProductOption };
       setGroups((prev) =>
@@ -463,14 +463,14 @@ export default function ModifierGroupManager({
       setEditingOptionId(null);
       setEditOptionGroupId(null);
     } catch (e) {
-      setEditOptionError(e instanceof Error ? e.message : "수정에 실패했습니다");
+      setEditOptionError(e instanceof Error ? e.message : "Edit failed");
     } finally {
       setEditOptionSaving(false);
     }
   };
 
   const handleDeleteOption = async (groupId: string, optionId: string, optionName: string) => {
-    const confirmed = window.confirm(`"${optionName}" 옵션을 삭제하시겠습니까?`);
+    const confirmed = window.confirm(`"${optionName}" Are you sure you want to delete this option?`);
     if (!confirmed) return;
     setDeletingOptionId(optionId);
     try {
@@ -480,7 +480,7 @@ export default function ModifierGroupManager({
       );
       if (!res.ok) {
         const err = (await res.json()) as { message?: string };
-        throw new Error(err.message || "삭제에 실패했습니다");
+        throw new Error(err.message || "Delete failed");
       }
       setGroups((prev) =>
         prev.map((g) =>
@@ -488,7 +488,7 @@ export default function ModifierGroupManager({
         )
       );
     } catch (e) {
-      alert(e instanceof Error ? e.message : "삭제에 실패했습니다");
+      alert(e instanceof Error ? e.message : "Delete failed");
     } finally {
       setDeletingOptionId(null);
     }
@@ -497,7 +497,7 @@ export default function ModifierGroupManager({
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-5">
       <div className="flex items-center justify-between border-b border-gray-100 pb-2">
-        <h2 className="text-base font-semibold text-gray-900">모디파이어 그룹 관리</h2>
+        <h2 className="text-base font-semibold text-gray-900">Modifier Group Management</h2>
         {!addingGroup && (
           <button
             type="button"
@@ -508,7 +508,7 @@ export default function ModifierGroupManager({
             }}
             className="px-3 py-1.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-md text-xs font-medium hover:bg-amber-100 transition-colors"
           >
-            + 그룹 추가
+            + Add Group
           </button>
         )}
       </div>
@@ -521,13 +521,13 @@ export default function ModifierGroupManager({
           onCancel={() => setAddingGroup(false)}
           saving={newGroupSaving}
           error={newGroupError}
-          saveLabel="그룹 추가"
+          saveLabel="Add Group"
         />
       )}
 
       {groups.length === 0 && !addingGroup && (
         <p className="text-sm text-gray-400 text-center py-4">
-          등록된 모디파이어 그룹이 없습니다. 그룹을 추가해보세요.
+          No modifier groups registered. Try adding a group.
         </p>
       )}
 
@@ -544,7 +544,7 @@ export default function ModifierGroupManager({
                   onCancel={() => setEditingGroupId(null)}
                   saving={editGroupSaving}
                   error={editGroupError}
-                  saveLabel="저장"
+                  saveLabel="Save"
                 />
               </div>
             ) : (
@@ -558,14 +558,14 @@ export default function ModifierGroupManager({
                   )}
                   {group.isRequired && (
                     <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-xs rounded-full font-medium">
-                      필수
+                      Required
                     </span>
                   )}
                   <span className="text-xs text-gray-400">
-                    선택 {group.minSelect}~{group.maxSelect}개
+                    Select {group.minSelect}~{group.maxSelect}
                   </span>
-                  <span className="text-xs text-gray-400">정렬: {group.sortOrder}</span>
-                  <span className="text-xs text-gray-400">{group.options.length}개 옵션</span>
+                  <span className="text-xs text-gray-400">Sort: {group.sortOrder}</span>
+                  <span className="text-xs text-gray-400">{group.options.length} options</span>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <button
@@ -583,18 +583,18 @@ export default function ModifierGroupManager({
                     }}
                     disabled={group.isLoyverseSynced}
                     className="px-2.5 py-1 text-xs text-gray-600 border border-gray-300 rounded-md hover:bg-gray-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                    title={group.isLoyverseSynced ? "Loyverse sync된 그룹은 수정할 수 없습니다" : undefined}
+                    title={group.isLoyverseSynced ? "Cannot edit Loyverse-synced groups" : undefined}
                   >
-                    수정
+                    Edit
                   </button>
                   <button
                     type="button"
                     onClick={() => handleDeleteGroup(group.id, group.name)}
                     disabled={deletingGroupId === group.id || group.isLoyverseSynced}
                     className="px-2.5 py-1 text-xs text-red-600 border border-red-200 rounded-md hover:bg-red-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                    title={group.isLoyverseSynced ? "Loyverse sync된 그룹은 삭제할 수 없습니다" : undefined}
+                    title={group.isLoyverseSynced ? "Cannot delete Loyverse-synced groups" : undefined}
                   >
-                    {deletingGroupId === group.id ? "삭제 중..." : "삭제"}
+                    {deletingGroupId === group.id ? "Deleting......" : "Delete"}
                   </button>
                 </div>
               </div>
@@ -616,7 +616,7 @@ export default function ModifierGroupManager({
                         }}
                         saving={editOptionSaving}
                         error={editOptionError}
-                        saveLabel="저장"
+                        saveLabel="Save"
                       />
                     </div>
                   ) : (
@@ -625,7 +625,7 @@ export default function ModifierGroupManager({
                         <span className="text-gray-800">{option.name}</span>
                         <span className="text-gray-500 tabular-nums">
                           {option.priceDelta === 0
-                            ? "무료"
+                            ? "Free"
                             : option.priceDelta > 0
                             ? `+$${option.priceDelta.toFixed(2)}`
                             : `-$${Math.abs(option.priceDelta).toFixed(2)}`}
@@ -637,12 +637,12 @@ export default function ModifierGroupManager({
                         )}
                         {!option.isActive && (
                           <span className="px-1.5 py-0.5 bg-gray-100 text-gray-400 text-xs rounded-full">
-                            비활성
+                            Inactive
                           </span>
                         )}
                         {option.tracksInventory && (
                           <span className="px-1.5 py-0.5 bg-blue-50 text-blue-600 text-xs rounded-full">
-                            재고추적
+                            Inventory Tracking
                           </span>
                         )}
                         {option.sku && (
@@ -654,7 +654,7 @@ export default function ModifierGroupManager({
                           href={`/admin/modifiers/${option.id}`}
                           className="px-2 py-1 text-xs text-gray-500 border border-gray-200 rounded hover:bg-gray-100 transition-colors"
                         >
-                          상세
+                          Details
                         </Link>
                         <button
                           type="button"
@@ -673,18 +673,18 @@ export default function ModifierGroupManager({
                           }}
                           disabled={option.isLoyverseSynced}
                           className="px-2 py-1 text-xs text-gray-600 border border-gray-300 rounded hover:bg-gray-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                          title={option.isLoyverseSynced ? "Loyverse sync된 옵션은 수정할 수 없습니다" : undefined}
+                          title={option.isLoyverseSynced ? "Cannot edit Loyverse-synced options" : undefined}
                         >
-                          수정
+                          Edit
                         </button>
                         <button
                           type="button"
                           onClick={() => handleDeleteOption(group.id, option.id, option.name)}
                           disabled={deletingOptionId === option.id || option.isLoyverseSynced}
                           className="px-2 py-1 text-xs text-red-600 border border-red-200 rounded hover:bg-red-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                          title={option.isLoyverseSynced ? "Loyverse sync된 옵션은 삭제할 수 없습니다" : undefined}
+                          title={option.isLoyverseSynced ? "Cannot delete Loyverse-synced options" : undefined}
                         >
-                          {deletingOptionId === option.id ? "..." : "삭제"}
+                          {deletingOptionId === option.id ? "..." : "Delete"}
                         </button>
                       </div>
                     </div>
@@ -705,7 +705,7 @@ export default function ModifierGroupManager({
                     }}
                     saving={newOptionSaving}
                     error={newOptionError}
-                    saveLabel="옵션 추가"
+                    saveLabel="Options Add"
                   />
                 </div>
               ) : (
@@ -719,7 +719,7 @@ export default function ModifierGroupManager({
                     }}
                     className="text-xs text-amber-600 hover:text-amber-800 transition-colors font-medium"
                   >
-                    + 옵션 추가
+                    + Add Option
                   </button>
                 </div>
               )}

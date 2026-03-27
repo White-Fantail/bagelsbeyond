@@ -110,7 +110,7 @@ export async function runDailyOrderPushSync(
       orderId: "",
       orderNumber: "",
       source: "SYSTEM",
-      reason: `구독 발생 생성 실패: ${err instanceof Error ? err.message : String(err)}`,
+      reason: `Subscription occurrence create failed: ${err instanceof Error ? err.message : String(err)}`,
     });
   }
 
@@ -124,7 +124,7 @@ export async function runDailyOrderPushSync(
       orderId: "",
       orderNumber: "",
       source: "SYSTEM",
-      reason: `구독 주문 생성 실패: ${err instanceof Error ? err.message : String(err)}`,
+      reason: `Subscriptions Orders Create Failed: ${err instanceof Error ? err.message : String(err)}`,
     });
   }
 

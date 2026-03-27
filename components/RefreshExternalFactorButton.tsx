@@ -23,11 +23,11 @@ export default function RefreshExternalFactorButton({ recordId }: Props) {
         method: "POST",
       });
       const data = await res.json() as CollectionResult & { message?: string };
-      if (!res.ok) throw new Error(data.message ?? "수집에 실패했습니다");
+      if (!res.ok) throw new Error(data.message ?? "Collection failed");
       setResult(data);
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "오류가 발생했습니다");
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setLoading(false);
     }
@@ -40,7 +40,7 @@ export default function RefreshExternalFactorButton({ recordId }: Props) {
         disabled={loading}
         className="px-3 py-1.5 text-xs bg-blue-50 text-blue-700 border border-blue-200 rounded-md hover:bg-blue-100 disabled:opacity-50 transition-colors font-medium"
       >
-        {loading ? "수집 중..." : "🔄 외부 데이터 수집"}
+        {loading ? "Collecting..." : "🔄 Collect External Data"}
       </button>
       {error && (
         <p className="text-xs text-red-500">{error}</p>
@@ -49,16 +49,16 @@ export default function RefreshExternalFactorButton({ recordId }: Props) {
         <div className="text-xs">
           {result.success ? (
             <span className="text-green-600">
-              ✅ 수집 완료
+              ✅ Collection complete
               {result.collectedFields.length > 0 && ` (${result.collectedFields.join(", ")})`}
               {result.failedProviders.length > 0 && (
                 <span className="text-yellow-600 ml-1">
-                  ⚠️ 실패: {result.failedProviders.join(", ")}
+                  ⚠️ Failed: {result.failedProviders.join(", ")}
                 </span>
               )}
             </span>
           ) : (
-            <span className="text-red-600">❌ 수집 실패</span>
+            <span className="text-red-600">❌ Collection failed</span>
           )}
         </div>
       )}

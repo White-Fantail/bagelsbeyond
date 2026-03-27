@@ -10,11 +10,11 @@ export async function GET(
     const job = await getImportJobById(id);
 
     if (!job) {
-      return NextResponse.json({ message: "가져오기 작업을 찾을 수 없습니다" }, { status: 404 });
+      return NextResponse.json({ message: "Import task not found" }, { status: 404 });
     }
 
     return NextResponse.json(job);
   } catch (_error) {
-    return NextResponse.json({ message: "가져오기 작업을 불러오는데 실패했습니다" }, { status: 500 });
+    return NextResponse.json({ message: "Failed to load import task" }, { status: 500 });
   }
 }

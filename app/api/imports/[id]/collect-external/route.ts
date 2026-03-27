@@ -16,7 +16,7 @@ export async function POST(
     });
 
     if (rows.length === 0) {
-      return NextResponse.json({ message: "임포트된 행이 없습니다", totalDates: 0, processedDates: 0, errors: [] });
+      return NextResponse.json({ message: "No imported rows", totalDates: 0, processedDates: 0, errors: [] });
     }
 
     const dates = rows.map((r: { parsedDate: Date | null }) => new Date(r.parsedDate!));
@@ -26,7 +26,7 @@ export async function POST(
     const result = await collectExternalFactorsForDateRange(startDate, endDate);
     return NextResponse.json(result);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "외부 데이터 수집에 실패했습니다";
+    const message = error instanceof Error ? error.message : "External Data Collection failed";
     return NextResponse.json({ message }, { status: 500 });
   }
 }

@@ -23,16 +23,16 @@ const DEFAULT_TIMEZONE = "Pacific/Auckland";
 
 // WMO weather code to Korean summary
 function wmoToSummary(code: number): string {
-  if (code === 0) return "맑음";
-  if (code <= 2) return "구름 조금";
-  if (code === 3) return "흐림";
-  if (code <= 49) return "안개";
-  if (code <= 59) return "이슬비";
-  if (code <= 69) return "비";
-  if (code <= 79) return "눈";
-  if (code <= 84) return "소나기";
-  if (code <= 99) return "천둥번개";
-  return "알 수 없음";
+  if (code === 0) return "Clear";
+  if (code <= 2) return "Partly Cloudy";
+  if (code === 3) return "Cloudy";
+  if (code <= 49) return "Foggy";
+  if (code <= 59) return "Drizzle";
+  if (code <= 69) return "Rain";
+  if (code <= 79) return "Snow";
+  if (code <= 84) return "Shower";
+  if (code <= 99) return "Thunderstorm";
+  return "Unknown";
 }
 
 // Open-Meteo provider — free, no API key required
@@ -71,7 +71,7 @@ export class OpenMeteoWeatherProvider implements WeatherProvider {
     });
 
     console.log(
-      `[weather] 요청 시작 | date=${dateStr} | isPast=${isPast} | lat=${lat} | lon=${lon} | tz=${tz} | url=${baseUrl}?${params.toString()}`
+      `[weather] Request Started | date=${dateStr} | isPast=${isPast} | lat=${lat} | lon=${lon} | tz=${tz} | url=${baseUrl}?${params.toString()}`
     );
 
     try {
@@ -80,7 +80,7 @@ export class OpenMeteoWeatherProvider implements WeatherProvider {
         signal: AbortSignal.timeout(8000),
       });
 
-      console.log(`[weather] 응답 수신 | date=${dateStr} | status=${res.status}`);
+      console.log(`[weather] Response received | date=${dateStr} | status=${res.status}`);
 
       if (!res.ok) {
         const errBody = await res.text().catch(() => "");
@@ -99,7 +99,7 @@ export class OpenMeteoWeatherProvider implements WeatherProvider {
 
       const d = json.daily;
       if (!d) {
-        console.warn(`[weather] daily 데이터 없음 | date=${dateStr}`);
+        console.warn(`[weather] daily No Data | date=${dateStr}`);
         return null;
       }
 
@@ -110,7 +110,7 @@ export class OpenMeteoWeatherProvider implements WeatherProvider {
       const wmoCode = d.weathercode?.[0] ?? 0;
 
       if (maxTemp == null || minTemp == null) {
-        console.warn(`[weather] 온도 없음 | date=${dateStr} | maxTemp=${maxTemp} | minTemp=${minTemp}`);
+        console.warn(`[weather] temperature null | date=${dateStr} | maxTemp=${maxTemp} | minTemp=${minTemp}`);
         return null;
       }
 
@@ -123,14 +123,14 @@ export class OpenMeteoWeatherProvider implements WeatherProvider {
       };
 
       console.log(
-        `[weather] 파싱 완료 | date=${dateStr} | summary=${result.summary} | minTemp=${result.minTemp} | maxTemp=${result.maxTemp} | rainMm=${result.rainMm} | windKph=${result.windKph}`
+        `[weather] parsing Completed | date=${dateStr} | summary=${result.summary} | minTemp=${result.minTemp} | maxTemp=${result.maxTemp} | rainMm=${result.rainMm} | windKph=${result.windKph}`
       );
 
       return result;
     } catch (err) {
       // Re-throw so the service layer records this as a provider failure (not a silent skip)
       console.error(
-        `[weather] 오류 | date=${dateStr} | error=${err instanceof Error ? err.message : String(err)}`
+        `[weather] Error | date=${dateStr} | error=${err instanceof Error ? err.message : String(err)}`
       );
       throw err;
     }

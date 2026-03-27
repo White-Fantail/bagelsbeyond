@@ -78,19 +78,19 @@ export default async function SyncOrdersPage() {
       <div>
         <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
           <Link href="/admin" className="hover:text-amber-600 transition-colors">
-            관리자 대시보드
+            Admin Dashboard
           </Link>
           <span>/</span>
-          <span className="text-gray-700 font-medium">주문 자동 전송 현황</span>
+          <span className="text-gray-700 font-medium">Order Auto-Send Status</span>
         </div>
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">주문 자동 전송 현황</h1>
+            <h1 className="text-2xl font-bold text-gray-900">Order Auto-Send Status</h1>
             <p className="text-gray-500 mt-0.5 text-sm">
-              오늘({todayStr}) 픽업 예정 주문의 Loyverse 자동 전송 상태
+              Loyverse auto-send status for today&apos;s ({todayStr}) scheduled pickup orders
               {mockMode && (
                 <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
-                  Mock 모드
+                  Mock mode
                 </span>
               )}
             </p>
@@ -106,39 +106,39 @@ export default async function SyncOrdersPage() {
 
       {/* Config info */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-700 flex flex-wrap gap-x-6 gap-y-1">
-        <span>📅 기준 타임존: <strong>{timezone}</strong></span>
-        <span>📆 오늘 날짜: <strong>{todayStr}</strong></span>
-        <span>🕐 마지막 전송: <strong>
+        <span>📅 Base Timezone: <strong>{timezone}</strong></span>
+        <span>📆 Today Date: <strong>{todayStr}</strong></span>
+        <span>🕐 Last Sent: <strong>
           {lastSyncEntry?.updatedAt
-            ? lastSyncEntry.updatedAt.toLocaleString("ko-KR")
-            : "없음"}
+            ? lastSyncEntry.updatedAt.toLocaleString("en-NZ")
+            : "None"}
         </strong></span>
       </div>
 
       {/* Summary stats */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-        <StatCard label="웹 주문 (INTERNAL)" value={internalCount} color="blue" />
-        <StatCard label="구독 주문 (SUBSCRIPTION)" value={subscriptionCount} color="purple" />
-        <StatCard label="전송 성공" value={successOrders.length} color="green" />
-        <StatCard label="전송 실패" value={failedOrders.length} color="red" />
-        <StatCard label="처리 중" value={pendingOrders.length} color="amber" />
-        <StatCard label="미전송" value={notSentOrders.length} color="gray" />
+        <StatCard label="Web Orders (INTERNAL)" value={internalCount} color="blue" />
+        <StatCard label="Subscriptions Orders (SUBSCRIPTION)" value={subscriptionCount} color="purple" />
+        <StatCard label="Send Success" value={successOrders.length} color="green" />
+        <StatCard label="Send Failed" value={failedOrders.length} color="red" />
+        <StatCard label="Processing..." value={pendingOrders.length} color="amber" />
+        <StatCard label="Not Sent" value={notSentOrders.length} color="gray" />
       </div>
 
       {/* Failed orders */}
       {failedOrders.length > 0 && (
         <div className="bg-white rounded-xl border border-red-200 p-6 space-y-4">
           <h2 className="font-semibold text-red-700">
-            ❌ 전송 실패 주문 ({failedOrders.length}건)
+            ❌ Send Failed Orders ({failedOrders.length}items)
           </h2>
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
               <thead>
                 <tr className="text-left text-gray-500 border-b border-gray-100">
-                  <th className="pb-2 pr-4">주문번호</th>
-                  <th className="pb-2 pr-4">소스</th>
-                  <th className="pb-2 pr-4">실패 이유</th>
-                  {isAdmin && <th className="pb-2">재시도</th>}
+                  <th className="pb-2 pr-4">Order Number</th>
+                  <th className="pb-2 pr-4">Source</th>
+                  <th className="pb-2 pr-4">Failure Reason</th>
+                  {isAdmin && <th className="pb-2">Retry</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
@@ -187,20 +187,20 @@ export default async function SyncOrdersPage() {
       {notSentOrders.length > 0 && (
         <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
           <h2 className="font-semibold text-gray-700">
-            ⏳ 미전송 주문 ({notSentOrders.length}건)
+            ⏳ Unsent Orders ({notSentOrders.length}items)
           </h2>
           <p className="text-sm text-gray-500">
-            자동 전송 대상이지만 아직 전송 시도가 없는 주문입니다.
-            {isAdmin && " 아래에서 수동 전송하거나 상단 버튼으로 전체 재실행하세요."}
+            Orders targeted for auto-send but not yet attempted..
+            {isAdmin && " Manually send below or use the top button to re-run all."}
           </p>
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
               <thead>
                 <tr className="text-left text-gray-500 border-b border-gray-100">
-                  <th className="pb-2 pr-4">주문번호</th>
-                  <th className="pb-2 pr-4">소스</th>
-                  <th className="pb-2 pr-4">픽업 시간대</th>
-                  {isAdmin && <th className="pb-2">전송</th>}
+                  <th className="pb-2 pr-4">Order Number</th>
+                  <th className="pb-2 pr-4">Source</th>
+                  <th className="pb-2 pr-4">Pickup Time</th>
+                  {isAdmin && <th className="pb-2">Send</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
@@ -249,16 +249,16 @@ export default async function SyncOrdersPage() {
       {successOrders.length > 0 && (
         <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
           <h2 className="font-semibold text-gray-700">
-            ✅ 전송 성공 주문 ({successOrders.length}건)
+            ✅ Send Success Orders ({successOrders.length}items)
           </h2>
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
               <thead>
                 <tr className="text-left text-gray-500 border-b border-gray-100">
-                  <th className="pb-2 pr-4">주문번호</th>
-                  <th className="pb-2 pr-4">소스</th>
-                  <th className="pb-2 pr-4">외부 수신번호</th>
-                  <th className="pb-2">전송 시각</th>
+                  <th className="pb-2 pr-4">Order Number</th>
+                  <th className="pb-2 pr-4">Source</th>
+                  <th className="pb-2 pr-4">External Ref</th>
+                  <th className="pb-2">Sent At</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
@@ -289,7 +289,7 @@ export default async function SyncOrdersPage() {
                     </td>
                     <td className="py-2 text-xs text-gray-500">
                       {order.externalMapping?.lastSyncedAt
-                        ? order.externalMapping.lastSyncedAt.toLocaleString("ko-KR")
+                        ? order.externalMapping.lastSyncedAt.toLocaleString("en-NZ")
                         : "-"}
                     </td>
                   </tr>
@@ -302,17 +302,17 @@ export default async function SyncOrdersPage() {
 
       {/* Policy info */}
       <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-2">
-        <h2 className="font-semibold text-gray-900">자동 전송 정책</h2>
+        <h2 className="font-semibold text-gray-900">Auto-Send Policy</h2>
         <ul className="text-sm text-gray-600 space-y-1 list-disc list-inside">
-          <li>오늘 픽업 예정인 INTERNAL + SUBSCRIPTION 주문만 자동 전송</li>
-          <li>미래 날짜 주문은 미리 POS에 전송하지 않음</li>
-          <li>성공 전송된 주문은 기본적으로 재전송하지 않음 (중복 방지)</li>
-          <li>취소(CANCELLED) 주문은 전송 대상에서 제외</li>
-          <li>상품 Loyverse 매핑 누락 시 전송 실패로 기록</li>
-          <li>내부 주문은 전송 실패와 무관하게 정상 유지됨</li>
+          <li>Only INTERNAL + SUBSCRIPTION Orders scheduled for today&apos;s pickup are auto-sent</li>
+          <li>Future-date Orders are not sent to POS in advance</li>
+          <li>Successfully sent Orders are not re-sent by default (to prevent duplicates)</li>
+          <li>Cancelled (CANCELLED) Orders are excluded from sending</li>
+          <li>Orders with missing Loyverse product mapping are recorded as send failed</li>
+          <li>Internal Orders are kept intact regardless of send failures</li>
           <li>
-            기준 타임존: <strong>{timezone}</strong>{" "}
-            (APP_TIMEZONE 환경변수로 변경)
+            Base Timezone: <strong>{timezone}</strong>{" "}
+            (change via APP_TIMEZONE env var)
           </li>
         </ul>
       </div>

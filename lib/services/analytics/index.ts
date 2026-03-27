@@ -406,7 +406,7 @@ export async function getHolidaySegmentComparison(
 
   return buildSegmentResult(
     "holiday",
-    "공휴일",
+    "Holiday",
     holidayRecords,
     nonHolidayRecords,
     startDate,
@@ -429,7 +429,7 @@ export async function getSchoolHolidaySegmentComparison(
 
   return buildSegmentResult(
     "schoolHoliday",
-    "학교 방학",
+    "School Holiday",
     schoolHolidayRecords,
     regularRecords,
     startDate,
@@ -452,7 +452,7 @@ export async function getRainSegmentComparison(
 
   return buildSegmentResult(
     "rain",
-    "비 오는 날",
+    "Rainy days",
     rainyRecords,
     dryRecords,
     startDate,
@@ -476,7 +476,7 @@ export async function getEventSegmentComparison(
 
   return buildSegmentResult(
     "event",
-    "로컬 이벤트",
+    "Local Event",
     eventRecords,
     regularRecords,
     startDate,
@@ -519,13 +519,13 @@ export async function getHolidayNameBreakdown(
 }
 
 const DOW_LABELS: Record<number, string> = {
-  0: "일요일",
-  1: "월요일",
-  2: "화요일",
-  3: "수요일",
-  4: "목요일",
-  5: "금요일",
-  6: "토요일",
+  0: "Sun",
+  1: "Mon",
+  2: "Tue",
+  3: "Wed",
+  4: "Thu",
+  5: "Fri",
+  6: "Sat",
 };
 
 /**

@@ -27,12 +27,12 @@ export default function ProfileForm({ currentName, currentEmail }: Props) {
         const data = await res.json();
 
         if (!res.ok) {
-          setMessage({ type: "error", text: data.message ?? "수정에 실패했습니다" });
+          setMessage({ type: "error", text: data.message ?? "Edit failed" });
         } else {
-          setMessage({ type: "success", text: "프로필이 업데이트되었습니다" });
+          setMessage({ type: "success", text: "Profile updated" });
         }
       } catch {
-        setMessage({ type: "error", text: "요청 중 오류가 발생했습니다" });
+        setMessage({ type: "error", text: "An error occurred while processing" });
       }
     });
   }
@@ -54,7 +54,7 @@ export default function ProfileForm({ currentName, currentEmail }: Props) {
       {/* Name */}
       <div>
         <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-          이름
+          Name
         </label>
         <input
           id="name"
@@ -64,15 +64,15 @@ export default function ProfileForm({ currentName, currentEmail }: Props) {
           required
           maxLength={100}
           className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-          placeholder="이름을 입력하세요"
+          placeholder="Please enter your name"
         />
       </div>
 
       {/* Email — read-only */}
       <div>
         <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-          이메일
-          <span className="ml-2 text-xs text-gray-400 font-normal">(변경 불가)</span>
+          Email
+          <span className="ml-2 text-xs text-gray-400 font-normal">(Cannot be changed)</span>
         </label>
         <input
           id="email"
@@ -89,7 +89,7 @@ export default function ProfileForm({ currentName, currentEmail }: Props) {
         disabled={isPending || name.trim() === ""}
         className="w-full py-2.5 px-4 bg-amber-600 hover:bg-amber-700 disabled:opacity-60 text-white text-sm font-semibold rounded-lg transition-colors"
       >
-        {isPending ? "저장 중…" : "저장"}
+        {isPending ? "Saving..." : "Save"}
       </button>
     </form>
   );

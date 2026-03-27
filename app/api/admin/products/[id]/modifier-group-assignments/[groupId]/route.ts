@@ -17,6 +17,6 @@ export async function DELETE(
     });
     return NextResponse.json({ ok: true });
   } catch {
-    return NextResponse.json({ message: "모디파이어 그룹 연결 해제에 실패했습니다" }, { status: 500 });
+    return NextResponse.json({ message: "Failed to unlink modifier group" }, { status: 500 });
   }
 }

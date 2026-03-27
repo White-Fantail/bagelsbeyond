@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
   } catch (_error) {
     console.error(_error);
     return NextResponse.json(
-      { message: "주별 분석 데이터를 불러오는데 실패했습니다" },
+      { message: "Weekly Analysis Failed to load data" },
       { status: 500 }
     );
   }

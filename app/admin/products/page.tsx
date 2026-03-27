@@ -90,14 +90,14 @@ export default async function AdminProductsPage({
         <div>
           <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
             <Link href="/admin" className="hover:text-amber-600 transition-colors">
-              관리자 대시보드
+              Admin Dashboard
             </Link>
             <span>/</span>
-            <span className="text-gray-700 font-medium">상품 관리</span>
+            <span className="text-gray-700 font-medium">Product Management</span>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">상품 관리</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Product Management</h1>
           <p className="text-gray-500 mt-0.5 text-sm">
-            전체 상품 목록 및 가격·활성 상태를 관리합니다
+            Manage the full product list, prices, and active status.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -105,7 +105,7 @@ export default async function AdminProductsPage({
             href="/admin/products/new"
             className="px-4 py-2 bg-amber-500 text-white rounded-lg text-sm font-medium hover:bg-amber-600 transition-colors whitespace-nowrap"
           >
-            + 새 상품 추가
+            + Add New Product
           </Link>
         </div>
       </div>
@@ -113,15 +113,15 @@ export default async function AdminProductsPage({
       {/* Summary cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         <div className="bg-white rounded-xl border border-gray-200 p-4">
-          <p className="text-xs text-gray-500">전체 상품</p>
+          <p className="text-xs text-gray-500">All Products</p>
           <p className="text-2xl font-bold text-gray-900 mt-1">{total}</p>
         </div>
         <div className="bg-white rounded-xl border border-green-100 p-4">
-          <p className="text-xs text-green-600">활성 상품</p>
+          <p className="text-xs text-green-600">Active Products</p>
           <p className="text-2xl font-bold text-green-700 mt-1">{activeCount}</p>
         </div>
         <div className="bg-white rounded-xl border border-gray-200 p-4">
-          <p className="text-xs text-gray-500">비활성 상품</p>
+          <p className="text-xs text-gray-500">Inactive Products</p>
           <p className="text-2xl font-bold text-gray-600 mt-1">{total - activeCount}</p>
         </div>
       </div>
@@ -135,12 +135,12 @@ export default async function AdminProductsPage({
       <div className="text-sm text-gray-500">
         {hasFilters ? (
           <>
-            검색 결과 <strong className="text-gray-700">{products.length}</strong>개
-            <span className="text-gray-400"> (전체 {total}개)</span>
+            Search results <strong className="text-gray-700">{products.length}</strong>
+            <span className="text-gray-400"> (All {total})</span>
           </>
         ) : (
           <>
-            전체 <strong className="text-gray-700">{products.length}</strong>개 상품
+            All <strong className="text-gray-700">{products.length}</strong> Products
           </>
         )}
       </div>
@@ -150,10 +150,10 @@ export default async function AdminProductsPage({
         {products.length === 0 ? (
           <div className="p-12 text-center text-gray-500">
             <p className="text-lg font-medium">
-              {hasFilters ? "검색 결과가 없습니다" : "등록된 상품이 없습니다"}
+              {hasFilters ? "No search results" : "No products registered"}
             </p>
             <p className="text-sm mt-1">
-              {hasFilters ? "필터 조건을 변경해보세요." : "새 상품을 추가해보세요."}
+              {hasFilters ? "Try changing your filter conditions." : "Try adding new Products."}
             </p>
           </div>
         ) : (
@@ -161,15 +161,15 @@ export default async function AdminProductsPage({
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-200 bg-gray-50">
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">이름</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">카테고리</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">출처</th>
-                  <th className="text-center px-4 py-3 font-medium text-gray-600">모디파이어</th>
-                  <th className="text-right px-4 py-3 font-medium text-gray-600">가격</th>
-                  <th className="text-center px-4 py-3 font-medium text-gray-600">활성</th>
-                  <th className="text-center px-4 py-3 font-medium text-gray-600">구독가능</th>
-                  <th className="text-right px-4 py-3 font-medium text-gray-600">정렬순서</th>
-                  <th className="text-right px-4 py-3 font-medium text-gray-600">마지막수정일</th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-600">Name</th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-600">Categories</th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-600">Source</th>
+                  <th className="text-center px-4 py-3 font-medium text-gray-600">Modifiers</th>
+                  <th className="text-right px-4 py-3 font-medium text-gray-600">Price</th>
+                  <th className="text-center px-4 py-3 font-medium text-gray-600">Active</th>
+                  <th className="text-center px-4 py-3 font-medium text-gray-600">SubscriptionsAvailable</th>
+                  <th className="text-right px-4 py-3 font-medium text-gray-600">Sort Order</th>
+                  <th className="text-right px-4 py-3 font-medium text-gray-600">Last Edit Date</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -204,14 +204,14 @@ export default async function AdminProductsPage({
                           </span>
                         ) : (
                           <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
-                            내부
+                            Internal
                           </span>
                         )}
                       </td>
                       <td className="px-4 py-3 text-center">
                         {modifierCount > 0 ? (
                           <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
-                            {modifierCount}개
+                            {modifierCount}
                           </span>
                         ) : (
                           <span className="text-xs text-gray-400">–</span>
@@ -223,22 +223,22 @@ export default async function AdminProductsPage({
                       <td className="px-4 py-3 text-center">
                         {product.isActive ? (
                           <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
-                            활성
+                            Active
                           </span>
                         ) : (
                           <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
-                            비활성
+                            Inactive
                           </span>
                         )}
                       </td>
                       <td className="px-4 py-3 text-center">
                         {product.isSubscriptionEligible ? (
                           <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
-                            가능
+                            Available
                           </span>
                         ) : (
                           <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-400">
-                            불가
+                            Unavailable
                           </span>
                         )}
                       </td>
@@ -246,7 +246,7 @@ export default async function AdminProductsPage({
                         {product.sortOrder}
                       </td>
                       <td className="px-4 py-3 text-right text-gray-400 tabular-nums text-xs">
-                        {product.updatedAt.toLocaleDateString("ko-KR")}
+                        {product.updatedAt.toLocaleDateString("en-NZ")}
                       </td>
                     </tr>
                   );

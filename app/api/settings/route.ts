@@ -12,7 +12,7 @@ export async function GET() {
     }
     return NextResponse.json(settings);
   } catch (_error) {
-    return NextResponse.json({ message: "설정을 불러오는데 실패했습니다" }, { status: 500 });
+    return NextResponse.json({ message: "Failed to load settings" }, { status: 500 });
   }
 }
 
@@ -23,7 +23,7 @@ export async function PUT(req: NextRequest) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { message: "입력값이 올바르지 않습니다", errors: parsed.error.flatten() },
+        { message: "Invalid input", errors: parsed.error.flatten() },
         { status: 400 }
       );
     }
@@ -40,6 +40,6 @@ export async function PUT(req: NextRequest) {
 
     return NextResponse.json(settings);
   } catch (_error) {
-    return NextResponse.json({ message: "저장에 실패했습니다" }, { status: 500 });
+    return NextResponse.json({ message: "Save failed" }, { status: 500 });
   }
 }

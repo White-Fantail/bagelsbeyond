@@ -197,13 +197,13 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">운영 대시보드</h1>
-        <p className="text-gray-500 mt-1">Bagels Beyond — 매일 운영 현황을 한눈에</p>
+        <h1 className="text-2xl font-bold text-gray-900">Operations Dashboard</h1>
+        <p className="text-gray-500 mt-1">Bagels Beyond — Daily operations status at a glance</p>
       </div>
 
       {/* Tomorrow Prediction Card */}
       <div>
-        <h2 className="text-lg font-semibold text-gray-900 mb-3">📅 내일 예측</h2>
+        <h2 className="text-lg font-semibold text-gray-900 mb-3">📅 Tomorrow Predictions</h2>
         {tomorrowPrediction ? (
           <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200 p-5">
             <div className="flex items-start justify-between mb-4">
@@ -213,7 +213,7 @@ export default async function DashboardPage() {
               </div>
               {tomorrowPrediction.confidenceScore != null && (
                 <div className="text-right">
-                  <p className="text-xs text-gray-500">신뢰도</p>
+                  <p className="text-xs text-gray-500">Confidence</p>
                   <p className={`text-lg font-bold ${tomorrowPrediction.confidenceScore >= 70 ? "text-green-600" : tomorrowPrediction.confidenceScore >= 50 ? "text-yellow-600" : "text-red-600"}`}>
                     {tomorrowPrediction.confidenceScore}%
                   </p>
@@ -221,34 +221,34 @@ export default async function DashboardPage() {
               )}
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <PredCard icon="��" label="예상 판매" value={`${tomorrowPrediction.predictedBagelsSold}개`} />
-              <PredCard icon="🔥" label="추천 생산" value={`${tomorrowPrediction.recommendedBagelsToBake}개`} highlight />
-              <PredCard icon="📦" label="예상 잔여" value={`${tomorrowPrediction.predictedLeftovers}개`} />
+              <PredCard icon="��" label="Predicted Sold" value={`${tomorrowPrediction.predictedBagelsSold}`} />
+              <PredCard icon="🔥" label="Recommended Production" value={`${tomorrowPrediction.recommendedBagelsToBake}`} highlight />
+              <PredCard icon="📦" label="Predicted Remaining" value={`${tomorrowPrediction.predictedLeftovers}`} />
               {tomorrowPrediction.projectedSellThroughRate != null && (
-                <PredCard icon="📈" label="예상 판매율" value={`${(tomorrowPrediction.projectedSellThroughRate * 100).toFixed(1)}%`} />
+                <PredCard icon="📈" label="Estimated Sell-through Rate" value={`${(tomorrowPrediction.projectedSellThroughRate * 100).toFixed(1)}%`} />
               )}
             </div>
             <div className="mt-4 flex gap-2 flex-wrap">
               <Link href={`/predictions/${tomorrowPrediction.id}`} className="text-sm text-blue-700 hover:underline font-medium">
-                상세 보기 →
+                View Details →
               </Link>
               <span className="text-gray-300">|</span>
               <Link href={`/predictions/new`} className="text-sm text-blue-600 hover:underline">
-                재계산
+                Recalculate
               </Link>
             </div>
           </div>
         ) : (
           <div className="bg-gray-50 rounded-lg border border-dashed border-gray-300 p-6 flex items-center justify-between">
             <div>
-              <p className="text-gray-500 text-sm">내일({tomorrowStr}) 예측이 아직 없습니다.</p>
-              <p className="text-gray-400 text-xs mt-1">지금 예측을 생성하면 생산량 추천을 받을 수 있습니다.</p>
+              <p className="text-gray-500 text-sm">No prediction yet for tomorrow ({tomorrowStr}).</p>
+              <p className="text-gray-400 text-xs mt-1">Create a prediction now to get a production recommendation.</p>
             </div>
             <Link
               href={`/predictions/new`}
               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium whitespace-nowrap"
             >
-              🔮 내일 예측 만들기
+              🔮 Create Tomorrow&apos;s Prediction
             </Link>
           </div>
         )}
@@ -256,24 +256,24 @@ export default async function DashboardPage() {
 
       {/* Recent Performance Summary */}
       <div>
-        <h2 className="text-lg font-semibold text-gray-900 mb-3">📊 최근 7일 실적</h2>
+        <h2 className="text-lg font-semibold text-gray-900 mb-3">📊 Recent 7-Day Performance</h2>
         {recentRecords.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <StatCard title="7일 총매출" value={formatCurrency(totalSalesSum)} sub={`${recentRecords.length}일 기록`} />
-            <StatCard title="일평균 매출" value={formatCurrency(avgDailySales)} sub="최근 7일 기준" />
-            <StatCard title="일평균 판매량" value={`${Math.round(avgBagelsSold)}개`} sub="베이글" />
+            <StatCard title="7-Day Total Sales" value={formatCurrency(totalSalesSum)} sub={`${recentRecords.length} days recorded`} />
+            <StatCard title="Daily Avg. Sales" value={formatCurrency(avgDailySales)} sub="recent 7-day baseline" />
+            <StatCard title="Daily Avg. Sold" value={`${Math.round(avgBagelsSold)}`} sub="bagels" />
             <StatCard
-              title="평균 폐기율"
+              title="Avg. Waste Rate"
               value={`${(avgWasteRate * 100).toFixed(1)}%`}
-              sub="베이글 기준"
+              sub="bagel baseline"
               highlight={avgWasteRate > 0.1}
             />
           </div>
         ) : (
           <div className="bg-gray-50 rounded-lg border border-gray-200 p-6 text-center">
-            <p className="text-gray-400 text-sm">최근 7일 매출 데이터가 없습니다.</p>
+            <p className="text-gray-400 text-sm">No sales data for the recent 7 days.</p>
             <Link href="/sales/new" className="mt-2 inline-block text-sm text-amber-600 hover:underline">
-              매출 입력하기 →
+              Enter Sales →
             </Link>
           </div>
         )}
@@ -282,22 +282,22 @@ export default async function DashboardPage() {
       {/* Prediction Accuracy */}
       {comparableCount > 0 && (
         <div>
-          <h2 className="text-lg font-semibold text-gray-900 mb-3">🎯 최근 예측 정확도</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-3">🎯 recent Predictions Accuracy</h2>
           <div className="bg-white rounded-lg border border-gray-200 p-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500">최근 {comparableCount}건 비교 가능</p>
+                <p className="text-sm text-gray-500">recent {comparableCount} items available for comparison</p>
                 <p className="text-2xl font-bold text-gray-900 mt-1">
-                  {accurateCount}건 정확 <span className="text-lg font-normal text-gray-500">/ {comparableCount}건</span>
+                  {accurateCount}items accurate <span className="text-lg font-normal text-gray-500">/ {comparableCount}items</span>
                 </p>
-                <p className="text-sm text-gray-500 mt-1">오차율 5% 이내 기준</p>
+                <p className="text-sm text-gray-500 mt-1">Error rate within 5% baseline</p>
               </div>
               <div className="text-right">
                 <div className={`text-3xl font-bold ${accuracyRate != null && accuracyRate >= 60 ? "text-green-600" : accuracyRate != null && accuracyRate >= 40 ? "text-yellow-600" : "text-red-600"}`}>
                   {accuracyRate ?? "-"}%
                 </div>
                 <Link href="/predictions/performance" className="text-sm text-blue-600 hover:underline mt-1 block">
-                  성과 상세 →
+                  Performance Details →
                 </Link>
               </div>
             </div>
@@ -308,19 +308,19 @@ export default async function DashboardPage() {
       {/* Analytics Summary */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold text-gray-900">📊 분석 요약</h2>
+          <h2 className="text-lg font-semibold text-gray-900">📊 Analytics Summary</h2>
           <Link href="/analytics" className="text-sm text-amber-600 hover:underline">
-            분석 상세 →
+            Analytics Details →
           </Link>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* 7-day comparison */}
           {week7Comparison && (
             <div className="bg-white rounded-lg border border-gray-200 p-4">
-              <p className="text-xs font-medium text-gray-500 mb-3">최근 7일 vs 이전 7일</p>
+              <p className="text-xs font-medium text-gray-500 mb-3">Last 7 days vs. previous 7 days</p>
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">총 매출</span>
+                  <span className="text-sm text-gray-600">Total Sales</span>
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-semibold text-gray-900">
                       {formatCurrencyNZD(week7Comparison.current.totalSales)}
@@ -340,13 +340,13 @@ export default async function DashboardPage() {
                   </div>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">일평균 매출</span>
+                  <span className="text-sm text-gray-600">Daily Avg. Sales</span>
                   <span className="text-sm font-medium text-gray-700">
                     {formatCurrencyNZD(week7Comparison.current.averageDailySales)}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">평균 폐기율</span>
+                  <span className="text-sm text-gray-600">Avg. Waste Rate</span>
                   <span
                     className={`text-sm font-medium ${
                       week7Comparison.current.wasteRate > 0.1 ? "text-red-600" : "text-green-600"
@@ -362,10 +362,10 @@ export default async function DashboardPage() {
           {/* This month vs last month */}
           {monthComparison && (
             <div className="bg-white rounded-lg border border-gray-200 p-4">
-              <p className="text-xs font-medium text-gray-500 mb-3">이번 달 vs 지난 달</p>
+              <p className="text-xs font-medium text-gray-500 mb-3">This month vs. last month</p>
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">이번 달 매출</span>
+                  <span className="text-sm text-gray-600">This Month Sales</span>
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-semibold text-gray-900">
                       {formatCurrencyNZD(monthComparison.current.totalSales)}
@@ -385,15 +385,15 @@ export default async function DashboardPage() {
                   </div>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">지난 달 매출</span>
+                  <span className="text-sm text-gray-600">Last Month Sales</span>
                   <span className="text-sm font-medium text-gray-500">
                     {formatCurrencyNZD(monthComparison.previous.totalSales)}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">이번 달 기록</span>
+                  <span className="text-sm text-gray-600">This Month Records</span>
                   <span className="text-sm font-medium text-gray-700">
-                    {monthComparison.current.recordCount}일
+                    {monthComparison.current.recordCount} days
                   </span>
                 </div>
               </div>
@@ -403,9 +403,9 @@ export default async function DashboardPage() {
 
         {!week7Comparison && !monthComparison && (
           <div className="bg-gray-50 rounded-lg border border-gray-200 p-4 text-center text-sm text-gray-400">
-            분석 데이터가 없습니다.{" "}
+            No analytics data..{" "}
             <Link href="/sales/new" className="text-amber-600 hover:underline">
-              매출 입력하기 →
+              Enter Sales →
             </Link>
           </div>
         )}
@@ -413,13 +413,13 @@ export default async function DashboardPage() {
 
       {/* Quick Actions */}
       <div>
-        <h2 className="text-lg font-semibold text-gray-900 mb-3">⚡ 빠른 액션</h2>
+        <h2 className="text-lg font-semibold text-gray-900 mb-3">⚡ Quick Actions</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-          <QuickAction href="/sales/new" label="새 매출 입력" icon="➕" color="amber" />
-          <QuickAction href="/imports/new" label="CSV 가져오기" icon="📂" color="purple" />
-          <QuickAction href="/predictions/new" label="새 예측 만들기" icon="🔮" color="blue" />
-          <QuickAction href="/predictions/performance" label="예측 성과" icon="📊" color="green" />
-          <QuickAction href="/calendar" label="달력 보기" icon="📅" color="gray" />
+          <QuickAction href="/sales/new" label="Enter Sales" icon="➕" color="amber" />
+          <QuickAction href="/imports/new" label="CSV Imports" icon="📂" color="purple" />
+          <QuickAction href="/predictions/new" label="Create New Prediction" icon="🔮" color="blue" />
+          <QuickAction href="/predictions/performance" label="Predictions Performance" icon="📊" color="green" />
+          <QuickAction href="/calendar" label="Calendar View" icon="📅" color="gray" />
         </div>
       </div>
 
@@ -427,18 +427,18 @@ export default async function DashboardPage() {
       {recentRecords.length > 0 && (
         <div>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-semibold text-gray-900">최근 매출 기록</h2>
-            <Link href="/sales" className="text-sm text-amber-600 hover:underline">전체 보기 →</Link>
+            <h2 className="text-lg font-semibold text-gray-900">recent Sales Records</h2>
+            <Link href="/sales" className="text-sm text-amber-600 hover:underline">View All →</Link>
           </div>
           <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">날짜</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">총매출</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">판매</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">잔여</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">폐기율</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Total Sales</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Sold</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Remaining</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Waste Rate</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -452,8 +452,8 @@ export default async function DashboardPage() {
                         </Link>
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-900 text-right">{formatCurrency(getTotalSales(record))}</td>
-                      <td className="px-4 py-3 text-sm text-gray-900 text-right">{getSoldBagels(record)}개</td>
-                      <td className="px-4 py-3 text-sm text-gray-900 text-right">{record.bagelsLeft}개</td>
+                      <td className="px-4 py-3 text-sm text-gray-900 text-right">{getSoldBagels(record)}</td>
+                      <td className="px-4 py-3 text-sm text-gray-900 text-right">{record.bagelsLeft}</td>
                       <td className={`px-4 py-3 text-sm text-right font-medium ${wasteRate > 0.1 ? "text-red-600" : "text-green-600"}`}>
                         {(wasteRate * 100).toFixed(1)}%
                       </td>
@@ -470,32 +470,32 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {latestImportJob && (
           <div>
-            <h2 className="text-base font-semibold text-gray-900 mb-2">최근 CSV 가져오기</h2>
+            <h2 className="text-base font-semibold text-gray-900 mb-2">recent CSV Imports</h2>
             <div className="bg-white rounded-lg border border-purple-200 p-4">
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-900">{latestImportJob.fileName}</p>
                   <p className="text-xs text-gray-500 mt-1">
-                    총 {latestImportJob.totalRows}행 · 성공 {latestImportJob.successRows} · 실패 {latestImportJob.failedRows}
+                    Total {latestImportJob.totalRows} rows · Success {latestImportJob.successRows} · Failed {latestImportJob.failedRows}
                   </p>
                 </div>
                 <StatusBadge status={latestImportJob.status} />
               </div>
               <Link href={`/imports/${latestImportJob.id}`} className="text-xs text-purple-600 hover:underline mt-2 block">
-                상세 보기 →
+                View Details →
               </Link>
             </div>
           </div>
         )}
         {latestExternalFactor && (
           <div>
-            <h2 className="text-base font-semibold text-gray-900 mb-2">외부 데이터 수집 현황</h2>
+            <h2 className="text-base font-semibold text-gray-900 mb-2">External Data Collection Status</h2>
             <div className="bg-white rounded-lg border border-teal-200 p-4">
               <p className="text-sm font-medium text-gray-900">
-                최근 수집일: {latestExternalFactor.dailyRecord ? formatDate((latestExternalFactor.dailyRecord as { date: Date }).date) : "-"}
+                last collected: {latestExternalFactor.dailyRecord ? formatDate((latestExternalFactor.dailyRecord as { date: Date }).date) : "-"}
               </p>
               <Link href="/sales" className="text-xs text-teal-600 hover:underline mt-2 block">
-                매출 기록 보기 →
+                View Sales Records →
               </Link>
             </div>
           </div>
@@ -505,32 +505,32 @@ export default async function DashboardPage() {
       {/* Task Status Section */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold text-gray-900">🤖 자동화 작업 현황</h2>
+          <h2 className="text-lg font-semibold text-gray-900">🤖 Automation Task status</h2>
           <Link href="/tasks" className="text-sm text-indigo-600 hover:underline">
-            전체 보기 →
+            View All →
           </Link>
         </div>
 
         {/* Summary stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
           <div className="bg-white border border-gray-200 rounded-lg p-4 text-center">
-            <p className="text-xs text-gray-500">실패한 작업</p>
+            <p className="text-xs text-gray-500">Failed Task</p>
             <p className={`text-2xl font-bold mt-1 ${(taskStatusMap.failed ?? 0) > 0 ? "text-red-600" : "text-gray-700"}`}>
               {taskStatusMap.failed ?? 0}
             </p>
           </div>
           <div className="bg-white border border-gray-200 rounded-lg p-4 text-center">
-            <p className="text-xs text-gray-500">진행 중</p>
+            <p className="text-xs text-gray-500">In progress</p>
             <p className={`text-2xl font-bold mt-1 ${(taskStatusMap.running ?? 0) > 0 ? "text-blue-600" : "text-gray-700"}`}>
               {taskStatusMap.running ?? 0}
             </p>
           </div>
           <div className="bg-white border border-gray-200 rounded-lg p-4 text-center">
-            <p className="text-xs text-gray-500">대기 중</p>
+            <p className="text-xs text-gray-500">Pending</p>
             <p className="text-2xl font-bold mt-1 text-gray-700">{taskStatusMap.pending ?? 0}</p>
           </div>
           <div className="bg-white border border-gray-200 rounded-lg p-4 text-center">
-            <p className="text-xs text-gray-500">성공</p>
+            <p className="text-xs text-gray-500">Success</p>
             <p className="text-2xl font-bold mt-1 text-green-600">{taskStatusMap.success ?? 0}</p>
           </div>
         </div>
@@ -538,19 +538,19 @@ export default async function DashboardPage() {
         {/* Last run times */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
           <div className="bg-white border border-gray-200 rounded-lg p-4">
-            <p className="text-xs text-gray-500 mb-1">마지막 외부요인 수집</p>
+            <p className="text-xs text-gray-500 mb-1">Last External Data Collect</p>
             <p className="text-sm font-medium text-gray-800">
               {lastExternalFactorTask?.finishedAt
-                ? new Date(lastExternalFactorTask.finishedAt).toLocaleString("ko-KR")
-                : "아직 없음"}
+                ? new Date(lastExternalFactorTask.finishedAt).toLocaleString("en-NZ")
+                : "Not yet"}
             </p>
           </div>
           <div className="bg-white border border-gray-200 rounded-lg p-4">
-            <p className="text-xs text-gray-500 mb-1">마지막 예측 생성</p>
+            <p className="text-xs text-gray-500 mb-1">Last Prediction Created</p>
             <p className="text-sm font-medium text-gray-800">
               {lastPredictionTask?.finishedAt
-                ? new Date(lastPredictionTask.finishedAt).toLocaleString("ko-KR")
-                : "아직 없음"}
+                ? new Date(lastPredictionTask.finishedAt).toLocaleString("en-NZ")
+                : "Not yet"}
             </p>
           </div>
         </div>
@@ -561,10 +561,10 @@ export default async function DashboardPage() {
             <table className="min-w-full divide-y divide-gray-100 text-sm">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-4 py-2 text-left text-xs text-gray-500 font-medium">작업 유형</th>
-                  <th className="px-4 py-2 text-left text-xs text-gray-500 font-medium">대상 날짜</th>
-                  <th className="px-4 py-2 text-left text-xs text-gray-500 font-medium">상태</th>
-                  <th className="px-4 py-2 text-left text-xs text-gray-500 font-medium">생성일시</th>
+                  <th className="px-4 py-2 text-left text-xs text-gray-500 font-medium">Task Type</th>
+                  <th className="px-4 py-2 text-left text-xs text-gray-500 font-medium">Target Date</th>
+                  <th className="px-4 py-2 text-left text-xs text-gray-500 font-medium">Status</th>
+                  <th className="px-4 py-2 text-left text-xs text-gray-500 font-medium">Created At</th>
                   <th className="px-4 py-2 text-left text-xs text-gray-500 font-medium"></th>
                 </tr>
               </thead>
@@ -573,7 +573,7 @@ export default async function DashboardPage() {
                   <tr key={t.id} className="hover:bg-gray-50">
                     <td className="px-4 py-2 font-medium text-gray-800">{formatTaskType(t.taskType)}</td>
                     <td className="px-4 py-2 text-gray-600">
-                      {t.targetDate ? new Date(t.targetDate).toLocaleDateString("ko-KR") : "-"}
+                      {t.targetDate ? new Date(t.targetDate).toLocaleDateString("en-NZ") : "-"}
                     </td>
                     <td className="px-4 py-2">
                       <span className={`px-2 py-0.5 rounded text-xs font-medium ${getTaskStatusColor(t.status)}`}>
@@ -581,11 +581,11 @@ export default async function DashboardPage() {
                       </span>
                     </td>
                     <td className="px-4 py-2 text-gray-500 text-xs">
-                      {new Date(t.createdAt).toLocaleString("ko-KR")}
+                      {new Date(t.createdAt).toLocaleString("en-NZ")}
                     </td>
                     <td className="px-4 py-2">
                       <Link href={`/tasks/${t.id}`} className="text-xs text-indigo-600 hover:underline">
-                        상세
+                        Details
                       </Link>
                     </td>
                   </tr>
@@ -599,17 +599,17 @@ export default async function DashboardPage() {
         <div className="mt-3 flex flex-wrap gap-2">
           <TaskActionButton
             href="/api/cron/run"
-            label="▶ 외부요인 수집"
+            label="▶ ExternalFactor Collect"
             body={{ action: "ensure_external_factors" }}
           />
           <TaskActionButton
             href="/api/cron/run"
-            label="🔮 내일 예측 생성"
+            label="🔮 Tomorrow Predictions Create"
             body={{ action: "schedule_tomorrow_prediction" }}
           />
           <TaskActionButton
             href="/api/cron/run"
-            label="⟳ 대기 작업 실행"
+            label="⟳ Run Pending Task"
             body={{ action: "run_pending" }}
           />
         </div>
@@ -618,12 +618,12 @@ export default async function DashboardPage() {
       {recentRecords.length === 0 && (
         <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
           <p className="text-4xl mb-3">🥯</p>
-          <p className="text-gray-500 mb-4">아직 입력된 매출 데이터가 없습니다.</p>
+          <p className="text-gray-500 mb-4">No sales data entered yet.</p>
           <Link
             href="/sales/new"
             className="inline-flex items-center px-4 py-2 bg-amber-500 text-white rounded-md hover:bg-amber-600 transition-colors"
           >
-            첫 번째 매출 입력하기
+            Enter First Sales Record
           </Link>
         </div>
       )}
@@ -709,11 +709,11 @@ function StatusBadge({ status }: { status: string }) {
     validating: "bg-yellow-100 text-yellow-700",
   };
   const label: Record<string, string> = {
-    imported: "임포트됨",
-    ready: "준비완료",
-    failed: "실패",
-    pending: "대기중",
-    validating: "검증중",
+    imported: "Imported",
+    ready: "Ready",
+    failed: "Failed",
+    pending: "Pending",
+    validating: "Validating",
   };
   return (
     <span className={`px-2 py-0.5 rounded text-xs font-medium ${map[status] ?? "bg-gray-100 text-gray-700"}`}>

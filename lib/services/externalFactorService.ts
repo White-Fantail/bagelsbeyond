@@ -127,12 +127,12 @@ export async function upsertExternalFactorsByDate(
       windKph: null,
       sourceWeather: "open-meteo:failed",
     };
-    console.error(`[externalFactor] weather 실패 | date=${dateKey} | reason=${reason}`);
+    console.error(`[externalFactor] weather Failed | date=${dateKey} | reason=${reason}`);
   } else {
     // Provider returned null (no data available for this date, e.g. too far in the future)
     skippedProviders.push("weather");
     weatherData = { sourceWeather: null };
-    console.warn(`[externalFactor] weather 데이터 없음 (null 반환) | date=${dateKey}`);
+    console.warn(`[externalFactor] weather no data (returned null) | date=${dateKey}`);
   }
 
   // --- Holiday ---
@@ -216,7 +216,7 @@ export async function upsertExternalFactorsByDate(
 
   try {
     console.log(
-      `[externalFactor] upsert 시작 | date=${dateKey}` +
+      `[externalFactor] upsert Started | date=${dateKey}` +
       ` | weatherSummary=${upsertData.weatherSummary ?? "null"}` +
       ` | minTemp=${upsertData.minTemp ?? "null"}` +
       ` | maxTemp=${upsertData.maxTemp ?? "null"}` +

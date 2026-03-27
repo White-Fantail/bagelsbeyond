@@ -81,12 +81,12 @@ export async function runExternalFactorCollectionTask(taskId: string): Promise<v
   const task = await prisma.scheduledTask.findUnique({ where: { id: taskId } });
   if (!task) throw new Error(`Task not found: ${taskId}`);
   if (!task.targetDate) {
-    await markDone(taskId, "failed", { errorMessage: "targetDate가 없습니다." });
+    await markDone(taskId, "failed", { errorMessage: "targetDate is missing." });
     return;
   }
 
   await markRunning(taskId);
-  await addLog(taskId, `외부요인 수집 시작: ${toDateKey(task.targetDate)}`);
+  await addLog(taskId, `ExternalFactor Collect Started: ${toDateKey(task.targetDate)}`);
 
   try {
     const result = await upsertExternalFactorsByDate(new Date(task.targetDate));
@@ -103,18 +103,18 @@ export async function runExternalFactorCollectionTask(taskId: string): Promise<v
     });
 
     if (!result.success) {
-      await addLog(taskId, `수집 실패: ${result.warnings.join("; ")}`, "error");
+      await addLog(taskId, `Collect Failed: ${result.warnings.join("; ")}`, "error");
       await markDone(taskId, "failed", { resultSummary: summary, errorMessage: result.warnings.join("; ") });
     } else if (result.failedProviders.length > 0) {
-      await addLog(taskId, `부분 성공: ${result.failedProviders.length}개 provider 실패`, "warning");
+      await addLog(taskId, `Partial Success: ${result.failedProviders.length} provider Failed`, "warning");
       await markDone(taskId, "partial", { resultSummary: summary });
     } else {
-      await addLog(taskId, `수집 완료: ${result.collectedFields.join(", ")}`);
+      await addLog(taskId, `Collection complete: ${result.collectedFields.join(", ")}`);
       await markDone(taskId, "success", { resultSummary: summary });
     }
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    await addLog(taskId, `예외 발생: ${msg}`, "error");
+    await addLog(taskId, `Exception: ${msg}`, "error");
     await markDone(taskId, "failed", { errorMessage: msg });
   }
 }
@@ -127,7 +127,7 @@ export async function runPredictionGenerationTask(taskId: string): Promise<void>
   const task = await prisma.scheduledTask.findUnique({ where: { id: taskId } });
   if (!task) throw new Error(`Task not found: ${taskId}`);
   if (!task.targetDate) {
-    await markDone(taskId, "failed", { errorMessage: "targetDate가 없습니다." });
+    await markDone(taskId, "failed", { errorMessage: "targetDate is missing." });
     return;
   }
 
@@ -135,7 +135,7 @@ export async function runPredictionGenerationTask(taskId: string): Promise<void>
   const targetDate = new Date(task.targetDate);
   targetDate.setHours(0, 0, 0, 0);
   const dateStr = toDateKey(targetDate);
-  await addLog(taskId, `예측 생성 시작: ${dateStr}`);
+  await addLog(taskId, `Predictions Create Started: ${dateStr}`);
 
   try {
     // Check for existing prediction
@@ -145,27 +145,27 @@ export async function runPredictionGenerationTask(taskId: string): Promise<void>
       where: { targetDate: { gte: targetDate, lte: end } },
     });
     if (existingPrediction) {
-      await addLog(taskId, `예측이 이미 존재합니다 (id: ${existingPrediction.id}). 건너뜀.`);
-      await markDone(taskId, "skipped", { resultSummary: "예측 이미 존재" });
+      await addLog(taskId, `Prediction already exists (id: ${existingPrediction.id}). Skipped.`);
+      await markDone(taskId, "skipped", { resultSummary: "Prediction already exists" });
       return;
     }
 
     // Ensure external factors exist; collect if missing
     const existingFactor = await prisma.dailyExternalFactor.findUnique({ where: { date: targetDate } });
     if (!existingFactor) {
-      await addLog(taskId, `외부요인 없음 → 수집 시도: ${dateStr}`);
+      await addLog(taskId, `No ExternalFactor found — attempting to collect: ${dateStr}`);
       try {
         const r = await upsertExternalFactorsByDate(targetDate);
         if (!r.success) {
-          await addLog(taskId, `외부요인 수집 실패: ${r.warnings.join("; ")}`, "warning");
+          await addLog(taskId, `ExternalFactor Collect Failed: ${r.warnings.join("; ")}`, "warning");
         } else {
-          await addLog(taskId, `외부요인 수집 완료: ${r.collectedFields.join(", ")}`);
+          await addLog(taskId, `ExternalFactor Collection complete: ${r.collectedFields.join(", ")}`);
         }
       } catch (fe) {
-        await addLog(taskId, `외부요인 수집 예외: ${fe instanceof Error ? fe.message : String(fe)}`, "warning");
+        await addLog(taskId, `ExternalFactor collection exception: ${fe instanceof Error ? fe.message : String(fe)}`, "warning");
       }
     } else {
-      await addLog(taskId, `기존 외부요인 사용: ${dateStr}`);
+      await addLog(taskId, `Using existing ExternalFactor: ${dateStr}`);
     }
 
     // Build and save prediction
@@ -173,13 +173,13 @@ export async function runPredictionGenerationTask(taskId: string): Promise<void>
     const result = calculateRuleBasedPrediction(input);
     const savedPrediction = await savePredictionResult(result);
 
-    await addLog(taskId, `예측 생성 완료: id=${savedPrediction.id}, 예상매출=${result.predictedSales}`);
+    await addLog(taskId, `Predictions Create Completed: id=${savedPrediction.id}, PredictedSales=${result.predictedSales}`);
     await markDone(taskId, "success", {
-      resultSummary: `예측 id: ${savedPrediction.id} | 예상매출: ${Math.round(result.predictedSales)}`,
+      resultSummary: `Predictions id: ${savedPrediction.id} | PredictedSales: ${Math.round(result.predictedSales)}`,
     });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    await addLog(taskId, `예외 발생: ${msg}`, "error");
+    await addLog(taskId, `Exception: ${msg}`, "error");
     await markDone(taskId, "failed", { errorMessage: msg });
   }
 }

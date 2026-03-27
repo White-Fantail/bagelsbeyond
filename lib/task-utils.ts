@@ -47,12 +47,12 @@ export function toDateKey(date: Date): string {
 // ─── Status Label Helpers ──────────────────────────────────────────────────────
 
 const STATUS_LABELS: Record<TaskStatus, string> = {
-  pending:  "대기 중",
-  running:  "실행 중",
-  success:  "성공",
-  partial:  "부분 성공",
-  failed:   "실패",
-  skipped:  "건너뜀",
+  pending:  "Pending",
+  running:  "Running",
+  success:  "Success",
+  partial:  "Partial Success",
+  failed:   "Failed",
+  skipped:  "Skipped",
 };
 
 const STATUS_COLORS: Record<TaskStatus, string> = {
@@ -73,8 +73,8 @@ export function getTaskStatusColor(status: string): string {
 }
 
 const TASK_TYPE_LABELS: Record<TaskType, string> = {
-  collect_external_factors: "외부요인 수집",
-  generate_prediction:      "예측 생성",
+  collect_external_factors: "ExternalFactor Collect",
+  generate_prediction:      "Predictions Create",
 };
 
 export function formatTaskType(taskType: string): string {
@@ -94,12 +94,12 @@ export type TaskResultSummaryInput = {
 
 export function summarizeTaskResult(input: TaskResultSummaryInput): string {
   const parts: string[] = [];
-  if (input.totalDates != null) parts.push(`대상: ${input.totalDates}일`);
-  if (input.processedDates != null) parts.push(`처리: ${input.processedDates}일`);
-  if (input.failedDates != null && input.failedDates > 0) parts.push(`실패: ${input.failedDates}일`);
-  if (input.skippedDates != null && input.skippedDates > 0) parts.push(`건너뜀: ${input.skippedDates}일`);
+  if (input.totalDates != null) parts.push(`Target dates: ${input.totalDates}`);
+  if (input.processedDates != null) parts.push(`Processing: ${input.processedDates} days`);
+  if (input.failedDates != null && input.failedDates > 0) parts.push(`Failed: ${input.failedDates} days`);
+  if (input.skippedDates != null && input.skippedDates > 0) parts.push(`Skipped: ${input.skippedDates} days`);
   if (input.failedProviders && input.failedProviders.length > 0)
-    parts.push(`실패 provider: ${input.failedProviders.join(", ")}`);
+    parts.push(`Failed provider: ${input.failedProviders.join(", ")}`);
   if (input.extraInfo) parts.push(input.extraInfo);
   return parts.join(" | ");
 }

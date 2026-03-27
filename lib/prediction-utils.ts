@@ -20,7 +20,7 @@ export function getDayOfWeekKey(date: Date): string {
 }
 
 export function getDayOfWeekLabel(date: Date): string {
-  const labels = ["일요일", "월요일", "화요일", "수요일", "목요일", "금요일", "토요일"];
+  const labels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   return labels[date.getDay()];
 }
 
@@ -115,10 +115,10 @@ export function comparePredictedVsActual(
 
 export function getPredictionAccuracyLabel(salesErrorPct: number): string {
   const abs = Math.abs(salesErrorPct);
-  if (abs <= 5) return "정확";
-  if (abs <= 10) return salesErrorPct > 0 ? "약간 낮게 예측" : "약간 높게 예측";
-  if (abs <= 20) return salesErrorPct > 0 ? "낮게 예측" : "높게 예측";
-  return salesErrorPct > 0 ? "크게 낮게 예측" : "크게 높게 예측";
+  if (abs <= 5) return "Accurate";
+  if (abs <= 10) return salesErrorPct > 0 ? "Slightly underpredicted" : "Slightly overpredicted";
+  if (abs <= 20) return salesErrorPct > 0 ? "Underpredicted" : "Overpredicted";
+  return salesErrorPct > 0 ? "Significantly underpredicted" : "Significantly overpredicted";
 }
 
 export function calculateErrorRate(predicted: number, actual: number): number {

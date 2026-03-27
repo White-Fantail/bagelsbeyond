@@ -8,7 +8,7 @@ import CollectExternalButton from "@/components/CollectExternalButton";
 type Props = { params: Promise<{ date: string }> };
 
 function formatDate(date: Date) {
-  return date.toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric", weekday: "long" });
+  return date.toLocaleDateString("en-NZ", { year: "numeric", month: "long", day: "numeric", weekday: "long" });
 }
 
 export default async function ExternalFactorDetailPage({ params }: Props) {
@@ -18,8 +18,8 @@ export default async function ExternalFactorDetailPage({ params }: Props) {
   if (isNaN(parsedDate.getTime())) {
     return (
       <div className="space-y-4">
-        <p className="text-red-600">유효하지 않은 날짜입니다: {dateParam}</p>
-        <Link href="/external-factors" className="text-amber-600 hover:underline text-sm">← 목록으로</Link>
+        <p className="text-red-600">Invalid date: {dateParam}</p>
+        <Link href="/external-factors" className="text-amber-600 hover:underline text-sm">← Back to List</Link>
       </div>
     );
   }
@@ -40,10 +40,10 @@ export default async function ExternalFactorDetailPage({ params }: Props) {
       <div className="flex items-start justify-between gap-4">
         <div>
           <Link href="/external-factors" className="text-sm text-amber-600 hover:underline">
-            ← 외부 데이터 목록
+            ← External Data List
           </Link>
           <h1 className="text-2xl font-bold text-gray-900 mt-1">{formatDate(parsedDate)}</h1>
-          <p className="text-gray-500 text-sm mt-0.5">외부 요인 상세</p>
+          <p className="text-gray-500 text-sm mt-0.5">External Factors Details</p>
         </div>
         <CollectExternalButton date={dateParam} />
       </div>
@@ -52,93 +52,93 @@ export default async function ExternalFactorDetailPage({ params }: Props) {
       {factor ? (
         <>
           <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
-            <h2 className="text-base font-semibold text-gray-900 border-b border-gray-100 pb-2">날씨</h2>
+            <h2 className="text-base font-semibold text-gray-900 border-b border-gray-100 pb-2">Weather</h2>
             {factor.sourceWeather === "open-meteo:failed" && (
               <div className="bg-red-50 border border-red-200 rounded-md px-3 py-2 text-sm text-red-700 flex items-center gap-2">
                 <span>⚠️</span>
-                <span>날씨 수집 실패 — 수집 버튼을 다시 눌러 재시도하세요.</span>
+                <span>Weather Collection failed — click the collect button again to retry.</span>
               </div>
             )}
             {!factor.sourceWeather && !factor.weatherSummary && (
               <div className="bg-yellow-50 border border-yellow-200 rounded-md px-3 py-2 text-sm text-yellow-700 flex items-center gap-2">
                 <span>ℹ️</span>
-                <span>날씨 데이터가 없습니다. 수집 버튼을 눌러 수집하세요.</span>
+                <span>No weather data available. click the collect button.</span>
               </div>
             )}
             <dl className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-              <InfoItem label="날씨 요약" value={factor.weatherSummary ?? "—"} />
-              <InfoItem label="최저 기온" value={factor.minTemp != null ? `${factor.minTemp}°C` : "—"} />
-              <InfoItem label="최고 기온" value={factor.maxTemp != null ? `${factor.maxTemp}°C` : "—"} />
-              <InfoItem label="강수량" value={factor.rainMm != null ? `${factor.rainMm}mm` : "—"} />
-              <InfoItem label="풍속" value={factor.windKph != null ? `${factor.windKph}kph` : "—"} />
+              <InfoItem label="Weather Summary" value={factor.weatherSummary ?? "—"} />
+              <InfoItem label="Min Temp" value={factor.minTemp != null ? `${factor.minTemp}°C` : "—"} />
+              <InfoItem label="Max Temp" value={factor.maxTemp != null ? `${factor.maxTemp}°C` : "—"} />
+              <InfoItem label="Rainfall" value={factor.rainMm != null ? `${factor.rainMm}mm` : "—"} />
+              <InfoItem label="Wind Speed" value={factor.windKph != null ? `${factor.windKph}kph` : "—"} />
               {factor.sourceWeather && factor.sourceWeather !== "open-meteo:failed" && (
-                <InfoItem label="소스" value={factor.sourceWeather} />
+                <InfoItem label="Source" value={factor.sourceWeather} />
               )}
             </dl>
           </div>
 
           <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
-            <h2 className="text-base font-semibold text-gray-900 border-b border-gray-100 pb-2">공휴일 &amp; 방학</h2>
+            <h2 className="text-base font-semibold text-gray-900 border-b border-gray-100 pb-2">Holiday &amp; School Holiday</h2>
             <dl className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-              <InfoItem label="공휴일" value={factor.holidayName ?? "없음"} />
-              <InfoItem label="학교 방학" value={factor.schoolHoliday ? "예" : "아니오"} />
-              {factor.sourceHoliday && <InfoItem label="공휴일 소스" value={factor.sourceHoliday} />}
+              <InfoItem label="Holiday" value={factor.holidayName ?? "None"} />
+              <InfoItem label="School Holiday" value={factor.schoolHoliday ? "Yes" : "No"} />
+              {factor.sourceHoliday && <InfoItem label="Holiday Source" value={factor.sourceHoliday} />}
             </dl>
           </div>
 
           <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
-            <h2 className="text-base font-semibold text-gray-900 border-b border-gray-100 pb-2">이벤트 &amp; 뉴스</h2>
+            <h2 className="text-base font-semibold text-gray-900 border-b border-gray-100 pb-2">Event &amp; News</h2>
             <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <InfoItem label="지역 이벤트" value={factor.localEventName ?? "없음"} />
-              {factor.sourceEvents && <InfoItem label="이벤트 소스" value={factor.sourceEvents} />}
+              <InfoItem label="Local Event" value={factor.localEventName ?? "None"} />
+              {factor.sourceEvents && <InfoItem label="Event Source" value={factor.sourceEvents} />}
               {factor.nzNewsSummary && (
                 <div className="sm:col-span-2">
-                  <InfoItem label="뉴질랜드 뉴스" value={factor.nzNewsSummary} />
+                  <InfoItem label="NZ News" value={factor.nzNewsSummary} />
                 </div>
               )}
               {factor.worldNewsSummary && (
                 <div className="sm:col-span-2">
-                  <InfoItem label="국제 뉴스" value={factor.worldNewsSummary} />
+                  <InfoItem label="World News" value={factor.worldNewsSummary} />
                 </div>
               )}
-              {factor.sourceNews && <InfoItem label="뉴스 소스" value={factor.sourceNews} />}
+              {factor.sourceNews && <InfoItem label="News Source" value={factor.sourceNews} />}
             </dl>
           </div>
 
           {/* Meta info */}
           <div className="bg-gray-50 rounded-lg border border-gray-200 p-4 text-xs text-gray-500 grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <InfoItem label="수집 시각" value={factor.collectedAt ? new Date(factor.collectedAt).toLocaleString("ko-KR") : "—"} />
-            <InfoItem label="마지막 갱신" value={factor.lastRefreshedAt ? new Date(factor.lastRefreshedAt).toLocaleString("ko-KR") : "—"} />
-            <InfoItem label="생성일" value={new Date(factor.createdAt).toLocaleString("ko-KR")} />
+            <InfoItem label="Collected At" value={factor.collectedAt ? new Date(factor.collectedAt).toLocaleString("en-NZ") : "—"} />
+            <InfoItem label="Last Refreshed" value={factor.lastRefreshedAt ? new Date(factor.lastRefreshedAt).toLocaleString("en-NZ") : "—"} />
+            <InfoItem label="Created Date" value={new Date(factor.createdAt).toLocaleString("en-NZ")} />
             <InfoItem label="ID" value={factor.id.slice(0, 8) + "…"} />
           </div>
         </>
       ) : (
         <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
           <p className="text-gray-400 text-4xl">📭</p>
-          <p className="text-gray-600 mt-3 font-medium">이 날짜의 외부 데이터가 없습니다.</p>
-          <p className="text-gray-400 text-sm mt-1">위 &apos;외부 데이터 수집&apos; 버튼을 눌러 수집을 시작하세요.</p>
+          <p className="text-gray-600 mt-3 font-medium">No external data for this date.</p>
+          <p className="text-gray-400 text-sm mt-1">Click the &apos;Collect External Data&apos; button above to start collection.</p>
         </div>
       )}
 
       {/* Linked records */}
       {(dailyRecord || predictions.length > 0) && (
         <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-3">
-          <h2 className="text-base font-semibold text-gray-900 border-b border-gray-100 pb-2">연결된 데이터</h2>
+          <h2 className="text-base font-semibold text-gray-900 border-b border-gray-100 pb-2">Linked Data</h2>
           <div className="space-y-2">
             {dailyRecord && (
               <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-600">📊 매출 기록</span>
+                <span className="text-gray-600">📊 Sales Records</span>
                 <Link href={`/sales/${dailyRecord.id}`} className="text-amber-600 hover:underline">
-                  {formatDate(new Date(dailyRecord.date))} 보기 →
+                  {formatDate(new Date(dailyRecord.date))} View →
                 </Link>
               </div>
             )}
             {predictions.map((p: SalesPrediction) => (
               <div key={p.id} className="flex items-center justify-between text-sm">
-                <span className="text-gray-600">🔮 예측</span>
+                <span className="text-gray-600">🔮 Predictions</span>
                 <Link href={`/predictions/${p.id}`} className="text-blue-600 hover:underline">
-                  {new Date(p.createdAt).toLocaleString("ko-KR")} 보기 →
+                  {new Date(p.createdAt).toLocaleString("en-NZ")} View →
                 </Link>
               </div>
             ))}

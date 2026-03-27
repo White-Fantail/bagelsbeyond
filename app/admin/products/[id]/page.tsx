@@ -83,22 +83,22 @@ export default async function EditProductPage({
         <div>
           <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
             <Link href="/admin" className="hover:text-amber-600 transition-colors">
-              관리자 대시보드
+              Admin Dashboard
             </Link>
             <span>/</span>
             <Link href="/admin/products" className="hover:text-amber-600 transition-colors">
-              상품 관리
+              Product Management
             </Link>
           </div>
         </div>
         <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
-          <p className="text-lg font-medium text-gray-700">상품을 찾을 수 없습니다</p>
-          <p className="text-sm text-gray-400 mt-1">삭제되었거나 존재하지 않는 상품입니다</p>
+          <p className="text-lg font-medium text-gray-700">Product not found</p>
+          <p className="text-sm text-gray-400 mt-1">This product has been deleted or does not exist</p>
           <Link
             href="/admin/products"
             className="mt-4 inline-block px-4 py-2 bg-amber-500 text-white rounded-lg text-sm font-medium hover:bg-amber-600 transition-colors"
           >
-            상품 목록으로 돌아가기
+            Back to Products
           </Link>
         </div>
       </div>
@@ -138,17 +138,17 @@ export default async function EditProductPage({
         <div>
           <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
             <Link href="/admin" className="hover:text-amber-600 transition-colors">
-              관리자 대시보드
+              Admin Dashboard
             </Link>
             <span>/</span>
             <Link href="/admin/products" className="hover:text-amber-600 transition-colors">
-              상품 관리
+              Product Management
             </Link>
             <span>/</span>
             <span className="text-gray-700 font-medium">{product.name}</span>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">상품 수정</h1>
-          <p className="text-gray-500 mt-0.5 text-sm">상품 정보를 수정합니다</p>
+          <h1 className="text-2xl font-bold text-gray-900">Products Edit</h1>
+          <p className="text-gray-500 mt-0.5 text-sm">Edit product information</p>
         </div>
         <DeleteProductButton productId={product.id} productName={product.name} />
       </div>
@@ -162,31 +162,31 @@ export default async function EditProductPage({
         <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-3">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="font-semibold text-gray-900">Loyverse Modifier 매핑 상태</h2>
+              <h2 className="font-semibold text-gray-900">Loyverse Modifier Mapping Status</h2>
               <p className="text-sm text-gray-500 mt-0.5">
-                베이글 종류(Bagel Type)는 variant가 아닌 modifier 기준으로 관리됩니다.
-                주문 전송 전에 모든 옵션이 매핑되어 있어야 합니다.
+                Bagel types (Bagel Type) are managed by modifier, not variant..
+                All options must be mapped before sending orders..
               </p>
             </div>
             <Link
               href="/admin/integrations/loyverse/modifiers"
               className="shrink-0 px-3 py-1.5 rounded-lg text-sm bg-amber-500 text-white hover:bg-amber-600 transition-colors"
             >
-              매핑 관리 →
+              Manage Mapping →
             </Link>
           </div>
 
           <div className="flex gap-4 text-sm">
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
-              ✓ 매핑됨 {mappedCount}개
+              ✓ Mapped {mappedCount}
             </span>
             {unmappedActiveCount > 0 ? (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-600">
-                ✗ 미매핑 (활성) {unmappedActiveCount}개
+                ✗ Unmapped (Active) {unmappedActiveCount}
               </span>
             ) : (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
-                미매핑 없음
+                No unmapped
               </span>
             )}
           </div>
@@ -196,7 +196,7 @@ export default async function EditProductPage({
               <div className="bg-gray-50 border-b border-gray-100 px-4 py-2 text-xs font-semibold text-gray-600">
                 {group.name}
                 {group.isRequired && (
-                  <span className="ml-2 text-amber-600">* 필수</span>
+                  <span className="ml-2 text-amber-600">* Required</span>
                 )}
               </div>
               <ul className="divide-y divide-gray-100">
@@ -210,7 +210,7 @@ export default async function EditProductPage({
                         </span>
                         {opt.tracksInventory && (
                           <span className="text-xs px-1.5 py-0.5 rounded bg-purple-100 text-purple-700">
-                            재고추적
+                            Inventory Tracking
                           </span>
                         )}
                       </div>
@@ -218,7 +218,7 @@ export default async function EditProductPage({
                         {mapping ? (
                           <>
                             <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700">
-                              ✓ 매핑됨
+                              ✓ Mapped
                             </span>
                             <span className="text-xs text-gray-400 font-mono">
                               {mapping.externalName ?? mapping.externalOptionId}
@@ -226,11 +226,11 @@ export default async function EditProductPage({
                           </>
                         ) : opt.isActive ? (
                           <span className="text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-600">
-                            ✗ 미매핑
+                            ✗ Unmapped
                           </span>
                         ) : (
                           <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-400">
-                            비활성
+                            Inactive
                           </span>
                         )}
                       </div>

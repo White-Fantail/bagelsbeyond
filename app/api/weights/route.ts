@@ -9,7 +9,7 @@ export async function GET() {
     });
     return NextResponse.json(weights);
   } catch (_error) {
-    return NextResponse.json({ message: "데이터를 불러오는데 실패했습니다" }, { status: 500 });
+    return NextResponse.json({ message: "Failed to load data" }, { status: 500 });
   }
 }
 
@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { message: "입력값이 올바르지 않습니다", errors: parsed.error.flatten() },
+        { message: "Invalid input", errors: parsed.error.flatten() },
         { status: 400 }
       );
     }
@@ -28,6 +28,6 @@ export async function POST(req: NextRequest) {
     const weight = await prisma.predictionWeight.create({ data: parsed.data });
     return NextResponse.json(weight, { status: 201 });
   } catch (_error) {
-    return NextResponse.json({ message: "저장에 실패했습니다" }, { status: 500 });
+    return NextResponse.json({ message: "Save failed" }, { status: 500 });
   }
 }

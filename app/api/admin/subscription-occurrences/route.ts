@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
 
   const dateStr = req.nextUrl.searchParams.get("date");
   if (!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-    return NextResponse.json({ message: "날짜를 입력해주세요 (YYYY-MM-DD)" }, { status: 400 });
+    return NextResponse.json({ message: "Please enter a date (YYYY-MM-DD)" }, { status: 400 });
   }
 
   const date = new Date(dateStr + "T00:00:00.000Z");
@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
     });
     return NextResponse.json({ occurrences });
   } catch {
-    return NextResponse.json({ message: "발생 목록을 불러오지 못했습니다" }, { status: 500 });
+    return NextResponse.json({ message: "Failed to load occurrence list" }, { status: 500 });
   }
 }
 
@@ -48,12 +48,12 @@ export async function POST(req: NextRequest) {
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ message: "요청 본문이 올바르지 않습니다" }, { status: 400 });
+    return NextResponse.json({ message: "Invalid request body" }, { status: 400 });
   }
 
   const parsed = postSchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ message: parsed.error.issues[0]?.message ?? "입력 오류" }, { status: 400 });
+    return NextResponse.json({ message: parsed.error.issues[0]?.message ?? "Input error" }, { status: 400 });
   }
 
   const date = new Date(parsed.data.date + "T00:00:00.000Z");
@@ -66,6 +66,6 @@ export async function POST(req: NextRequest) {
     }
     return NextResponse.json({ occurrences: occResult, orders: orderResult });
   } catch {
-    return NextResponse.json({ message: "발생 생성 중 오류가 발생했습니다" }, { status: 500 });
+    return NextResponse.json({ message: "Error creating occurrence" }, { status: 500 });
   }
 }

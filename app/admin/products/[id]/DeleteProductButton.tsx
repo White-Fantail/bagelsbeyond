@@ -16,7 +16,7 @@ export default function DeleteProductButton({
 
   const handleDelete = async () => {
     const confirmed = window.confirm(
-      `"${productName}" 상품을 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.`
+      `Delete "${productName}"?\n\nThis action cannot be undone.`
     );
     if (!confirmed) return;
 
@@ -28,12 +28,12 @@ export default function DeleteProductButton({
       });
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.message || "삭제에 실패했습니다");
+        throw new Error(data.message || "Delete failed");
       }
       router.push("/admin/products");
     } catch (e) {
       setStatus("idle");
-      setError(e instanceof Error ? e.message : "삭제에 실패했습니다");
+      setError(e instanceof Error ? e.message : "Delete failed");
     }
   };
 
@@ -44,7 +44,7 @@ export default function DeleteProductButton({
         disabled={status === "loading"}
         className="px-4 py-2 bg-red-50 text-red-600 border border-red-200 rounded-lg text-sm font-medium hover:bg-red-100 transition-colors disabled:opacity-50 whitespace-nowrap"
       >
-        {status === "loading" ? "삭제 중..." : "상품 삭제"}
+        {status === "loading" ? "Deleting......" : "Products Delete"}
       </button>
       {error && <p className="text-xs text-red-600">{error}</p>}
     </div>

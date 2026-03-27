@@ -11,9 +11,9 @@ import type { Role } from "@/app/generated/prisma/enums";
 // ── Role display metadata ──────────────────────────────────────────────────────
 
 const ROLE_LABELS: Record<Role, string> = {
-  ADMIN: "관리자",
-  STAFF: "직원",
-  CUSTOMER: "고객",
+  ADMIN: "Admin",
+  STAFF: "Staff",
+  CUSTOMER: "Customer",
 };
 
 const ROLE_BADGE_CLASS: Record<Role, string> = {
@@ -62,7 +62,7 @@ export default function Navigation({ session }: NavigationProps) {
       {/* ── Top bar ── */}
       <header
         className="fixed top-0 right-0 left-0 lg:left-64 h-16 bg-white border-b border-gray-200 z-20 flex items-center px-4 sm:px-6"
-        aria-label="상단 바"
+        aria-label="top bar"
       >
         {/* Mobile: hamburger + store name */}
         <div className="flex items-center gap-3 lg:hidden">
@@ -70,7 +70,7 @@ export default function Navigation({ session }: NavigationProps) {
             type="button"
             onClick={() => setIsDrawerOpen(true)}
             className="p-2 rounded-md text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors"
-            aria-label="메뉴 열기"
+            aria-label="Open Menu"
             aria-expanded={isDrawerOpen}
           >
             <svg
@@ -91,7 +91,7 @@ export default function Navigation({ session }: NavigationProps) {
           <Link href="/" className="flex items-center gap-2">
             <span className="text-lg font-bold text-amber-600">🥯</span>
             <span className="text-base font-semibold text-gray-900">
-              베이글스 비욘드
+              Bagels Beyond
             </span>
           </Link>
         </div>
@@ -126,7 +126,7 @@ export default function Navigation({ session }: NavigationProps) {
                 disabled={isPending}
                 className="text-xs px-3 py-1.5 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50"
               >
-                {isPending ? "…" : "로그아웃"}
+                {isPending ? "…" : "Sign out"}
               </button>
             </>
           ) : (
@@ -135,13 +135,13 @@ export default function Navigation({ session }: NavigationProps) {
                 href="/login"
                 className="text-sm px-3 py-1.5 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
               >
-                로그인
+                Login
               </Link>
               <Link
                 href="/signup"
                 className="text-sm px-3 py-1.5 rounded-md bg-amber-600 text-white hover:bg-amber-700 transition-colors"
               >
-                회원가입
+                Sign Up
               </Link>
             </div>
           )}

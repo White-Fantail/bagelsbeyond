@@ -5,7 +5,7 @@ import { prisma } from "@/lib/db";
 import type { DailyExternalFactor } from "@/types";
 
 function formatDate(date: Date) {
-  return date.toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric", weekday: "short" });
+  return date.toLocaleDateString("en-NZ", { year: "numeric", month: "long", day: "numeric", weekday: "short" });
 }
 
 export default async function ExternalFactorsPage({
@@ -33,8 +33,8 @@ export default async function ExternalFactorsPage({
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">외부 데이터 관리</h1>
-          <p className="text-gray-500 mt-1">날짜별 자동 수집된 외부 요인 데이터</p>
+          <h1 className="text-2xl font-bold text-gray-900">External Data management</h1>
+          <p className="text-gray-500 mt-1">External factors data auto-collected by date</p>
         </div>
         <CollectTodayButton />
       </div>
@@ -45,20 +45,20 @@ export default async function ExternalFactorsPage({
       {factors.length === 0 ? (
         <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
           <p className="text-gray-400 text-lg">📭</p>
-          <p className="text-gray-500 mt-2">수집된 외부 데이터가 없습니다.</p>
-          <p className="text-gray-400 text-sm mt-1">매출 기록 또는 예측 생성 시 자동 수집됩니다.</p>
+          <p className="text-gray-500 mt-2">No external data collected.</p>
+          <p className="text-gray-400 text-sm mt-1">Auto-collected on new Sales Records or Predictions.</p>
         </div>
       ) : (
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">날짜</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">날씨</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">공휴일</th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600">학교방학</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">이벤트</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">수집 시각</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">Date</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">Weather</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">Holiday</th>
+                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600">School Holiday</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">Event</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">Collected At</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -97,7 +97,7 @@ export default async function ExternalFactorsPage({
                     </td>
                     <td className="px-4 py-3 text-center">
                       {f.schoolHoliday ? (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">방학</span>
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">School Holiday</span>
                       ) : (
                         <span className="text-gray-300">—</span>
                       )}
@@ -111,7 +111,7 @@ export default async function ExternalFactorsPage({
                     </td>
                     <td className="px-4 py-3 text-gray-400 text-xs">
                       {f.collectedAt
-                        ? new Date(f.collectedAt).toLocaleDateString("ko-KR")
+                        ? new Date(f.collectedAt).toLocaleDateString("en-NZ")
                         : <span className="text-gray-300">—</span>}
                     </td>
                   </tr>
@@ -129,7 +129,7 @@ function FilterForm({ from, to }: { from?: string; to?: string }) {
   return (
     <form method="GET" className="flex items-end gap-3 bg-white rounded-lg border border-gray-200 p-4">
       <div>
-        <label className="block text-xs font-medium text-gray-600 mb-1">시작일</label>
+        <label className="block text-xs font-medium text-gray-600 mb-1">Start Date</label>
         <input
           type="date"
           name="from"
@@ -138,7 +138,7 @@ function FilterForm({ from, to }: { from?: string; to?: string }) {
         />
       </div>
       <div>
-        <label className="block text-xs font-medium text-gray-600 mb-1">종료일</label>
+        <label className="block text-xs font-medium text-gray-600 mb-1">End Date</label>
         <input
           type="date"
           name="to"
@@ -150,11 +150,11 @@ function FilterForm({ from, to }: { from?: string; to?: string }) {
         type="submit"
         className="px-4 py-1.5 bg-amber-500 text-white rounded-md text-sm hover:bg-amber-600 transition-colors"
       >
-        필터
+        Filter
       </button>
       {(from || to) && (
         <Link href="/external-factors" className="px-4 py-1.5 border border-gray-300 text-gray-600 rounded-md text-sm hover:bg-gray-50 transition-colors">
-          초기화
+          Reset
         </Link>
       )}
     </form>
@@ -169,7 +169,7 @@ function CollectTodayButton() {
       href={`/external-factors/${today}`}
       className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700 transition-colors font-medium"
     >
-      오늘 데이터 보기/수집
+      View/Collect Today&apos;s Data
     </Link>
   );
 }

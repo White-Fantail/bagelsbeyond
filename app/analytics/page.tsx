@@ -52,11 +52,11 @@ function getPeriodDates(period: string): { startDate: Date; endDate: Date } {
 }
 
 const PERIOD_OPTIONS = [
-  { value: "7d", label: "최근 7일" },
-  { value: "30d", label: "최근 30일" },
-  { value: "90d", label: "최근 90일" },
-  { value: "thisMonth", label: "이번 달" },
-  { value: "lastMonth", label: "지난 달" },
+  { value: "7d", label: "Recent 7 days" },
+  { value: "30d", label: "Recent 30 days" },
+  { value: "90d", label: "Recent 90 days" },
+  { value: "thisMonth", label: "This Month" },
+  { value: "lastMonth", label: "Last Month" },
 ];
 
 export default async function AnalyticsPage({
@@ -89,9 +89,9 @@ export default async function AnalyticsPage({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">📊 매출 분석</h1>
+        <h1 className="text-2xl font-bold text-gray-900">📊 Sales Analytics</h1>
         <p className="text-gray-500 mt-1">
-          {startDate.toLocaleDateString("ko-KR")} ~ {endDate.toLocaleDateString("ko-KR")}
+          {startDate.toLocaleDateString("en-NZ")} ~ {endDate.toLocaleDateString("en-NZ")}
         </p>
       </div>
 
@@ -115,42 +115,42 @@ export default async function AnalyticsPage({
       {/* Summary Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="bg-white rounded-lg border border-t-4 border-t-amber-500 border-gray-200 p-5">
-          <p className="text-sm text-gray-500">총 매출</p>
+          <p className="text-sm text-gray-500">Total Sales</p>
           <p className="text-2xl font-bold text-gray-900 mt-1">
             {formatCurrencyNZD(summary.totalSales)}
           </p>
-          <p className="text-xs text-gray-400 mt-1">{summary.recordCount}일 기록</p>
+          <p className="text-xs text-gray-400 mt-1">{summary.recordCount} days recorded</p>
         </div>
         <div className="bg-white rounded-lg border border-t-4 border-t-blue-500 border-gray-200 p-5">
-          <p className="text-sm text-gray-500">일평균 매출</p>
+          <p className="text-sm text-gray-500">Daily Avg. Sales</p>
           <p className="text-2xl font-bold text-gray-900 mt-1">
             {formatCurrencyNZD(summary.averageDailySales)}
           </p>
-          <p className="text-xs text-gray-400 mt-1">기간 평균</p>
+          <p className="text-xs text-gray-400 mt-1">Period average</p>
         </div>
         <div className="bg-white rounded-lg border border-t-4 border-t-green-500 border-gray-200 p-5">
-          <p className="text-sm text-gray-500">총 판매 베이글</p>
+          <p className="text-sm text-gray-500">Total Sold Bagels</p>
           <p className="text-2xl font-bold text-gray-900 mt-1">
-            {summary.totalBagelsSold}개
+            {summary.totalBagelsSold}
           </p>
           <p className="text-xs text-gray-400 mt-1">
-            일평균 {Math.round(summary.averageBagelsSold)}개
+            Daily Avg. {Math.round(summary.averageBagelsSold)}
           </p>
         </div>
         <div className="bg-white rounded-lg border border-t-4 border-t-red-500 border-gray-200 p-5">
-          <p className="text-sm text-gray-500">평균 폐기율</p>
+          <p className="text-sm text-gray-500">Avg. Waste Rate</p>
           <p className="text-2xl font-bold text-gray-900 mt-1">
             {formatPercentage(summary.wasteRate)}
           </p>
           <p className="text-xs text-gray-400 mt-1">
-            판매율 {formatPercentage(summary.sellThroughRate)}
+            Sell-through {formatPercentage(summary.sellThroughRate)}
           </p>
         </div>
       </div>
 
       {/* Channel Breakdown */}
       <div className="bg-white rounded-lg border border-gray-200 p-5">
-        <h3 className="text-sm font-semibold text-gray-700 mb-4">채널별 매출 비중</h3>
+        <h3 className="text-sm font-semibold text-gray-700 mb-4">By Channel Sales Share</h3>
         <ChannelBar
           storePercent={summary.storePercent}
           uberPercent={summary.uberPercent}
@@ -159,10 +159,10 @@ export default async function AnalyticsPage({
         />
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
           {[
-            { label: "매장", amount: summary.storeSales, pct: summary.storePercent, color: "bg-blue-500" },
-            { label: "우버이츠", amount: summary.uberSales, pct: summary.uberPercent, color: "bg-green-500" },
-            { label: "도어대쉬", amount: summary.doordashSales, pct: summary.doordashPercent, color: "bg-red-500" },
-            { label: "기타", amount: summary.otherSales, pct: summary.otherPercent, color: "bg-gray-400" },
+            { label: "Store", amount: summary.storeSales, pct: summary.storePercent, color: "bg-blue-500" },
+            { label: "Uber Eats", amount: summary.uberSales, pct: summary.uberPercent, color: "bg-green-500" },
+            { label: "DoorDash", amount: summary.doordashSales, pct: summary.doordashPercent, color: "bg-red-500" },
+            { label: "Other", amount: summary.otherSales, pct: summary.otherPercent, color: "bg-gray-400" },
           ].map((ch) => (
             <div key={ch.label} className="text-center">
               <div className={`inline-block w-3 h-3 rounded-full ${ch.color} mb-1`} />
@@ -178,7 +178,7 @@ export default async function AnalyticsPage({
 
       {/* Period Comparison */}
       <div>
-        <h2 className="text-base font-semibold text-gray-900 mb-3">기간 비교</h2>
+        <h2 className="text-base font-semibold text-gray-900 mb-3">Period Comparison</h2>
         <PeriodComparisonSection comparison={comparison} />
       </div>
 
@@ -186,9 +186,9 @@ export default async function AnalyticsPage({
       {weeklyData.length > 0 && (
         <div className="bg-white rounded-lg border border-gray-200 p-5">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-gray-700">주별 매출 추이 (최근 8주)</h3>
+            <h3 className="text-sm font-semibold text-gray-700">Weekly Sales Trend (recent 8 weeks)</h3>
             <Link href="/analytics/weekly" className="text-xs text-amber-600 hover:underline">
-              주별 분석 →
+              Weekly Analysis →
             </Link>
           </div>
           <div className="space-y-2">
@@ -213,15 +213,15 @@ export default async function AnalyticsPage({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {holidaySeg.segment.recordCount > 0 && (
           <div className="bg-white rounded-lg border border-gray-200 p-4">
-            <h3 className="text-sm font-semibold text-gray-700 mb-2">🎌 공휴일 영향</h3>
+            <h3 className="text-sm font-semibold text-gray-700 mb-2">🎌 Holiday Impact</h3>
             <div className="flex justify-between text-sm">
-              <span className="text-gray-500">공휴일 평균 매출</span>
+              <span className="text-gray-500">Holiday Avg. Sales</span>
               <span className="font-semibold text-amber-700">
                 {formatCurrencyNZD(holidaySeg.segment.averageDailySales)}
               </span>
             </div>
             <div className="flex justify-between text-sm mt-1">
-              <span className="text-gray-500">일반일 평균 매출</span>
+              <span className="text-gray-500">Regular Day Avg. Sales</span>
               <span className="font-medium text-gray-700">
                 {formatCurrencyNZD(holidaySeg.baseline.averageDailySales)}
               </span>
@@ -232,24 +232,24 @@ export default async function AnalyticsPage({
               }`}
             >
               {holidaySeg.salesDiffPercent >= 0 ? "▲ +" : "▼ "}
-              {holidaySeg.salesDiffPercent.toFixed(1)}% 차이
+              {holidaySeg.salesDiffPercent.toFixed(1)}% difference
             </div>
             <Link href="/analytics/segments" className="text-xs text-amber-600 hover:underline mt-2 block">
-              세그먼트 상세 →
+              Segment Details →
             </Link>
           </div>
         )}
         {schoolHolidaySeg.segment.recordCount > 0 && (
           <div className="bg-white rounded-lg border border-gray-200 p-4">
-            <h3 className="text-sm font-semibold text-gray-700 mb-2">🏫 학교 방학 영향</h3>
+            <h3 className="text-sm font-semibold text-gray-700 mb-2">🏫 School Holiday Impact</h3>
             <div className="flex justify-between text-sm">
-              <span className="text-gray-500">방학 기간 평균 매출</span>
+              <span className="text-gray-500">School Holiday Period Avg. Sales</span>
               <span className="font-semibold text-amber-700">
                 {formatCurrencyNZD(schoolHolidaySeg.segment.averageDailySales)}
               </span>
             </div>
             <div className="flex justify-between text-sm mt-1">
-              <span className="text-gray-500">학기 중 평균 매출</span>
+              <span className="text-gray-500">In-Term Avg. Sales</span>
               <span className="font-medium text-gray-700">
                 {formatCurrencyNZD(schoolHolidaySeg.baseline.averageDailySales)}
               </span>
@@ -260,10 +260,10 @@ export default async function AnalyticsPage({
               }`}
             >
               {schoolHolidaySeg.salesDiffPercent >= 0 ? "▲ +" : "▼ "}
-              {schoolHolidaySeg.salesDiffPercent.toFixed(1)}% 차이
+              {schoolHolidaySeg.salesDiffPercent.toFixed(1)}% difference
             </div>
             <Link href="/analytics/segments" className="text-xs text-amber-600 hover:underline mt-2 block">
-              세그먼트 상세 →
+              Segment Details →
             </Link>
           </div>
         )}
@@ -273,23 +273,23 @@ export default async function AnalyticsPage({
       <div className="bg-white rounded-lg border border-gray-200 p-5">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="text-sm font-semibold text-gray-700">📅 요일별 분석</h3>
-            <p className="text-xs text-gray-400 mt-0.5">선택 기간 내 요일별 평균 매출 및 판매량</p>
+            <h3 className="text-sm font-semibold text-gray-700">📅 Day-of-Week Analysis</h3>
+            <p className="text-xs text-gray-400 mt-0.5">Daily avg. sales and sold qty for the selected period</p>
           </div>
         </div>
         <DayOfWeekTable data={dayOfWeekData} />
         <p className="text-xs text-gray-400 mt-3">
-          * 전체 대비: 해당 기간 일평균 매출 대비 각 요일 평균 매출의 증감률
+          * vs. All: change rate of each day&apos;s avg. sales vs. the period&apos;s daily avg. sales
         </p>
       </div>
 
       {/* Quick Navigation */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
-          { href: "/analytics/daily", label: "📅 일별 분석", desc: "날짜별 상세" },
-          { href: "/analytics/weekly", label: "📆 주별 분석", desc: "주간 트렌드" },
-          { href: "/analytics/monthly", label: "🗓️ 월별 분석", desc: "월간 요약" },
-          { href: "/analytics/segments", label: "🔍 세그먼트", desc: "조건별 비교" },
+          { href: "/analytics/daily", label: "📅 Daily Analytics", desc: "Details by date" },
+          { href: "/analytics/weekly", label: "📆 Weekly Analysis", desc: "Weekly trends" },
+          { href: "/analytics/monthly", label: "🗓️ Monthly Analytics", desc: "Monthly summary" },
+          { href: "/analytics/segments", label: "🔍 segments", desc: "Compare by condition" },
         ].map((item) => (
           <Link
             key={item.href}

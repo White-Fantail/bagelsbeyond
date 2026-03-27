@@ -40,10 +40,10 @@ export default async function WeeklyAnalyticsPage({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">📆 주별 분석</h1>
+        <h1 className="text-2xl font-bold text-gray-900">📆 Weekly Analysis</h1>
         <p className="text-gray-500 mt-1">
-          {startDate.toLocaleDateString("ko-KR")} ~ {endDate.toLocaleDateString("ko-KR")}
-          {" "}({weeks.length}주)
+          {startDate.toLocaleDateString("en-NZ")} ~ {endDate.toLocaleDateString("en-NZ")}
+          {" "}({weeks.length} weeks)
         </p>
       </div>
 
@@ -51,23 +51,23 @@ export default async function WeeklyAnalyticsPage({
       {bestWeek && worstWeek && weeks.length > 1 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="bg-green-50 rounded-lg border border-green-200 p-4">
-            <p className="text-xs text-green-600 font-medium mb-1">🏆 최고 주</p>
+            <p className="text-xs text-green-600 font-medium mb-1">🏆 Best Week</p>
             <p className="font-semibold text-gray-900">{bestWeek.weekLabel}</p>
             <p className="text-lg font-bold text-green-700 mt-1">
               {formatCurrencyNZD(bestWeek.totalSales)}
             </p>
             <p className="text-xs text-gray-500 mt-0.5">
-              {bestWeek.recordCount}일 · 일평균 {formatCurrencyNZD(bestWeek.averageDailySales)}
+              {bestWeek.recordCount} days · Daily Avg. {formatCurrencyNZD(bestWeek.averageDailySales)}
             </p>
           </div>
           <div className="bg-red-50 rounded-lg border border-red-200 p-4">
-            <p className="text-xs text-red-600 font-medium mb-1">📉 최저 주</p>
+            <p className="text-xs text-red-600 font-medium mb-1">📉 Worst Week</p>
             <p className="font-semibold text-gray-900">{worstWeek.weekLabel}</p>
             <p className="text-lg font-bold text-red-700 mt-1">
               {formatCurrencyNZD(worstWeek.totalSales)}
             </p>
             <p className="text-xs text-gray-500 mt-0.5">
-              {worstWeek.recordCount}일 · 일평균 {formatCurrencyNZD(worstWeek.averageDailySales)}
+              {worstWeek.recordCount} days · Daily Avg. {formatCurrencyNZD(worstWeek.averageDailySales)}
             </p>
           </div>
         </div>
@@ -75,13 +75,13 @@ export default async function WeeklyAnalyticsPage({
 
       {weeks.length === 0 ? (
         <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-          <p className="text-gray-400">해당 기간에 데이터가 없습니다.</p>
+          <p className="text-gray-400">No data for this period..</p>
         </div>
       ) : (
         <>
           {/* Bar Chart */}
           <div className="bg-white rounded-lg border border-gray-200 p-5">
-            <h3 className="text-sm font-semibold text-gray-700 mb-4">주별 총 매출</h3>
+            <h3 className="text-sm font-semibold text-gray-700 mb-4">Weekly Total Sales</h3>
             <div className="space-y-2">
               {weeks.map((week) => (
                 <div key={week.weekStart} className="flex items-center gap-3">
@@ -114,12 +114,12 @@ export default async function WeeklyAnalyticsPage({
             <table className="min-w-full divide-y divide-gray-200 text-sm">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">주</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">총 매출</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">일평균</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">판매 베이글</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">평균 폐기율</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">전주 대비</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Week</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Total Sales</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Daily Avg.</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Sold Bagels</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Avg. Waste Rate</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">vs. Last Week</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -142,7 +142,7 @@ export default async function WeeklyAnalyticsPage({
                     >
                       <td className="px-4 py-3 font-medium text-gray-900">
                         {week.weekLabel}
-                        <span className="text-xs text-gray-400 ml-2">({week.recordCount}일)</span>
+                        <span className="text-xs text-gray-400 ml-2">({week.recordCount} days)</span>
                       </td>
                       <td className="px-4 py-3 text-right font-medium text-gray-900">
                         {formatCurrencyNZD(week.totalSales)}
@@ -151,7 +151,7 @@ export default async function WeeklyAnalyticsPage({
                         {formatCurrencyNZD(week.averageDailySales)}
                       </td>
                       <td className="px-4 py-3 text-right text-gray-700">
-                        {week.totalBagelsSold}개
+                        {week.totalBagelsSold}
                       </td>
                       <td
                         className={`px-4 py-3 text-right font-medium ${
@@ -202,8 +202,8 @@ export default async function WeeklyAnalyticsPage({
                     </span>
                   </div>
                   <div className="text-sm text-gray-500 flex gap-3">
-                    <span>일평균 {formatCurrencyNZD(week.averageDailySales)}</span>
-                    <span>폐기율 {formatPercentage(week.wasteRate)}</span>
+                    <span>Daily Avg. {formatCurrencyNZD(week.averageDailySales)}</span>
+                    <span>Waste Rate {formatPercentage(week.wasteRate)}</span>
                     {changePercent !== null && (
                       <span className={changePercent >= 0 ? "text-green-600" : "text-red-600"}>
                         {changePercent >= 0 ? "▲ +" : "▼ "}{changePercent.toFixed(1)}%

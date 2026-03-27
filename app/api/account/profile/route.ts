@@ -6,8 +6,8 @@ import { apiRequireAuth, isNextResponse } from "@/lib/auth/dal";
 const patchSchema = z.object({
   name: z
     .string()
-    .min(1, "이름을 입력해주세요")
-    .max(100, "이름이 너무 깁니다")
+    .min(1, "Please enter your name")
+    .max(100, "Name is too long")
     .trim(),
 });
 
@@ -21,13 +21,13 @@ export async function PATCH(req: NextRequest) {
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ message: "요청 본문이 올바르지 않습니다" }, { status: 400 });
+    return NextResponse.json({ message: "Invalid request body" }, { status: 400 });
   }
 
   const parsed = patchSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { message: parsed.error.issues[0]?.message ?? "입력값이 올바르지 않습니다" },
+      { message: parsed.error.issues[0]?.message ?? "Invalid input" },
       { status: 400 }
     );
   }
@@ -45,7 +45,7 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ user: updated });
   } catch {
     return NextResponse.json(
-      { message: "프로필 업데이트에 실패했습니다" },
+      { message: "Failed to update profile" },
       { status: 500 }
     );
   }

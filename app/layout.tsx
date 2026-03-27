@@ -5,8 +5,8 @@ import Sidebar from "@/components/navigation/Sidebar";
 import { getSession } from "@/lib/auth/session";
 
 export const metadata: Metadata = {
-  title: "베이글스 비욘드 매출 관리",
-  description: "베이글스 비욘드 매출 관리 대장",
+  title: "Bagels Beyond Sales Management",
+  description: "Bagels Beyond Sales Management",
 };
 
 export default async function RootLayout({

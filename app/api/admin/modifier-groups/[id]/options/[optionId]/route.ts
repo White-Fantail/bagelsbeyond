@@ -32,20 +32,20 @@ export async function PATCH(
     },
   });
   if (!option) {
-    return NextResponse.json({ message: "옵션을 찾을 수 없습니다" }, { status: 404 });
+    return NextResponse.json({ message: "Option not found" }, { status: 404 });
   }
 
   let body: unknown;
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ message: "요청 본문이 올바르지 않습니다" }, { status: 400 });
+    return NextResponse.json({ message: "Invalid request body" }, { status: 400 });
   }
 
   const parsed = updateSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { message: "입력값이 올바르지 않습니다", errors: parsed.error.flatten() },
+      { message: "Invalid input", errors: parsed.error.flatten() },
       { status: 400 }
     );
   }
@@ -62,7 +62,7 @@ export async function PATCH(
     const updated = await prisma.productOption.update({ where: { id: optionId }, data });
     return NextResponse.json({ option: updated });
   } catch {
-    return NextResponse.json({ message: "옵션 수정에 실패했습니다" }, { status: 500 });
+    return NextResponse.json({ message: "Options Edit failed" }, { status: 500 });
   }
 }
 
@@ -85,12 +85,12 @@ export async function DELETE(
     },
   });
   if (!option) {
-    return NextResponse.json({ message: "옵션을 찾을 수 없습니다" }, { status: 404 });
+    return NextResponse.json({ message: "Option not found" }, { status: 404 });
   }
 
   if (option.externalOptionMappings.length > 0) {
     return NextResponse.json(
-      { message: "Loyverse sync된 옵션은 삭제할 수 없습니다" },
+      { message: "Cannot delete Loyverse-synced options" },
       { status: 403 }
     );
   }
@@ -99,6 +99,6 @@ export async function DELETE(
     await prisma.productOption.delete({ where: { id: optionId } });
     return NextResponse.json({ ok: true });
   } catch {
-    return NextResponse.json({ message: "옵션 삭제에 실패했습니다" }, { status: 500 });
+    return NextResponse.json({ message: "Options Delete failed" }, { status: 500 });
   }
 }

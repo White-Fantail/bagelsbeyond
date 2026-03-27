@@ -193,17 +193,17 @@ export default async function AdminModifiersPage({ searchParams }: { searchParam
       <div className="flex items-start justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
-            <Link href="/admin" className="hover:text-amber-600">관리자 대시보드</Link>
+            <Link href="/admin" className="hover:text-amber-600">Admin Dashboard</Link>
             <span>/</span>
-            <span className="text-gray-700 font-medium">모디파이어 관리</span>
+            <span className="text-gray-700 font-medium">Modifier Management</span>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">모디파이어 관리</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Modifier Management</h1>
           <p className="text-gray-500 mt-0.5 text-sm">
-            모디파이어 그룹과 옵션을 생성·수정하고, 상품에서 연결할 수 있습니다
+            Create and edit modifier groups and options, and link them to products.
           </p>
         </div>
         <Link href="/admin/inventory" className="px-3 py-2 bg-amber-500 text-white rounded-lg text-sm font-medium hover:bg-amber-600 whitespace-nowrap">
-          재고 관리 →
+          Inventory Management →
         </Link>
       </div>
 
@@ -220,15 +220,15 @@ export default async function AdminModifiersPage({ searchParams }: { searchParam
         >
           <p className="font-semibold">
             {lastFullSync.status === "success"
-              ? "✓ Loyverse 마지막 전체 동기화 성공"
+              ? "✓ Loyverse Last Full Sync successful"
               : lastFullSync.status === "partial"
-              ? "⚠ Loyverse 마지막 전체 동기화 부분 완료"
-              : "✗ Loyverse 마지막 전체 동기화 실패"}
+              ? "⚠ Loyverse Last Full Sync partially complete"
+              : "✗ Loyverse Last Full Sync Failed"}
           </p>
           <p className="text-xs">
-            {lastFullSync.syncedAt.toLocaleString("ko-KR")}
+            {lastFullSync.syncedAt.toLocaleString("en-NZ")}
             {lastFullSync.status !== "failed" && (
-              <> · 그룹 {lastFullSync.modifierGroupsUpserted}개 · 옵션 {lastFullSync.modifierOptionsUpserted}개 · 링크 {lastFullSync.modifierLinksUpdated}건</>
+              <> · Groups {lastFullSync.modifierGroupsUpserted} · Options {lastFullSync.modifierOptionsUpserted} · Links {lastFullSync.modifierLinksUpdated}</>
             )}
             {lastFullSync.errorMessage && (
               <span className="text-red-600 ml-2 font-mono">{lastFullSync.errorMessage}</span>
@@ -237,27 +237,27 @@ export default async function AdminModifiersPage({ searchParams }: { searchParam
         </div>
       ) : (
         <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-          <p className="font-semibold">⚠ 동기화 이력 없음</p>
-          <p className="text-xs mt-0.5">아직 Loyverse 전체 동기화가 실행된 적 없습니다. 아래 버튼으로 동기화하세요.</p>
+          <p className="font-semibold">⚠ No Sync History</p>
+          <p className="text-xs mt-0.5">Loyverse Full Sync has never been run. Use the button below to sync.</p>
         </div>
       )}
 
       {/* Shared-inventory notice */}
       <div className="rounded-lg border border-purple-100 bg-purple-50 p-4 text-sm text-purple-800">
-        <p className="font-semibold">💡 Modifier는 공용 재고 단위입니다</p>
+        <p className="font-semibold">💡 Modifiers are shared Inventory units</p>
         <p className="text-xs mt-0.5">
-          <code className="bg-purple-100 rounded px-1">tracksInventory=true</code>인 Modifier Option은 여러 상품에서 공유되어도 재고는 옵션 1개 기준으로만 관리됩니다.
-          예: &quot;Plain Bagel&quot; 옵션이 베이글 상품·샌드위치 상품에 모두 사용되어도 DailyOptionInventory는 하나만 존재합니다.
+          <code className="bg-purple-100 rounded px-1">tracksInventory=true</code> modifier options are shared across products but have only one Inventory entry.
+          E.g. The &quot;Plain Bagel&quot; option used in both bagel and sandwich products has only one DailyOptionInventory entry.
         </p>
       </div>
 
       {/* Modifier sync button */}
       <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-3">
         <div>
-          <h2 className="font-semibold text-gray-900 text-sm">Loyverse 전체 동기화</h2>
+          <h2 className="font-semibold text-gray-900 text-sm">Loyverse All Sync</h2>
           <p className="text-xs text-gray-500 mt-0.5">
-            카테고리·모디파이어 그룹·옵션·상품을 한 번에 동기화합니다.
-            상품과 모디파이어 그룹의 연결 관계도 같이 업데이트됩니다.
+            Sync categories, modifier groups, options, and products all at once..
+            Product-modifier group links are also updated..
           </p>
         </div>
         <ModifierSyncButton />
@@ -266,7 +266,7 @@ export default async function AdminModifiersPage({ searchParams }: { searchParam
       {/* Stats cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="bg-white rounded-xl border border-gray-200 p-4">
-          <p className="text-xs text-gray-500">전체 그룹</p>
+          <p className="text-xs text-gray-500">All groups</p>
           <p className="text-2xl font-bold text-gray-900 mt-1">{totalGroups}</p>
         </div>
         <div className="bg-white rounded-xl border border-blue-100 p-4">
@@ -274,11 +274,11 @@ export default async function AdminModifiersPage({ searchParams }: { searchParam
           <p className="text-2xl font-bold text-blue-700 mt-1">{syncedGroupCount}</p>
         </div>
         <div className="bg-white rounded-xl border border-purple-100 p-4">
-          <p className="text-xs text-purple-600">재고추적 옵션</p>
+          <p className="text-xs text-purple-600">Inventory Tracking Options</p>
           <p className="text-2xl font-bold text-purple-700 mt-1">{tracksInventoryCount}</p>
         </div>
         <div className="bg-white rounded-xl border border-green-100 p-4">
-          <p className="text-xs text-green-600">전체 옵션</p>
+          <p className="text-xs text-green-600">All Options</p>
           <p className="text-2xl font-bold text-green-700 mt-1">{totalOptions}</p>
         </div>
       </div>
@@ -292,14 +292,14 @@ export default async function AdminModifiersPage({ searchParams }: { searchParam
       <div className="text-sm text-gray-500">
         {hasFilters ? (
           <>
-            검색 결과 <strong className="text-gray-700">{groups.length}</strong>개 그룹
-            {" "}(<strong className="text-gray-700">{totalOptions}</strong>개 옵션)
-            {" "}<span className="text-gray-400">(전체 {totalGroups}개 그룹)</span>
+            Search results <strong className="text-gray-700">{groups.length}</strong> groups
+            {" "}(<strong className="text-gray-700">{totalOptions}</strong> options)
+            {" "}<span className="text-gray-400">({totalGroups} groups total)</span>
           </>
         ) : (
           <>
-            전체 <strong className="text-gray-700">{groups.length}</strong>개 그룹
-            {" "}· <strong className="text-gray-700">{totalOptions}</strong>개 옵션
+            All <strong className="text-gray-700">{groups.length}</strong> groups
+            {" "}· <strong className="text-gray-700">{totalOptions}</strong> options
           </>
         )}
       </div>

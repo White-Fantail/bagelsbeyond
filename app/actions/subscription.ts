@@ -42,7 +42,7 @@ export async function createSubscriptionAction(
   });
 
   if (!parsed.success) {
-    return { success: false, message: parsed.error.issues[0]?.message ?? "입력 오류" };
+    return { success: false, message: parsed.error.issues[0]?.message ?? "Input error" };
   }
 
   const { pickupWeekday, pickupTimeSlot, startDate, endDate, note, itemsJson } = parsed.data;
@@ -51,16 +51,16 @@ export async function createSubscriptionAction(
   try {
     items = JSON.parse(itemsJson) as { productId: string; quantity: number }[];
   } catch {
-    return { success: false, message: "상품 정보가 올바르지 않습니다" };
+    return { success: false, message: "Invalid product information" };
   }
 
   if (!Array.isArray(items) || items.length === 0) {
-    return { success: false, message: "최소 1개 이상의 상품을 선택해주세요" };
+    return { success: false, message: "Please select at least 1 product" };
   }
 
   for (const item of items) {
     if (!item.productId || !Number.isInteger(item.quantity) || item.quantity <= 0) {
-      return { success: false, message: "수량이 올바르지 않습니다" };
+      return { success: false, message: "Invalid quantity" };
     }
   }
 
@@ -77,7 +77,7 @@ export async function createSubscriptionAction(
     return { success: true, subscriptionId: sub.id };
   } catch (err) {
     console.error("Subscription creation failed:", err);
-    return { success: false, message: "구독 생성 중 오류가 발생했습니다" };
+    return { success: false, message: "Error creating subscription" };
   }
 }
 
@@ -91,7 +91,7 @@ export async function pauseSubscriptionAction(
     await updateSubscriptionStatus(id, SubscriptionStatus.PAUSED, session.userId);
     return { success: true };
   } catch (err) {
-    return { success: false, message: err instanceof Error ? err.message : "오류가 발생했습니다" };
+    return { success: false, message: err instanceof Error ? err.message : "An error occurred" };
   }
 }
 
@@ -105,7 +105,7 @@ export async function resumeSubscriptionAction(
     await updateSubscriptionStatus(id, SubscriptionStatus.ACTIVE, session.userId);
     return { success: true };
   } catch (err) {
-    return { success: false, message: err instanceof Error ? err.message : "오류가 발생했습니다" };
+    return { success: false, message: err instanceof Error ? err.message : "An error occurred" };
   }
 }
 
@@ -119,7 +119,7 @@ export async function cancelSubscriptionAction(
     await updateSubscriptionStatus(id, SubscriptionStatus.CANCELLED, session.userId);
     return { success: true };
   } catch (err) {
-    return { success: false, message: err instanceof Error ? err.message : "오류가 발생했습니다" };
+    return { success: false, message: err instanceof Error ? err.message : "An error occurred" };
   }
 }
 
@@ -133,6 +133,6 @@ export async function skipOccurrenceAction(
     await skipOccurrence(occurrenceId, session.userId);
     return { success: true };
   } catch (err) {
-    return { success: false, message: err instanceof Error ? err.message : "오류가 발생했습니다" };
+    return { success: false, message: err instanceof Error ? err.message : "An error occurred" };
   }
 }

@@ -21,9 +21,9 @@ export interface CreateOrderState {
 // ── Zod schema ────────────────────────────────────────────────────────────────
 
 const createOrderSchema = z.object({
-  cartJson: z.string().min(1, "장바구니가 비어 있습니다"),
-  pickupDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "날짜 형식이 올바르지 않습니다"),
-  pickupTimeSlot: z.string().min(1, "픽업 시간을 선택해주세요"),
+  cartJson: z.string().min(1, "Cart is empty"),
+  pickupDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format"),
+  pickupTimeSlot: z.string().min(1, "Please select a pickup time"),
   note: z.string().optional(),
 });
 
@@ -46,20 +46,20 @@ export async function createOrderAction(
   });
 
   if (!parsed.success) {
-    return { success: false, message: parsed.error.issues[0]?.message ?? "입력 오류" };
+    return { success: false, message: parsed.error.issues[0]?.message ?? "Input error" };
   }
 
   const { cartJson, pickupDate, pickupTimeSlot, note } = parsed.data;
 
   // Validate pickup time slot
   if (!PICKUP_TIME_SLOTS.includes(pickupTimeSlot)) {
-    return { success: false, message: "올바르지 않은 픽업 시간입니다" };
+    return { success: false, message: "Invalid pickup time" };
   }
 
   // Validate pickup date
   const pickupDateObj = new Date(pickupDate + "T00:00:00.000Z");
   if (!isValidPickupDate(pickupDateObj)) {
-    return { success: false, message: "올바르지 않은 픽업 날짜입니다. 영업일(월~토)을 선택해주세요" };
+    return { success: false, message: "Invalid pickup date. Please select a business day (Mon–Sat)" };
   }
 
   // Parse cart
@@ -67,17 +67,17 @@ export async function createOrderAction(
   try {
     cart = JSON.parse(cartJson) as CartItem[];
   } catch {
-    return { success: false, message: "장바구니 데이터가 올바르지 않습니다" };
+    return { success: false, message: "Invalid cart data" };
   }
 
   if (!Array.isArray(cart) || cart.length === 0) {
-    return { success: false, message: "장바구니가 비어 있습니다" };
+    return { success: false, message: "Cart is empty" };
   }
 
   // Validate quantity
   for (const item of cart) {
     if (!item.productId || !Number.isInteger(item.quantity) || item.quantity <= 0) {
-      return { success: false, message: "수량이 올바르지 않습니다" };
+      return { success: false, message: "Invalid quantity" };
     }
   }
 
@@ -93,7 +93,7 @@ export async function createOrderAction(
   });
 
   if (products.length !== productIds.length) {
-    return { success: false, message: "주문할 수 없는 상품이 포함되어 있습니다" };
+    return { success: false, message: "Contains products that cannot be ordered" };
   }
 
   const productMap = new Map(products.map((p) => [p.id, p]));
@@ -119,7 +119,7 @@ export async function createOrderAction(
   for (const cartItem of cart) {
     const product = productMap.get(cartItem.productId);
     if (!product) {
-      return { success: false, message: `상품을 찾을 수 없습니다: ${cartItem.productId}` };
+      return { success: false, message: `Product not found: ${cartItem.productId}` };
     }
 
     // Server recalculate price
@@ -130,11 +130,11 @@ export async function createOrderAction(
     for (const sel of cartItem.selectedOptions) {
       const group = product.optionGroups.find((g) => g.id === sel.optionGroupId);
       if (!group) {
-        return { success: false, message: `옵션 그룹을 찾을 수 없습니다: ${sel.optionGroupId}` };
+        return { success: false, message: `Option group not found: ${sel.optionGroupId}` };
       }
       const option = group.options.find((o) => o.id === sel.optionId);
       if (!option) {
-        return { success: false, message: `옵션을 찾을 수 없습니다: ${sel.optionId}` };
+        return { success: false, message: `Option not found: ${sel.optionId}` };
       }
       unitPrice += option.priceDelta;
       resolvedOptions.push({
@@ -152,7 +152,7 @@ export async function createOrderAction(
       if (selected.length < group.minSelect) {
         return {
           success: false,
-          message: `"${product.name}"의 "${group.name}" 옵션을 선택해주세요`,
+          message: `"${product.name}please select "${group.name}" option`,
         };
       }
     }
@@ -248,7 +248,7 @@ export async function createOrderAction(
     });
   } catch (err) {
     console.error("Order creation failed:", err);
-    return { success: false, message: "주문 생성 중 오류가 발생했습니다" };
+    return { success: false, message: "Error creating order" };
   }
 
   return { success: true, orderNumber };
@@ -270,11 +270,11 @@ export async function cancelOrderAction(
   });
 
   if (!order || order.userId !== session.userId) {
-    return { success: false, message: "주문을 찾을 수 없습니다" };
+    return { success: false, message: "Order not found" };
   }
 
   if (order.status !== "PENDING" && order.status !== "CONFIRMED") {
-    return { success: false, message: "취소할 수 없는 주문 상태입니다" };
+    return { success: false, message: "Order cannot be cancelled in this status" };
   }
 
   // Block cancellation if pickup is within 2 hours
@@ -284,7 +284,7 @@ export async function cancelOrderAction(
     pickupTime.setUTCHours(hh - 12, mm, 0, 0); // NZ is UTC+12 roughly
     const twoHoursFromNow = new Date(Date.now() + 2 * 60 * 60 * 1000);
     if (pickupTime <= twoHoursFromNow) {
-      return { success: false, message: "픽업 2시간 이내에는 취소할 수 없습니다" };
+      return { success: false, message: "Cannot cancel within 2 hours of pickup" };
     }
   }
 
@@ -314,7 +314,7 @@ export async function cancelOrderAction(
     return { success: true };
   } catch (err) {
     console.error("Order cancellation failed:", err);
-    return { success: false, message: "취소 처리 중 오류가 발생했습니다" };
+    return { success: false, message: "Error processing cancellation" };
   }
 }
 
@@ -330,7 +330,7 @@ export async function updateOrderStatusAction(
   newStatus: OrderStatus
 ): Promise<{ success: boolean; message?: string }> {
   const session = await requireStaffOrAdmin();
-  if (!session) return { success: false, message: "권한이 없습니다" };
+  if (!session) return { success: false, message: "Unauthorized" };
 
   const order = await prisma.order.findUnique({
     where: { orderNumber },
@@ -338,20 +338,20 @@ export async function updateOrderStatusAction(
   });
 
   if (!order) {
-    return { success: false, message: "주문을 찾을 수 없습니다" };
+    return { success: false, message: "Order not found" };
   }
 
   // Allow CANCELLED from any non-completed state
   if (newStatus === "CANCELLED") {
     if (order.status === "COMPLETED" || order.status === "CANCELLED") {
-      return { success: false, message: "이미 완료되거나 취소된 주문입니다" };
+      return { success: false, message: "Order is already completed or cancelled" };
     }
   } else {
     // Forward-only transition check
     const currentIdx = STATUS_ORDER.indexOf(order.status as OrderStatus);
     const newIdx = STATUS_ORDER.indexOf(newStatus);
     if (newIdx <= currentIdx) {
-      return { success: false, message: "이전 상태로 되돌릴 수 없습니다" };
+      return { success: false, message: "Cannot revert to previous status" };
     }
   }
 
@@ -381,6 +381,6 @@ export async function updateOrderStatusAction(
     return { success: true };
   } catch (err) {
     console.error("Status update failed:", err);
-    return { success: false, message: "상태 변경 중 오류가 발생했습니다" };
+    return { success: false, message: "Error changing status" };
   }
 }

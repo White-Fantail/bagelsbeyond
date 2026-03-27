@@ -17,11 +17,11 @@ type EditState = {
 };
 
 const GROUPS: { key: string; label: string; icon: string; prefix: string[] }[] = [
-  { key: "weekday", label: "요일", icon: "📅", prefix: ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"] },
-  { key: "weather", label: "날씨", icon: "🌤️", prefix: ["weather_"] },
-  { key: "holiday", label: "공휴일", icon: "🎉", prefix: ["holiday"] },
-  { key: "events", label: "이벤트", icon: "🎪", prefix: ["local_event", "school_holiday"] },
-  { key: "news", label: "뉴스", icon: "📰", prefix: ["nz_news", "world_news"] },
+  { key: "weekday", label: "Day", icon: "📅", prefix: ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"] },
+  { key: "weather", label: "Weather", icon: "🌤️", prefix: ["weather_"] },
+  { key: "holiday", label: "Holiday", icon: "🎉", prefix: ["holiday"] },
+  { key: "events", label: "Event", icon: "🎪", prefix: ["local_event", "school_holiday"] },
+  { key: "news", label: "News", icon: "📰", prefix: ["nz_news", "world_news"] },
 ];
 
 function getGroupIcon(factorKey: string): string {
@@ -104,13 +104,13 @@ export default function WeightsManager({ initialWeights }: Props) {
       });
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.message || "수정에 실패했습니다");
+        throw new Error(err.message || "Edit failed");
       }
       const updated: PredictionWeight = await res.json();
       setWeights((prev) => prev.map((w) => (w.id === updated.id ? updated : w)));
       setEditState(null);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "수정에 실패했습니다");
+      setError(e instanceof Error ? e.message : "Edit failed");
     } finally {
       setIsSaving(false);
     }
@@ -121,11 +121,11 @@ export default function WeightsManager({ initialWeights }: Props) {
     setIsDeleting(true);
     try {
       const res = await fetch(`/api/weights/${deleteId}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("삭제에 실패했습니다");
+      if (!res.ok) throw new Error("Delete failed");
       setWeights((prev) => prev.filter((w) => w.id !== deleteId));
       setDeleteId(null);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "삭제에 실패했습니다");
+      setError(e instanceof Error ? e.message : "Delete failed");
     } finally {
       setIsDeleting(false);
     }
@@ -147,13 +147,13 @@ export default function WeightsManager({ initialWeights }: Props) {
       });
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.message || "저장에 실패했습니다");
+        throw new Error(err.message || "Save failed");
       }
       const created: PredictionWeight = await res.json();
       setWeights((prev) => [...prev, created]);
       setNewForm({ factorKey: "", weightValue: "0", isActive: true, description: "" });
     } catch (e) {
-      setError(e instanceof Error ? e.message : "저장에 실패했습니다");
+      setError(e instanceof Error ? e.message : "Save failed");
     } finally {
       setIsSaving(false);
     }
@@ -184,7 +184,7 @@ export default function WeightsManager({ initialWeights }: Props) {
           onClick={() => setActiveGroup("all")}
           className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${activeGroup === "all" ? "bg-gray-800 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
         >
-          전체 ({groupCounts.all ?? 0})
+          All ({groupCounts.all ?? 0})
         </button>
         {GROUPS.map((g) => (
           <button
@@ -200,15 +200,15 @@ export default function WeightsManager({ initialWeights }: Props) {
             onClick={() => setActiveGroup("other")}
             className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${activeGroup === "other" ? "bg-gray-800 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
           >
-            기타 ({groupCounts["other"] ?? 0})
+            Other ({groupCounts["other"] ?? 0})
           </button>
         )}
       </div>
 
       {/* Guide */}
       <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 text-xs text-blue-700">
-        <strong>💡 가중치 안내:</strong> 가중치는 예측 매출 대비 비율입니다. <code>+0.2</code> = 20% 증가, <code>-0.15</code> = 15% 감소.
-        일반적으로 <strong>-1.0 ~ +1.0</strong> 범위 권장.
+        <strong>💡 Weights Guide:</strong> Weights are ratios relative to Predicted Sales. <code>+0.2</code> = 20% increase, <code>-0.15</code> = 15% decrease.
+        Typically recommended range: <strong>-1.0 ~ +1.0</strong>.
       </div>
 
       {/* Weights Table */}
@@ -216,19 +216,19 @@ export default function WeightsManager({ initialWeights }: Props) {
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">요인 키</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">설명</th>
-              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">가중치</th>
-              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">효과</th>
-              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">활성</th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">액션</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Factor Key</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
+              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Weights</th>
+              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Effect</th>
+              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Active</th>
+              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {filteredWeights.length === 0 && (
               <tr>
                 <td colSpan={6} className="px-4 py-8 text-center text-sm text-gray-400">
-                  해당 카테고리의 가중치가 없습니다.
+                  No weights for this category..
                 </td>
               </tr>
             )}
@@ -274,13 +274,13 @@ export default function WeightsManager({ initialWeights }: Props) {
                         disabled={isSaving}
                         className="px-2 py-1 bg-amber-500 text-white rounded text-xs hover:bg-amber-600 disabled:opacity-50"
                       >
-                        저장
+                        Save
                       </button>
                       <button
                         onClick={cancelEdit}
                         className="px-2 py-1 bg-white text-gray-700 border border-gray-300 rounded text-xs hover:bg-gray-50"
                       >
-                        취소
+                        Cancel
                       </button>
                     </div>
                   </td>
@@ -305,7 +305,7 @@ export default function WeightsManager({ initialWeights }: Props) {
                   <td className="px-4 py-3 text-center">
                     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${w.isActive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
                       <span className={`w-1.5 h-1.5 rounded-full ${w.isActive ? "bg-green-500" : "bg-gray-400"}`} />
-                      {w.isActive ? "활성" : "비활성"}
+                      {w.isActive ? "Active" : "Inactive"}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-right">
@@ -314,13 +314,13 @@ export default function WeightsManager({ initialWeights }: Props) {
                         onClick={() => startEdit(w)}
                         className="px-2 py-1 bg-white text-gray-700 border border-gray-300 rounded text-xs hover:bg-gray-50"
                       >
-                        수정
+                        Edit
                       </button>
                       <button
                         onClick={() => setDeleteId(w.id)}
                         className="px-2 py-1 bg-white text-red-600 border border-red-200 rounded text-xs hover:bg-red-50"
                       >
-                        삭제
+                        Delete
                       </button>
                     </div>
                   </td>
@@ -333,10 +333,10 @@ export default function WeightsManager({ initialWeights }: Props) {
 
       {/* Add new weight */}
       <div className="bg-white rounded-lg border border-gray-200 p-4">
-        <h3 className="text-sm font-semibold text-gray-900 mb-3">새 항목 추가</h3>
+        <h3 className="text-sm font-semibold text-gray-900 mb-3">Add New Entry</h3>
         <div className="flex flex-wrap gap-3 items-end">
           <div className="flex flex-col gap-1">
-            <label className="text-xs text-gray-600">요인 키 *</label>
+            <label className="text-xs text-gray-600">Factor Key *</label>
             <input
               value={newForm.factorKey}
               onChange={(e) => setNewForm({ ...newForm, factorKey: e.target.value })}
@@ -345,7 +345,7 @@ export default function WeightsManager({ initialWeights }: Props) {
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-xs text-gray-600">가중치 *</label>
+            <label className="text-xs text-gray-600">Weights *</label>
             <div className="flex items-center gap-1">
               <input
                 type="number"
@@ -362,11 +362,11 @@ export default function WeightsManager({ initialWeights }: Props) {
             </div>
           </div>
           <div className="flex flex-col gap-1 flex-1 min-w-32">
-            <label className="text-xs text-gray-600">설명</label>
+            <label className="text-xs text-gray-600">Description</label>
             <input
               value={newForm.description}
               onChange={(e) => setNewForm({ ...newForm, description: e.target.value })}
-              placeholder="요인 설명 (선택)"
+              placeholder="Factor Description (Select)"
               className="px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500"
             />
           </div>
@@ -377,14 +377,14 @@ export default function WeightsManager({ initialWeights }: Props) {
               checked={newForm.isActive}
               onChange={(e) => setNewForm({ ...newForm, isActive: e.target.checked })}
             />
-            <label htmlFor="newIsActive" className="text-sm text-gray-700">활성</label>
+            <label htmlFor="newIsActive" className="text-sm text-gray-700">Active</label>
           </div>
           <button
             onClick={addNew}
             disabled={isSaving || !newForm.factorKey}
             className="px-4 py-2 bg-amber-500 text-white rounded-md text-sm font-medium hover:bg-amber-600 disabled:opacity-50"
           >
-            {isSaving ? "저장 중..." : "+ 추가"}
+            {isSaving ? "Saving......" : "+ Add"}
           </button>
         </div>
       </div>

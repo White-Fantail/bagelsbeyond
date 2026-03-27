@@ -4,14 +4,14 @@ import { apiRequireAdmin, isNextResponse } from "@/lib/auth/dal";
 import { z } from "zod";
 
 const productCreateSchema = z.object({
-  name: z.string().min(1, "상품명을 입력해주세요"),
+  name: z.string().min(1, "Product Please enter your name"),
   slug: z
     .string()
-    .min(1, "슬러그를 입력해주세요")
-    .regex(/^[a-z0-9-]+$/, "슬러그는 소문자, 숫자, 하이픈만 사용할 수 있습니다"),
+    .min(1, "Please enter a slug")
+    .regex(/^[a-z0-9-]+$/, "Slug can only contain lowercase letters, numbers, and hyphens"),
   description: z.string().optional(),
   loyverseCategoryId: z.string().optional().nullable(),
-  basePrice: z.number().min(0, "가격은 0 이상이어야 합니다"),
+  basePrice: z.number().min(0, "Price must be 0 or more"),
   isActive: z.boolean().default(true),
   isSubscriptionEligible: z.boolean().default(false),
   sortOrder: z.number().int().default(0),
@@ -37,7 +37,7 @@ export async function GET() {
     return NextResponse.json({ products });
   } catch (_error) {
     return NextResponse.json(
-      { message: "상품 목록을 불러오는데 실패했습니다" },
+      { message: "Failed to load products list" },
       { status: 500 }
     );
   }
@@ -51,13 +51,13 @@ export async function POST(req: NextRequest) {
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ message: "요청 본문이 올바르지 않습니다" }, { status: 400 });
+    return NextResponse.json({ message: "Invalid request body" }, { status: 400 });
   }
 
   const parsed = productCreateSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { message: "입력값이 올바르지 않습니다", errors: parsed.error.flatten() },
+      { message: "Invalid input", errors: parsed.error.flatten() },
       { status: 400 }
     );
   }
@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
   const existing = await prisma.product.findUnique({ where: { slug: data.slug } });
   if (existing) {
     return NextResponse.json(
-      { message: "이미 사용 중인 슬러그입니다" },
+      { message: "Slug is already in use" },
       { status: 409 }
     );
   }
@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ product }, { status: 201 });
   } catch (_error) {
     return NextResponse.json(
-      { message: "상품 생성에 실패했습니다" },
+      { message: "Failed to create product" },
       { status: 500 }
     );
   }

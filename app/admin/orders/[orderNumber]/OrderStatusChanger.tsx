@@ -6,12 +6,12 @@ import { updateOrderStatusAction } from "@/app/actions/order";
 import type { OrderStatus } from "@/app/generated/prisma/enums";
 
 const ALL_STATUSES: { value: OrderStatus; label: string }[] = [
-  { value: "PENDING", label: "접수됨" },
-  { value: "CONFIRMED", label: "확인됨" },
-  { value: "PREPARING", label: "준비중" },
-  { value: "READY", label: "준비완료" },
-  { value: "COMPLETED", label: "완료" },
-  { value: "CANCELLED", label: "취소됨" },
+  { value: "PENDING", label: "Received" },
+  { value: "CONFIRMED", label: "Confirmed" },
+  { value: "PREPARING", label: "Preparing" },
+  { value: "READY", label: "Ready" },
+  { value: "COMPLETED", label: "Completed" },
+  { value: "CANCELLED", label: "Cancelled" },
 ];
 
 interface Props {
@@ -31,10 +31,10 @@ export default function OrderStatusChanger({ orderNumber, currentStatus }: Props
     startTransition(async () => {
       const result = await updateOrderStatusAction(orderNumber, selected as OrderStatus);
       if (result.success) {
-        setMessage({ type: "success", text: "상태가 변경되었습니다" });
+        setMessage({ type: "success", text: "Status changed" });
         router.refresh();
       } else {
-        setMessage({ type: "error", text: result.message ?? "오류가 발생했습니다" });
+        setMessage({ type: "error", text: result.message ?? "An error occurred" });
       }
     });
   }
@@ -42,7 +42,7 @@ export default function OrderStatusChanger({ orderNumber, currentStatus }: Props
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2">
-        <label className="text-sm font-medium text-gray-700">상태 변경</label>
+        <label className="text-sm font-medium text-gray-700">Change Status</label>
         <select
           value={selected}
           onChange={(e) => setSelected(e.target.value)}
@@ -58,7 +58,7 @@ export default function OrderStatusChanger({ orderNumber, currentStatus }: Props
           disabled={isPending || selected === currentStatus || currentStatus === "COMPLETED" || currentStatus === "CANCELLED"}
           className="px-4 py-1.5 text-sm rounded-lg bg-amber-500 text-white font-medium hover:bg-amber-600 disabled:opacity-50 transition-colors"
         >
-          {isPending ? "처리 중…" : "변경"}
+          {isPending ? "Processing..." : "Change"}
         </button>
       </div>
       {message && (

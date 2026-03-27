@@ -16,10 +16,10 @@ async function getPredictions(): Promise<SalesPrediction[]> {
 }
 
 const METHOD_LABELS: Record<string, string> = {
-  rule_based_v1: "규칙 기반 v1",
-  rule_based_v2: "규칙 기반 v2",
-  weighted_v1: "가중치 기반 v1",
-  manual: "수동 입력",
+  rule_based_v1: "Rule-based v1",
+  rule_based_v2: "Rule-based v2",
+  weighted_v1: "Weights-based v1",
+  manual: "Manual Enter",
 };
 
 export default async function PredictionsPage() {
@@ -29,21 +29,21 @@ export default async function PredictionsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">예측 목록</h1>
-          <p className="text-gray-500 mt-1">매출 예측 결과 ({predictions.length}건)</p>
+          <h1 className="text-2xl font-bold text-gray-900">Predictions List</h1>
+          <p className="text-gray-500 mt-1">Sales Predictions results ({predictions.length} items)</p>
         </div>
         <div className="flex gap-2">
           <Link
             href="/predictions/performance"
             className="px-3 py-1.5 text-sm border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
           >
-            📊 성과 보기
+            📊 View Performance
           </Link>
           <Link
             href="/predictions/new"
             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium"
           >
-            + 새 예측 만들기
+            + Create New Prediction
           </Link>
         </div>
       </div>
@@ -51,12 +51,12 @@ export default async function PredictionsPage() {
       {predictions.length === 0 ? (
         <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
           <p className="text-4xl mb-3">🔮</p>
-          <p className="text-gray-500 mb-4">아직 생성된 예측이 없습니다.</p>
+          <p className="text-gray-500 mb-4">No predictions created yet.</p>
           <Link
             href="/predictions/new"
             className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
           >
-            첫 번째 예측 만들기
+            Create First Prediction
           </Link>
         </div>
       ) : (
@@ -76,13 +76,13 @@ export default async function PredictionsPage() {
                   </span>
                 </div>
                 <div className="mt-1 text-sm text-gray-600">
-                  예상 매출: <span className="font-medium">{formatCurrency(p.predictedSales)}</span>
+                  Predicted Sales: <span className="font-medium">{formatCurrency(p.predictedSales)}</span>
                 </div>
                 <div className="mt-1 text-xs text-gray-500 flex gap-3">
-                  <span>베이글 {p.predictedBagelsSold}개</span>
-                  <span>생산 추천 {p.recommendedBagelsToBake}개</span>
+                  <span>{p.predictedBagelsSold} bagels</span>
+                  <span>Recommended Production {p.recommendedBagelsToBake}</span>
                   {p.confidenceScore != null && (
-                    <span>신뢰도 {p.confidenceScore}%</span>
+                    <span>Confidence {p.confidenceScore}%</span>
                   )}
                 </div>
               </Link>
@@ -94,12 +94,12 @@ export default async function PredictionsPage() {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">예측 날짜</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">예상 매출</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">예상 판매량</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">추천 생산량</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">방식</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">생성일</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Predictions Date</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Predicted Sales</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Estimated Sold Qty</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Recommended Production</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Method</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Created Date</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -111,8 +111,8 @@ export default async function PredictionsPage() {
                       </Link>
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-900 text-right">{formatCurrency(p.predictedSales)}</td>
-                    <td className="px-4 py-3 text-sm text-gray-900 text-right">{p.predictedBagelsSold}개</td>
-                    <td className="px-4 py-3 text-sm text-gray-900 text-right">{p.recommendedBagelsToBake}개</td>
+                    <td className="px-4 py-3 text-sm text-gray-900 text-right">{p.predictedBagelsSold}</td>
+                    <td className="px-4 py-3 text-sm text-gray-900 text-right">{p.recommendedBagelsToBake}</td>
                     <td className="px-4 py-3 text-sm text-gray-500">
                       <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs">
                         {METHOD_LABELS[p.method] ?? p.method}

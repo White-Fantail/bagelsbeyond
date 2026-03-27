@@ -17,28 +17,28 @@ export default function ChannelBar({
         <div
           className="bg-blue-500 h-full"
           style={{ width: `${storePercent}%` }}
-          title={`매장 ${storePercent.toFixed(1)}%`}
+          title={`Store ${storePercent.toFixed(1)}%`}
         />
       )}
       {uberPercent > 0 && (
         <div
           className="bg-green-500 h-full"
           style={{ width: `${uberPercent}%` }}
-          title={`우버이츠 ${uberPercent.toFixed(1)}%`}
+          title={`Uber Eats ${uberPercent.toFixed(1)}%`}
         />
       )}
       {doordashPercent > 0 && (
         <div
           className="bg-red-500 h-full"
           style={{ width: `${doordashPercent}%` }}
-          title={`도어대쉬 ${doordashPercent.toFixed(1)}%`}
+          title={`DoorDash ${doordashPercent.toFixed(1)}%`}
         />
       )}
       {otherPercent > 0 && (
         <div
           className="bg-gray-400 h-full"
           style={{ width: `${otherPercent}%` }}
-          title={`기타 ${otherPercent.toFixed(1)}%`}
+          title={`Other ${otherPercent.toFixed(1)}%`}
         />
       )}
     </div>

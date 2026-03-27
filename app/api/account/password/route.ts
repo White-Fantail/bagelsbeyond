@@ -6,16 +6,16 @@ import { apiRequireAuth, isNextResponse } from "@/lib/auth/dal";
 
 const passwordSchema = z
   .object({
-    currentPassword: z.string().min(1, "현재 비밀번호를 입력해주세요"),
+    currentPassword: z.string().min(1, "Current Please enter your password"),
     newPassword: z
       .string()
-      .min(8, "비밀번호는 8자 이상이어야 합니다")
-      .regex(/[A-Za-z]/, "비밀번호에 영문자가 포함되어야 합니다")
-      .regex(/[0-9]/, "비밀번호에 숫자가 포함되어야 합니다"),
-    confirmPassword: z.string().min(1, "비밀번호 확인을 입력해주세요"),
+      .min(8, "Password must be at least 8 characters")
+      .regex(/[A-Za-z]/, "Password must contain a letter")
+      .regex(/[0-9]/, "Password must contain a number"),
+    confirmPassword: z.string().min(1, "Please enter password confirmation"),
   })
   .refine((d) => d.newPassword === d.confirmPassword, {
-    message: "새 비밀번호가 일치하지 않습니다",
+    message: "New passwords do not match",
     path: ["confirmPassword"],
   });
 
@@ -29,14 +29,14 @@ export async function POST(req: NextRequest) {
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ message: "요청 본문이 올바르지 않습니다" }, { status: 400 });
+    return NextResponse.json({ message: "Invalid request body" }, { status: 400 });
   }
 
   const parsed = passwordSchema.safeParse(body);
   if (!parsed.success) {
     const firstError = parsed.error.issues[0];
     return NextResponse.json(
-      { message: firstError?.message ?? "입력값이 올바르지 않습니다" },
+      { message: firstError?.message ?? "Invalid input" },
       { status: 400 }
     );
   }
@@ -50,14 +50,14 @@ export async function POST(req: NextRequest) {
   });
 
   if (!user) {
-    return NextResponse.json({ message: "사용자를 찾을 수 없습니다" }, { status: 404 });
+    return NextResponse.json({ message: "User not found" }, { status: 404 });
   }
 
   // Verify current password
   const isMatch = await bcrypt.compare(currentPassword, user.passwordHash);
   if (!isMatch) {
     return NextResponse.json(
-      { message: "현재 비밀번호가 올바르지 않습니다" },
+      { message: "Current password is incorrect" },
       { status: 422 }
     );
   }
@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
   const isSame = await bcrypt.compare(newPassword, user.passwordHash);
   if (isSame) {
     return NextResponse.json(
-      { message: "새 비밀번호는 현재 비밀번호와 달라야 합니다" },
+      { message: "New password must be different from current password" },
       { status: 422 }
     );
   }
@@ -79,10 +79,10 @@ export async function POST(req: NextRequest) {
       data: { passwordHash: newHash },
     });
 
-    return NextResponse.json({ message: "비밀번호가 변경되었습니다" });
+    return NextResponse.json({ message: "Password changed" });
   } catch {
     return NextResponse.json(
-      { message: "비밀번호 변경에 실패했습니다" },
+      { message: "Failed to change password" },
       { status: 500 }
     );
   }

@@ -10,23 +10,23 @@ import { Role } from "@/app/generated/prisma/enums";
 // ── Validation schemas ────────────────────────────────────────────────────────
 
 const loginSchema = z.object({
-  email: z.string().email("올바른 이메일을 입력해주세요"),
-  password: z.string().min(1, "비밀번호를 입력해주세요"),
+  email: z.string().email("Please enter a valid email"),
+  password: z.string().min(1, "Please enter your password"),
 });
 
 const signupSchema = z
   .object({
-    name: z.string().min(1, "이름을 입력해주세요").max(100, "이름이 너무 깁니다"),
-    email: z.string().email("올바른 이메일을 입력해주세요"),
+    name: z.string().min(1, "Please enter your name").max(100, "Name is too long"),
+    email: z.string().email("Please enter a valid email"),
     password: z
       .string()
-      .min(8, "비밀번호는 8자 이상이어야 합니다")
-      .regex(/[A-Za-z]/, "비밀번호에 영문자가 포함되어야 합니다")
-      .regex(/[0-9]/, "비밀번호에 숫자가 포함되어야 합니다"),
-    passwordConfirm: z.string().min(1, "비밀번호 확인을 입력해주세요"),
+      .min(8, "Password must be at least 8 characters")
+      .regex(/[A-Za-z]/, "Password must contain a letter")
+      .regex(/[0-9]/, "Password must contain a number"),
+    passwordConfirm: z.string().min(1, "Please enter password confirmation"),
   })
   .refine((d) => d.password === d.passwordConfirm, {
-    message: "비밀번호가 일치하지 않습니다",
+    message: "Passwords do not match",
     path: ["passwordConfirm"],
   });
 
@@ -65,12 +65,12 @@ export async function loginAction(
   const user = await prisma.user.findUnique({ where: { email } });
 
   if (!user || !user.isActive) {
-    return { message: "이메일 또는 비밀번호가 올바르지 않습니다" };
+    return { message: "Incorrect email or password" };
   }
 
   const passwordMatch = await bcrypt.compare(password, user.passwordHash);
   if (!passwordMatch) {
-    return { message: "이메일 또는 비밀번호가 올바르지 않습니다" };
+    return { message: "Incorrect email or password" };
   }
 
   await createSession({
@@ -118,7 +118,7 @@ export async function signupAction(
   // Check for duplicate email (regardless of isActive status)
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
-    return { errors: { email: ["이미 사용 중인 이메일입니다"] } };
+    return { errors: { email: ["Email is already in use"] } };
   }
 
   const passwordHash = await bcrypt.hash(password, 12);

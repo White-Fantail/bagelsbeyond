@@ -62,11 +62,11 @@ export class NagerHolidayProvider implements HolidayProvider {
 // Fallback mock with a small static list of NZ public holidays
 export class MockHolidayProvider implements HolidayProvider {
   private static knownHolidays: Record<string, string> = {
-    "01-01": "뉴이어 데이",
-    "02-06": "와이탕이 데이",
-    "04-25": "안작 데이",
-    "12-25": "크리스마스",
-    "12-26": "박싱 데이",
+    "01-01": "New Year's Day",
+    "02-06": "Waitangi Day",
+    "04-25": "Anzac Day",
+    "12-25": "Christmas",
+    "12-26": "Boxing Day",
   };
 
   async fetchHolidayByDate(date: Date): Promise<HolidayData | null> {

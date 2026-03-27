@@ -58,9 +58,9 @@ export default async function OrderPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">주문하기</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Order</h1>
         <p className="text-gray-500 mt-1 text-sm">
-          신선한 베이글을 예약 픽업 주문하세요. 결제는 현장에서 이루어집니다.
+          Order fresh bagels for scheduled pickup. Payment is made on-site.
         </p>
       </div>
       <ProductList products={serialised} />

@@ -50,15 +50,15 @@ export default function UserTable({ users, currentUserId }: UserTableProps) {
       });
       const data = await res.json();
       if (!res.ok) {
-        setMessage({ type: "error", text: data.message ?? "처리에 실패했습니다" });
+        setMessage({ type: "error", text: data.message ?? "Processing failed" });
       } else {
-        setMessage({ type: "success", text: "변경사항이 저장되었습니다" });
+        setMessage({ type: "success", text: "Changes saved" });
         startTransition(() => {
           router.refresh();
         });
       }
     } catch {
-      setMessage({ type: "error", text: "서버 연결에 실패했습니다" });
+      setMessage({ type: "error", text: "Failed to connect to server" });
     } finally {
       setActionUserId(null);
     }
@@ -92,8 +92,8 @@ export default function UserTable({ users, currentUserId }: UserTableProps) {
 
       {users.length === 0 ? (
         <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
-          <p className="text-gray-400 text-sm">검색 결과가 없습니다.</p>
-          <p className="text-gray-400 text-xs mt-1">검색어 또는 필터를 변경해 보세요.</p>
+          <p className="text-gray-400 text-sm">No search results.</p>
+          <p className="text-gray-400 text-xs mt-1">Try changing your search term or filter.</p>
         </div>
       ) : (
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
@@ -102,12 +102,12 @@ export default function UserTable({ users, currentUserId }: UserTableProps) {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-100 bg-gray-50">
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">이름</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">이메일</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">권한</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">상태</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">가입일</th>
-                  <th className="text-right px-4 py-3 font-medium text-gray-600">액션</th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-600">Name</th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-600">Email</th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-600">Role</th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-600">Status</th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-600">Join Date</th>
+                  <th className="text-right px-4 py-3 font-medium text-gray-600">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
@@ -119,7 +119,7 @@ export default function UserTable({ users, currentUserId }: UserTableProps) {
                       <td className="px-4 py-3 font-medium text-gray-900">
                         {user.name}
                         {isSelf && (
-                          <span className="ml-1.5 text-xs text-amber-600 font-normal">(나)</span>
+                          <span className="ml-1.5 text-xs text-amber-600 font-normal">(Me)</span>
                         )}
                       </td>
                       <td className="px-4 py-3 text-gray-600">{user.email}</td>
@@ -129,7 +129,7 @@ export default function UserTable({ users, currentUserId }: UserTableProps) {
                           onChange={(e) => handleRoleChange(user, e.target.value as Role)}
                           disabled={isLoading}
                           className={`text-xs px-2 py-1 rounded-md border font-medium focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:opacity-50 disabled:cursor-not-allowed ${ROLE_COLORS[user.role]} border-transparent`}
-                          aria-label={`${user.name}의 권한 변경`}
+                          aria-label={`Change ${user.name}'s role`}
                         >
                           {ALL_ROLES.map((r) => (
                             <option key={r} value={r}>{ROLE_LABELS[r]}</option>
@@ -144,11 +144,11 @@ export default function UserTable({ users, currentUserId }: UserTableProps) {
                               : "bg-gray-100 text-gray-500"
                           }`}
                         >
-                          {user.isActive ? "활성" : "비활성"}
+                          {user.isActive ? "Active" : "Inactive"}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-gray-500">
-                        {new Date(user.createdAt).toLocaleDateString("ko-KR")}
+                        {new Date(user.createdAt).toLocaleDateString("en-NZ")}
                       </td>
                       <td className="px-4 py-3 text-right">
                         <button
@@ -159,9 +159,9 @@ export default function UserTable({ users, currentUserId }: UserTableProps) {
                               ? "border-gray-300 text-gray-600 hover:bg-gray-50"
                               : "border-green-300 text-green-700 hover:bg-green-50"
                           }`}
-                          aria-label={user.isActive ? `${user.name} 비활성화` : `${user.name} 활성화`}
+                          aria-label={user.isActive ? `Deactivate ${user.name}` : `Activate ${user.name}`}
                         >
-                          {isActing ? "처리 중…" : user.isActive ? "비활성화" : "활성화"}
+                          {isActing ? "Processing..." : user.isActive ? "Deactivate" : "Activate"}
                         </button>
                       </td>
                     </tr>
@@ -183,7 +183,7 @@ export default function UserTable({ users, currentUserId }: UserTableProps) {
                       <p className="font-medium text-gray-900">
                         {user.name}
                         {isSelf && (
-                          <span className="ml-1.5 text-xs text-amber-600 font-normal">(나)</span>
+                          <span className="ml-1.5 text-xs text-amber-600 font-normal">(Me)</span>
                         )}
                       </p>
                       <p className="text-xs text-gray-500 mt-0.5">{user.email}</p>
@@ -193,7 +193,7 @@ export default function UserTable({ users, currentUserId }: UserTableProps) {
                         user.isActive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
                       }`}
                     >
-                      {user.isActive ? "활성" : "비활성"}
+                      {user.isActive ? "Active" : "Inactive"}
                     </span>
                   </div>
                   <div className="flex items-center gap-3">
@@ -202,7 +202,7 @@ export default function UserTable({ users, currentUserId }: UserTableProps) {
                       onChange={(e) => handleRoleChange(user, e.target.value as Role)}
                       disabled={isLoading}
                       className={`text-xs px-2 py-1.5 rounded-md border font-medium focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:opacity-50 ${ROLE_COLORS[user.role]} border-transparent`}
-                      aria-label={`${user.name}의 권한 변경`}
+                      aria-label={`Change ${user.name}'s role`}
                     >
                       {ALL_ROLES.map((r) => (
                         <option key={r} value={r}>{ROLE_LABELS[r]}</option>
@@ -217,10 +217,10 @@ export default function UserTable({ users, currentUserId }: UserTableProps) {
                           : "border-green-300 text-green-700 hover:bg-green-50"
                       }`}
                     >
-                      {isActing ? "처리 중…" : user.isActive ? "비활성화" : "활성화"}
+                      {isActing ? "Processing..." : user.isActive ? "Deactivate" : "Activate"}
                     </button>
                     <span className="text-xs text-gray-400 ml-auto">
-                      {new Date(user.createdAt).toLocaleDateString("ko-KR")}
+                      {new Date(user.createdAt).toLocaleDateString("en-NZ")}
                     </span>
                   </div>
                 </div>

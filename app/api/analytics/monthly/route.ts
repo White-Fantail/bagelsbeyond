@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
   } catch (_error) {
     console.error(_error);
     return NextResponse.json(
-      { message: "월별 분석 데이터를 불러오는데 실패했습니다" },
+      { message: "monthly Analytics Failed to load data" },
       { status: 500 }
     );
   }
