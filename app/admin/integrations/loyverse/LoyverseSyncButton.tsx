@@ -99,31 +99,58 @@ export default function LoyverseSyncButton() {
             )}
           </div>
 
-          {/* Modifier link diagnostics — always shown so 0-link causes are visible */}
-          <div className="rounded-lg border border-amber-100 bg-amber-50/50 p-3 space-y-1.5">
+          {/* Modifier link diagnostics — split into raw / parsed / final stages */}
+          <div className="rounded-lg border border-amber-100 bg-amber-50/50 p-3 space-y-2.5">
             <p className="text-xs font-semibold text-amber-800">상품-모디파이어 연결 진단</p>
-            <ul className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-amber-700">
-              <li>
-                <span className="font-medium">modifiers_ids 필드 없음:</span>{" "}
-                {result.itemsWithoutModifierField ?? 0}
-              </li>
-              <li>
-                <span className="font-medium">modifiers_ids 빈 배열:</span>{" "}
-                {result.itemsWithEmptyModifiers ?? 0}
-              </li>
-              <li>
-                <span className="font-medium">modifier 매칭 실패:</span>{" "}
-                {result.modifierNotFoundLocally ?? 0}
-              </li>
-              <li>
-                <span className="font-medium">링크 생성 성공:</span>{" "}
-                {result.itemModifierLinksSynced ?? 0}
-              </li>
-              <li>
-                <span className="font-medium">링크 생성 실패:</span>{" "}
-                {result.linkInsertErrors ?? 0}
-              </li>
-            </ul>
+
+            {/* Stage A: Raw API response */}
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-amber-700">[A] Raw API 응답 (deleted_at 필터 전)</p>
+              <ul className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-amber-700">
+                <li>
+                  <span className="font-medium">raw modifiers_ids 있음:</span>{" "}
+                  {result.rawItemsWithModifiersIds ?? 0}
+                </li>
+                <li>
+                  <span className="font-medium">raw modifiers_ids 없음:</span>{" "}
+                  {result.rawItemsWithoutModifiersIds ?? 0}
+                </li>
+              </ul>
+            </div>
+
+            {/* Stage B: Active (parsed) items */}
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-amber-700">[B] Parsed (활성 상품만)</p>
+              <ul className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-amber-700">
+                <li>
+                  <span className="font-medium">modifiers_ids 필드 없음:</span>{" "}
+                  {result.itemsWithoutModifierField ?? 0}
+                </li>
+                <li>
+                  <span className="font-medium">modifiers_ids 빈 배열:</span>{" "}
+                  {result.itemsWithEmptyModifiers ?? 0}
+                </li>
+              </ul>
+            </div>
+
+            {/* Stage C: Final link creation */}
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-amber-700">[C] 링크 생성 결과</p>
+              <ul className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-amber-700">
+                <li>
+                  <span className="font-medium">modifier 매칭 실패:</span>{" "}
+                  {result.modifierNotFoundLocally ?? 0}
+                </li>
+                <li>
+                  <span className="font-medium">링크 생성 성공:</span>{" "}
+                  {result.itemModifierLinksSynced ?? 0}
+                </li>
+                <li>
+                  <span className="font-medium">링크 생성 실패:</span>{" "}
+                  {result.linkInsertErrors ?? 0}
+                </li>
+              </ul>
+            </div>
           </div>
 
           {result.errors && result.errors.length > 0 && (
