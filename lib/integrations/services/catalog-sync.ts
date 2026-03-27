@@ -160,16 +160,21 @@ async function upsertExternalProduct(
 // ─── Option / modifier group sync ─────────────────────────────────────────────
 
 /**
- * Upsert ProductOptionGroup + ProductOption records from external modifier groups.
+ * Upsert ProductOptionGroup + ProductOption records from external modifier groups,
+ * then ensure a ProductOptionGroupAssignment links the group to the product.
  *
  * Policy:
+ *   • Groups are standalone (productId = null). Products reference them via
+ *     ProductOptionGroupAssignment, consistent with the centralised modifier model.
  *   • Group identified by ExternalOptionGroupMap (source, externalId) — rename-safe.
- *     If no mapping exists yet, falls back to name-based lookup for migration
- *     compatibility, then creates the mapping.
+ *     If no mapping exists yet, falls back to a global name-based lookup for
+ *     migration compatibility, then creates the mapping.
  *   • minSelect / maxSelect / isRequired are set to sensible defaults on creation
  *     and are NOT overwritten on subsequent syncs (allow operator tuning).
  *   • Options are identified by (optionGroupId, name).
  *   • priceDelta is always overwritten from POS.
+ *   • A ProductOptionGroupAssignment is upserted after every group sync so the
+ *     product is always linked even if the group pre-existed.
  */
 async function syncOptionGroups(
   productId: string,
@@ -177,6 +182,8 @@ async function syncOptionGroups(
   source: IntegrationSource
 ): Promise<void> {
   for (const extGroup of modifierGroups) {
+    let optionGroupId: string;
+
     // ── Look up by externalId first (rename-safe) ─────────────────────────────
     const existingMap = await prisma.externalOptionGroupMap.findUnique({
       where: {
@@ -199,49 +206,61 @@ async function syncOptionGroups(
         data: { lastSyncedAt: new Date() },
       });
       await syncOptions(existingMap.optionGroupId, extGroup.modifiers, existingMap.optionGroup.options, source, extGroup.externalId);
-      continue;
-    }
-
-    // ── Fallback: name-based lookup (migration compatibility) ─────────────────
-    // An option group that existed before Phase 5B won't have a mapping yet.
-    // We adopt it and create the mapping so future syncs use externalId.
-    const orphanGroup = await prisma.productOptionGroup.findFirst({
-      where: { productId, name: extGroup.name },
-      include: { options: true },
-    });
-
-    if (orphanGroup) {
-      await prisma.externalOptionGroupMap.create({
-        data: {
-          source,
-          externalOptionGroupId: extGroup.externalId,
-          optionGroupId: orphanGroup.id,
-          lastSyncedAt: new Date(),
-        },
+      optionGroupId = existingMap.optionGroupId;
+    } else {
+      // ── Fallback: global name-based lookup (migration compatibility) ──────────
+      // An option group that existed before the standalone-group model won't have
+      // a mapping yet.  Search by name across all groups (productId is now nullable
+      // so we no longer filter on it).  We adopt the match and create the mapping
+      // so future syncs use externalId.
+      const orphanGroup = await prisma.productOptionGroup.findFirst({
+        where: { name: extGroup.name },
+        include: { options: true },
       });
-      await syncOptions(orphanGroup.id, extGroup.modifiers, orphanGroup.options, source, extGroup.externalId);
-      continue;
+
+      if (orphanGroup) {
+        await prisma.externalOptionGroupMap.create({
+          data: {
+            source,
+            externalOptionGroupId: extGroup.externalId,
+            optionGroupId: orphanGroup.id,
+            lastSyncedAt: new Date(),
+          },
+        });
+        await syncOptions(orphanGroup.id, extGroup.modifiers, orphanGroup.options, source, extGroup.externalId);
+        optionGroupId = orphanGroup.id;
+      } else {
+        // ── CREATE path ─────────────────────────────────────────────────────────
+        // Groups are created without a productId so they are standalone and can be
+        // shared across products via ProductOptionGroupAssignment.
+        const newGroup = await prisma.productOptionGroup.create({
+          data: {
+            productId: null,
+            name: extGroup.name,
+            minSelect: 0,
+            maxSelect: 1,
+            isRequired: false,
+          },
+        });
+        await prisma.externalOptionGroupMap.create({
+          data: {
+            source,
+            externalOptionGroupId: extGroup.externalId,
+            optionGroupId: newGroup.id,
+            lastSyncedAt: new Date(),
+          },
+        });
+        await syncOptions(newGroup.id, extGroup.modifiers, [], source, extGroup.externalId);
+        optionGroupId = newGroup.id;
+      }
     }
 
-    // ── CREATE path ───────────────────────────────────────────────────────────
-    const newGroup = await prisma.productOptionGroup.create({
-      data: {
-        productId,
-        name: extGroup.name,
-        minSelect: 0,
-        maxSelect: 1,
-        isRequired: false,
-      },
+    // ── Ensure product↔group assignment exists ────────────────────────────────
+    await prisma.productOptionGroupAssignment.upsert({
+      where: { productId_optionGroupId: { productId, optionGroupId } },
+      create: { productId, optionGroupId },
+      update: {},
     });
-    await prisma.externalOptionGroupMap.create({
-      data: {
-        source,
-        externalOptionGroupId: extGroup.externalId,
-        optionGroupId: newGroup.id,
-        lastSyncedAt: new Date(),
-      },
-    });
-    await syncOptions(newGroup.id, extGroup.modifiers, [], source, extGroup.externalId);
   }
 }
 
