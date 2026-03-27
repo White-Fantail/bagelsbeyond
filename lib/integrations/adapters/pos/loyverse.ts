@@ -19,6 +19,8 @@ import type {
   LoyverseRawItem,
   LoyverseRawCategory,
   LoyverseRawModifier,
+  LoyverseRawVariant,
+  LoyverseRawInventoryLevel,
   LoyverseCatalogRaw,
 } from "./types";
 import { normalizeLoyverseCatalog } from "../../services/catalog-mapper";
@@ -200,6 +202,66 @@ const MOCK_CATALOG: LoyverseCatalogRaw = {
   ],
 };
 
+const MOCK_VARIANTS: LoyverseRawVariant[] = [
+  {
+    variant_id: "mock-var-001",
+    item_id: "mock-item-001",
+    sku: "SKU-BAGEL-001",
+    reference_id: "REF-001",
+    barcode: null,
+    cost: 1.5,
+    default_pricing_type: "FIXED",
+    default_price: 4.5,
+    stores: [{ store_id: "mock-store-001", pricing_type: "FIXED", price: 4.5, available_for_sale: true }],
+    option1_name: null,
+    option1_val: null,
+    option2_name: null,
+    option2_val: null,
+    option3_name: null,
+    option3_val: null,
+  },
+  {
+    variant_id: "mock-var-002",
+    item_id: "mock-item-002",
+    sku: "SKU-BAGEL-002",
+    reference_id: null,
+    barcode: null,
+    cost: 1.8,
+    default_pricing_type: "FIXED",
+    default_price: 6.5,
+    stores: [{ store_id: "mock-store-001", pricing_type: "FIXED", price: 6.5, available_for_sale: true }],
+    option1_name: null,
+    option1_val: null,
+    option2_name: null,
+    option2_val: null,
+    option3_name: null,
+    option3_val: null,
+  },
+  {
+    variant_id: "mock-var-003",
+    item_id: "mock-item-003",
+    sku: null,
+    reference_id: null,
+    barcode: null,
+    cost: 0.5,
+    default_pricing_type: "FIXED",
+    default_price: 5.0,
+    stores: [{ store_id: "mock-store-001", pricing_type: "FIXED", price: 5.0, available_for_sale: true }],
+    option1_name: null,
+    option1_val: null,
+    option2_name: null,
+    option2_val: null,
+    option3_name: null,
+    option3_val: null,
+  },
+];
+
+const MOCK_INVENTORY: LoyverseRawInventoryLevel[] = [
+  { variant_id: "mock-var-001", store_id: "mock-store-001", in_stock: 10, updated_at: "2024-06-01T00:00:00.000Z" },
+  { variant_id: "mock-var-002", store_id: "mock-store-001", in_stock: 8, updated_at: "2024-06-01T00:00:00.000Z" },
+  { variant_id: "mock-var-003", store_id: "mock-store-001", in_stock: 20, updated_at: "2024-06-01T00:00:00.000Z" },
+];
+
 // ─── Loyverse Adapter ─────────────────────────────────────────────────────────
 
 export class LoyverseAdapter implements POSAdapter {
@@ -379,6 +441,68 @@ export class LoyverseAdapter implements POSAdapter {
 
     console.info(`[Loyverse] Fetched ${allModifiers.length} modifiers`);
     return allModifiers;
+  }
+
+  /**
+   * Fetch all variants from Loyverse, following cursor-based pagination.
+   * Endpoint: GET /variants
+   */
+  async fetchVariants(): Promise<LoyverseRawVariant[]> {
+    if (this.mockMode) {
+      console.info("[Loyverse] Mock mode — returning mock variants");
+      return MOCK_VARIANTS;
+    }
+
+    const allVariants: LoyverseRawVariant[] = [];
+    let cursor: string | null = null;
+
+    do {
+      const query: string = cursor ? `?cursor=${encodeURIComponent(cursor)}` : "";
+      const page: { variants: LoyverseRawVariant[]; cursor: string | null } =
+        await this.fetchWithAuth<{
+          variants: LoyverseRawVariant[];
+          cursor: string | null;
+        }>(`/variants${query}`);
+
+      if (Array.isArray(page.variants)) {
+        allVariants.push(...page.variants);
+      }
+      cursor = page.cursor ?? null;
+    } while (cursor);
+
+    console.info(`[Loyverse] Fetched ${allVariants.length} variants`);
+    return allVariants;
+  }
+
+  /**
+   * Fetch inventory levels from Loyverse, following cursor-based pagination.
+   * Endpoint: GET /inventory
+   */
+  async fetchInventory(): Promise<LoyverseRawInventoryLevel[]> {
+    if (this.mockMode) {
+      console.info("[Loyverse] Mock mode — returning mock inventory");
+      return MOCK_INVENTORY;
+    }
+
+    const allLevels: LoyverseRawInventoryLevel[] = [];
+    let cursor: string | null = null;
+
+    do {
+      const query: string = cursor ? `?cursor=${encodeURIComponent(cursor)}` : "";
+      const page: { inventory_levels: LoyverseRawInventoryLevel[]; cursor: string | null } =
+        await this.fetchWithAuth<{
+          inventory_levels: LoyverseRawInventoryLevel[];
+          cursor: string | null;
+        }>(`/inventory${query}`);
+
+      if (Array.isArray(page.inventory_levels)) {
+        allLevels.push(...page.inventory_levels);
+      }
+      cursor = page.cursor ?? null;
+    } while (cursor);
+
+    console.info(`[Loyverse] Fetched ${allLevels.length} inventory levels`);
+    return allLevels;
   }
 
   /**
