@@ -99,22 +99,22 @@ export async function syncAllLoyverse(adapter: LoyverseAdapter): Promise<MirrorS
     console.info(`[mirror-sync] Items synced: ${result.itemsSynced}`);
 
     // Debug: log modifier-reference summary for active items
+    const itemsWithField = activeItems.filter((i) => "modifiers_ids" in (i as object));
     const itemsWithRefs = activeItems.filter(
       (i) => "modifiers_ids" in (i as object) && Array.isArray(i.modifiers_ids) && i.modifiers_ids.length > 0
     );
-    const itemsWithoutRefs = activeItems.length - itemsWithRefs.length;
+    const itemsWithEmptyField = itemsWithField.length - itemsWithRefs.length;
     console.info(`[Loyverse Sync] Items fetched: ${activeItems.length}`);
-    console.info(`[Loyverse Sync] Items with modifier refs: ${itemsWithRefs.length}`);
-    console.info(`[Loyverse Sync] Items without modifier refs: ${itemsWithoutRefs}`);
+    console.info(`[Loyverse Sync] items with modifiers_ids field: ${itemsWithField.length}`);
+    console.info(`[Loyverse Sync] items with non-empty modifiers_ids: ${itemsWithRefs.length}`);
+    console.info(`[Loyverse Sync] items with empty modifiers_ids: ${itemsWithEmptyField}`);
     activeItems.slice(0, 3).forEach((item, idx) => {
-      const rawKeys = Object.keys(item as object).join(", ");
       const modIds = Array.isArray(item.modifiers_ids) ? item.modifiers_ids : [];
       console.info(
         `[Loyverse Sync] Sample Item #${idx + 1}:\n` +
           `  id: ${item.id}\n` +
           `  name: ${item.item_name}\n` +
-          `  modifier refs: [${modIds.join(", ")}]\n` +
-          `  raw fields: ${rawKeys}`
+          `  modifiers_ids: [${modIds.map((id) => `"${id}"`).join(", ")}]`
       );
     });
 
