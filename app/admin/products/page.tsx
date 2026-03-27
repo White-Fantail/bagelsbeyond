@@ -76,9 +76,15 @@ export default async function AdminProductsPage({
         isSubscriptionEligible: true,
         sortOrder: true,
         updatedAt: true,
+        loyverseCategory: {
+          select: { name: true },
+        },
         externalMappings: {
           where: { source: IntegrationSource.LOYVERSE },
           select: { id: true },
+        },
+        optionGroupAssignments: {
+          select: { optionGroupId: true },
         },
       },
     }),
@@ -167,6 +173,7 @@ export default async function AdminProductsPage({
                   <th className="text-left px-4 py-3 font-medium text-gray-600">이름</th>
                   <th className="text-left px-4 py-3 font-medium text-gray-600">카테고리</th>
                   <th className="text-left px-4 py-3 font-medium text-gray-600">출처</th>
+                  <th className="text-center px-4 py-3 font-medium text-gray-600">모디파이어</th>
                   <th className="text-right px-4 py-3 font-medium text-gray-600">가격</th>
                   <th className="text-center px-4 py-3 font-medium text-gray-600">활성</th>
                   <th className="text-center px-4 py-3 font-medium text-gray-600">구독가능</th>
@@ -177,6 +184,10 @@ export default async function AdminProductsPage({
               <tbody className="divide-y divide-gray-100">
                 {products.map((product) => {
                   const isLoyverseSynced = product.externalMappings.length > 0;
+                  const categoryLabel = product.loyverseCategory?.name
+                    ?? CATEGORY_LABELS[product.category]
+                    ?? product.category;
+                  const modifierCount = product.optionGroupAssignments.length;
                   return (
                     <tr key={product.id} className="hover:bg-amber-50 transition-colors">
                       <td className="px-4 py-3 font-medium text-gray-900">
@@ -188,7 +199,14 @@ export default async function AdminProductsPage({
                         </Link>
                       </td>
                       <td className="px-4 py-3 text-gray-600">
-                        {CATEGORY_LABELS[product.category] ?? product.category}
+                        {product.loyverseCategory ? (
+                          <span className="inline-flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-blue-400 inline-block" />
+                            {categoryLabel}
+                          </span>
+                        ) : (
+                          categoryLabel
+                        )}
                       </td>
                       <td className="px-4 py-3">
                         {isLoyverseSynced ? (
@@ -199,6 +217,15 @@ export default async function AdminProductsPage({
                           <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
                             내부
                           </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        {modifierCount > 0 ? (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
+                            {modifierCount}개
+                          </span>
+                        ) : (
+                          <span className="text-xs text-gray-400">–</span>
                         )}
                       </td>
                       <td className="px-4 py-3 text-right text-gray-900 font-medium tabular-nums">

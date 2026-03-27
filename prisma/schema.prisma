@@ -315,12 +315,36 @@ enum IntegrationSource {
 // ─── Product (master catalogue) ───────────────────────────────────────────────
 // Internal master data. All POS-imported items are eventually mapped to a Product.
 
+// ─── LoyverseCategory ────────────────────────────────────────────────────────
+// Mirror of Loyverse categories. Loyverse is the single source of truth.
+// Categories are never created locally; they are always synced from Loyverse.
+
+model LoyverseCategory {
+  id                 String   @id @default(cuid())
+  loyverseCategoryId String   @unique
+  name               String
+  color              String?
+  isActive           Boolean  @default(true)
+  source             String   @default("LOYVERSE")
+  isSynced           Boolean  @default(true)
+  isEditable         Boolean  @default(false)
+  rawPayload         Json?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  products Product[]
+
+  @@index([isActive])
+  @@map("loyverse_categories")
+}
+
 model Product {
   id                    String          @id @default(cuid())
   name                  String
   slug                  String          @unique
   description           String?
   category              ProductCategory @default(OTHER)
+  loyverseCategoryId    String?
   basePrice             Float
   isActive              Boolean         @default(true)
   isSubscriptionEligible Boolean        @default(false)
@@ -328,6 +352,7 @@ model Product {
   createdAt             DateTime        @default(now())
   updatedAt             DateTime        @updatedAt
 
+  loyverseCategory           LoyverseCategory?     @relation(fields: [loyverseCategoryId], references: [id], onDelete: SetNull)
   variants                   ProductVariant[]
   optionGroups               ProductOptionGroup[]
   // Shared modifier group assignments (many-to-many).
@@ -340,6 +365,7 @@ model Product {
 
   @@index([isActive])
   @@index([category])
+  @@index([loyverseCategoryId])
   @@map("products")
 }
 
@@ -818,4 +844,32 @@ model LoyverseModifierSyncLog {
 
   @@index([syncedAt])
   @@map("loyverse_modifier_sync_logs")
+}
+
+// ─── LoyverseFullSyncLog ──────────────────────────────────────────────────────
+// Records each full (unified) Loyverse sync run.
+
+model LoyverseFullSyncLog {
+  id                    String   @id @default(cuid())
+  syncedAt              DateTime @default(now())
+  status                String   // "success" | "partial" | "failed"
+  categoriesFetched     Int      @default(0)
+  categoriesUpserted    Int      @default(0)
+  productsFetched       Int      @default(0)
+  productsCreated       Int      @default(0)
+  productsUpdated       Int      @default(0)
+  modifierGroupsFetched Int      @default(0)
+  modifierGroupsUpserted Int     @default(0)
+  modifierOptionsFetched Int     @default(0)
+  modifierOptionsUpserted Int    @default(0)
+  categoryLinksUpdated  Int      @default(0)
+  modifierLinksUpdated  Int      @default(0)
+  staleLinksRemoved     Int      @default(0)
+  skippedCount          Int      @default(0)
+  errorCount            Int      @default(0)
+  errorMessage          String?
+  createdAt             DateTime @default(now())
+
+  @@index([syncedAt])
+  @@map("loyverse_full_sync_logs")
 }
