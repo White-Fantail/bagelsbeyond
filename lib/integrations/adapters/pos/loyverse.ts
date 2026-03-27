@@ -27,6 +27,9 @@ import { normalizeLoyverseCatalog } from "../../services/catalog-mapper";
 
 const DEFAULT_BASE_URL = "https://api.loyverse.com/v1.0";
 
+/** Maximum number of characters captured from the raw HTTP body for diagnostic preview. */
+const RAW_BODY_PREVIEW_LENGTH = 10_000;
+
 // ─── Error helpers ────────────────────────────────────────────────────────────
 
 class LoyverseApiError extends Error {
@@ -37,6 +40,29 @@ class LoyverseApiError extends Error {
     super(message);
     this.name = "LoyverseApiError";
   }
+}
+
+// ─── HTTP pipeline diagnostics ────────────────────────────────────────────────
+
+/**
+ * Diagnostics captured at each stage of the /items HTTP pipeline.
+ * Populated by fetchItems() and accessible via adapter.itemsDiagnostics.
+ */
+export interface ItemsFetchDiagnostics {
+  /** Whether LOYVERSE_MOCK mode was active (no real HTTP call made) */
+  loyverseMock: boolean;
+  /** Actual URL that was called (null in mock mode) */
+  requestUrl: string | null;
+  /** HTTP response status code (null in mock mode) */
+  httpStatus: number | null;
+  /** Whether the literal string `"modifiers_ids"` appears anywhere in the raw HTTP body text */
+  rawBodyContainsModifiersIds: boolean | null;
+  /** First 10 000 characters of the raw HTTP body (null in mock mode) */
+  rawBodyPreview: string | null;
+  /** Always false — no fallback payload is used */
+  usingFallback: boolean;
+  /** Always false — no in-memory cache is used */
+  usingCache: boolean;
 }
 
 // ─── Mock data (used when LOYVERSE_MOCK=true or token absent) ─────────────────
@@ -268,11 +294,18 @@ export class LoyverseAdapter implements POSAdapter {
   private readonly apiToken: string;
   private readonly baseUrl: string;
   private readonly mockMode: boolean;
+  /** Populated after each fetchItems() call — null until first call. */
+  private _itemsDiagnostics: ItemsFetchDiagnostics | null = null;
 
   constructor(apiToken: string, baseUrl?: string) {
     this.apiToken = apiToken;
     this.baseUrl = (baseUrl ?? DEFAULT_BASE_URL).replace(/\/$/, "");
     this.mockMode = process.env.LOYVERSE_MOCK === "true" || !apiToken;
+  }
+
+  /** HTTP pipeline diagnostics captured during the last fetchItems() call. */
+  get itemsDiagnostics(): ItemsFetchDiagnostics | null {
+    return this._itemsDiagnostics;
   }
 
   private get authHeaders(): Record<string, string> {
@@ -363,6 +396,28 @@ export class LoyverseAdapter implements POSAdapter {
   }
 
   /**
+   * Low-level fetch that returns the raw HTTP body text along with status.
+   * Used to capture the HTTP body string BEFORE JSON.parse so diagnostics can
+   * verify field presence (e.g. `"modifiers_ids"`) at the wire level.
+   * Does NOT include error handling — callers must check `status` themselves.
+   */
+  private async fetchTextWithAuth(
+    path: string
+  ): Promise<{ url: string; status: number; text: string }> {
+    const url = `${this.baseUrl}${path}`;
+    let res: Response;
+    try {
+      res = await fetch(url, { headers: this.authHeaders });
+    } catch (err) {
+      throw new LoyverseApiError(
+        `Network error calling Loyverse (${path}): ${err instanceof Error ? err.message : String(err)}`
+      );
+    }
+    const text = await res.text();
+    return { url, status: res.status, text };
+  }
+
+  /**
    * Fetch all items (products) from Loyverse, following cursor-based pagination.
    * Logs raw payload diagnostics on the first page so the presence/absence of
    * `modifiers_ids` in the API response can be verified before any processing.
@@ -372,6 +427,15 @@ export class LoyverseAdapter implements POSAdapter {
       console.info(
         `[Loyverse] fetchItems: mockMode=true LOYVERSE_MOCK=${process.env.LOYVERSE_MOCK ?? "unset"} — returning MOCK_CATALOG items`
       );
+      this._itemsDiagnostics = {
+        loyverseMock: true,
+        requestUrl: null,
+        httpStatus: null,
+        rawBodyContainsModifiersIds: null,
+        rawBodyPreview: null,
+        usingFallback: false,
+        usingCache: false,
+      };
       MOCK_CATALOG.items.slice(0, 3).forEach((item, idx) => {
         const rawObj = item as unknown as Record<string, unknown>;
         console.info(`[RAW ITEM #${idx + 1} KEYS] ${JSON.stringify(Object.keys(rawObj))}`);
@@ -393,35 +457,90 @@ export class LoyverseAdapter implements POSAdapter {
 
     do {
       const query: string = cursor ? `?cursor=${encodeURIComponent(cursor)}` : "";
-      const page: { items: LoyverseRawItem[]; cursor: string | null } =
-        await this.fetchWithAuth<{
-          items: LoyverseRawItem[];
-          cursor: string | null;
-        }>(`/items${query}`);
 
-      if (Array.isArray(page.items)) {
-        // Log raw payload diagnostics for the first page only
-        if (pageNum === 0) {
+      let page: { items: LoyverseRawItem[]; cursor: string | null };
+
+      if (pageNum === 0) {
+        // ── First page: capture HTTP body text BEFORE JSON.parse ─────────────
+        // This lets us verify field presence (e.g. "modifiers_ids") at the
+        // actual wire level, before any JavaScript transformation.
+        const rawResult = await this.fetchTextWithAuth(`/items${query}`);
+        const rawText = rawResult.text;
+        const httpStatus = rawResult.status;
+        const requestUrl = rawResult.url;
+
+        // Log the HTTP-level diagnostics
+        console.info(`[HTTP STATUS] ${httpStatus}`);
+        console.info(`[HTTP URL] ${requestUrl}`);
+        console.info(`[LOYVERSE_MOCK] ${process.env.LOYVERSE_MOCK ?? "unset"}`);
+        console.info(`[USING FALLBACK] false`);
+        console.info(`[USING CACHE] false`);
+        const rawBodyContains = rawText.includes('"modifiers_ids"');
+        console.info(`[RAW BODY CONTAINS "modifiers_ids"] ${rawBodyContains}`);
+        const bodyPreview = rawText.slice(0, RAW_BODY_PREVIEW_LENGTH);
+        console.info(`[RAW BODY PREVIEW] ${bodyPreview}`);
+
+        // Store diagnostics for callers (e.g. syncAllLoyverse)
+        this._itemsDiagnostics = {
+          loyverseMock: false,
+          requestUrl,
+          httpStatus,
+          rawBodyContainsModifiersIds: rawBodyContains,
+          rawBodyPreview: bodyPreview,
+          usingFallback: false,
+          usingCache: false,
+        };
+
+        // Handle non-2xx the same way fetchWithAuth does
+        if (httpStatus >= 400) {
+          if (httpStatus === 401) {
+            throw new LoyverseApiError("Loyverse authentication failed — check LOYVERSE_API_TOKEN", 401);
+          }
+          if (httpStatus === 404) {
+            throw new LoyverseApiError(`Loyverse endpoint not found (HTTP 404): ${requestUrl}`, 404);
+          }
+          if (httpStatus === 429) {
+            throw new LoyverseApiError("Loyverse rate limit exceeded (HTTP 429) — retry later", 429);
+          }
+          if (httpStatus >= 500) {
+            throw new LoyverseApiError(`Loyverse server error (HTTP ${httpStatus}) — try again later`, httpStatus);
+          }
+          throw new LoyverseApiError(`Loyverse API error (HTTP ${httpStatus}) on /items`, httpStatus);
+        }
+
+        // JSON.parse the captured text (this is the step AFTER HTTP raw body)
+        page = JSON.parse(rawText) as { items: LoyverseRawItem[]; cursor: string | null };
+
+        // Log JSON.parse diagnostics
+        if (Array.isArray(page.items)) {
           const sample = page.items.slice(0, 3);
           sample.forEach((rawItem, idx) => {
             const rawObj = rawItem as unknown as Record<string, unknown>;
-            console.info(`[RAW ITEM #${idx + 1} KEYS] ${JSON.stringify(Object.keys(rawObj))}`);
+            console.info(`[JSON ITEM #${idx + 1} KEYS] ${JSON.stringify(Object.keys(rawObj))}`);
             const modIds = rawObj["modifiers_ids"];
             console.info(
-              `[RAW ITEM #${idx + 1} modifiers_ids] ${modIds !== undefined ? JSON.stringify(modIds) : "FIELD ABSENT"}`
+              `[JSON ITEM #${idx + 1} modifiers_ids] ${modIds !== undefined ? JSON.stringify(modIds) : "FIELD ABSENT"}`
             );
-            console.info(`[RAW ITEM #${idx + 1} FULL JSON] ${JSON.stringify(rawItem)}`);
+            console.info(`[JSON ITEM #${idx + 1} FULL JSON] ${JSON.stringify(rawItem)}`);
           });
 
-          // Count field presence across ALL items on first page
           const total = page.items.length;
           const withField = page.items.filter(
             (i) => "modifiers_ids" in (i as unknown as Record<string, unknown>)
           ).length;
           console.info(
-            `[RAW PAGE 1 SUMMARY] items=${total} with_modifiers_ids_field=${withField} without=${total - withField}`
+            `[JSON PAGE 1 SUMMARY] items=${total} with_modifiers_ids_field=${withField} without=${total - withField}`
           );
         }
+      } else {
+        // Subsequent pages go through the normal fetchWithAuth path
+        page = await this.fetchWithAuth<{
+          items: LoyverseRawItem[];
+          cursor: string | null;
+        }>(`/items${query}`);
+      }
+
+      if (Array.isArray(page.items)) {
         allItems.push(...page.items);
       }
       cursor = page.cursor ?? null;

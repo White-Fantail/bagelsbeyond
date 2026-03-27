@@ -99,28 +99,61 @@ export default function LoyverseSyncButton() {
             )}
           </div>
 
-          {/* Modifier link diagnostics — split into raw / parsed / final stages */}
+          {/* Modifier link diagnostics — split into HTTP raw / JSON.parse / parsed / final stages */}
           <div className="rounded-lg border border-amber-100 bg-amber-50/50 p-3 space-y-2.5">
             <p className="text-xs font-semibold text-amber-800">상품-모디파이어 연결 진단</p>
 
-            {/* Stage A: Raw API response */}
+            {/* Stage A: HTTP 원문 응답 */}
             <div className="space-y-1">
-              <p className="text-xs font-medium text-amber-700">[A] Raw API 응답 (deleted_at 필터 전)</p>
+              <p className="text-xs font-medium text-amber-700">[A] HTTP 원문 응답</p>
               <ul className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-amber-700">
                 <li>
-                  <span className="font-medium">raw modifiers_ids 있음:</span>{" "}
+                  <span className="font-medium">Mock 모드:</span>{" "}
+                  {result.loyverseMock ? "예 (실제 HTTP 없음)" : "아니오"}
+                </li>
+                <li>
+                  <span className="font-medium">HTTP 상태:</span>{" "}
+                  {result.itemsFetchHttpStatus ?? "N/A"}
+                </li>
+                <li className="col-span-2">
+                  <span className="font-medium">요청 URL:</span>{" "}
+                  {result.itemsFetchUrl ?? "N/A"}
+                </li>
+                <li>
+                  <span className="font-medium">원문에 "modifiers_ids" 포함:</span>{" "}
+                  {result.rawBodyContainsModifiersIds === null
+                    ? "N/A (mock)"
+                    : result.rawBodyContainsModifiersIds
+                    ? "✓ 있음"
+                    : "✗ 없음"}
+                </li>
+                <li>
+                  <span className="font-medium">Fallback 사용:</span> 아니오
+                </li>
+                <li>
+                  <span className="font-medium">Cache 사용:</span> 아니오
+                </li>
+              </ul>
+            </div>
+
+            {/* Stage B: JSON.parse 직후 */}
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-amber-700">[B] JSON.parse 직후 (deleted_at 필터 전)</p>
+              <ul className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-amber-700">
+                <li>
+                  <span className="font-medium">modifiers_ids 있음:</span>{" "}
                   {result.rawItemsWithModifiersIds ?? 0}
                 </li>
                 <li>
-                  <span className="font-medium">raw modifiers_ids 없음:</span>{" "}
+                  <span className="font-medium">modifiers_ids 없음:</span>{" "}
                   {result.rawItemsWithoutModifiersIds ?? 0}
                 </li>
               </ul>
             </div>
 
-            {/* Stage B: Active (parsed) items */}
+            {/* Stage C: Parsed DTO (활성 상품만) */}
             <div className="space-y-1">
-              <p className="text-xs font-medium text-amber-700">[B] Parsed (활성 상품만)</p>
+              <p className="text-xs font-medium text-amber-700">[C] Parsed DTO (활성 상품만)</p>
               <ul className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-amber-700">
                 <li>
                   <span className="font-medium">modifiers_ids 필드 없음:</span>{" "}
@@ -133,9 +166,9 @@ export default function LoyverseSyncButton() {
               </ul>
             </div>
 
-            {/* Stage C: Final link creation */}
+            {/* Stage D: 링크 생성 결과 */}
             <div className="space-y-1">
-              <p className="text-xs font-medium text-amber-700">[C] 링크 생성 결과</p>
+              <p className="text-xs font-medium text-amber-700">[D] 링크 생성 결과</p>
               <ul className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-amber-700">
                 <li>
                   <span className="font-medium">modifier 매칭 실패:</span>{" "}
