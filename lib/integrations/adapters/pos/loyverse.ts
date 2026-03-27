@@ -55,7 +55,7 @@ export interface ItemsFetchDiagnostics {
   requestUrl: string | null;
   /** HTTP response status code (null in mock mode) */
   httpStatus: number | null;
-  /** Whether the literal string `"modifiers_ids"` appears anywhere in the raw HTTP body text */
+  /** Whether the literal string `"modifier_ids"` appears anywhere in the raw HTTP body text */
   rawBodyContainsModifiersIds: boolean | null;
   /** First 10 000 characters of the raw HTTP body (null in mock mode) */
   rawBodyPreview: string | null;
@@ -77,7 +77,7 @@ const MOCK_CATALOG: LoyverseCatalogRaw = {
       category_id: "mock-cat-001",
       sold_by_weight: false,
       is_composite: false,
-      modifiers_ids: ["mock-mod-group-001"],
+      modifier_ids: ["mock-mod-group-001"],
       form: "FORM_ITEM",
       image_url: null,
       color: null,
@@ -119,7 +119,7 @@ const MOCK_CATALOG: LoyverseCatalogRaw = {
       category_id: "mock-cat-001",
       sold_by_weight: false,
       is_composite: false,
-      modifiers_ids: [],
+      modifier_ids: [],
       form: "FORM_ITEM",
       image_url: null,
       color: null,
@@ -161,7 +161,7 @@ const MOCK_CATALOG: LoyverseCatalogRaw = {
       category_id: "mock-cat-002",
       sold_by_weight: false,
       is_composite: false,
-      modifiers_ids: ["mock-mod-group-002"],
+      modifier_ids: ["mock-mod-group-002"],
       form: "FORM_ITEM",
       image_url: null,
       color: null,
@@ -398,7 +398,7 @@ export class LoyverseAdapter implements POSAdapter {
   /**
    * Low-level fetch that returns the raw HTTP body text along with status.
    * Used to capture the HTTP body string BEFORE JSON.parse so diagnostics can
-   * verify field presence (e.g. `"modifiers_ids"`) at the wire level.
+   * verify field presence (e.g. `"modifier_ids"`) at the wire level.
    * Does NOT include error handling — callers must check `status` themselves.
    */
   private async fetchTextWithAuth(
@@ -420,7 +420,7 @@ export class LoyverseAdapter implements POSAdapter {
   /**
    * Fetch all items (products) from Loyverse, following cursor-based pagination.
    * Logs raw payload diagnostics on the first page so the presence/absence of
-   * `modifiers_ids` in the API response can be verified before any processing.
+   * `modifier_ids` in the API response can be verified before any processing.
    */
   async fetchItems(): Promise<LoyverseRawItem[]> {
     if (this.mockMode) {
@@ -439,9 +439,9 @@ export class LoyverseAdapter implements POSAdapter {
       MOCK_CATALOG.items.slice(0, 3).forEach((item, idx) => {
         const rawObj = item as unknown as Record<string, unknown>;
         console.info(`[RAW ITEM #${idx + 1} KEYS] ${JSON.stringify(Object.keys(rawObj))}`);
-        const modIds = rawObj["modifiers_ids"];
+        const modIds = rawObj["modifier_ids"];
         console.info(
-          `[RAW ITEM #${idx + 1} modifiers_ids] ${modIds !== undefined ? JSON.stringify(modIds) : "FIELD ABSENT"}`
+          `[RAW ITEM #${idx + 1} modifier_ids] ${modIds !== undefined ? JSON.stringify(modIds) : "FIELD ABSENT"}`
         );
       });
       return MOCK_CATALOG.items;
@@ -462,7 +462,7 @@ export class LoyverseAdapter implements POSAdapter {
 
       if (pageNum === 0) {
         // ── First page: capture HTTP body text BEFORE JSON.parse ─────────────
-        // This lets us verify field presence (e.g. "modifiers_ids") at the
+        // This lets us verify field presence (e.g. "modifier_ids") at the
         // actual wire level, before any JavaScript transformation.
         const rawResult = await this.fetchTextWithAuth(`/items${query}`);
         const rawText = rawResult.text;
@@ -475,8 +475,8 @@ export class LoyverseAdapter implements POSAdapter {
         console.info(`[LOYVERSE_MOCK] ${process.env.LOYVERSE_MOCK ?? "unset"}`);
         console.info(`[USING FALLBACK] false`);
         console.info(`[USING CACHE] false`);
-        const rawBodyContains = rawText.includes('"modifiers_ids"');
-        console.info(`[RAW BODY CONTAINS "modifiers_ids"] ${rawBodyContains}`);
+        const rawBodyContains = rawText.includes('"modifier_ids"');
+        console.info(`[RAW BODY CONTAINS "modifier_ids"] ${rawBodyContains}`);
         const bodyPreview = rawText.slice(0, RAW_BODY_PREVIEW_LENGTH);
         console.info(`[RAW BODY PREVIEW] ${bodyPreview}`);
 
@@ -517,19 +517,19 @@ export class LoyverseAdapter implements POSAdapter {
           sample.forEach((rawItem, idx) => {
             const rawObj = rawItem as unknown as Record<string, unknown>;
             console.info(`[JSON ITEM #${idx + 1} KEYS] ${JSON.stringify(Object.keys(rawObj))}`);
-            const modIds = rawObj["modifiers_ids"];
+            const modIds = rawObj["modifier_ids"];
             console.info(
-              `[JSON ITEM #${idx + 1} modifiers_ids] ${modIds !== undefined ? JSON.stringify(modIds) : "FIELD ABSENT"}`
+              `[JSON ITEM #${idx + 1} modifier_ids] ${modIds !== undefined ? JSON.stringify(modIds) : "FIELD ABSENT"}`
             );
             console.info(`[JSON ITEM #${idx + 1} FULL JSON] ${JSON.stringify(rawItem)}`);
           });
 
           const total = page.items.length;
           const withField = page.items.filter(
-            (i) => "modifiers_ids" in (i as unknown as Record<string, unknown>)
+            (i) => "modifier_ids" in (i as unknown as Record<string, unknown>)
           ).length;
           console.info(
-            `[JSON PAGE 1 SUMMARY] items=${total} with_modifiers_ids_field=${withField} without=${total - withField}`
+            `[JSON PAGE 1 SUMMARY] items=${total} with_modifier_ids_field=${withField} without=${total - withField}`
           );
         }
       } else {

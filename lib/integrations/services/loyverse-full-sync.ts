@@ -491,7 +491,7 @@ async function syncProducts(
       }
 
       // Link product to modifier groups via ProductOptionGroupAssignment
-      for (const modifierId of item.modifiers_ids ?? []) {
+      for (const modifierId of item.modifier_ids ?? []) {
         const optionGroupId = modifierGroupIdMap.get(modifierId);
         if (!optionGroupId) {
           console.warn(
@@ -568,7 +568,7 @@ async function removeStaleModifierLinks(
     for (const item of items) {
       const productId = extProductToInternal.get(item.id);
       if (!productId) continue;
-      for (const modifierId of item.modifiers_ids ?? []) {
+      for (const modifierId of item.modifier_ids ?? []) {
         const optionGroupId = extGroupToInternal.get(modifierId);
         if (!optionGroupId) continue;
         validPairs.add(`${productId}:${optionGroupId}`);

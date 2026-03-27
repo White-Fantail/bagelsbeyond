@@ -44,7 +44,7 @@ export interface MirrorSyncResult {
   itemsFetchUrl: string | null;
   /** HTTP response status from the /items call (null in mock mode) */
   itemsFetchHttpStatus: number | null;
-  /** Whether the literal string `"modifiers_ids"` appears in the raw HTTP body text */
+  /** Whether the literal string `"modifier_ids"` appears in the raw HTTP body text */
   rawBodyContainsModifiersIds: boolean | null;
   /** First 10 000 characters of the raw HTTP body (null in mock mode) */
   rawBodyPreview: string | null;
@@ -55,9 +55,9 @@ export interface MirrorSyncResult {
   // ── Stage A: Raw API response (before deleted_at filter) ─────────────────────
   /** Total items returned by the Loyverse API (including deleted) */
   rawItemsTotal: number;
-  /** Raw items that have the `modifiers_ids` field present in the API response */
+  /** Raw items that have the `modifier_ids` field present in the API response */
   rawItemsWithModifiersIds: number;
-  /** Raw items that are missing the `modifiers_ids` field in the API response */
+  /** Raw items that are missing the `modifier_ids` field in the API response */
   rawItemsWithoutModifiersIds: number;
   // ── Stage B: Parsed + active items (after deleted_at filter) ─────────────────
   /** Active items whose payload contained no modifier reference field at all */
@@ -132,7 +132,7 @@ export async function syncAllLoyverse(adapter: LoyverseAdapter): Promise<MirrorS
     // ── HTTP pipeline diagnostics (populated by fetchItems) ───────────────────
     // These fields reveal what was in the actual HTTP body text, before any
     // JavaScript transformation, so we can determine at which stage
-    // `modifiers_ids` is present or absent.
+    // `modifier_ids` is present or absent.
     const diag = adapter.itemsDiagnostics;
     result.loyverseMock = diag?.loyverseMock ?? false;
     result.itemsFetchUrl = diag?.requestUrl ?? null;
@@ -153,22 +153,22 @@ export async function syncAllLoyverse(adapter: LoyverseAdapter): Promise<MirrorS
     // NOTE: this stage operates on the already-JSON.parsed LoyverseRawItem[].
     // The HTTP raw body text check above is the true "before JSON.parse" stage.
     const rawItemsWithField = items.filter(
-      (i) => "modifiers_ids" in (i as unknown as Record<string, unknown>)
+      (i) => "modifier_ids" in (i as unknown as Record<string, unknown>)
     );
     result.rawItemsTotal = items.length;
     result.rawItemsWithModifiersIds = rawItemsWithField.length;
     result.rawItemsWithoutModifiersIds = items.length - rawItemsWithField.length;
     console.info(
       `[STAGE A: JSON.parse 직후] total=${result.rawItemsTotal} ` +
-      `with_modifiers_ids=${result.rawItemsWithModifiersIds} ` +
-      `without_modifiers_ids=${result.rawItemsWithoutModifiersIds}`
+      `with_modifier_ids=${result.rawItemsWithModifiersIds} ` +
+      `without_modifier_ids=${result.rawItemsWithoutModifiersIds}`
     );
     items.slice(0, 3).forEach((item, idx) => {
       const rawObj = item as unknown as Record<string, unknown>;
-      const modIds = rawObj["modifiers_ids"];
+      const modIds = rawObj["modifier_ids"];
       console.info(
         `[RAW ITEM #${idx + 1}] id=${item.id} name="${item.item_name}" ` +
-        `modifiers_ids=${modIds !== undefined ? JSON.stringify(modIds) : "FIELD ABSENT"}`
+        `modifier_ids=${modIds !== undefined ? JSON.stringify(modIds) : "FIELD ABSENT"}`
       );
     });
 
@@ -176,22 +176,22 @@ export async function syncAllLoyverse(adapter: LoyverseAdapter): Promise<MirrorS
 
     // ── Stage B: Active (parsed) item diagnostics (after deleted_at filter) ───
     const activeWithField = activeItems.filter(
-      (i) => "modifiers_ids" in (i as unknown as Record<string, unknown>)
+      (i) => "modifier_ids" in (i as unknown as Record<string, unknown>)
     );
     const activeWithNonEmpty = activeWithField.filter(
-      (i) => Array.isArray(i.modifiers_ids) && i.modifiers_ids.length > 0
+      (i) => Array.isArray(i.modifier_ids) && i.modifier_ids.length > 0
     );
     console.info(
       `[STAGE B: ACTIVE] total=${activeItems.length} ` +
-      `with_modifiers_ids_field=${activeWithField.length} ` +
-      `with_non_empty_modifiers_ids=${activeWithNonEmpty.length} ` +
+      `with_modifier_ids_field=${activeWithField.length} ` +
+      `with_non_empty_modifier_ids=${activeWithNonEmpty.length} ` +
       `deleted_filtered_out=${items.length - activeItems.length}`
     );
     activeItems.slice(0, 3).forEach((item, idx) => {
-      const modIds = Array.isArray(item.modifiers_ids) ? item.modifiers_ids : [];
+      const modIds = Array.isArray(item.modifier_ids) ? item.modifier_ids : [];
       console.info(
         `[PARSED ITEM #${idx + 1}] id=${item.id} name="${item.item_name}" ` +
-        `modifiers_ids=${JSON.stringify(modIds)}`
+        `modifier_ids=${JSON.stringify(modIds)}`
       );
     });
 
@@ -401,7 +401,7 @@ async function syncItemModifierLinks(
   for (const item of items) {
     try {
       // Case 1: modifier reference field is completely absent from the payload
-      const hasModifierField = "modifiers_ids" in (item as object);
+      const hasModifierField = "modifier_ids" in (item as object);
       if (!hasModifierField) {
         result.itemsWithoutModifierField++;
         console.warn(
@@ -410,7 +410,7 @@ async function syncItemModifierLinks(
         continue;
       }
 
-      const modifierIds = item.modifiers_ids ?? [];
+      const modifierIds = item.modifier_ids ?? [];
 
       // Delete existing links for this item then re-insert from Loyverse
       await prisma.loyverseItemModifier.deleteMany({

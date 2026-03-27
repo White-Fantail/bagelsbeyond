@@ -199,7 +199,7 @@ async function upsertModifierGroups(
     const modifierToItems = new Map<string, string[]>();
     for (const item of items) {
       if (item.deleted_at !== null) continue;
-      for (const modId of item.modifiers_ids ?? []) {
+      for (const modId of item.modifier_ids ?? []) {
         const existing = modifierToItems.get(modId) ?? [];
         existing.push(item.id);
         modifierToItems.set(modId, existing);

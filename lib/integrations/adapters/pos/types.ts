@@ -40,7 +40,7 @@ export interface LoyverseRawItem {
   sold_by_weight: boolean;
   is_composite: boolean;
   /** IDs of modifier groups attached to this item */
-  modifiers_ids: string[];
+  modifier_ids: string[];
   form: string;
   image_url: string | null;
   color: string | null;

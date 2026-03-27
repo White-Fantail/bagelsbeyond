@@ -120,7 +120,7 @@ export default function LoyverseSyncButton() {
                   {result.itemsFetchUrl ?? "N/A"}
                 </li>
                 <li>
-                  <span className="font-medium">원문에 "modifiers_ids" 포함:</span>{" "}
+                  <span className="font-medium">원문에 "modifier_ids" 포함:</span>{" "}
                   {result.rawBodyContainsModifiersIds === null
                     ? "N/A (mock)"
                     : result.rawBodyContainsModifiersIds
@@ -141,11 +141,11 @@ export default function LoyverseSyncButton() {
               <p className="text-xs font-medium text-amber-700">[B] JSON.parse 직후 (deleted_at 필터 전)</p>
               <ul className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-amber-700">
                 <li>
-                  <span className="font-medium">modifiers_ids 있음:</span>{" "}
+                  <span className="font-medium">modifier_ids 있음:</span>{" "}
                   {result.rawItemsWithModifiersIds ?? 0}
                 </li>
                 <li>
-                  <span className="font-medium">modifiers_ids 없음:</span>{" "}
+                  <span className="font-medium">modifier_ids 없음:</span>{" "}
                   {result.rawItemsWithoutModifiersIds ?? 0}
                 </li>
               </ul>
@@ -156,11 +156,11 @@ export default function LoyverseSyncButton() {
               <p className="text-xs font-medium text-amber-700">[C] Parsed DTO (활성 상품만)</p>
               <ul className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-amber-700">
                 <li>
-                  <span className="font-medium">modifiers_ids 필드 없음:</span>{" "}
+                  <span className="font-medium">modifier_ids 필드 없음:</span>{" "}
                   {result.itemsWithoutModifierField ?? 0}
                 </li>
                 <li>
-                  <span className="font-medium">modifiers_ids 빈 배열:</span>{" "}
+                  <span className="font-medium">modifier_ids 빈 배열:</span>{" "}
                   {result.itemsWithEmptyModifiers ?? 0}
                 </li>
               </ul>
