@@ -26,7 +26,6 @@ import type {
   LoyverseRawModifier,
   LoyverseRawItem,
 } from "../adapters/pos/types";
-import { mapExternalCategory } from "./catalog-mapper";
 import { IntegrationSource } from "@/app/generated/prisma/enums";
 
 // ─── Result types ─────────────────────────────────────────────────────────────
@@ -430,16 +429,12 @@ async function syncProducts(
       const isActive =
         item.variants.some((v) => v.stores.some((s) => s.available_for_sale));
 
-      // Map to internal enum category (kept for backward compat, uses Loyverse category name)
-      const enumCategory = mapExternalCategory(categoryEntry?.name);
-
       // Determine fields to write
       const productFields = {
         name: item.item_name,
         description: item.description ?? null,
         basePrice,
         isActive,
-        category: enumCategory,
         loyverseCategoryId,
         updatedAt: new Date(),
       };

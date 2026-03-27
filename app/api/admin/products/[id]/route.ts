@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { apiRequireAdmin, isNextResponse } from "@/lib/auth/dal";
-import { IntegrationSource, ProductCategory } from "@/app/generated/prisma/enums";
+import { IntegrationSource } from "@/app/generated/prisma/enums";
 import { z } from "zod";
 
 const productPatchSchema = z.object({
@@ -12,7 +12,7 @@ const productPatchSchema = z.object({
     .regex(/^[a-z0-9-]+$/, "슬러그는 소문자, 숫자, 하이픈만 사용할 수 있습니다")
     .optional(),
   description: z.string().optional().nullable(),
-  category: z.nativeEnum(ProductCategory).optional(),
+  loyverseCategoryId: z.string().optional().nullable(),
   basePrice: z.number().min(0, "가격은 0 이상이어야 합니다").optional(),
   isActive: z.boolean().optional(),
   isSubscriptionEligible: z.boolean().optional(),
@@ -20,7 +20,7 @@ const productPatchSchema = z.object({
 });
 
 /** Fields that cannot be changed on a Loyverse-synced product */
-const LOYVERSE_READONLY_FIELDS = ["name", "slug", "description", "category", "basePrice"] as const;
+const LOYVERSE_READONLY_FIELDS = ["name", "slug", "description", "basePrice"] as const;
 
 export async function GET(
   _req: NextRequest,

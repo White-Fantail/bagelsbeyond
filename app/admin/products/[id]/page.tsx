@@ -54,7 +54,7 @@ export default async function EditProductPage({
       name: true,
       slug: true,
       description: true,
-      category: true,
+      loyverseCategoryId: true,
       basePrice: true,
       isActive: true,
       isSubscriptionEligible: true,

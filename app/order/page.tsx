@@ -28,6 +28,7 @@ export default async function OrderPage() {
         orderBy: { date: "asc" },
         take: 2,
       },
+      loyverseCategory: { select: { name: true } },
     },
   });
 
@@ -36,7 +37,7 @@ export default async function OrderPage() {
     id: p.id,
     name: p.name,
     description: p.description,
-    category: p.category,
+    category: p.loyverseCategory?.name ?? null,
     basePrice: p.basePrice,
     isSubscriptionEligible: p.isSubscriptionEligible,
     isSoldOut: p.dailyInventory.some((d) => d.isSoldOut),
