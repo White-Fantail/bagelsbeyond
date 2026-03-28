@@ -31,6 +31,8 @@ export default async function LoyverseIntegrationPage() {
         modifierGroupsUpserted: true,
         modifierOptionsUpserted: true,
         modifierLinksUpdated: true,
+        itemModifierLinksAttempted: true,
+        itemModifierLinksPersisted: true,
         errorMessage: true,
       },
     }),
