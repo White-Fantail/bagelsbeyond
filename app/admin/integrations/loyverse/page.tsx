@@ -182,6 +182,8 @@ export default async function LoyverseIntegrationPage() {
                 <span>Modifier groups {lastFullSync.modifierGroupsUpserted}</span>
                 <span>Modifier options {lastFullSync.modifierOptionsUpserted}</span>
                 <span>Product-Modifier links {lastFullSync.modifierLinksUpdated}</span>
+                <span>Links attempted {lastFullSync.itemModifierLinksAttempted ?? 0}</span>
+                <span>Links persisted (DB) {lastFullSync.itemModifierLinksPersisted ?? 0}</span>
               </div>
             )}
             {lastFullSync.errorMessage && (
