@@ -935,13 +935,15 @@ model LoyverseFullSyncLog {
   modifierGroupsUpserted Int     @default(0)
   modifierOptionsFetched Int     @default(0)
   modifierOptionsUpserted Int    @default(0)
-  categoryLinksUpdated  Int      @default(0)
-  modifierLinksUpdated  Int      @default(0)
-  staleLinksRemoved     Int      @default(0)
-  skippedCount          Int      @default(0)
-  errorCount            Int      @default(0)
-  errorMessage          String?
-  createdAt             DateTime @default(now())
+  categoryLinksUpdated           Int      @default(0)
+  modifierLinksUpdated           Int      @default(0)
+  staleLinksRemoved              Int      @default(0)
+  skippedCount                   Int      @default(0)
+  errorCount                     Int      @default(0)
+  errorMessage                   String?
+  itemModifierLinksAttempted     Int      @default(0)
+  itemModifierLinksPersisted     Int      @default(0)
+  createdAt                      DateTime @default(now())
 
   @@index([syncedAt])
   @@map("loyverse_full_sync_logs")

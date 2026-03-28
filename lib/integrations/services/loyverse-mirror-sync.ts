@@ -69,6 +69,9 @@ export interface MirrorSyncResult {
   modifierNotFoundLocally: number;
   /** Number of item-modifier link DB inserts that failed */
   linkInsertErrors: number;
+  // ── Stage D: DB verification ──────────────────────────────────────────────────
+  /** Actual row count in loyverse_item_modifiers after all inserts */
+  itemModifierLinksPersisted: number;
   errorCount: number;
   errors: string[];
 }
@@ -104,6 +107,7 @@ export async function syncAllLoyverse(adapter: LoyverseAdapter): Promise<MirrorS
     itemsWithEmptyModifiers: 0,
     modifierNotFoundLocally: 0,
     linkInsertErrors: 0,
+    itemModifierLinksPersisted: 0,
     errorCount: 0,
     errors: [],
   };
@@ -211,6 +215,16 @@ export async function syncAllLoyverse(adapter: LoyverseAdapter): Promise<MirrorS
     );
     console.info(`[mirror-sync] Item-modifier links synced: ${result.itemModifierLinksSynced}`);
 
+    // ── Stage D: DB verification — count actual rows persisted ───────────────
+    try {
+      result.itemModifierLinksPersisted = await prisma.loyverseItemModifier.count();
+      console.info(
+        `[STAGE D: DB VERIFY] actual_rows_in_db=${result.itemModifierLinksPersisted}`
+      );
+    } catch (countErr) {
+      console.error("[mirror-sync] Stage D DB count failed:", countErr);
+    }
+
     // Step 5: Variants
     console.info("[mirror-sync] Step 5: Syncing variants…");
     const variants = await adapter.fetchVariants();
@@ -234,6 +248,34 @@ export async function syncAllLoyverse(adapter: LoyverseAdapter): Promise<MirrorS
 
   result.finishedAt = new Date();
 
+  // Persist sync summary to loyverse_full_sync_logs
+  try {
+    await prisma.loyverseFullSyncLog.create({
+      data: {
+        status: result.status,
+        categoriesFetched: result.categoriesSynced,
+        categoriesUpserted: result.categoriesSynced,
+        productsFetched: result.itemsSynced,
+        productsCreated: 0,
+        productsUpdated: result.itemsSynced,
+        modifierGroupsFetched: result.modifiersSynced,
+        modifierGroupsUpserted: result.modifiersSynced,
+        modifierOptionsFetched: result.modifierOptionsSynced,
+        modifierOptionsUpserted: result.modifierOptionsSynced,
+        categoryLinksUpdated: 0,
+        modifierLinksUpdated: result.itemModifierLinksSynced,
+        staleLinksRemoved: 0,
+        skippedCount: result.itemsWithoutModifierField + result.itemsWithEmptyModifiers,
+        errorCount: result.errorCount,
+        errorMessage: result.errors.length > 0 ? result.errors.slice(0, 3).join("; ") : null,
+        itemModifierLinksAttempted: result.itemModifierLinksSynced + result.linkInsertErrors,
+        itemModifierLinksPersisted: result.itemModifierLinksPersisted,
+      },
+    });
+  } catch (logErr) {
+    console.error("[mirror-sync] Failed to persist sync log:", logErr);
+  }
+
   const duration = ((result.finishedAt.getTime() - result.startedAt.getTime()) / 1000).toFixed(1);
   console.info(
     `[mirror-sync] DONE status=${result.status} duration=${duration}s ` +
@@ -244,7 +286,8 @@ export async function syncAllLoyverse(adapter: LoyverseAdapter): Promise<MirrorS
       `[HTTP] mock=${result.loyverseMock} httpStatus=${result.itemsFetchHttpStatus ?? "N/A"} rawContainsModifiersIds=${result.rawBodyContainsModifiersIds ?? "N/A"} ` +
       `[A] rawTotal=${result.rawItemsTotal} rawWithField=${result.rawItemsWithModifiersIds} rawWithoutField=${result.rawItemsWithoutModifiersIds} ` +
       `[B] noModifierField=${result.itemsWithoutModifierField} emptyModifiers=${result.itemsWithEmptyModifiers} ` +
-      `[C] modifierNotFound=${result.modifierNotFoundLocally} linkInsertErrors=${result.linkInsertErrors}`
+      `[C] modifierNotFound=${result.modifierNotFoundLocally} linkInsertErrors=${result.linkInsertErrors} ` +
+      `[D] dbPersisted=${result.itemModifierLinksPersisted}`
   );
 
   return result;

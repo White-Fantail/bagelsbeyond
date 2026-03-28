@@ -182,6 +182,10 @@ export default function LoyverseSyncButton() {
                   <span className="font-medium">link create failed:</span>{" "}
                   {result.linkInsertErrors ?? 0}
                 </li>
+                <li>
+                  <span className="font-medium">DB persisted (actual rows):</span>{" "}
+                  {result.itemModifierLinksPersisted ?? 0}
+                </li>
               </ul>
             </div>
           </div>

@@ -110,6 +110,44 @@ export default async function EditProductPage({
   const isLoyverseSynced = externalMappings.length > 0;
   const externalProductId = externalMappings[0]?.externalProductId ?? null;
 
+  // Fetch Loyverse modifier groups linked to this item
+  let loyverseModifierGroups: {
+    id: string;
+    name: string;
+    required: boolean;
+    minSelect: number | null;
+    maxSelect: number | null;
+    options: { id: string; name: string; price: number }[];
+  }[] = [];
+
+  if (externalProductId) {
+    const loyverseItem = await prisma.loyverseItem.findUnique({
+      where: { id: externalProductId },
+      select: {
+        modifiers: {
+          select: {
+            modifier: {
+              select: {
+                id: true,
+                name: true,
+                required: true,
+                minSelect: true,
+                maxSelect: true,
+                options: {
+                  select: { id: true, name: true, price: true },
+                  orderBy: { name: "asc" },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+    if (loyverseItem) {
+      loyverseModifierGroups = loyverseItem.modifiers.map((m) => m.modifier);
+    }
+  }
+
   const formProduct = {
     ...productFields,
     description: productFields.description ?? undefined,
@@ -156,6 +194,61 @@ export default async function EditProductPage({
       <ProductForm product={formProduct} mode="edit" />
 
       <OptionGroupManager productId={product.id} initialGroups={allGroups} />
+
+      {/* Loyverse Connected Modifier Groups */}
+      {isLoyverseSynced && (
+        <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="font-semibold text-gray-900">Loyverse Connected Modifier Groups</h2>
+              <p className="text-sm text-gray-500 mt-0.5">
+                Modifier groups linked to this product in Loyverse (via mirror sync).
+              </p>
+            </div>
+            <span className="text-xs text-gray-400 font-mono">{externalProductId}</span>
+          </div>
+          {loyverseModifierGroups.length === 0 ? (
+            <p className="text-sm text-gray-400 italic">
+              {isLoyverseSynced
+                ? "No modifier groups linked in Loyverse. Run a Full Sync to refresh."
+                : "Product is not yet synced with Loyverse."}
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {loyverseModifierGroups.map((group) => (
+                <div key={group.id} className="rounded-lg border border-gray-100 overflow-hidden">
+                  <div className="bg-gray-50 border-b border-gray-100 px-4 py-2 flex items-center justify-between text-xs font-semibold text-gray-600">
+                    <span>
+                      {group.name}
+                      {group.required && (
+                        <span className="ml-2 text-amber-600">* Required</span>
+                      )}
+                    </span>
+                    <span className="font-normal text-gray-400">
+                      {group.minSelect != null && `min ${group.minSelect}`}
+                      {group.minSelect != null && group.maxSelect != null && " / "}
+                      {group.maxSelect != null && `max ${group.maxSelect}`}
+                    </span>
+                  </div>
+                  <ul className="divide-y divide-gray-100">
+                    {group.options.map((opt) => (
+                      <li
+                        key={opt.id}
+                        className="flex items-center justify-between px-4 py-2 text-sm text-gray-700"
+                      >
+                        <span>{opt.name}</span>
+                        <span className="text-xs text-gray-500 font-mono">
+                          {opt.price === 0 ? "Free" : `+$${opt.price.toFixed(2)}`}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Modifier Mapping Status */}
       {allOptions.length > 0 && (
