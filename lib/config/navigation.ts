@@ -114,7 +114,10 @@ export const STAFF_NAV: RoleNavConfig = {
     {
       id: "inventory",
       label: "Inventory",
-      items: [{ href: "/admin/inventory", label: "Inventory Management" }],
+      items: [
+        { href: "/admin/inventory", label: "Inventory Management" },
+        { href: "/admin/bagel-availability", label: "Bagel Availability" },
+      ],
     },
   ],
 };
@@ -138,6 +141,7 @@ export const ADMIN_NAV: RoleNavConfig = {
         { href: "/admin/modifiers", label: "Modifier Management" },
         { href: "/admin/categories", label: "Category Management" },
         { href: "/admin/inventory", label: "Inventory Management" },
+        { href: "/admin/bagel-availability", label: "Bagel Availability" },
       ],
     },
     {
