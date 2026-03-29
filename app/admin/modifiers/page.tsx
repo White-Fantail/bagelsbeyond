@@ -6,16 +6,12 @@ import { IntegrationSource } from "@/app/generated/prisma/enums";
 import Link from "next/link";
 import { Suspense } from "react";
 import ModifierFilters from "./ModifierFilters";
-import ModifierSyncButton from "./ModifierSyncButton";
 import ModifierGroupList from "./ModifierGroupList";
-import ModifierGroupManager from "./ModifierGroupManager";
 import type { ModifierGroupRow } from "./ModifierGroupList";
-import type { EditableModifierGroup } from "./ModifierGroupManager";
 
 type SearchParams = {
   search?: string;
   groupId?: string;
-  source?: string;
   tracksInventory?: string;
   isActive?: string;
 };
@@ -32,12 +28,6 @@ export default async function AdminModifiersPage({ searchParams }: { searchParam
 
   if (sp.groupId) groupWhere.id = sp.groupId;
 
-  if (sp.source === "LOYVERSE") {
-    groupWhere.externalMapping = { isNot: null };
-  } else if (sp.source === "INTERNAL") {
-    groupWhere.externalMapping = null;
-  }
-
   // Option-level filters (filter groups that have at least one matching option)
   const optionWhere: Record<string, unknown> = {};
   if (sp.search?.trim()) optionWhere.name = { contains: sp.search.trim(), mode: "insensitive" };
@@ -51,7 +41,7 @@ export default async function AdminModifiersPage({ searchParams }: { searchParam
     groupWhere.options = { some: optionWhere };
   }
 
-  const hasFilters = !!(sp.search || sp.groupId || sp.source || sp.tracksInventory || sp.isActive);
+  const hasFilters = !!(sp.search || sp.groupId || sp.tracksInventory || sp.isActive);
 
   const [rawGroups, allGroups, lastFullSync] = await Promise.all([
     // Groups matching the filter
@@ -167,26 +157,6 @@ export default async function AdminModifiersPage({ searchParams }: { searchParam
     };
   });
 
-  const editableGroups: EditableModifierGroup[] = rawGroups.map((g) => ({
-    id: g.id,
-    name: g.name,
-    minSelect: g.minSelect,
-    maxSelect: g.maxSelect,
-    isRequired: g.isRequired,
-    sortOrder: g.sortOrder,
-    isLoyverseSynced: g.externalMapping !== null,
-    options: g.options.map((o) => ({
-      id: o.id,
-      name: o.name,
-      priceDelta: o.priceDelta,
-      isActive: o.isActive,
-      tracksInventory: o.tracksInventory,
-      sortOrder: o.sortOrder,
-      sku: o.sku,
-      isLoyverseSynced: o.externalOptionMappings.length > 0,
-    })),
-  }));
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -195,11 +165,11 @@ export default async function AdminModifiersPage({ searchParams }: { searchParam
           <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
             <Link href="/admin" className="hover:text-amber-600">Admin Dashboard</Link>
             <span>/</span>
-            <span className="text-gray-700 font-medium">Modifier Management</span>
+            <span className="text-gray-700 font-medium">Modifier Library</span>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">Modifier Management</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Modifier Library</h1>
           <p className="text-gray-500 mt-0.5 text-sm">
-            Create and edit modifier groups and options, and link them to products.
+            Loyverse에서 동기화된 모디파이어와 옵션을 확인합니다.
           </p>
         </div>
         <Link href="/admin/inventory" className="px-3 py-2 bg-amber-500 text-white rounded-lg text-sm font-medium hover:bg-amber-600 whitespace-nowrap">
@@ -207,25 +177,12 @@ export default async function AdminModifiersPage({ searchParams }: { searchParam
         </Link>
       </div>
 
-      {/* Last full sync status */}
-      {lastFullSync ? (
-        <div
-          className={`rounded-lg border p-4 text-sm space-y-1 ${
-            lastFullSync.status === "success"
-              ? "border-green-200 bg-green-50 text-green-800"
-              : lastFullSync.status === "partial"
-              ? "border-amber-200 bg-amber-50 text-amber-700"
-              : "border-red-200 bg-red-50 text-red-700"
-          }`}
-        >
-          <p className="font-semibold">
-            {lastFullSync.status === "success"
-              ? "✓ Loyverse Last Full Sync successful"
-              : lastFullSync.status === "partial"
-              ? "⚠ Loyverse Last Full Sync partially complete"
-              : "✗ Loyverse Last Full Sync Failed"}
-          </p>
-          <p className="text-xs">
+      {/* Sync info notice */}
+      <div className="rounded-lg border border-blue-100 bg-blue-50 p-4 text-sm text-blue-800">
+        <p className="font-semibold">ℹ 모디파이어 데이터는 Loyverse 전체 동기화에서 자동 업데이트됩니다.</p>
+        {lastFullSync ? (
+          <p className="text-xs mt-0.5 text-blue-600">
+            마지막 전체 동기화:{" "}
             {lastFullSync.syncedAt.toLocaleString("en-NZ")}
             {lastFullSync.status !== "failed" && (
               <> · Groups {lastFullSync.modifierGroupsUpserted} · Options {lastFullSync.modifierOptionsUpserted} · Links {lastFullSync.modifierLinksUpdated}</>
@@ -234,13 +191,10 @@ export default async function AdminModifiersPage({ searchParams }: { searchParam
               <span className="text-red-600 ml-2 font-mono">{lastFullSync.errorMessage}</span>
             )}
           </p>
-        </div>
-      ) : (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-          <p className="font-semibold">⚠ No Sync History</p>
-          <p className="text-xs mt-0.5">Loyverse Full Sync has never been run. Use the button below to sync.</p>
-        </div>
-      )}
+        ) : (
+          <p className="text-xs mt-0.5 text-amber-600">아직 전체 동기화 기록이 없습니다.</p>
+        )}
+      </div>
 
       {/* Shared-inventory notice */}
       <div className="rounded-lg border border-purple-100 bg-purple-50 p-4 text-sm text-purple-800">
@@ -249,18 +203,6 @@ export default async function AdminModifiersPage({ searchParams }: { searchParam
           <code className="bg-purple-100 rounded px-1">tracksInventory=true</code> modifier options are shared across products but have only one Inventory entry.
           E.g. The &quot;Plain Bagel&quot; option used in both bagel and sandwich products has only one DailyOptionInventory entry.
         </p>
-      </div>
-
-      {/* Modifier sync button */}
-      <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-3">
-        <div>
-          <h2 className="font-semibold text-gray-900 text-sm">Loyverse All Sync</h2>
-          <p className="text-xs text-gray-500 mt-0.5">
-            Sync categories, modifier groups, options, and products all at once..
-            Product-modifier group links are also updated..
-          </p>
-        </div>
-        <ModifierSyncButton />
       </div>
 
       {/* Stats cards */}
@@ -304,11 +246,8 @@ export default async function AdminModifiersPage({ searchParams }: { searchParam
         )}
       </div>
 
-      {/* Modifier group management (create/edit/delete for internal groups) */}
-      <ModifierGroupManager initialGroups={editableGroups} />
-
-      {/* Read-only overview table (shown as reference; expandable rows) */}
-      {hasFilters && <ModifierGroupList groups={groups} />}
+      {/* Modifier group list (read-only, collapsed by default) */}
+      <ModifierGroupList groups={groups} />
     </div>
   );
 }
