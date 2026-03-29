@@ -9,7 +9,7 @@ const CART_KEY = "beyond_cart";
 interface Option { id: string; name: string; priceDelta: number; isSoldOut: boolean; }
 interface OptionGroup {
   id: string; name: string; minSelect: number; maxSelect: number;
-  isRequired: boolean; options: Option[];
+  isRequired: boolean; sortOrder: number; options: Option[];
 }
 interface Product {
   id: string; name: string; description: string | null; category: string | null;
