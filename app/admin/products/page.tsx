@@ -36,7 +36,9 @@ export default async function AdminProductsPage({
     where.name = { contains: search, mode: "insensitive" };
   }
 
-  // Filter by canonical categoryId (new architecture) or legacy loyverseCategoryId
+  // Filter by canonical categoryId (new architecture) or legacy loyverseCategoryId.
+  // Note: canonical Category IDs and LoyverseCategory IDs are both CUIDs (cuid())
+  // generated independently, so collisions are astronomically unlikely.
   if (categoryFilter !== "ALL") {
     where.OR = [
       { categoryId: categoryFilter },

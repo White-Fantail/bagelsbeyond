@@ -34,11 +34,11 @@ export async function POST(request: Request) {
   const { items } = parsed.data;
 
   try {
-    // Determine which table to use: canonical Category or legacy LoyverseCategory
-    const firstId = items[0]?.id;
-    const isCanonical = firstId
-      ? !!(await prisma.category.findUnique({ where: { id: firstId } }).catch(() => null))
-      : false;
+    // Determine which table to use: canonical Category or legacy LoyverseCategory.
+    // Use a single count check rather than a per-request findUnique — the assumption
+    // is that once the backfill has run, all category IDs come from the canonical table.
+    const canonicalCount = await prisma.category.count();
+    const isCanonical = canonicalCount > 0;
 
     if (isCanonical) {
       // Use canonical Category table (new architecture)
