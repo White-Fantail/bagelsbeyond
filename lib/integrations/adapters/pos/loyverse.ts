@@ -293,13 +293,15 @@ const MOCK_INVENTORY: LoyverseRawInventoryLevel[] = [
 export class LoyverseAdapter implements POSAdapter {
   private readonly apiToken: string;
   private readonly baseUrl: string;
+  private readonly storeId: string;
   private readonly mockMode: boolean;
   /** Populated after each fetchItems() call — null until first call. */
   private _itemsDiagnostics: ItemsFetchDiagnostics | null = null;
 
-  constructor(apiToken: string, baseUrl?: string) {
+  constructor(apiToken: string, baseUrl?: string, storeId?: string) {
     this.apiToken = apiToken;
     this.baseUrl = (baseUrl ?? DEFAULT_BASE_URL).replace(/\/$/, "");
+    this.storeId = storeId ?? "";
     this.mockMode = process.env.LOYVERSE_MOCK === "true" || !apiToken;
   }
 
@@ -719,6 +721,10 @@ export class LoyverseAdapter implements POSAdapter {
   ): Promise<SyncResult<{ externalOrderId: string }>> {
     if (!this.apiToken) {
       return { success: false, error: "LOYVERSE_API_TOKEN is not configured" };
+    }
+
+    if (!this.storeId) {
+      return { success: false, error: "LOYVERSE_STORE_ID is not configured" };
     }
 
     if (this.mockMode) {
