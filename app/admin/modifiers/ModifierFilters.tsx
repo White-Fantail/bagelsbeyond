@@ -3,12 +3,6 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
-const SOURCE_OPTIONS = [
-  { value: "ALL", label: "All Source" },
-  { value: "LOYVERSE", label: "Loyverse Sync" },
-  { value: "INTERNAL", label: "Internal Create" },
-];
-
 const TRACKS_OPTIONS = [
   { value: "ALL", label: "Inventory Tracking All" },
   { value: "YES", label: "Inventory Tracking ON" },
@@ -29,7 +23,6 @@ export default function ModifierFilters({ groups }: Props) {
 
   const [search, setSearch] = useState(searchParams.get("search") ?? "");
   const [groupId, setGroupId] = useState(searchParams.get("groupId") ?? "");
-  const [source, setSource] = useState(searchParams.get("source") ?? "ALL");
   const [tracks, setTracks] = useState(searchParams.get("tracksInventory") ?? "ALL");
   const [isActive, setIsActive] = useState(searchParams.get("isActive") ?? "ALL");
 
@@ -37,19 +30,17 @@ export default function ModifierFilters({ groups }: Props) {
     const params = new URLSearchParams();
     const s = overrides?.search ?? search;
     const g = overrides?.groupId ?? groupId;
-    const src = overrides?.source ?? source;
     const t = overrides?.tracksInventory ?? tracks;
     const a = overrides?.isActive ?? isActive;
     if (s) params.set("search", s);
     if (g) params.set("groupId", g);
-    if (src !== "ALL") params.set("source", src);
     if (t !== "ALL") params.set("tracksInventory", t);
     if (a !== "ALL") params.set("isActive", a);
     router.push("/admin/modifiers?" + params.toString());
   };
 
   const handleReset = () => {
-    setSearch(""); setGroupId(""); setSource("ALL"); setTracks("ALL"); setIsActive("ALL");
+    setSearch(""); setGroupId(""); setTracks("ALL"); setIsActive("ALL");
     router.push("/admin/modifiers");
   };
 
@@ -67,12 +58,6 @@ export default function ModifierFilters({ groups }: Props) {
           <select value={groupId} onChange={(e) => { setGroupId(e.target.value); applyFilters({ groupId: e.target.value }); }} className={sel}>
             <option value="">All groups</option>
             {groups.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
-          </select>
-        </div>
-        <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-gray-600">Source</label>
-          <select value={source} onChange={(e) => { setSource(e.target.value); applyFilters({ source: e.target.value }); }} className={sel}>
-            {SOURCE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
         </div>
         <div className="flex flex-col gap-1">
