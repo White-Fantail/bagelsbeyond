@@ -34,14 +34,34 @@ export async function POST(request: Request) {
   const { items } = parsed.data;
 
   try {
-    await prisma.$transaction(
-      items.map(({ id, displayOrder }) =>
-        prisma.loyverseCategory.update({
-          where: { id },
-          data: { displayOrder, updatedAt: new Date() },
-        })
-      )
-    );
+    // Determine which table to use: canonical Category or legacy LoyverseCategory.
+    // Use a single count check rather than a per-request findUnique — the assumption
+    // is that once the backfill has run, all category IDs come from the canonical table.
+    const canonicalCount = await prisma.category.count();
+    const isCanonical = canonicalCount > 0;
+
+    if (isCanonical) {
+      // Use canonical Category table (new architecture)
+      await prisma.$transaction(
+        items.map(({ id, displayOrder }) =>
+          prisma.category.update({
+            where: { id },
+            data: { displayOrder },
+          })
+        )
+      );
+    } else {
+      // Fallback: use LoyverseCategory (legacy)
+      await prisma.$transaction(
+        items.map(({ id, displayOrder }) =>
+          prisma.loyverseCategory.update({
+            where: { id },
+            data: { displayOrder, updatedAt: new Date() },
+          })
+        )
+      );
+    }
+
     return NextResponse.json({ success: true, updated: items.length });
   } catch {
     return NextResponse.json(
@@ -50,3 +70,4 @@ export async function POST(request: Request) {
     );
   }
 }
+

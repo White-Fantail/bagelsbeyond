@@ -6,6 +6,9 @@ import { z } from "zod";
 const patchSchema = z.object({
   isVisible: z.boolean().optional(),
   displayOrder: z.number().int().min(0).optional(),
+  name: z.string().min(1).optional(),
+  description: z.string().optional().nullable(),
+  isActive: z.boolean().optional(),
 });
 
 export async function PATCH(
@@ -38,9 +41,21 @@ export async function PATCH(
   }
 
   try {
+    // Try canonical Category first (new architecture)
+    const canonicalCategory = await prisma.category.findUnique({ where: { id } });
+    if (canonicalCategory) {
+      const updated = await prisma.category.update({
+        where: { id },
+        data,
+        select: { id: true, name: true, isVisible: true, displayOrder: true, isActive: true },
+      });
+      return NextResponse.json({ category: updated });
+    }
+
+    // Fallback: update LoyverseCategory (legacy — before backfill is run)
     const updated = await prisma.loyverseCategory.update({
       where: { id },
-      data: { ...data, updatedAt: new Date() },
+      data: { isVisible: data.isVisible, displayOrder: data.displayOrder, updatedAt: new Date() },
       select: { id: true, name: true, isVisible: true, displayOrder: true },
     });
     return NextResponse.json({ category: updated });
@@ -51,3 +66,4 @@ export async function PATCH(
     );
   }
 }
+

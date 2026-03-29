@@ -2,7 +2,6 @@ export const dynamic = "force-dynamic";
 
 import { requireAdmin } from "@/lib/auth/dal";
 import { prisma } from "@/lib/db";
-import { IntegrationSource } from "@/app/generated/prisma/enums";
 import Link from "next/link";
 import { Suspense } from "react";
 import ProductFilters from "./ProductFilters";
@@ -25,11 +24,10 @@ export default async function AdminProductsPage({
   const sp = await searchParams;
   const search = sp.search?.trim() ?? "";
   const categoryFilter = sp.category ?? "ALL";
-  const sourceFilter = sp.source ?? "ALL";
   const activeFilter = sp.isActive ?? "ALL";
   const subscriptionFilter = sp.subscription ?? "ALL";
 
-  const hasFilters = !!(sp.search || sp.category || sp.source || sp.isActive || sp.subscription);
+  const hasFilters = !!(sp.search || sp.category || sp.isActive || sp.subscription);
 
   // Build where clause
   const where: Record<string, unknown> = {};
@@ -38,8 +36,14 @@ export default async function AdminProductsPage({
     where.name = { contains: search, mode: "insensitive" };
   }
 
+  // Filter by canonical categoryId (new architecture) or legacy loyverseCategoryId.
+  // Note: canonical Category IDs and LoyverseCategory IDs are both CUIDs (cuid())
+  // generated independently, so collisions are astronomically unlikely.
   if (categoryFilter !== "ALL") {
-    where.loyverseCategoryId = categoryFilter;
+    where.OR = [
+      { categoryId: categoryFilter },
+      { loyverseCategoryId: categoryFilter },
+    ];
   }
 
   if (activeFilter === "ACTIVE") where.isActive = true;
@@ -48,31 +52,34 @@ export default async function AdminProductsPage({
   if (subscriptionFilter === "YES") where.isSubscriptionEligible = true;
   else if (subscriptionFilter === "NO") where.isSubscriptionEligible = false;
 
-  // Source filter requires joining external mappings
-  if (sourceFilter === "LOYVERSE") {
-    where.externalMappings = { some: { source: IntegrationSource.LOYVERSE } };
-  } else if (sourceFilter === "INTERNAL") {
-    where.externalMappings = { none: { source: IntegrationSource.LOYVERSE } };
-  }
-
   const [products, total, activeCount] = await Promise.all([
     prisma.product.findMany({
       where,
-      orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+      orderBy: [{ displayOrder: "asc" }, { sortOrder: "asc" }, { name: "asc" }],
       select: {
         id: true,
         name: true,
         basePrice: true,
         isActive: true,
+        isVisible: true,
+        soldOut: true,
+        status: true,
         isSubscriptionEligible: true,
+        displayOrder: true,
         sortOrder: true,
         updatedAt: true,
+        // Canonical category (new architecture)
+        category: {
+          select: { id: true, name: true },
+        },
+        // Legacy Loyverse category (fallback)
         loyverseCategory: {
           select: { name: true },
         },
-        externalMappings: {
-          where: { source: IntegrationSource.LOYVERSE },
-          select: { id: true },
+        // Channel mapping status
+        channelMapping: {
+          where: { channel: "LOYVERSE" },
+          select: { status: true, lastSyncAt: true },
         },
         optionGroupAssignments: {
           select: { optionGroupId: true },
@@ -97,7 +104,7 @@ export default async function AdminProductsPage({
           </div>
           <h1 className="text-2xl font-bold text-gray-900">Product Management</h1>
           <p className="text-gray-500 mt-0.5 text-sm">
-            Manage the full product list, prices, and active status.
+            Canonical product list. Loyverse-linked structure is mirrored automatically.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -162,21 +169,25 @@ export default async function AdminProductsPage({
               <thead>
                 <tr className="border-b border-gray-200 bg-gray-50">
                   <th className="text-left px-4 py-3 font-medium text-gray-600">Name</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Categories</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Source</th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-600">Category</th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-600">Channel</th>
                   <th className="text-center px-4 py-3 font-medium text-gray-600">Modifiers</th>
                   <th className="text-right px-4 py-3 font-medium text-gray-600">Price</th>
                   <th className="text-center px-4 py-3 font-medium text-gray-600">Active</th>
-                  <th className="text-center px-4 py-3 font-medium text-gray-600">Subscription Available</th>
-                  <th className="text-right px-4 py-3 font-medium text-gray-600">Sort Order</th>
-                  <th className="text-right px-4 py-3 font-medium text-gray-600">Last Edit Date</th>
+                  <th className="text-center px-4 py-3 font-medium text-gray-600">Visible</th>
+                  <th className="text-center px-4 py-3 font-medium text-gray-600">Sold Out</th>
+                  <th className="text-right px-4 py-3 font-medium text-gray-600">Last Edit</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {products.map((product) => {
-                  const isLoyverseSynced = product.externalMappings.length > 0;
-                  const categoryLabel = product.loyverseCategory?.name ?? null;
+                  // Prefer canonical category, fall back to legacy
+                  const categoryLabel =
+                    product.category?.name ?? product.loyverseCategory?.name ?? null;
                   const modifierCount = product.optionGroupAssignments.length;
+                  const loyverseMapping = product.channelMapping[0];
+                  const isLoyverseMapped = !!loyverseMapping;
+
                   return (
                     <tr key={product.id} className="hover:bg-amber-50 transition-colors">
                       <td className="px-4 py-3 font-medium text-gray-900">
@@ -198,7 +209,7 @@ export default async function AdminProductsPage({
                         )}
                       </td>
                       <td className="px-4 py-3">
-                        {isLoyverseSynced ? (
+                        {isLoyverseMapped ? (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
                             🔗 Loyverse
                           </span>
@@ -232,18 +243,20 @@ export default async function AdminProductsPage({
                         )}
                       </td>
                       <td className="px-4 py-3 text-center">
-                        {product.isSubscriptionEligible ? (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
-                            Available
-                          </span>
+                        {product.isVisible ? (
+                          <span className="text-xs text-green-600">✓</span>
                         ) : (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-400">
-                            Unavailable
-                          </span>
+                          <span className="text-xs text-gray-400">–</span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-right text-gray-500 tabular-nums">
-                        {product.sortOrder}
+                      <td className="px-4 py-3 text-center">
+                        {product.soldOut ? (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">
+                            Sold Out
+                          </span>
+                        ) : (
+                          <span className="text-xs text-gray-400">–</span>
+                        )}
                       </td>
                       <td className="px-4 py-3 text-right text-gray-400 tabular-nums text-xs">
                         {product.updatedAt.toLocaleDateString("en-NZ")}
@@ -259,3 +272,4 @@ export default async function AdminProductsPage({
     </div>
   );
 }
+
