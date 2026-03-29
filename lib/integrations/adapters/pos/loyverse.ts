@@ -757,6 +757,7 @@ export class LoyverseAdapter implements POSAdapter {
 
       const payload = {
         receipt_number: order.orderNumber ?? order.externalId,
+        store_id: this.storeId,
         note: order.note ?? null,
         total_money: order.totalAmount,
         line_items,
@@ -871,7 +872,8 @@ export class LoyverseAdapter implements POSAdapter {
 export function createLoyverseAdapter(): LoyverseAdapter {
   const token = process.env.LOYVERSE_API_TOKEN ?? "";
   const baseUrl = process.env.LOYVERSE_API_BASE_URL ?? DEFAULT_BASE_URL;
-  return new LoyverseAdapter(token, baseUrl);
+  const storeId = process.env.LOYVERSE_STORE_ID ?? "";
+  return new LoyverseAdapter(token, baseUrl, storeId);
 }
 
 /** Returns true if Loyverse is the active POS provider */
