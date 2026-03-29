@@ -130,11 +130,13 @@ export async function createOrderAction(
     for (const sel of cartItem.selectedOptions) {
       const group = product.optionGroups.find((g) => g.id === sel.optionGroupId);
       if (!group) {
-        return { success: false, message: `Option group not found: ${sel.optionGroupId}` };
+        console.error(`[order] Option group not found for internal id: ${sel.optionGroupId}`);
+        return { success: false, message: "There was a menu sync issue while submitting your order. Please try again, or contact the store." };
       }
       const option = group.options.find((o) => o.id === sel.optionId);
       if (!option) {
-        return { success: false, message: `Option not found: ${sel.optionId}` };
+        console.error(`[order] Option not found for internal id: ${sel.optionId}`);
+        return { success: false, message: "There was a menu sync issue while submitting your order. Please try again, or contact the store." };
       }
       unitPrice += option.priceDelta;
       resolvedOptions.push({

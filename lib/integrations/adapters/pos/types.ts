@@ -132,6 +132,10 @@ export interface ExternalOrderItemModifier {
   name: string;
   price: number;
   quantity?: number;
+  /** Loyverse modifier option ID (externalOptionId from ExternalOptionMap). Must be set for Loyverse receipts. */
+  modifierId?: string;
+  /** Loyverse modifier group ID (externalGroupId from ExternalOptionMap). Optional for Loyverse receipts. */
+  modifierGroupId?: string;
 }
 
 export interface ExternalOrderItem {
