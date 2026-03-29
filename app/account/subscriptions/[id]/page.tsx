@@ -10,7 +10,7 @@ const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 const STATUS_LABEL: Record<string, string> = {
   ACTIVE: "Active",
-  PAUSED: "Pause",
+  PAUSED: "Paused",
   CANCELLED: "Cancelled",
 };
 
@@ -57,9 +57,9 @@ export default async function SubscriptionDetailPage({
           <span>/</span>
           <Link href="/account/subscriptions" className="hover:text-amber-600">My Subscriptions</Link>
           <span>/</span>
-          <span className="text-gray-700 font-medium">Subscriptions Details</span>
+          <span className="text-gray-700 font-medium">Subscription Details</span>
         </div>
-        <h1 className="text-2xl font-bold text-gray-900">Subscriptions Details</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Subscription Details</h1>
       </div>
 
       {/* Status & info */}
@@ -68,7 +68,7 @@ export default async function SubscriptionDetailPage({
           <span className={`text-xs px-2 py-1 rounded-full font-medium ${STATUS_COLOR[sub.status] ?? "text-gray-600 bg-gray-100"}`}>
             {STATUS_LABEL[sub.status] ?? sub.status}
           </span>
-          <span className="font-semibold text-gray-900">Every {WEEKDAYS[sub.pickupWeekday]}Day</span>
+          <span className="font-semibold text-gray-900">Every {WEEKDAYS[sub.pickupWeekday]}</span>
           {sub.pickupTimeSlot && <span className="text-sm text-gray-500">{sub.pickupTimeSlot}</span>}
         </div>
 
@@ -93,7 +93,7 @@ export default async function SubscriptionDetailPage({
         )}
 
         <div>
-          <p className="text-gray-500 text-xs mb-1">Subscriptions Products</p>
+          <p className="text-gray-500 text-xs mb-1">Subscription Items</p>
           <div className="space-y-1">
             {sub.items.map((item) => (
               <div key={item.id} className="flex justify-between text-sm">

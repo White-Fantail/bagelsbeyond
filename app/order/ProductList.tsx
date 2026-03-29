@@ -191,7 +191,12 @@ export default function ProductList({ products }: Props) {
       {/* Sticky cart bar */}
       {cartCount > 0 && (
         <div className="fixed bottom-0 left-0 right-0 bg-amber-600 text-white p-4 flex items-center justify-between z-50">
-          <span className="font-medium">Cart ({cartCount})</span>
+          <div>
+            <span className="font-medium">{cartCount} {cartCount === 1 ? "item" : "items"}</span>
+            <span className="text-amber-200 text-sm ml-2">
+              ${(Math.round(cart.reduce((s, i) => s + i.lineTotal, 0) * 100) / 100).toFixed(2)}
+            </span>
+          </div>
           <Link href="/order/cart" className="bg-white text-amber-700 font-semibold px-5 py-2 rounded-lg text-sm">
             View Cart →
           </Link>

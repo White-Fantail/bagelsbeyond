@@ -8,7 +8,7 @@ const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 const STATUS_LABEL: Record<string, string> = {
   ACTIVE: "Active",
-  PAUSED: "Pause",
+  PAUSED: "Paused",
   CANCELLED: "Cancelled",
 };
 
@@ -59,7 +59,7 @@ export default async function AccountSubscriptionsPage() {
                       {STATUS_LABEL[sub.status] ?? sub.status}
                     </span>
                     <span className="text-sm font-semibold text-gray-900">
-                      Every {WEEKDAYS[sub.pickupWeekday]}Day
+                      Every {WEEKDAYS[sub.pickupWeekday]}
                     </span>
                     {sub.pickupTimeSlot && (
                       <span className="text-xs text-gray-500">{sub.pickupTimeSlot}</span>

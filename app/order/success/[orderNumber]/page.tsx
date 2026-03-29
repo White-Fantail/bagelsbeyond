@@ -71,7 +71,7 @@ export default async function OrderSuccessPage({
       </div>
 
       <div className="bg-white rounded-xl border border-gray-200 p-5 text-left space-y-2">
-        <h2 className="font-semibold text-sm text-gray-800 mb-2">Orders Products</h2>
+        <h2 className="font-semibold text-sm text-gray-800 mb-2">Order Items</h2>
         {order.items.map((item) => (
           <div key={item.id} className="text-sm">
             <div className="flex justify-between">
