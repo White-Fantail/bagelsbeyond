@@ -185,9 +185,24 @@ export async function pushOrderToPOS(
           name: mapping?.externalName ?? opt.optionNameSnapshot,
           price: opt.priceDeltaSnapshot,
           quantity: opt.quantity,
+          modifierId: mapping?.externalOptionId ?? undefined,
+          modifierGroupId: mapping?.externalGroupId ?? undefined,
         };
       }),
     }));
+
+    console.info("[order-sync] Building Loyverse payload", {
+      orderId,
+      orderNumber: order.orderNumber,
+      itemCount: externalOrderItems.length,
+      modifierResolution: externalOrderItems.flatMap((item) =>
+        item.modifiers.map((m) => ({
+          name: m.name,
+          modifierId: m.modifierId ?? null,
+          modifierGroupId: m.modifierGroupId ?? null,
+        }))
+      ),
+    });
 
     return pushToAdapter(
       orderId,
@@ -216,6 +231,12 @@ export async function pushOrderToPOS(
       quantity: opt.quantity,
     })),
   }));
+
+  console.info("[order-sync] Building Loyverse payload (no modifiers)", {
+    orderId,
+    orderNumber: order.orderNumber,
+    itemCount: externalOrderItems.length,
+  });
 
   return pushToAdapter(orderId, order, adapter, source, externalOrderItems, note);
 }

@@ -728,23 +728,52 @@ export class LoyverseAdapter implements POSAdapter {
     }
 
     try {
+      interface LoyverseReceiptModifier {
+        modifier_id?: string;
+        modifier_set_id?: string;
+        name: string;
+        price: number;
+      }
+
+      const line_items = order.items.map((item) => ({
+        item_id: item.externalProductId !== "" ? item.externalProductId : null,
+        item_name: item.productName,
+        quantity: item.quantity,
+        price: item.unitPrice,
+        total_money: item.lineTotal,
+        modifiers: (item.modifiers ?? []).map((m): LoyverseReceiptModifier => ({
+          ...(m.modifierId ? { modifier_id: m.modifierId } : {}),
+          ...(m.modifierGroupId ? { modifier_set_id: m.modifierGroupId } : {}),
+          name: m.name,
+          price: m.price,
+        })),
+      }));
+
       const payload = {
         receipt_number: order.orderNumber ?? order.externalId,
         note: order.note ?? null,
         total_money: order.totalAmount,
-        line_items: order.items.map((item) => ({
-          item_id: item.externalProductId !== "" ? item.externalProductId : null,
-          item_name: item.productName,
-          quantity: item.quantity,
-          price: item.unitPrice,
-          total_money: item.lineTotal,
-          modifiers: item.modifiers?.map((m) => ({
-            name: m.name,
-            price: m.price,
-          })) ?? [],
-        })),
+        line_items,
         created_at: order.createdAt.toISOString(),
       };
+
+      console.info("[Loyverse] Sending receipt payload", {
+        receipt_number: payload.receipt_number,
+        total_money: payload.total_money,
+        line_item_count: line_items.length,
+        line_items: line_items.map((li) => ({
+          item_id: li.item_id,
+          item_name: li.item_name,
+          quantity: li.quantity,
+          modifier_count: li.modifiers.length,
+          modifiers: li.modifiers.map((m) => ({
+            modifier_id: m.modifier_id ?? null,
+            modifier_set_id: m.modifier_set_id ?? null,
+            name: m.name,
+            price: m.price,
+          })),
+        })),
+      });
 
       const res = await this.fetchWithAuth<{ receipt_number: string }>(
         "/receipts",
