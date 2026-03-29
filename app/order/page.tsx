@@ -26,6 +26,13 @@ export default async function OrderPage() {
           options: {
             where: { isActive: true },
             orderBy: { sortOrder: "asc" },
+            include: {
+              dailyOptionInventory: {
+                where: { date: { gte: today } },
+                orderBy: { date: "asc" },
+                take: 1,
+              },
+            },
           },
         },
       },
@@ -58,6 +65,7 @@ export default async function OrderPage() {
         id: o.id,
         name: o.name,
         priceDelta: o.priceDelta,
+        isSoldOut: o.dailyOptionInventory?.[0]?.isSoldOut ?? false,
       })),
     })),
   }));

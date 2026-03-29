@@ -6,7 +6,7 @@ import type { CartItem, SelectedOption } from "@/types/cart";
 
 const CART_KEY = "beyond_cart";
 
-interface Option { id: string; name: string; priceDelta: number; }
+interface Option { id: string; name: string; priceDelta: number; isSoldOut: boolean; }
 interface OptionGroup {
   id: string; name: string; minSelect: number; maxSelect: number;
   isRequired: boolean; options: Option[];
@@ -235,6 +235,16 @@ function QuantitySelector({
 
 // ── Product Modal ─────────────────────────────────────────────────────────────
 
+function getGroupSubtitle(group: OptionGroup): string {
+  const { minSelect, maxSelect, isRequired } = group;
+  if (!isRequired && maxSelect <= 1) return "Optional";
+  if (minSelect === 1 && maxSelect === 1) return "Select 1";
+  if (minSelect === maxSelect && minSelect > 0) return `Select ${minSelect}`;
+  if (minSelect === 0 && maxSelect > 1) return `Choose up to ${maxSelect}`;
+  if (minSelect > 0 && maxSelect > 1) return `Choose ${minSelect}–${maxSelect}`;
+  return isRequired ? "Required" : "Optional";
+}
+
 function ProductModal({
   product,
   onClose,
@@ -242,133 +252,231 @@ function ProductModal({
 }: {
   product: Product;
   onClose: () => void;
-  onAddToCart: (product: Product, qty: number, selections: Record<string, string>, note: string) => string | null;
+  onAddToCart: (product: Product, qty: number, selections: Record<string, string[]>, note: string) => string | null;
 }) {
   const [qty, setQty] = useState(1);
-  const [selections, setSelections] = useState<Record<string, string>>({});
+  const [selections, setSelections] = useState<Record<string, string[]>>({});
   const [note, setNote] = useState("");
   const [error, setError] = useState("");
+  const [groupErrors, setGroupErrors] = useState<Record<string, string>>({});
 
-  // Lock scroll while modal is open
+  // Lock body scroll while modal is open
   useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => { document.body.style.overflow = prev; };
   }, []);
 
-  const optionTotal = product.optionGroups.reduce((sum, g) => {
-    const optId = selections[g.id];
-    if (!optId) return sum;
-    const opt = g.options.find((o) => o.id === optId);
-    return sum + (opt?.priceDelta ?? 0);
-  }, 0);
-  const lineTotal = calcLineTotal(product.basePrice, Object.keys(selections).map((gid) => {
-    const g = product.optionGroups.find((g) => g.id === gid);
-    const opt = g?.options.find((o) => o.id === selections[gid]);
-    if (!g || !opt) return null;
-    return { optionGroupId: gid, optionGroupName: g.name, optionId: opt.id, optionName: opt.name, priceDelta: opt.priceDelta };
-  }).filter(Boolean) as SelectedOption[], qty);
+  // ESC key to close
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) { if (e.key === "Escape") onClose(); }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  // Build flat list of selected options for price calculation
+  const selectedOptions: SelectedOption[] = [];
+  for (const group of product.optionGroups) {
+    const optIds = selections[group.id] ?? [];
+    for (const optId of optIds) {
+      const opt = group.options.find((o) => o.id === optId);
+      if (opt) {
+        selectedOptions.push({
+          optionGroupId: group.id,
+          optionGroupName: group.name,
+          optionId: opt.id,
+          optionName: opt.name,
+          priceDelta: opt.priceDelta,
+        });
+      }
+    }
+  }
+
+  const lineTotal = calcLineTotal(product.basePrice, selectedOptions, qty);
+
+  function toggleOption(group: OptionGroup, optId: string) {
+    setSelections((prev) => {
+      const current = prev[group.id] ?? [];
+      const isSingle = group.maxSelect === 1;
+      if (isSingle) {
+        // Radio: replace existing selection
+        return { ...prev, [group.id]: [optId] };
+      }
+      // Checkbox: toggle membership, respecting maxSelect
+      if (current.includes(optId)) {
+        return { ...prev, [group.id]: current.filter((id) => id !== optId) };
+      }
+      if (current.length >= group.maxSelect) return prev; // max reached
+      return { ...prev, [group.id]: [...current, optId] };
+    });
+    // Clear per-group error on interaction
+    setGroupErrors((prev) => { const n = { ...prev }; delete n[group.id]; return n; });
+    setError("");
+  }
 
   function handleAdd() {
+    const newGroupErrors: Record<string, string> = {};
+    for (const group of product.optionGroups) {
+      if (!group.isRequired) continue;
+      const selected = selections[group.id] ?? [];
+      if (selected.length < group.minSelect) {
+        newGroupErrors[group.id] = getGroupSubtitle(group);
+      }
+    }
+    if (Object.keys(newGroupErrors).length > 0) {
+      setGroupErrors(newGroupErrors);
+      setError("Please complete all required selections above.");
+      return;
+    }
     const err = onAddToCart(product, qty, selections, note);
     if (err) { setError(err); return; }
     onClose();
   }
 
+  const hasRequiredUnfilled = product.optionGroups.some((g) => {
+    if (!g.isRequired) return false;
+    return (selections[g.id] ?? []).length < g.minSelect;
+  });
+
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
       role="dialog"
       aria-modal="true"
+      aria-label={product.name}
     >
-      {/* Backdrop */}
+      {/* Dim overlay */}
       <div
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/50"
         onClick={onClose}
         aria-hidden="true"
       />
 
       {/* Modal panel */}
-      <div className="relative w-full sm:max-w-lg bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[92dvh] overflow-y-auto flex flex-col">
-        {/* Drag handle (mobile) */}
-        <div className="sm:hidden flex justify-center pt-3 pb-1">
-          <div className="w-10 h-1 bg-gray-200 rounded-full" />
+      <div className="relative w-full sm:w-[480px] bg-white rounded-2xl shadow-2xl max-h-[90dvh] flex flex-col overflow-hidden">
+
+        {/* ── Hero image ── */}
+        <div className="relative h-52 sm:h-60 bg-gradient-to-br from-amber-50 to-orange-100 flex items-center justify-center shrink-0">
+          <span className="text-8xl" aria-hidden="true">🥯</span>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="absolute top-3 right-3 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md text-gray-600 hover:bg-gray-50 transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
 
-        {/* Hero */}
-        <div className="h-48 bg-gradient-to-br from-amber-50 to-orange-100 flex items-center justify-center shrink-0">
-          <span className="text-7xl" aria-hidden="true">🥯</span>
-        </div>
+        {/* ── Scrollable body ── */}
+        <div className="flex-1 overflow-y-auto">
 
-        {/* Content */}
-        <div className="p-5 space-y-4 flex-1">
-          <div>
+          {/* Product info */}
+          <div className="px-5 pt-5 pb-4">
             <h2 className="text-xl font-bold text-gray-900">{product.name}</h2>
             {product.description && (
-              <p className="text-sm text-gray-500 mt-1 leading-relaxed">{product.description}</p>
+              <p className="text-sm text-gray-500 mt-1.5 leading-relaxed">{product.description}</p>
             )}
-            <p className="text-xl font-bold text-amber-600 mt-2">
-              ${product.basePrice.toFixed(2)}
-              {optionTotal !== 0 && (
-                <span className="text-sm text-gray-500 font-normal ml-1">
-                  + ${optionTotal.toFixed(2)} options
-                </span>
-              )}
+            <p className="text-sm font-semibold text-amber-600 mt-2">
+              Starting from ${product.basePrice.toFixed(2)}
             </p>
           </div>
 
-          {/* Option groups */}
-          {product.optionGroups.map((group) => (
-            <div key={group.id} className="space-y-2">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-semibold text-gray-800">
-                  {group.name}
-                  {group.isRequired && <span className="text-red-500 ml-0.5">*</span>}
-                </p>
-                <span className="text-xs text-gray-400 bg-gray-100 rounded-full px-2 py-0.5">
-                  {group.isRequired ? "Required" : "Optional"}
-                </span>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                {!group.isRequired && (
-                  <button
-                    type="button"
-                    onClick={() => setSelections((s) => { const n = { ...s }; delete n[group.id]; return n; })}
-                    className={`text-left px-3 py-2 rounded-xl border text-sm transition-colors ${
-                      !selections[group.id]
-                        ? "border-amber-400 bg-amber-50 text-amber-700 font-medium"
-                        : "border-gray-200 text-gray-500 hover:border-gray-300"
-                    }`}
-                  >
-                    None
-                  </button>
-                )}
-                {group.options.map((opt) => (
-                  <button
-                    key={opt.id}
-                    type="button"
-                    onClick={() => setSelections((s) => ({ ...s, [group.id]: opt.id }))}
-                    className={`text-left px-3 py-2 rounded-xl border text-sm transition-colors ${
-                      selections[group.id] === opt.id
-                        ? "border-amber-400 bg-amber-50 text-amber-700 font-medium"
-                        : "border-gray-200 text-gray-700 hover:border-amber-200 hover:bg-amber-50/50"
-                    }`}
-                  >
-                    <span className="block">{opt.name}</span>
-                    {opt.priceDelta !== 0 && (
-                      <span className="text-xs text-gray-500">
-                        {opt.priceDelta > 0 ? "+" : ""}${opt.priceDelta.toFixed(2)}
-                      </span>
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ))}
+          {/* Modifier groups */}
+          <div className="px-5 pb-4">
+            {product.optionGroups.map((group) => {
+              const selected = selections[group.id] ?? [];
+              const isSingle = group.maxSelect === 1;
+              const subtitle = getGroupSubtitle(group);
+              const groupErr = groupErrors[group.id];
+
+              return (
+                <fieldset key={group.id} className="border-t border-gray-100 py-4">
+                  {/* Group header */}
+                  <div className="mb-3">
+                    <legend className="text-sm font-semibold text-gray-900 w-full">{group.name}</legend>
+                    <p className={`text-xs mt-0.5 ${groupErr ? "text-red-500 font-medium" : "text-gray-400"}`}>
+                      {groupErr ? `Please ${subtitle.toLowerCase()}` : subtitle}
+                    </p>
+                  </div>
+
+                  {/* Options list */}
+                  <div className="divide-y divide-gray-50">
+                    {group.options.map((opt) => {
+                      const isSelected = selected.includes(opt.id);
+                      const maxReached = !isSingle && !isSelected && selected.length >= group.maxSelect;
+                      const isDisabled = opt.isSoldOut || maxReached;
+
+                      return (
+                        <button
+                          key={opt.id}
+                          type="button"
+                          role={isSingle ? "radio" : "checkbox"}
+                          aria-checked={isSelected}
+                          disabled={isDisabled && !isSelected}
+                          onClick={() => !opt.isSoldOut && toggleOption(group, opt.id)}
+                          className={`w-full flex items-center gap-3 py-3 text-left transition-colors rounded-sm ${
+                            opt.isSoldOut
+                              ? "cursor-not-allowed opacity-40"
+                              : maxReached
+                              ? "opacity-50 cursor-not-allowed"
+                              : "hover:bg-gray-50 cursor-pointer"
+                          }`}
+                        >
+                          {/* Option name + price delta */}
+                          <div className="flex-1 min-w-0">
+                            <span className="text-sm text-gray-800">{opt.name}</span>
+                            {opt.priceDelta !== 0 && (
+                              <span className="block text-xs text-gray-400 mt-0.5">
+                                {opt.priceDelta > 0 ? "+" : ""}${opt.priceDelta.toFixed(2)}
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Right control */}
+                          {opt.isSoldOut ? (
+                            <span className="text-xs text-gray-400 border border-gray-200 rounded px-2 py-0.5 shrink-0 whitespace-nowrap">
+                              Sold out
+                            </span>
+                          ) : isSingle ? (
+                            /* Radio */
+                            <div
+                              aria-hidden="true"
+                              className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
+                                isSelected ? "border-amber-500" : "border-gray-300"
+                              }`}
+                            >
+                              {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-amber-500" />}
+                            </div>
+                          ) : (
+                            /* Checkbox */
+                            <div
+                              aria-hidden="true"
+                              className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-colors ${
+                                isSelected ? "border-amber-500 bg-amber-500" : "border-gray-300"
+                              }`}
+                            >
+                              {isSelected && (
+                                <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3} aria-hidden="true">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                </svg>
+                              )}
+                            </div>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </fieldset>
+              );
+            })}
+          </div>
 
           {/* Special instructions */}
-          <div className="space-y-1.5">
-            <p className="text-sm font-semibold text-gray-800">Special Instructions</p>
+          <div className="px-5 pb-5 border-t border-gray-100 pt-4">
+            <p className="text-sm font-semibold text-gray-800 mb-1.5">Special Instructions</p>
             <textarea
               value={note}
               onChange={(e) => setNote(e.target.value)}
@@ -379,26 +487,36 @@ function ProductModal({
             />
           </div>
 
-          {error && <p className="text-sm text-red-500">{error}</p>}
+          {error && (
+            <p className="px-5 pb-4 text-sm text-red-500">{error}</p>
+          )}
         </div>
 
-        {/* Sticky bottom bar */}
-        <div className="sticky bottom-0 bg-white border-t border-gray-100 px-5 py-4 flex items-center gap-3">
+        {/* ── Sticky footer ── */}
+        <div className="border-t border-gray-100 px-5 py-4 flex items-center gap-3 bg-white">
           <QuantitySelector value={qty} min={1} onChange={setQty} />
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            onClick={handleAdd}
-            className="flex-1 py-2.5 rounded-xl bg-amber-500 text-white font-semibold text-sm hover:bg-amber-600 transition-colors"
-          >
-            Add to Order · ${lineTotal.toFixed(2)}
-          </button>
+          <div className="flex items-center gap-2 ml-auto">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors whitespace-nowrap"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleAdd}
+              disabled={hasRequiredUnfilled}
+              aria-disabled={hasRequiredUnfilled}
+              className={`px-4 py-2.5 rounded-xl font-semibold text-sm transition-colors whitespace-nowrap ${
+                hasRequiredUnfilled
+                  ? "bg-amber-300 text-white cursor-not-allowed"
+                  : "bg-amber-600 text-white hover:bg-amber-700"
+              }`}
+            >
+              Add to order — ${lineTotal.toFixed(2)}
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -457,32 +575,35 @@ export default function ProductList({ products }: Props) {
   const handleAddToCart = useCallback((
     product: Product,
     qty: number,
-    selections: Record<string, string>,
+    selections: Record<string, string[]>,
     _note: string,
   ): string | null => {
-    // Validate required groups
+    // Validate required groups meet minimum selection
     for (const group of product.optionGroups) {
       if (!group.isRequired) continue;
-      if (!selections[group.id]) {
+      const selected = selections[group.id] ?? [];
+      if (selected.length < group.minSelect) {
         return `Please select "${group.name}"`;
       }
     }
 
-    const selectedOptions: SelectedOption[] = product.optionGroups
-      .map((g) => {
-        const optId = selections[g.id];
-        if (!optId) return null;
-        const opt = g.options.find((o) => o.id === optId);
-        if (!opt) return null;
-        return {
-          optionGroupId: g.id,
-          optionGroupName: g.name,
-          optionId: opt.id,
-          optionName: opt.name,
-          priceDelta: opt.priceDelta,
-        };
-      })
-      .filter(Boolean) as SelectedOption[];
+    // Build flat SelectedOption list preserving group order
+    const selectedOptions: SelectedOption[] = [];
+    for (const group of product.optionGroups) {
+      const optIds = selections[group.id] ?? [];
+      for (const optId of optIds) {
+        const opt = group.options.find((o) => o.id === optId);
+        if (opt) {
+          selectedOptions.push({
+            optionGroupId: group.id,
+            optionGroupName: group.name,
+            optionId: opt.id,
+            optionName: opt.name,
+            priceDelta: opt.priceDelta,
+          });
+        }
+      }
+    }
 
     const newItem: CartItem = {
       id: `${product.id}-${Date.now()}`,

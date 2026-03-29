@@ -73,9 +73,17 @@ export default function CartPage() {
             <div className="flex-1">
               <p className="font-semibold text-gray-900">{item.productName}</p>
               {item.selectedOptions.length > 0 && (
-                <p className="text-xs text-gray-500 mt-0.5">
-                  {item.selectedOptions.map((o) => o.optionName).join(", ")}
-                </p>
+                <ul className="mt-1 space-y-0.5">
+                  {item.selectedOptions.map((o, i) => (
+                    <li key={i} className="text-xs text-gray-500 flex items-center gap-1">
+                      <span className="text-gray-300">–</span>
+                      <span>{o.optionName}</span>
+                      {o.priceDelta !== 0 && (
+                        <span className="text-gray-400">(+${o.priceDelta.toFixed(2)})</span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
               )}
               <p className="text-sm text-gray-700 mt-1">
                 ${item.basePrice.toFixed(2)}
