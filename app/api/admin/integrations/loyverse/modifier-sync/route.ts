@@ -120,7 +120,8 @@ interface UpsertResult {
 
 /**
  * For each Loyverse modifier group:
- *   - If already mapped (ExternalOptionGroupMap exists): update the group name and upsert options.
+ *   - If already mapped (ExternalOptionGroupMap exists): update the group name and upsert options,
+ *     and ensure ProductOptionGroupAssignment rows exist for all matched products.
  *   - If unmapped: look up which Loyverse items use it, find all matching internal products,
  *     create the group + options, and link via ProductOptionGroupAssignment.
  *     Groups are ALWAYS created even when no matching product is found (productId = null).
@@ -142,6 +143,40 @@ async function upsertModifierGroups(
   console.info(
     `[modifier-sync] upsertModifierGroups start: ${activeModifiers.length} active groups`
   );
+
+  // Fetch items upfront so both passes can build product-linkage without a
+  // second round-trip to the Loyverse API.
+  const items = await adapter.fetchItems();
+  console.info(`[modifier-sync] fetched ${items.length} Loyverse items for product linkage`);
+
+  // Build modifier-id → [item-id] lookup (active items only).
+  const modifierToItems = new Map<string, string[]>();
+  for (const item of items) {
+    if (item.deleted_at !== null) continue;
+    for (const modId of item.modifier_ids ?? []) {
+      const existing = modifierToItems.get(modId) ?? [];
+      existing.push(item.id);
+      modifierToItems.set(modId, existing);
+    }
+  }
+
+  // Pre-load all Loyverse ExternalProductMap rows so product lookups use a Map
+  // instead of individual DB queries (avoids N+1 per modifier group).
+  const allProductMaps = await prisma.externalProductMap.findMany({
+    where: { source: IntegrationSource.LOYVERSE },
+    select: { externalProductId: true, productId: true },
+  });
+  const extItemToProduct = new Map(
+    allProductMaps.map((pm) => [pm.externalProductId, pm.productId])
+  );
+
+  /** Resolve Loyverse item IDs → internal product IDs using the pre-loaded map. */
+  function resolveProductIds(modifierId: string): string[] {
+    const itemIds = modifierToItems.get(modifierId) ?? [];
+    return itemIds
+      .map((extItemId) => extItemToProduct.get(extItemId))
+      .filter((id): id is string => id !== undefined);
+  }
 
   // ── Pass 1: update already-mapped groups ────────────────────────────────────
   for (const rawGroup of activeModifiers) {
@@ -179,9 +214,29 @@ async function upsertModifierGroups(
     createdOptions += optCounts.created;
     updatedOptions += optCounts.updated;
 
+    // Ensure ProductOptionGroupAssignment rows exist for all matched products.
+    const productIds = resolveProductIds(rawGroup.id);
+    for (const productId of productIds) {
+      try {
+        await prisma.productOptionGroupAssignment.upsert({
+          where: {
+            productId_optionGroupId: { productId, optionGroupId: groupMap.optionGroupId },
+          },
+          create: { productId, optionGroupId: groupMap.optionGroupId },
+          update: {},
+        });
+        linkedProducts++;
+      } catch (err) {
+        console.error(
+          `[modifier-sync] Pass1 FAILED to link group="${rawGroup.name}" → productId=${productId}: ${String(err)}`
+        );
+      }
+    }
+
     console.info(
       `[modifier-sync] Pass1 updated group="${rawGroup.name}" id=${rawGroup.id} ` +
-      `options_created=${optCounts.created} options_updated=${optCounts.updated}`
+      `options_created=${optCounts.created} options_updated=${optCounts.updated} ` +
+      `linked_products=${productIds.length}`
     );
   }
 
@@ -190,111 +245,81 @@ async function upsertModifierGroups(
   );
 
   // ── Pass 2: create/link groups that are new in Loyverse ─────────────────────
-  if (unmappedGroups.length > 0) {
-    // Fetch the full items list so we can find which products each modifier group belongs to.
-    const items = await adapter.fetchItems();
-    console.info(`[modifier-sync] Pass2 fetched ${items.length} Loyverse items for product linkage`);
+  for (const rawGroup of unmappedGroups) {
+    const itemIds = modifierToItems.get(rawGroup.id) ?? [];
+    console.info(
+      `[modifier-sync] Pass2 group="${rawGroup.name}" id=${rawGroup.id} ` +
+      `loyverse_item_count=${itemIds.length} options=${(rawGroup.options ?? []).length}`
+    );
 
-    // Build modifier-id → [item-id] lookup (all active items).
-    const modifierToItems = new Map<string, string[]>();
-    for (const item of items) {
-      if (item.deleted_at !== null) continue;
-      for (const modId of item.modifier_ids ?? []) {
-        const existing = modifierToItems.get(modId) ?? [];
-        existing.push(item.id);
-        modifierToItems.set(modId, existing);
-      }
-    }
+    // Find ALL internal products that correspond to Loyverse items using this modifier.
+    const productIds = resolveProductIds(rawGroup.id);
 
-    for (const rawGroup of unmappedGroups) {
-      const itemIds = modifierToItems.get(rawGroup.id) ?? [];
-      console.info(
-        `[modifier-sync] Pass2 group="${rawGroup.name}" id=${rawGroup.id} ` +
-        `loyverse_item_count=${itemIds.length} options=${(rawGroup.options ?? []).length}`
-      );
+    console.info(
+      `[modifier-sync] Pass2 group="${rawGroup.name}": matched ${productIds.length} internal products ` +
+      `(unmatched=${itemIds.length - productIds.length} items not yet synced)`
+    );
 
-      // Find ALL internal products that correspond to Loyverse items using this modifier.
-      const productIds: string[] = [];
-      for (const extItemId of itemIds) {
-        const pm = await prisma.externalProductMap.findUnique({
-          where: {
-            source_externalProductId: {
-              source: IntegrationSource.LOYVERSE,
-              externalProductId: extItemId,
-            },
-          },
-        });
-        if (pm) {
-          productIds.push(pm.productId);
-        }
-      }
+    // Always create the group — use null productId when no product is synced yet.
+    // productId can be updated later when the product catalog is synced.
+    // The first matched product is recorded as the group's direct owner for
+    // backward compatibility; all matches are also linked via assignments below.
+    const groupProductId = productIds[0] ?? null;
 
-      console.info(
-        `[modifier-sync] Pass2 group="${rawGroup.name}": matched ${productIds.length} internal products ` +
-        `(unmatched=${itemIds.length - productIds.length} items not yet synced)`
-      );
-
-      // Always create the group — use null productId when no product is synced yet.
-      // productId can be updated later when the product catalog is synced.
-      // The first matched product is recorded as the group's direct owner for
-      // backward compatibility; all matches are also linked via assignments below.
-      const groupProductId = productIds[0] ?? null;
-
-      let newGroupId: string;
-      try {
-        const newGroup = await prisma.productOptionGroup.create({
-          data: {
-            productId: groupProductId,
-            name: rawGroup.name,
-          },
-        });
-        newGroupId = newGroup.id;
-      } catch (err) {
-        console.error(
-          `[modifier-sync] Pass2 FAILED to create group="${rawGroup.name}" id=${rawGroup.id}: ${String(err)}`
-        );
-        skippedGroups++;
-        continue;
-      }
-
-      await prisma.externalOptionGroupMap.create({
+    let newGroupId: string;
+    try {
+      const newGroup = await prisma.productOptionGroup.create({
         data: {
-          source: IntegrationSource.LOYVERSE,
-          externalOptionGroupId: rawGroup.id,
-          optionGroupId: newGroupId,
-          lastSyncedAt: new Date(),
+          productId: groupProductId,
+          name: rawGroup.name,
         },
       });
-
-      createdGroups++;
-
-      // Create ProductOptionGroupAssignment for every matched product.
-      for (const productId of productIds) {
-        try {
-          await prisma.productOptionGroupAssignment.upsert({
-            where: {
-              productId_optionGroupId: { productId, optionGroupId: newGroupId },
-            },
-            create: { productId, optionGroupId: newGroupId },
-            update: {},
-          });
-          linkedProducts++;
-        } catch (err) {
-          console.error(
-            `[modifier-sync] Pass2 FAILED to link group="${rawGroup.name}" → productId=${productId}: ${String(err)}`
-          );
-        }
-      }
-
-      const optCounts = await upsertOptionsForGroup(newGroupId, rawGroup, []);
-      createdOptions += optCounts.created;
-      updatedOptions += optCounts.updated;
-
-      console.info(
-        `[modifier-sync] Pass2 created group="${rawGroup.name}" internalId=${newGroupId} ` +
-        `options_created=${optCounts.created} linked_products=${productIds.length}`
+      newGroupId = newGroup.id;
+    } catch (err) {
+      console.error(
+        `[modifier-sync] Pass2 FAILED to create group="${rawGroup.name}" id=${rawGroup.id}: ${String(err)}`
       );
+      skippedGroups++;
+      continue;
     }
+
+    await prisma.externalOptionGroupMap.create({
+      data: {
+        source: IntegrationSource.LOYVERSE,
+        externalOptionGroupId: rawGroup.id,
+        optionGroupId: newGroupId,
+        lastSyncedAt: new Date(),
+      },
+    });
+
+    createdGroups++;
+
+    // Create ProductOptionGroupAssignment for every matched product.
+    for (const productId of productIds) {
+      try {
+        await prisma.productOptionGroupAssignment.upsert({
+          where: {
+            productId_optionGroupId: { productId, optionGroupId: newGroupId },
+          },
+          create: { productId, optionGroupId: newGroupId },
+          update: {},
+        });
+        linkedProducts++;
+      } catch (err) {
+        console.error(
+          `[modifier-sync] Pass2 FAILED to link group="${rawGroup.name}" → productId=${productId}: ${String(err)}`
+        );
+      }
+    }
+
+    const optCounts = await upsertOptionsForGroup(newGroupId, rawGroup, []);
+    createdOptions += optCounts.created;
+    updatedOptions += optCounts.updated;
+
+    console.info(
+      `[modifier-sync] Pass2 created group="${rawGroup.name}" internalId=${newGroupId} ` +
+      `options_created=${optCounts.created} linked_products=${productIds.length}`
+    );
   }
 
   console.info(

@@ -15,6 +15,7 @@
 //   const result = await syncAllLoyverse(adapter);
 
 import { prisma } from "@/lib/db";
+import { IntegrationSource } from "@/app/generated/prisma/enums";
 import type { LoyverseAdapter } from "../adapters/pos/loyverse";
 import type {
   LoyverseRawCategory,
@@ -72,6 +73,15 @@ export interface MirrorSyncResult {
   // ── Stage D: DB verification ──────────────────────────────────────────────────
   /** Actual row count in loyverse_item_modifiers after all inserts */
   itemModifierLinksPersisted: number;
+  // ── Step 4.5: Internal DB modifier assignments ────────────────────────────────
+  /** ProductOptionGroupAssignment rows created or confirmed in internal DB */
+  internalModifierLinksUpserted: number;
+  /** Stale ProductOptionGroupAssignment rows removed from internal DB */
+  internalStaleLinksRemoved: number;
+  /** Loyverse item IDs that had modifier_ids but no matching ExternalProductMap */
+  unmatchedProductIds: number;
+  /** Loyverse modifier IDs that had no matching ExternalOptionGroupMap */
+  unmatchedModifierIds: number;
   errorCount: number;
   errors: string[];
 }
@@ -108,6 +118,10 @@ export async function syncAllLoyverse(adapter: LoyverseAdapter): Promise<MirrorS
     modifierNotFoundLocally: 0,
     linkInsertErrors: 0,
     itemModifierLinksPersisted: 0,
+    internalModifierLinksUpserted: 0,
+    internalStaleLinksRemoved: 0,
+    unmatchedProductIds: 0,
+    unmatchedModifierIds: 0,
     errorCount: 0,
     errors: [],
   };
@@ -225,6 +239,15 @@ export async function syncAllLoyverse(adapter: LoyverseAdapter): Promise<MirrorS
       console.error("[mirror-sync] Stage D DB count failed:", countErr);
     }
 
+    // Step 4.5: Persist internal product-modifier assignments
+    console.info("[mirror-sync] Step 4.5: Persisting internal modifier assignments…");
+    await persistInternalModifierAssignments(activeItems, result);
+    console.info(
+      `[mirror-sync] Internal assignments: upserted=${result.internalModifierLinksUpserted} ` +
+        `staleRemoved=${result.internalStaleLinksRemoved} ` +
+        `unmatchedProducts=${result.unmatchedProductIds} unmatchedModifiers=${result.unmatchedModifierIds}`
+    );
+
     // Step 5: Variants
     console.info("[mirror-sync] Step 5: Syncing variants…");
     const variants = await adapter.fetchVariants();
@@ -263,8 +286,8 @@ export async function syncAllLoyverse(adapter: LoyverseAdapter): Promise<MirrorS
         modifierOptionsFetched: result.modifierOptionsSynced,
         modifierOptionsUpserted: result.modifierOptionsSynced,
         categoryLinksUpdated: 0,
-        modifierLinksUpdated: result.itemModifierLinksSynced,
-        staleLinksRemoved: 0,
+        modifierLinksUpdated: result.internalModifierLinksUpserted,
+        staleLinksRemoved: result.internalStaleLinksRemoved,
         skippedCount: result.itemsWithoutModifierField + result.itemsWithEmptyModifiers,
         errorCount: result.errorCount,
         errorMessage: result.errors.length > 0 ? result.errors.slice(0, 3).join("; ") : null,
@@ -287,10 +310,132 @@ export async function syncAllLoyverse(adapter: LoyverseAdapter): Promise<MirrorS
       `[A] rawTotal=${result.rawItemsTotal} rawWithField=${result.rawItemsWithModifiersIds} rawWithoutField=${result.rawItemsWithoutModifiersIds} ` +
       `[B] noModifierField=${result.itemsWithoutModifierField} emptyModifiers=${result.itemsWithEmptyModifiers} ` +
       `[C] modifierNotFound=${result.modifierNotFoundLocally} linkInsertErrors=${result.linkInsertErrors} ` +
-      `[D] dbPersisted=${result.itemModifierLinksPersisted}`
+      `[D] dbPersisted=${result.itemModifierLinksPersisted} ` +
+      `[4.5] internalUpserted=${result.internalModifierLinksUpserted} internalStaleRemoved=${result.internalStaleLinksRemoved} ` +
+      `unmatchedProducts=${result.unmatchedProductIds} unmatchedModifiers=${result.unmatchedModifierIds}`
   );
 
   return result;
+}
+
+// ─── Step 4.5: Persist internal modifier assignments ─────────────────────────
+
+/**
+ * For each active Loyverse item, resolve the internal product ID and internal
+ * option group ID using ExternalProductMap / ExternalOptionGroupMap, then upsert
+ * a ProductOptionGroupAssignment row. Stale rows (where the Loyverse link no
+ * longer exists) are removed — but only for assignments where both the product
+ * AND the option group have a Loyverse external mapping, so manually created
+ * links are never touched.
+ */
+async function persistInternalModifierAssignments(
+  items: LoyverseRawItem[],
+  result: MirrorSyncResult
+): Promise<void> {
+  try {
+    // Bulk-fetch all Loyverse → internal ID maps to avoid N+1 queries
+    const [allProductMaps, allGroupMaps] = await Promise.all([
+      prisma.externalProductMap.findMany({
+        where: { source: IntegrationSource.LOYVERSE },
+        select: { externalProductId: true, productId: true },
+      }),
+      prisma.externalOptionGroupMap.findMany({
+        where: { source: IntegrationSource.LOYVERSE },
+        select: { externalOptionGroupId: true, optionGroupId: true },
+      }),
+    ]);
+
+    const extProductToInternal = new Map(
+      allProductMaps.map((m) => [m.externalProductId, m.productId])
+    );
+    const extGroupToInternal = new Map(
+      allGroupMaps.map((m) => [m.externalOptionGroupId, m.optionGroupId])
+    );
+
+    // Build the set of valid (productId, optionGroupId) pairs from Loyverse data
+    const validPairs = new Set<string>();
+
+    for (const item of items) {
+      const productId = extProductToInternal.get(item.id);
+      if (!productId) {
+        if ((item.modifier_ids ?? []).length > 0) {
+          result.unmatchedProductIds++;
+          console.warn(
+            `[mirror-sync] Internal assignment: no ExternalProductMap for item "${item.item_name}" (${item.id}) — skipping`
+          );
+        }
+        continue;
+      }
+
+      for (const modifierId of item.modifier_ids ?? []) {
+        const optionGroupId = extGroupToInternal.get(modifierId);
+        if (!optionGroupId) {
+          result.unmatchedModifierIds++;
+          console.warn(
+            `[mirror-sync] Internal assignment: no ExternalOptionGroupMap for modifier ${modifierId} (item "${item.item_name}") — skipping`
+          );
+          continue;
+        }
+
+        const key = `${productId}:${optionGroupId}`;
+        validPairs.add(key);
+
+        try {
+          await prisma.productOptionGroupAssignment.upsert({
+            where: { productId_optionGroupId: { productId, optionGroupId } },
+            create: { productId, optionGroupId },
+            update: {},
+          });
+          result.internalModifierLinksUpserted++;
+        } catch (err) {
+          console.error(
+            `[mirror-sync] Failed to upsert internal assignment productId=${productId} optionGroupId=${optionGroupId}: ${String(err)}`
+          );
+        }
+      }
+    }
+
+    // Remove stale links: only assignments where BOTH the product AND the group
+    // have Loyverse external mappings (i.e., they are Loyverse-managed).
+    const loyverseProductIds = [...extProductToInternal.values()];
+    const loyverseGroupIds = [...extGroupToInternal.values()];
+
+    if (loyverseProductIds.length > 0 && loyverseGroupIds.length > 0) {
+      const existingAssignments = await prisma.productOptionGroupAssignment.findMany({
+        where: {
+          productId: { in: loyverseProductIds },
+          optionGroupId: { in: loyverseGroupIds },
+        },
+        select: { productId: true, optionGroupId: true },
+      });
+
+      for (const assignment of existingAssignments) {
+        const key = `${assignment.productId}:${assignment.optionGroupId}`;
+        if (!validPairs.has(key)) {
+          try {
+            await prisma.productOptionGroupAssignment.delete({
+              where: {
+                productId_optionGroupId: {
+                  productId: assignment.productId,
+                  optionGroupId: assignment.optionGroupId,
+                },
+              },
+            });
+            result.internalStaleLinksRemoved++;
+            console.info(
+              `[mirror-sync] Removed stale internal assignment productId=${assignment.productId} optionGroupId=${assignment.optionGroupId}`
+            );
+          } catch (err) {
+            console.error(
+              `[mirror-sync] Failed to remove stale assignment productId=${assignment.productId} optionGroupId=${assignment.optionGroupId}: ${String(err)}`
+            );
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.error("[mirror-sync] Error in persistInternalModifierAssignments:", err);
+  }
 }
 
 // ─── Step 1: Categories ───────────────────────────────────────────────────────
