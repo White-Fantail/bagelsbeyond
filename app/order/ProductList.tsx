@@ -82,7 +82,7 @@ function CategoryTabs({
               aria-selected={activeCategory === cat}
               data-cat={cat}
               onClick={() => { onSelect(cat); scrollToTab(cat); }}
-              {/* -mb-px makes the 2px tab border sit on top of the 1px container border */}
+              // -mb-px makes the 2px tab border sit on top of the 1px container border
               className={`shrink-0 px-4 py-3.5 text-sm font-medium transition-colors whitespace-nowrap border-b-2 -mb-px ${
                 activeCategory === cat
                   ? "border-orange-500 text-orange-600"
