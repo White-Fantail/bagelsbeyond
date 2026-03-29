@@ -41,7 +41,7 @@ export default function SubscribeForm({ products }: Props) {
 
       {/* Product selection */}
       <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-3">
-        <h2 className="font-semibold text-gray-800 text-sm">Products Select</h2>
+        <h2 className="font-semibold text-gray-800 text-sm">Select Products</h2>
         {products.length === 0 ? (
           <p className="text-sm text-gray-500">No subscribable products available</p>
         ) : (
@@ -90,7 +90,7 @@ export default function SubscribeForm({ products }: Props) {
 
       {/* Pickup time slot */}
       <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-3">
-        <h2 className="font-semibold text-gray-800 text-sm">Pickup Time (Select)</h2>
+        <h2 className="font-semibold text-gray-800 text-sm">Pickup Time <span className="text-gray-400 font-normal text-xs">(Optional)</span></h2>
         <select
           name="pickupTimeSlot"
           className="border border-gray-200 rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-amber-400"
@@ -117,7 +117,7 @@ export default function SubscribeForm({ products }: Props) {
 
       {/* End date (optional) */}
       <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-3">
-        <h2 className="font-semibold text-gray-800 text-sm">End Date (Select)</h2>
+        <h2 className="font-semibold text-gray-800 text-sm">End Date <span className="text-gray-400 font-normal text-xs">(Optional)</span></h2>
         <input
           type="date"
           name="endDate"
@@ -128,7 +128,7 @@ export default function SubscribeForm({ products }: Props) {
 
       {/* Note */}
       <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-3">
-        <h2 className="font-semibold text-gray-800 text-sm">Notes (Select)</h2>
+        <h2 className="font-semibold text-gray-800 text-sm">Notes <span className="text-gray-400 font-normal text-xs">(Optional)</span></h2>
         <textarea
           name="note"
           rows={2}
@@ -164,7 +164,7 @@ function SubscribeFormSubmit({ isPending }: { isPending: boolean }) {
         }}
         className="w-full py-3 rounded-xl bg-amber-600 text-white font-semibold text-sm hover:bg-amber-700 disabled:opacity-60 transition-colors"
       >
-        {isPending ? "Processing......" : "Subscribe"}
+        {isPending ? "Processing..." : "Subscribe"}
       </button>
     </div>
   );

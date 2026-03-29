@@ -102,7 +102,7 @@ export default function CheckoutForm({ customerName, customerEmail, customerPhon
 
       {/* Note */}
       <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-2">
-        <label className="block text-xs font-medium text-gray-700">Orders Notes (Select)</label>
+        <label className="block text-xs font-medium text-gray-700">Order Notes <span className="text-gray-400 font-normal">(Optional)</span></label>
         <textarea
           name="note"
           rows={2}
@@ -113,7 +113,7 @@ export default function CheckoutForm({ customerName, customerEmail, customerPhon
 
       {/* Order summary */}
       <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-2">
-        <h2 className="font-semibold text-gray-800 text-sm">Orders Summary</h2>
+        <h2 className="font-semibold text-gray-800 text-sm">Order Summary</h2>
         {cart.map((item) => (
           <div key={item.id} className="flex justify-between text-sm">
             <span className="text-gray-700">{item.productName} × {item.quantity}
@@ -125,7 +125,7 @@ export default function CheckoutForm({ customerName, customerEmail, customerPhon
           </div>
         ))}
         <div className="border-t border-gray-100 pt-2 flex justify-between font-bold text-gray-900">
-          <span>Predicted Total</span>
+          <span>Estimated Total</span>
           <span>${subtotal.toFixed(2)}</span>
         </div>
         <p className="text-xs text-gray-400">Final amount will be recalculated on the server. Payment is made on-site.</p>
@@ -142,7 +142,7 @@ export default function CheckoutForm({ customerName, customerEmail, customerPhon
         disabled={isPending}
         className="w-full py-3 rounded-xl bg-amber-500 text-white font-bold hover:bg-amber-600 disabled:opacity-60 transition-colors"
       >
-        {isPending ? "Orders Processing..." : "Order"}
+        {isPending ? "Placing Order..." : "Order"}
       </button>
     </form>
   );

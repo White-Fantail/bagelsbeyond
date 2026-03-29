@@ -51,7 +51,7 @@ export default async function AccountOrderDetailPage({
           <span>/</span>
           <span className="text-gray-700 font-medium">{order.orderNumber}</span>
         </div>
-        <h1 className="text-2xl font-bold text-gray-900">Orders Details</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Order Details</h1>
       </div>
 
       {/* Order info */}
@@ -91,7 +91,7 @@ export default async function AccountOrderDetailPage({
 
       {/* Items */}
       <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-3">
-        <h2 className="font-semibold text-gray-900">Orders Products</h2>
+        <h2 className="font-semibold text-gray-900">Order Items</h2>
         {order.items.map((item) => (
           <div key={item.id} className="text-sm space-y-0.5">
             <div className="flex justify-between">
