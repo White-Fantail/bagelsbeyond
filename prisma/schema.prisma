@@ -27,8 +27,9 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  customerProfile CustomerProfile?
-  subscriptions   Subscription[]
+  customerProfile         CustomerProfile?
+  subscriptions           Subscription[]
+  bagelAvailabilityStates BagelAvailabilityState[]
 
   @@map("users")
 }
@@ -950,4 +951,175 @@ model LoyverseFullSyncLog {
 
   @@index([syncedAt])
   @@map("loyverse_full_sync_logs")
+}
+
+// ─── Bagel Type Availability Control ─────────────────────────────────────────
+
+enum BagelChangeSource {
+  manual
+  voice
+  sync
+  system
+  api
+
+  @@map("bagel_change_source")
+}
+
+enum AvailabilityChannel {
+  loyverse
+  uber_eats
+  doordash
+
+  @@map("availability_channel")
+}
+
+enum ChannelSyncResult {
+  success
+  failed
+  pending
+  skipped
+
+  @@map("channel_sync_result")
+}
+
+enum AvailabilityAuditAction {
+  turned_on
+  turned_off
+  retried
+  restored
+
+  @@map("availability_audit_action")
+}
+
+enum RemoteEntityType {
+  item
+  option
+  modifier_option
+  category_item
+  unknown
+
+  @@map("remote_entity_type")
+}
+
+enum SyncJobStatus {
+  pending
+  processing
+  success
+  failed
+
+  @@map("sync_job_status")
+}
+
+model BagelType {
+  id        String   @id @default(cuid())
+  code      String   @unique
+  name      String
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  availabilityStates  BagelAvailabilityState[]
+  channelSyncStatuses ChannelSyncStatus[]
+  channelMappings     ChannelBagelMapping[]
+  auditLogs           AvailabilityAuditLog[]
+  syncJobs            AvailabilitySyncJob[]
+
+  @@index([code])
+  @@index([sortOrder])
+  @@map("bagel_types")
+}
+
+model BagelAvailabilityState {
+  id              String            @id @default(cuid())
+  bagelTypeId     String
+  isAvailable     Boolean
+  changedByUserId String?
+  changeSource    BagelChangeSource @default(manual)
+  note            String?
+  createdAt       DateTime          @default(now())
+
+  bagelType     BagelType @relation(fields: [bagelTypeId], references: [id], onDelete: Cascade)
+  changedByUser User?     @relation(fields: [changedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([bagelTypeId, createdAt(sort: Desc)])
+  @@map("bagel_availability_states")
+}
+
+model ChannelSyncStatus {
+  id                   String              @id @default(cuid())
+  bagelTypeId          String
+  channel              AvailabilityChannel
+  lastAttemptAt        DateTime?
+  lastSuccessAt        DateTime?
+  lastResult           ChannelSyncResult   @default(pending)
+  lastError            String?
+  lastKnownRemoteState Boolean?
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+
+  bagelType BagelType @relation(fields: [bagelTypeId], references: [id], onDelete: Cascade)
+
+  @@unique([bagelTypeId, channel])
+  @@index([bagelTypeId])
+  @@map("channel_sync_statuses")
+}
+
+model ChannelBagelMapping {
+  id               String              @id @default(cuid())
+  bagelTypeId      String
+  channel          AvailabilityChannel
+  remoteEntityType RemoteEntityType    @default(unknown)
+  remoteEntityId   String
+  remoteMenuId     String?
+  remoteStoreId    String?
+  metadata         Json?
+  isEnabled        Boolean             @default(true)
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+
+  bagelType BagelType @relation(fields: [bagelTypeId], references: [id], onDelete: Cascade)
+
+  @@unique([bagelTypeId, channel, remoteEntityId])
+  @@index([bagelTypeId, channel])
+  @@map("channel_bagel_mappings")
+}
+
+model AvailabilityAuditLog {
+  id          String                  @id @default(cuid())
+  bagelTypeId String
+  action      AvailabilityAuditAction
+  source      BagelChangeSource
+  actorUserId String?
+  actorLabel  String?
+  details     Json?
+  createdAt   DateTime                @default(now())
+
+  bagelType BagelType @relation(fields: [bagelTypeId], references: [id], onDelete: Cascade)
+
+  @@index([bagelTypeId, createdAt(sort: Desc)])
+  @@index([createdAt(sort: Desc)])
+  @@map("availability_audit_logs")
+}
+
+model AvailabilitySyncJob {
+  id              String              @id @default(cuid())
+  bagelTypeId     String
+  channel         AvailabilityChannel
+  targetState     Boolean
+  status          SyncJobStatus       @default(pending)
+  retryCount      Int                 @default(0)
+  maxRetries      Int                 @default(3)
+  nextRetryAt     DateTime?
+  lastError       String?
+  requestPayload  Json?
+  responsePayload Json?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  bagelType BagelType @relation(fields: [bagelTypeId], references: [id], onDelete: Cascade)
+
+  @@index([status, nextRetryAt])
+  @@index([bagelTypeId])
+  @@map("availability_sync_jobs")
 }
