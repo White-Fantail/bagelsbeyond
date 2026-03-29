@@ -170,6 +170,15 @@ export default async function EditProductPage({
     (o) => o.isActive && o.externalOptionMappings.length === 0
   ).length;
 
+  // Debug: check consistency between internal DB links and Loyverse mirror links
+  const internalGroupNames = new Set(allGroups.map((g) => g.name));
+  const mirrorGroupNames = new Set(loyverseModifierGroups.map((g) => g.name));
+  const internalOnlyGroups = allGroups.filter((g) => !mirrorGroupNames.has(g.name));
+  const mirrorOnlyGroups = loyverseModifierGroups.filter((g) => !internalGroupNames.has(g.name));
+  const isConsistent =
+    !isLoyverseSynced ||
+    (internalOnlyGroups.length === 0 && mirrorOnlyGroups.length === 0);
+
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4">
@@ -195,56 +204,103 @@ export default async function EditProductPage({
 
       <OptionGroupManager productId={product.id} initialGroups={allGroups} />
 
-      {/* Loyverse Connected Modifier Groups */}
+      {/* Loyverse Modifier Sync Debug Panel */}
       {isLoyverseSynced && (
-        <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-3">
+        <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="font-semibold text-gray-900">Loyverse Connected Modifier Groups</h2>
+              <h2 className="font-semibold text-gray-900">Loyverse Modifier Sync Status</h2>
               <p className="text-sm text-gray-500 mt-0.5">
-                Modifier groups linked to this product in Loyverse (via mirror sync).
+                Compares internal DB linked groups with Loyverse mirror data.
               </p>
             </div>
-            <span className="text-xs text-gray-400 font-mono">{externalProductId}</span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-400 font-mono">{externalProductId}</span>
+              {isConsistent ? (
+                <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                  ✓ Consistent
+                </span>
+              ) : (
+                <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
+                  ⚠ Out of sync — run Full Sync
+                </span>
+              )}
+            </div>
           </div>
-          {loyverseModifierGroups.length === 0 ? (
-            <p className="text-sm text-gray-400 italic">
-              {isLoyverseSynced
-                ? "No modifier groups linked in Loyverse. Run a Full Sync to refresh."
-                : "Product is not yet synced with Loyverse."}
-            </p>
-          ) : (
-            <div className="space-y-2">
-              {loyverseModifierGroups.map((group) => (
-                <div key={group.id} className="rounded-lg border border-gray-100 overflow-hidden">
-                  <div className="bg-gray-50 border-b border-gray-100 px-4 py-2 flex items-center justify-between text-xs font-semibold text-gray-600">
-                    <span>
-                      {group.name}
-                      {group.required && (
-                        <span className="ml-2 text-amber-600">* Required</span>
-                      )}
-                    </span>
-                    <span className="font-normal text-gray-400">
-                      {group.minSelect != null && `min ${group.minSelect}`}
-                      {group.minSelect != null && group.maxSelect != null && " / "}
-                      {group.maxSelect != null && `max ${group.maxSelect}`}
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+            {/* Internal DB links */}
+            <div className="rounded-lg border border-gray-100 p-3 space-y-2">
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                Internal DB ({allGroups.filter((g) => g.externalMapping != null).length} Loyverse-synced)
+              </p>
+              {allGroups.length === 0 ? (
+                <p className="text-xs text-gray-400 italic">No linked modifier groups</p>
+              ) : (
+                allGroups.map((g) => (
+                  <div key={g.id} className="flex items-center gap-1.5">
+                    {g.externalMapping ? (
+                      <span className="text-blue-500 text-xs">🔗</span>
+                    ) : (
+                      <span className="text-gray-300 text-xs">○</span>
+                    )}
+                    <span className={g.externalMapping ? "text-gray-800" : "text-gray-500"}>
+                      {g.name}
                     </span>
                   </div>
-                  <ul className="divide-y divide-gray-100">
-                    {group.options.map((opt) => (
-                      <li
-                        key={opt.id}
-                        className="flex items-center justify-between px-4 py-2 text-sm text-gray-700"
-                      >
-                        <span>{opt.name}</span>
-                        <span className="text-xs text-gray-500 font-mono">
-                          {opt.price === 0 ? "Free" : `+$${opt.price.toFixed(2)}`}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
+                ))
+              )}
+            </div>
+
+            {/* Loyverse mirror links */}
+            <div className="rounded-lg border border-gray-100 p-3 space-y-2">
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                Loyverse Mirror ({loyverseModifierGroups.length})
+              </p>
+              {loyverseModifierGroups.length === 0 ? (
+                <p className="text-xs text-gray-400 italic">
+                  No modifier groups linked in Loyverse
+                </p>
+              ) : (
+                loyverseModifierGroups.map((group) => (
+                  <div key={group.id} className="flex items-center gap-1.5">
+                    <span className="text-blue-500 text-xs">🔗</span>
+                    <span className="text-gray-800">{group.name}</span>
+                    {group.required && (
+                      <span className="text-amber-600 text-xs">* Required</span>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Show discrepancies if any */}
+          {!isConsistent && (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 space-y-1">
+              <p className="text-xs font-semibold text-amber-800">Discrepancies detected</p>
+              {mirrorOnlyGroups.length > 0 && (
+                <p className="text-xs text-amber-700">
+                  In Loyverse but not in internal DB:{" "}
+                  {mirrorOnlyGroups.map((g) => g.name).join(", ")}
+                </p>
+              )}
+              {internalOnlyGroups.filter((g) => g.externalMapping != null).length > 0 && (
+                <p className="text-xs text-amber-700">
+                  Loyverse-synced in internal DB but not in mirror:{" "}
+                  {internalOnlyGroups
+                    .filter((g) => g.externalMapping != null)
+                    .map((g) => g.name)
+                    .join(", ")}
+                </p>
+              )}
+              <p className="text-xs text-amber-600 mt-1">
+                Run a Full Sync from the{" "}
+                <Link href="/admin/integrations/loyverse" className="underline">
+                  Loyverse integration page
+                </Link>{" "}
+                to resolve.
+              </p>
             </div>
           )}
         </div>

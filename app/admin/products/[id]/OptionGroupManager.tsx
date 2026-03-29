@@ -267,14 +267,24 @@ export default function OptionGroupManager({ productId, initialGroups }: Props) 
                   >
                     Edit →
                   </Link>
-                  <button
-                    type="button"
-                    onClick={() => handleRemove(group)}
-                    disabled={removingGroupId === group.id}
-                    className="px-2.5 py-1 text-xs text-red-600 border border-red-200 rounded-md hover:bg-red-50 transition-colors disabled:opacity-50"
-                  >
-                    {removingGroupId === group.id ? "Removing..." : "Remove"}
-                  </button>
+                  {isSynced ? (
+                    <span
+                      className="px-2.5 py-1 text-xs text-gray-400 border border-gray-200 rounded-md cursor-not-allowed"
+                      aria-label="Managed by Loyverse — remove the link in Loyverse to unlink"
+                      title="Managed by Loyverse — remove the link in Loyverse to unlink"
+                    >
+                      Read-only
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => handleRemove(group)}
+                      disabled={removingGroupId === group.id}
+                      className="px-2.5 py-1 text-xs text-red-600 border border-red-200 rounded-md hover:bg-red-50 transition-colors disabled:opacity-50"
+                    >
+                      {removingGroupId === group.id ? "Removing..." : "Remove"}
+                    </button>
+                  )}
                 </div>
               </div>
 

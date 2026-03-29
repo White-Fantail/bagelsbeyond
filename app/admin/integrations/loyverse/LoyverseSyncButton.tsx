@@ -188,6 +188,29 @@ export default function LoyverseSyncButton() {
                 </li>
               </ul>
             </div>
+
+            {/* Step 4.5: Internal DB Assignments */}
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-amber-700">[4.5] Internal DB Assignments</p>
+              <ul className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-amber-700">
+                <li>
+                  <span className="font-medium">assignments upserted:</span>{" "}
+                  {result.internalModifierLinksUpserted ?? 0}
+                </li>
+                <li>
+                  <span className="font-medium">stale assignments removed:</span>{" "}
+                  {result.internalStaleLinksRemoved ?? 0}
+                </li>
+                <li>
+                  <span className="font-medium">unmatched products:</span>{" "}
+                  {result.unmatchedProductIds ?? 0}
+                </li>
+                <li>
+                  <span className="font-medium">unmatched modifier groups:</span>{" "}
+                  {result.unmatchedModifierIds ?? 0}
+                </li>
+              </ul>
+            </div>
           </div>
 
           {result.errors && result.errors.length > 0 && (
