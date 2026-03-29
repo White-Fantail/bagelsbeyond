@@ -60,7 +60,11 @@ interface VoiceState {
   error: string | null;
 }
 
-// ── Channel badge colors ───────────────────────────────────────────────────────
+// ── Constants ──────────────────────────────────────────────────────────────────
+
+const SYNC_REFRESH_DELAY_MS = 3000;
+const POLLING_INTERVAL_MS = 8000;
+const RETRY_REFRESH_DELAY_MS = 2000;
 
 const CHANNEL_COLORS: Record<string, string> = {
   loyverse: "bg-blue-100 text-blue-700",
@@ -127,7 +131,7 @@ export function BagelAvailabilityClient({ initialData }: { initialData: BagelTyp
   useEffect(() => {
     const hasSyncing = bagels.some((b) => b.syncStatus === "syncing");
     if (!hasSyncing) return;
-    const timer = setTimeout(refreshData, 8000);
+    const timer = setTimeout(refreshData, POLLING_INTERVAL_MS);
     return () => clearTimeout(timer);
   }, [bagels, refreshData]);
 
@@ -159,7 +163,7 @@ export function BagelAvailabilityClient({ initialData }: { initialData: BagelTyp
       );
 
       // Refresh after a short delay to pick up sync results
-      setTimeout(refreshData, 3000);
+      setTimeout(refreshData, SYNC_REFRESH_DELAY_MS);
     } catch {
       showMessage("error", "Network error");
       setBagels((prev) =>
@@ -184,7 +188,7 @@ export function BagelAvailabilityClient({ initialData }: { initialData: BagelTyp
         return;
       }
       showMessage("success", isAvailable ? "All bagels set to ON" : "All bagels set to OFF");
-      setTimeout(refreshData, 3000);
+      setTimeout(refreshData, SYNC_REFRESH_DELAY_MS);
     } catch {
       showMessage("error", "Network error");
     }
@@ -220,7 +224,7 @@ export function BagelAvailabilityClient({ initialData }: { initialData: BagelTyp
         body: JSON.stringify(bagelTypeId ? { bagelTypeId } : {}),
       });
       showMessage("success", "Retrying failed syncs...");
-      setTimeout(refreshData, 2000);
+      setTimeout(refreshData, RETRY_REFRESH_DELAY_MS);
     } catch {
       showMessage("error", "Retry failed");
     }
@@ -248,11 +252,10 @@ export function BagelAvailabilityClient({ initialData }: { initialData: BagelTyp
 
   const startListening = useCallback(() => {
     type SpeechRecognitionCtor = new () => SpeechRecognitionInstance;
-    const SpeechRecognitionImpl: SpeechRecognitionCtor | undefined =
-      typeof window !== "undefined"
-        ? ((window as unknown as { SpeechRecognition?: SpeechRecognitionCtor; webkitSpeechRecognition?: SpeechRecognitionCtor }).SpeechRecognition ??
-          (window as unknown as { webkitSpeechRecognition?: SpeechRecognitionCtor }).webkitSpeechRecognition)
-        : undefined;
+    const win = typeof window !== "undefined"
+      ? (window as unknown as { SpeechRecognition?: SpeechRecognitionCtor; webkitSpeechRecognition?: SpeechRecognitionCtor })
+      : undefined;
+    const SpeechRecognitionImpl = win?.SpeechRecognition ?? win?.webkitSpeechRecognition;
 
     if (!SpeechRecognitionImpl) {
       setVoice((v) => ({ ...v, error: "Speech recognition not supported in this browser" }));
@@ -290,7 +293,7 @@ export function BagelAvailabilityClient({ initialData }: { initialData: BagelTyp
       if (res.ok) {
         showMessage("success", `Voice: ${voice.preview}`);
         setVoice({ listening: false, transcript: "", preview: null, pendingCommand: null, error: null });
-        setTimeout(refreshData, 2000);
+        setTimeout(refreshData, RETRY_REFRESH_DELAY_MS);
       } else {
         showMessage("error", "Voice command failed");
       }
