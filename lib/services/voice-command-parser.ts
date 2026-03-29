@@ -73,13 +73,16 @@ function extractBagelCode(text: string): string | null {
 
 // Cache bagel type IDs (expires after 60 seconds)
 let _bagelTypeCache: Map<string, { id: string; name: string }> | null = null;
+let _bagelTypeCacheTimer: ReturnType<typeof setTimeout> | null = null;
 
 async function getBagelTypeByCode(code: string): Promise<{ id: string; name: string } | null> {
   if (!_bagelTypeCache) {
     const types = await prisma.bagelType.findMany({ where: { isActive: true } });
     _bagelTypeCache = new Map(types.map((t) => [t.code, { id: t.id, name: t.name }]));
-    setTimeout(() => {
+    if (_bagelTypeCacheTimer) clearTimeout(_bagelTypeCacheTimer);
+    _bagelTypeCacheTimer = setTimeout(() => {
       _bagelTypeCache = null;
+      _bagelTypeCacheTimer = null;
     }, 60_000);
   }
   return _bagelTypeCache.get(code) ?? null;
