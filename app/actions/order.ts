@@ -89,11 +89,35 @@ export async function createOrderAction(
       optionGroups: {
         include: { options: { where: { isActive: true } } },
       },
+      optionGroupAssignments: {
+        include: {
+          optionGroup: {
+            include: { options: { where: { isActive: true } } },
+          },
+        },
+      },
     },
   });
 
   if (products.length !== productIds.length) {
     return { success: false, message: "Contains products that cannot be ordered" };
+  }
+
+  // Build a merged option-group list per product (direct groups + assigned shared groups)
+  interface ResolvedOption { id: string; name: string; priceDelta: number; }
+  interface ResolvedGroup { id: string; name: string; isRequired: boolean; minSelect: number; options: ResolvedOption[]; }
+  const allGroupsMap = new Map<string, ResolvedGroup[]>();
+  for (const p of products) {
+    const seen = new Set<string>();
+    const merged: ResolvedGroup[] = [];
+    for (const g of p.optionGroups as ResolvedGroup[]) {
+      if (!seen.has(g.id)) { seen.add(g.id); merged.push(g); }
+    }
+    for (const a of p.optionGroupAssignments) {
+      const g = a.optionGroup as ResolvedGroup;
+      if (!seen.has(g.id)) { seen.add(g.id); merged.push(g); }
+    }
+    allGroupsMap.set(p.id, merged);
   }
 
   const productMap = new Map(products.map((p) => [p.id, p]));
@@ -122,13 +146,15 @@ export async function createOrderAction(
       return { success: false, message: `Product not found: ${cartItem.productId}` };
     }
 
+    const allGroups = allGroupsMap.get(product.id) ?? [];
+
     // Server recalculate price
     let unitPrice = product.basePrice;
     const resolvedOptions: ServerOrderItem["options"] = [];
 
     // Validate and resolve each selected option
     for (const sel of cartItem.selectedOptions) {
-      const group = product.optionGroups.find((g) => g.id === sel.optionGroupId);
+      const group = allGroups.find((g) => g.id === sel.optionGroupId);
       if (!group) {
         console.error(`[order] Option group not found for internal id: ${sel.optionGroupId}`);
         return { success: false, message: "There was a menu sync issue while submitting your order. Please try again, or contact the store." };
@@ -148,7 +174,7 @@ export async function createOrderAction(
     }
 
     // Validate required option groups
-    for (const group of product.optionGroups) {
+    for (const group of allGroups) {
       if (!group.isRequired) continue;
       const selected = cartItem.selectedOptions.filter((s) => s.optionGroupId === group.id);
       if (selected.length < group.minSelect) {
