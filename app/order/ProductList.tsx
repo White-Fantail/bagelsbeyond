@@ -65,26 +65,60 @@ function CategoryTabs({
   }
 
   return (
-    <div className="sticky top-16 z-30 bg-white border-b border-gray-100 shadow-sm">
-      <div
-        ref={scrollRef}
-        className="flex gap-1 overflow-x-auto scroll-smooth px-4 py-2 [&::-webkit-scrollbar]:hidden"
-        style={{ scrollbarWidth: "none" }}
-      >
-        {categories.map((cat) => (
+    <div className="sticky top-16 z-30 bg-white border-b border-gray-200">
+      <div className="max-w-5xl mx-auto flex items-stretch">
+        {/* Scrollable tab list */}
+        <div
+          ref={scrollRef}
+          role="tablist"
+          aria-label="Menu categories"
+          className="flex flex-1 overflow-x-auto [&::-webkit-scrollbar]:hidden"
+          style={{ scrollbarWidth: "none" }}
+        >
+          {categories.map((cat) => (
+            <button
+              key={cat}
+              role="tab"
+              aria-selected={activeCategory === cat}
+              data-cat={cat}
+              onClick={() => { onSelect(cat); scrollToTab(cat); }}
+              {/* -mb-px makes the 2px tab border sit on top of the 1px container border */}
+              className={`shrink-0 px-4 py-3.5 text-sm font-medium transition-colors whitespace-nowrap border-b-2 -mb-px ${
+                activeCategory === cat
+                  ? "border-orange-500 text-orange-600"
+                  : "border-transparent text-gray-500 hover:text-gray-800 hover:border-gray-300"
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+
+        {/* Search placeholder — UI only, ready for future wiring */}
+        <div className="hidden sm:flex items-center shrink-0 px-3 border-l border-gray-100">
           <button
-            key={cat}
-            data-cat={cat}
-            onClick={() => { onSelect(cat); scrollToTab(cat); }}
-            className={`shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap ${
-              activeCategory === cat
-                ? "bg-amber-500 text-white shadow-sm"
-                : "bg-gray-100 text-gray-600 hover:bg-amber-50 hover:text-amber-700"
-            }`}
+            type="button"
+            aria-label="Search menu items"
+            className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
           >
-            {cat}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="w-4 h-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 104.5 4.5a7.5 7.5 0 0012.15 12.15z"
+              />
+            </svg>
+            <span>Search</span>
           </button>
-        ))}
+        </div>
       </div>
     </div>
   );
@@ -107,43 +141,54 @@ function ProductCard({
       type="button"
       onClick={() => !isSoldOut && onOpen(product)}
       disabled={isSoldOut}
-      className={`group text-left bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden transition-all duration-200 ${
+      aria-label={`${product.name}${isSoldOut ? ", sold out" : hasOptions ? ", select options" : ", add to order"}`}
+      className={`group w-full text-left bg-white rounded-xl border border-gray-100 overflow-hidden transition-all duration-200 flex h-32 sm:h-36 ${
         isSoldOut
           ? "opacity-60 cursor-not-allowed"
-          : "hover:shadow-md hover:-translate-y-0.5 cursor-pointer"
+          : "hover:shadow-md hover:-translate-y-px cursor-pointer shadow-sm"
       }`}
     >
-      {/* Placeholder image area */}
-      <div className="h-36 bg-gradient-to-br from-amber-50 to-orange-100 flex items-center justify-center relative">
-        <span className="text-5xl" aria-hidden="true">🥯</span>
-        {isSoldOut && (
-          <span className="absolute top-2 right-2 bg-red-500 text-white text-xs font-semibold px-2 py-0.5 rounded-full">
-            Sold Out
-          </span>
-        )}
-        {product.isSubscriptionEligible && !isSoldOut && (
-          <span className="absolute top-2 right-2 bg-blue-500 text-white text-xs font-semibold px-2 py-0.5 rounded-full">
-            Subscribe
-          </span>
-        )}
-      </div>
-
-      {/* Card body */}
-      <div className="p-4 space-y-1.5">
-        <h3 className="font-semibold text-gray-900 leading-tight">{product.name}</h3>
-        {product.description && (
-          <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">{product.description}</p>
-        )}
-        <div className="flex items-center justify-between pt-1">
-          <span className="text-base font-bold text-amber-600">
-            {hasOptions ? "From " : ""}${product.basePrice.toFixed(2)}
-          </span>
-          {!isSoldOut && (
-            <span className="text-xs text-gray-400 bg-gray-50 rounded-full px-2 py-0.5 group-hover:bg-amber-50 group-hover:text-amber-600 transition-colors">
-              {hasOptions ? "Customise +" : "Add +"}
+      {/* Left: text info (~70%) */}
+      <div className="flex-1 p-4 flex flex-col justify-between min-w-0">
+        <div>
+          {isSoldOut ? (
+            <span className="inline-block text-xs font-medium text-red-500 bg-red-50 px-2 py-0.5 rounded-full mb-1.5">
+              Sold out
             </span>
+          ) : product.isSubscriptionEligible ? (
+            <span className="inline-block text-xs font-medium text-blue-500 bg-blue-50 px-2 py-0.5 rounded-full mb-1.5">
+              Subscribe &amp; save
+            </span>
+          ) : null}
+          <h3 className="font-semibold text-gray-900 text-sm sm:text-base leading-snug line-clamp-2">
+            {product.name}
+          </h3>
+          {product.description && (
+            <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed mt-0.5">
+              {product.description}
+            </p>
           )}
         </div>
+        <p className="text-sm font-bold text-gray-900 mt-1">
+          {hasOptions && (
+            <span className="text-xs font-normal text-gray-500 mr-0.5">From </span>
+          )}
+          ${product.basePrice.toFixed(2)}
+        </p>
+      </div>
+
+      {/* Right: image placeholder (~30%) */}
+      <div className="relative w-28 sm:w-36 shrink-0">
+        <div className="absolute inset-0 bg-gradient-to-br from-amber-50 to-orange-100 flex items-center justify-center">
+          <span className="text-4xl sm:text-5xl" aria-hidden="true">🥯</span>
+        </div>
+        {!isSoldOut && (
+          <div className="absolute bottom-2 right-2">
+            <span className="w-7 h-7 bg-white border border-gray-200 rounded-full flex items-center justify-center text-gray-700 text-lg leading-none shadow-sm group-hover:bg-orange-500 group-hover:border-orange-500 group-hover:text-white transition-colors select-none">
+              +
+            </span>
+          </div>
+        )}
       </div>
     </button>
   );
@@ -466,21 +511,21 @@ export default function ProductList({ products }: Props) {
       )}
 
       {/* Category sections */}
-      <div className="space-y-10 mt-6">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10 mt-6">
         {categories.map((cat) => (
           <section
             key={cat}
             ref={(el) => { sectionRefs.current[cat] = el; }}
           >
             {/* Section header */}
-            <div className="flex items-center gap-3 mb-4 px-0.5">
-              <h2 className="text-lg font-bold text-gray-900">{cat}</h2>
-              <div className="flex-1 h-px bg-gray-100" />
+            <div className="flex items-center gap-3 mb-4">
+              <h2 className="text-base font-bold text-gray-900 tracking-tight">{cat}</h2>
+              <div className="flex-1 h-px bg-gray-200" />
               <span className="text-xs text-gray-400">{productsByCategory[cat].length} items</span>
             </div>
 
-            {/* Product grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* Product grid — 2 col on md+, 1 col on mobile */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {productsByCategory[cat].map((product) => (
                 <ProductCard
                   key={product.id}
