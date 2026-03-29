@@ -201,6 +201,8 @@ async function syncCategories(
           isActive: true,
           rawPayload: cat as object,
           updatedAt: new Date(),
+          // isVisible and displayOrder are intentionally NOT updated here —
+          // they are managed by the admin and must survive re-syncs.
         },
       });
       idMap.set(cat.id, { id: upserted.id, name: cat.name });

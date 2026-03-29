@@ -13,6 +13,7 @@ interface OptionGroup {
 }
 interface Product {
   id: string; name: string; description: string | null; category: string | null;
+  categoryOrder: number;
   basePrice: number; isSubscriptionEligible: boolean; isSoldOut: boolean;
   optionGroups: OptionGroup[];
 }
@@ -35,13 +36,18 @@ function calcLineTotal(basePrice: number, options: SelectedOption[], qty: number
 }
 
 function getCategories(products: Product[]): string[] {
-  const seen = new Set<string>();
-  const result: string[] = [];
+  // Use the minimum categoryOrder encountered for each category name so that
+  // the sort is stable even if individual products carry slightly different values.
+  const seen = new Map<string, number>();
   for (const p of products) {
     const cat = p.category ?? "Other";
-    if (!seen.has(cat)) { seen.add(cat); result.push(cat); }
+    const order = p.categoryOrder;
+    const current = seen.get(cat);
+    if (current === undefined || order < current) seen.set(cat, order);
   }
-  return result;
+  return Array.from(seen.entries())
+    .sort((a, b) => a[1] - b[1] || a[0].localeCompare(b[0]))
+    .map(([name]) => name);
 }
 
 // ── Category Tabs ──────────────────────────────────────────────────────────────
@@ -82,7 +88,6 @@ function CategoryTabs({
               aria-selected={activeCategory === cat}
               data-cat={cat}
               onClick={() => { onSelect(cat); scrollToTab(cat); }}
-              {/* -mb-px makes the 2px tab border sit on top of the 1px container border */}
               className={`shrink-0 px-4 py-3.5 text-sm font-medium transition-colors whitespace-nowrap border-b-2 -mb-px ${
                 activeCategory === cat
                   ? "border-orange-500 text-orange-600"
