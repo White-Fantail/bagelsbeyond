@@ -318,6 +318,8 @@ model LoyverseCategory {
   name               String
   color              String?
   isActive           Boolean  @default(true)
+  isVisible          Boolean  @default(true)
+  displayOrder       Int      @default(0)
   source             String   @default("LOYVERSE")
   isSynced           Boolean  @default(true)
   isEditable         Boolean  @default(false)
@@ -328,6 +330,7 @@ model LoyverseCategory {
   products Product[]
 
   @@index([isActive])
+  @@index([isVisible])
   @@map("loyverse_categories")
 }
 

@@ -11,7 +11,13 @@ export default async function OrderPage() {
   today.setUTCHours(0, 0, 0, 0);
 
   const products = await prisma.product.findMany({
-    where: { isActive: true },
+    where: {
+      isActive: true,
+      OR: [
+        { loyverseCategoryId: null },
+        { loyverseCategory: { isVisible: true } },
+      ],
+    },
     orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
     include: {
       optionGroups: {
@@ -28,7 +34,7 @@ export default async function OrderPage() {
         orderBy: { date: "asc" },
         take: 2,
       },
-      loyverseCategory: { select: { name: true } },
+      loyverseCategory: { select: { name: true, displayOrder: true } },
     },
   });
 
@@ -38,6 +44,7 @@ export default async function OrderPage() {
     name: p.name,
     description: p.description,
     category: p.loyverseCategory?.name ?? null,
+    categoryOrder: p.loyverseCategory?.displayOrder ?? 9999,
     basePrice: p.basePrice,
     isSubscriptionEligible: p.isSubscriptionEligible,
     isSoldOut: p.dailyInventory.some((d) => d.isSoldOut),

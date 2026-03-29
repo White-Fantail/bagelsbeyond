@@ -9,8 +9,8 @@ export async function GET() {
   try {
     const categories = await prisma.loyverseCategory.findMany({
       where: { isActive: true },
-      orderBy: { name: "asc" },
-      select: { id: true, name: true, color: true },
+      orderBy: [{ displayOrder: "asc" }, { name: "asc" }],
+      select: { id: true, name: true, color: true, isVisible: true, displayOrder: true, updatedAt: true },
     });
 
     return NextResponse.json({ categories });
