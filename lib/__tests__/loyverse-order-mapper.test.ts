@@ -80,15 +80,13 @@ describe("buildLoyverseReceiptPayload", () => {
       []
     );
 
-    expect(payload.receipt_number).toBe("ORD-001");
-    expect(payload.total_money).toBe(10.0);
+    expect(payload.order).toBe("ORD-001");
     expect(payload.line_items).toHaveLength(1);
 
     const lineItem = payload.line_items[0];
-    expect(lineItem.item_id).toBe(LOYVERSE_PRODUCT_ID);
-    expect(lineItem.item_name).toBe("Classic Bagel");
+    expect(lineItem.variant_id).toBe(LOYVERSE_PRODUCT_ID);
     expect(lineItem.quantity).toBe(2);
-    expect(lineItem.modifiers).toHaveLength(0);
+    expect(lineItem.line_modifiers).toHaveLength(0);
   });
 
   // ── product with one modifier group and one option ─────────────────────────
@@ -119,13 +117,11 @@ describe("buildLoyverseReceiptPayload", () => {
     );
 
     const lineItem = payload.line_items[0];
-    expect(lineItem.item_id).toBe(LOYVERSE_PRODUCT_ID);
-    expect(lineItem.modifiers).toHaveLength(1);
+    expect(lineItem.variant_id).toBe(LOYVERSE_PRODUCT_ID);
+    expect(lineItem.line_modifiers).toHaveLength(1);
 
-    const modifier = lineItem.modifiers[0];
-    expect(modifier.modifier_id).toBe(LOYVERSE_OPTION_ID_1);
-    expect(modifier.modifier_set_id).toBe(LOYVERSE_GROUP_ID);
-    expect(modifier.name).toBe("Plain");
+    const modifier = lineItem.line_modifiers[0];
+    expect(modifier.modifier_option_id).toBe(LOYVERSE_OPTION_ID_1);
     expect(modifier.price).toBe(0);
   });
 
@@ -168,12 +164,10 @@ describe("buildLoyverseReceiptPayload", () => {
       ]
     );
 
-    const modifiers = payload.line_items[0].modifiers;
+    const modifiers = payload.line_items[0].line_modifiers;
     expect(modifiers).toHaveLength(2);
-    expect(modifiers[0].modifier_id).toBe(LOYVERSE_OPTION_ID_1);
-    expect(modifiers[0].modifier_set_id).toBe(LOYVERSE_GROUP_ID);
-    expect(modifiers[1].modifier_id).toBe(LOYVERSE_OPTION_ID_2);
-    expect(modifiers[1].modifier_set_id).toBe(LOYVERSE_GROUP_ID_2);
+    expect(modifiers[0].modifier_option_id).toBe(LOYVERSE_OPTION_ID_1);
+    expect(modifiers[1].modifier_option_id).toBe(LOYVERSE_OPTION_ID_2);
   });
 
   // ── missing loyverse product id ────────────────────────────────────────────
@@ -193,7 +187,7 @@ describe("buildLoyverseReceiptPayload", () => {
     // No product mapping provided — item_id should be null (not the internal id)
     const payload = buildLoyverseReceiptPayload(order, [], []);
 
-    expect(payload.line_items[0].item_id).toBeNull();
+    expect(payload.line_items[0].variant_id).toBeNull();
   });
 
   // ── missing loyverse modifier option id ───────────────────────────────────
@@ -225,7 +219,7 @@ describe("buildLoyverseReceiptPayload", () => {
 
   // ── missing loyverse modifier group id ────────────────────────────────────
 
-  it("omits modifier_set_id when loyverse group id is null", () => {
+  it("maps modifier with no group id correctly", () => {
     const order = makeOrder([
       {
         internalProductId: INTERNAL_PRODUCT_ID,
@@ -251,9 +245,8 @@ describe("buildLoyverseReceiptPayload", () => {
       [makeOptionMapping(INTERNAL_OPTION_ID_1, LOYVERSE_OPTION_ID_1, null)]
     );
 
-    const modifier = payload.line_items[0].modifiers[0];
-    expect(modifier.modifier_id).toBe(LOYVERSE_OPTION_ID_1);
-    expect(modifier.modifier_set_id).toBeUndefined();
+    const modifier = payload.line_items[0].line_modifiers[0];
+    expect(modifier.modifier_option_id).toBe(LOYVERSE_OPTION_ID_1);
   });
 
   // ── throws when option has null internalOptionId ──────────────────────────
@@ -319,7 +312,6 @@ describe("buildLoyverseReceiptPayload", () => {
     // But Loyverse ids should be present
     expect(serialized).toContain(LOYVERSE_PRODUCT_ID);
     expect(serialized).toContain(LOYVERSE_OPTION_ID_1);
-    expect(serialized).toContain(LOYVERSE_GROUP_ID);
   });
 
   // ── note building ─────────────────────────────────────────────────────────
@@ -341,12 +333,12 @@ describe("buildLoyverseReceiptPayload", () => {
     expect(payload.note).toBeNull();
   });
 
-  // ── created_at ISO string ─────────────────────────────────────────────────
+  // ── receipt_date ISO string ───────────────────────────────────────────────
 
-  it("formats created_at as ISO string", () => {
+  it("formats receipt_date as ISO string", () => {
     const date = new Date("2026-06-15T08:30:00.000Z");
     const order: OrderInput = { ...makeOrder([]), createdAt: date };
     const payload = buildLoyverseReceiptPayload(order, [], []);
-    expect(payload.created_at).toBe("2026-06-15T08:30:00.000Z");
+    expect(payload.receipt_date).toBe("2026-06-15T08:30:00.000Z");
   });
 });
