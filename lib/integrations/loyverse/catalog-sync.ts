@@ -448,12 +448,6 @@ export async function syncLoyverseItemsAndVariants(
           );
         }
       }
-      if (upstreamModIds.length === 0) {
-        // All removed above already; nothing extra needed but reset counter
-        await prisma.channelItemModifierGroupLink.deleteMany({
-          where: { channel: Channel.LOYVERSE, channelItemId: channelItem.id },
-        });
-      }
 
       // ── Item tax links ──
       const upstreamTaxIds = item.tax_ids ?? [];
@@ -487,11 +481,6 @@ export async function syncLoyverseItemsAndVariants(
             `item ${item.id} tax link ${taxId}: ${err instanceof Error ? err.message : String(err)}`
           );
         }
-      }
-      if (upstreamTaxIds.length === 0) {
-        await prisma.channelItemTaxLink.deleteMany({
-          where: { channel: Channel.LOYVERSE, channelItemId: channelItem.id },
-        });
       }
 
       // ── Item component links (composite items) ──
@@ -539,11 +528,6 @@ export async function syncLoyverseItemsAndVariants(
             `item ${item.id} component ${comp.variant_id}: ${err instanceof Error ? err.message : String(err)}`
           );
         }
-      }
-      if (upstreamComponentVariantIds.length === 0) {
-        await prisma.channelItemComponent.deleteMany({
-          where: { channel: Channel.LOYVERSE, channelItemId: channelItem.id },
-        });
       }
 
       // ── Variants ──

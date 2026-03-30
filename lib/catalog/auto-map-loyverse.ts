@@ -380,7 +380,7 @@ export async function autoMapLoyverseVariants(): Promise<{ mapped: number; warni
       // Resolve price: prefer single active store price, then default_price
       const storeRows = mirrorVariant.channelVariantStoreData;
       const activeStoreRows = storeRows.filter((s) => s.price != null);
-      let resolvedPrice: { toFixed: (n: number) => string } | null = null;
+      let resolvedPrice = null as typeof activeStoreRows[0]["price"] | null;
       if (activeStoreRows.length === 1) {
         resolvedPrice = activeStoreRows[0].price;
       } else if (mirrorVariant.defaultPrice != null) {
@@ -402,7 +402,7 @@ export async function autoMapLoyverseVariants(): Promise<{ mapped: number; warni
             name: variantName,
             sku: mirrorVariant.sku ?? null,
             barcode: mirrorVariant.barcode ?? null,
-            price: resolvedPrice as never,
+            price: resolvedPrice,
             cost: mirrorVariant.cost ?? null,
             purchaseCost: mirrorVariant.purchaseCost ?? null,
             option1Value: mirrorVariant.option1Value ?? null,
@@ -419,7 +419,7 @@ export async function autoMapLoyverseVariants(): Promise<{ mapped: number; warni
             name: variantName,
             sku: mirrorVariant.sku ?? null,
             barcode: mirrorVariant.barcode ?? null,
-            price: resolvedPrice as never,
+            price: resolvedPrice,
             cost: mirrorVariant.cost ?? null,
             purchaseCost: mirrorVariant.purchaseCost ?? null,
             option1Value: mirrorVariant.option1Value ?? null,
