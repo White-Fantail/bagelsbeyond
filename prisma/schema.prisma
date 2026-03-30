@@ -35,6 +35,8 @@ model User {
 }
 
 // ─── Customer Profile ─────────────────────────────────────────────────────────
+// 1:1 extension of User for CUSTOMER-specific data.
+// Designed to hold order/subscription/address data in future phases.
 
 model CustomerProfile {
   id                   String   @id @default(cuid())
@@ -133,6 +135,7 @@ model SalesPrediction {
   confidenceScore          Float?
   method                   String   @default("rule_based_v2")
   notes                    String?
+  // Extended fields for advanced prediction
   projectedWasteRate       Float?
   projectedSellThroughRate Float?
   baselineSales            Float?
@@ -166,7 +169,7 @@ model PredictionFactorSnapshot {
 model ImportJob {
   id           String   @id @default(cuid())
   fileName     String
-  status       String   @default("pending")
+  status       String   @default("pending") // pending, validating, ready, imported, failed
   totalRows    Int      @default(0)
   successRows  Int      @default(0)
   failedRows   Int      @default(0)
@@ -192,8 +195,7 @@ model ImportRow {
   parsedDoordashSales  Float?
   parsedOtherSales     Float?
   parsedNotes          String?
-  status               String    @default("pending")
-  validationErrors     String?
+  status               String    @default("pending") // pending, valid, invalid, imported, skipped
   linkedDailyRecordId  String?
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
@@ -208,9 +210,9 @@ model ImportRow {
 
 model ScheduledTask {
   id            String    @id @default(cuid())
-  taskType      String
+  taskType      String    // collect_external_factors | generate_prediction
   targetDate    DateTime?
-  status        String    @default("pending")
+  status        String    @default("pending") // pending | running | success | partial | failed | skipped
   startedAt     DateTime?
   finishedAt    DateTime?
   errorMessage  String?
@@ -231,7 +233,7 @@ model TaskLog {
   id              String        @id @default(cuid())
   scheduledTaskId String
   message         String
-  level           String        @default("info")
+  level           String        @default("info") // info | warning | error
   createdAt       DateTime      @default(now())
 
   task            ScheduledTask @relation(fields: [scheduledTaskId], references: [id], onDelete: Cascade)
@@ -241,14 +243,18 @@ model TaskLog {
 }
 
 // ─── Admin Audit Log ──────────────────────────────────────────────────────────
+// Records admin actions on user accounts for auditability.
+// Extensible for future actions (e.g. password resets, invites).
+// Future extension: add a UI in /admin/audit-logs to view these records.
+// Future extension: lastLoginAt can be tracked by updating the User model on each login.
 
 model AdminActionLog {
   id            String   @id @default(cuid())
-  adminUserId   String
-  targetUserId  String
-  actionType    String
-  previousValue String
-  newValue      String
+  adminUserId   String   // The ADMIN who performed the action
+  targetUserId  String   // The user whose account was affected
+  actionType    String   // CHANGE_ROLE | ACTIVATE_USER | DEACTIVATE_USER
+  previousValue String   // Previous role or isActive value (stringified)
+  newValue      String   // New role or isActive value (stringified)
   createdAt     DateTime @default(now())
 
   @@index([adminUserId])
