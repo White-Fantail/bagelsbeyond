@@ -204,7 +204,7 @@ export class LoyverseAdapter {
 
     if (!res.ok) {
       let body = "";
-      try { body = await res.text(); } catch { /* ignore */ }
+      try { body = await res.text(); } catch (readErr) { console.debug("[Loyverse] Could not read error response body:", readErr); }
       if (res.status === 401) throw new LoyverseApiError("Loyverse authentication failed — check LOYVERSE_API_TOKEN", 401);
       if (res.status === 404) throw new LoyverseApiError(`Loyverse endpoint not found (HTTP 404): ${url}`, 404);
       if (res.status === 429) throw new LoyverseApiError("Loyverse rate limit exceeded (HTTP 429) — retry later", 429);
@@ -248,10 +248,14 @@ export class LoyverseAdapter {
       let cursor: string | null = null;
       do {
         const qs: string = cursor ? `?cursor=${encodeURIComponent(cursor)}` : "";
-        type ModPage = { modifiers: Array<LoyverseRawModifier & { modifier_options?: LoyverseRawModifier["options"] }>; cursor: string | null };
+        type ModPage = {
+          modifiers: Array<LoyverseRawModifier & { modifier_options?: LoyverseRawModifier["options"] }>;
+          cursor: string | null;
+        };
         const page: ModPage = await this.fetchWithAuth<ModPage>(`/modifiers${qs}`);
         if (Array.isArray(page.modifiers)) {
-          all.push(...page.modifiers.map((m: LoyverseRawModifier & { modifier_options?: LoyverseRawModifier["options"] }) => ({ ...m, options: m.options ?? m.modifier_options })));
+          type ModWithAlias = LoyverseRawModifier & { modifier_options?: LoyverseRawModifier["options"] };
+          all.push(...page.modifiers.map((m: ModWithAlias) => ({ ...m, options: m.options ?? m.modifier_options })));
         }
         cursor = page.cursor ?? null;
       } while (cursor);
