@@ -297,6 +297,8 @@ export class LoyverseAdapter implements POSAdapter {
   private readonly mockMode: boolean;
   /** Populated after each fetchItems() call — null until first call. */
   private _itemsDiagnostics: ItemsFetchDiagnostics | null = null;
+  /** Cached CASH payment type ID fetched from GET /payment_types — null until first receipt push. */
+  private _cashPaymentTypeId: string | null = null;
 
   constructor(apiToken: string, baseUrl?: string, storeId?: string) {
     this.apiToken = apiToken;
@@ -712,6 +714,32 @@ export class LoyverseAdapter implements POSAdapter {
   }
 
   /**
+   * Fetch available payment types from Loyverse and return the ID of the first
+   * payment type whose `type` field is "CASH". The result is cached so that
+   * subsequent receipt pushes do not make a redundant API call.
+   * Loyverse docs: https://developer.loyverse.com/docs/#tag/PaymentTypes/paths/~1payment_types/get
+   */
+  private async fetchCashPaymentTypeId(): Promise<string | null> {
+    if (this._cashPaymentTypeId) {
+      return this._cashPaymentTypeId;
+    }
+    const data = await this.fetchWithAuth<{
+      payment_types: Array<{ id: string; name: string; type: string }>;
+    }>("/payment_types");
+    const cashType = data.payment_types.find((pt) => pt.type === "CASH");
+    if (!cashType) {
+      console.warn(
+        "[Loyverse] No CASH payment type found in /payment_types response. " +
+        "Ensure a Cash payment type is configured in the Loyverse back office (Settings → Payment types)."
+      );
+      return null;
+    }
+    console.info(`[Loyverse] Found CASH payment type id=${cashType.id} name="${cashType.name}"`);
+    this._cashPaymentTypeId = cashType.id;
+    return cashType.id;
+  }
+
+  /**
    * Push an order to Loyverse as a receipt.
    * Maps internal Order fields to the Loyverse POST /receipts payload.
    * Loyverse docs: https://developer.loyverse.com/docs/#tag/Receipts/paths/~1receipts/post
@@ -739,6 +767,11 @@ export class LoyverseAdapter implements POSAdapter {
         price: number;
       }
 
+      const cashPaymentTypeId = await this.fetchCashPaymentTypeId();
+      if (!cashPaymentTypeId) {
+        return { success: false, error: "Could not find a CASH payment type in Loyverse — cannot create receipt" };
+      }
+
       const line_items = order.items.map((item) => ({
         ...(item.externalProductId ? { variant_id: item.externalProductId } : {}),
         quantity: item.quantity,
@@ -751,12 +784,22 @@ export class LoyverseAdapter implements POSAdapter {
           })),
       }));
 
+      const paidAt = order.createdAt.toISOString();
+      const payments = [
+        {
+          payment_type_id: cashPaymentTypeId,
+          money_amount: order.totalAmount,
+          paid_at: paidAt,
+        },
+      ];
+
       const payload = {
         order: order.orderNumber ?? order.externalId,
         store_id: this.storeId,
         note: order.note ?? null,
-        receipt_date: order.createdAt.toISOString(),
+        receipt_date: paidAt,
         line_items,
+        payments,
       };
 
       console.info("[Loyverse] Sending receipt payload", {
@@ -772,6 +815,7 @@ export class LoyverseAdapter implements POSAdapter {
             price: m.price,
           })),
         })),
+        payments,
       });
 
       const res = await this.fetchWithAuth<{ receipt_number: string }>(
