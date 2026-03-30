@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import LoyverseSyncButton from "./LoyverseSyncButton";
 
 export default async function LoyversePage() {
   const lastSync = await prisma.syncJob.findFirst({
@@ -42,9 +43,7 @@ export default async function LoyversePage() {
           </div>
         ))}
       </div>
-      <p className="mt-6 text-sm text-gray-400">
-        Use the sync API endpoints to populate channel mirror tables from Loyverse.
-      </p>
+      <LoyverseSyncButton />
     </div>
   );
 }
