@@ -766,6 +766,7 @@ export class LoyverseAdapter implements POSAdapter {
 
       console.info("[Loyverse] Sending receipt payload", {
         receipt_number: payload.receipt_number,
+        store_id: payload.store_id,
         total_money: payload.total_money,
         line_item_count: line_items.length,
         line_items: line_items.map((li) => ({
