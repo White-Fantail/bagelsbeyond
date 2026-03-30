@@ -589,3 +589,85 @@ Phase 5B에서 `ExternalOptionGroupMap` 테이블을 추가하여 `(source, exte
 └── types/
     └── index.ts                    # TypeScript 타입 정의 (TaskStatus 등 포함)
 ```
+
+---
+
+## 🗂️ Admin Catalog Management (카탈로그 관리)
+
+### Overview / 개요
+
+카탈로그 관리 화면은 외부 POS(Loyverse) 에서 동기화된 카테고리/아이템/모디파이어 데이터를 관리자가 확인하고 내부 표시 설정을 조정하는 화면입니다.
+
+> **철학**: 카탈로그 데이터는 외부 소스(Loyverse)가 source-of-truth입니다.
+> 관리자 화면에서 핵심 필드(이름, 가격 등)를 임의로 수정하지 않고,
+> 내부 관리 필드(표시순서, 노출여부)만 조정합니다.
+> 데이터를 변경하려면 먼저 Loyverse에서 수정 후 동기화를 실행하세요.
+
+### Pages / 관리 페이지
+
+| 경로 | 설명 |
+|------|------|
+| `/admin/categories` | 카테고리 표시 순서 및 노출 여부 관리 |
+| `/admin/items` | 동기화된 상품 조회 및 내부 상태 관리 |
+| `/admin/modifiers` | 동기화된 modifier group / option 조회 |
+
+### Categories (`/admin/categories`)
+
+- 카테고리 목록 조회 (DB 기반, 하드코딩 상수 사용 안 함)
+- `sortOrder` (표시순서) 인라인 수정 가능 — blur 또는 Enter 시 저장
+- `isVisible` 토글 스위치로 즉시 변경
+- source type / source ref / sync status / synced at 표시
+- 검색 필터 지원
+
+### Items (`/admin/items`)
+
+- 동기화된 아이템 목록 조회 (카테고리 필터 / 검색 지원)
+- 이미지 썸네일, 가격, 카테고리, 소스 정보, modifier group count 표시
+- `isVisible` 토글로 노출 여부 즉시 변경
+- Details 버튼으로 모달 상세 보기 — modifier group 연결 정보 확인 가능
+- 외부 소스 기반 아이템은 핵심 필드 표시만 (수정 불가 구조)
+
+### Modifiers (`/admin/modifiers`)
+
+- modifier group 목록 조회
+- 각 그룹의 option 수, min/max 선택 규칙, 연결된 아이템 수 표시
+- 행 옆 ▶/▼ 버튼으로 option 목록 펼치기 — option명, 가격 추가금, default 여부, 활성 상태 표시
+- `isActive` 토글로 그룹 활성/비활성 변경
+- source type / source ref / synced at 표시
+
+### Data Philosophy / 데이터 철학
+
+1. **Mirror-First**: Loyverse 데이터 → `channel_*` 미러 테이블 → 정규 canonical 테이블
+2. **Source-of-Truth**: 외부 POS가 원본. 관리자 화면에서 이름/가격 등 core field는 수정하지 않음
+3. **Internal Fields Only**: `sortOrder`, `isVisible`, `isActive` 같은 내부 관리 필드만 관리자 화면에서 변경 가능
+4. **Sync to Update**: 외부 원본 변경 → Loyverse에서 수정 → `/admin/integrations/loyverse` 에서 🔄 Sync 실행
+
+### Access Control / 권한
+
+| 역할 | 접근 가능 여부 |
+|------|-----------|
+| ADMIN | ✅ 카탈로그 관리 전체 접근 |
+| STAFF | ❌ 카탈로그 관리 접근 불가 |
+| CUSTOMER | ❌ 카탈로그 관리 접근 불가 |
+
+모든 `/admin/catalog/*` API 엔드포인트는 ADMIN 권한을 요구합니다.
+
+### Sync Flow / 동기화 흐름
+
+```
+Loyverse POS
+  └→ POST /api/admin/integrations/loyverse/catalog-sync
+       └→ Mirror Phase: ChannelCategory / ChannelItem / ChannelModifierGroup 등 upsert
+       └→ Canonical Phase: Category / Item / ModifierGroup 생성 + Mapping 연결
+            └→ /admin/categories, /admin/items, /admin/modifiers 에서 확인 가능
+```
+
+### API Endpoints / API 엔드포인트
+
+| 경로 | 메서드 | 설명 |
+|------|--------|------|
+| `PATCH /api/admin/catalog/categories/[id]` | PATCH | 카테고리 sortOrder / isVisible 업데이트 |
+| `PATCH /api/admin/catalog/items/[id]` | PATCH | 아이템 isVisible / isActive 업데이트 |
+| `PATCH /api/admin/catalog/modifiers/[id]` | PATCH | modifier group isActive 업데이트 |
+| `GET /api/admin/catalog/items/[id]/modifiers` | GET | 아이템에 연결된 modifier group 목록 |
+
