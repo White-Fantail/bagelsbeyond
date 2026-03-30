@@ -926,3 +926,23 @@ CREATE INDEX "sync_job_logs_status_idx" ON "sync_job_logs"("status");
 
 -- subscription_item_options
 CREATE INDEX "subscription_item_options_subscriptionItemId_idx" ON "subscription_item_options"("subscriptionItemId");
+
+-- ─── Drop Order / Subscription tables and enums ───────────────────────────────
+-- These models have been removed from the schema in favour of the channel_ mirror layer.
+
+DROP TABLE IF EXISTS "subscription_item_options" CASCADE;
+DROP TABLE IF EXISTS "subscription_items" CASCADE;
+DROP TABLE IF EXISTS "subscription_occurrences" CASCADE;
+DROP TABLE IF EXISTS "subscriptions" CASCADE;
+DROP TABLE IF EXISTS "order_item_options" CASCADE;
+DROP TABLE IF EXISTS "order_items" CASCADE;
+DROP TABLE IF EXISTS "external_order_maps" CASCADE;
+DROP TABLE IF EXISTS "orders" CASCADE;
+
+DROP TYPE IF EXISTS "OrderStatus";
+DROP TYPE IF EXISTS "PaymentStatus";
+DROP TYPE IF EXISTS "FulfillmentType";
+DROP TYPE IF EXISTS "OrderSource";
+DROP TYPE IF EXISTS "IntegrationSource";
+DROP TYPE IF EXISTS "SubscriptionStatus";
+DROP TYPE IF EXISTS "OccurrenceStatus";
