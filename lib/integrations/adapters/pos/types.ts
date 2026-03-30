@@ -14,6 +14,7 @@ export interface LoyverseRawVariant {
   reference_id: string | null;
   barcode: string | null;
   cost: number | null;
+  purchase_cost?: number | null;
   default_pricing_type: "FIXED" | "VARIABLE";
   default_price: number | null;
   stores: Array<{
@@ -21,6 +22,8 @@ export interface LoyverseRawVariant {
     pricing_type: "FIXED" | "VARIABLE";
     price: number | null;
     available_for_sale: boolean;
+    optimal_stock?: number | null;
+    low_stock?: number | null;
   }>;
   option1_name: string | null;
   option1_val: string | null;
@@ -28,7 +31,9 @@ export interface LoyverseRawVariant {
   option2_val: string | null;
   option3_name: string | null;
   option3_val: string | null;
-  updated_at?: string;
+  created_at?: string | null;
+  updated_at?: string | null;
+  deleted_at?: string | null;
 }
 
 export interface LoyverseRawItem {
@@ -39,11 +44,22 @@ export interface LoyverseRawItem {
   category_id: string | null;
   sold_by_weight: boolean;
   is_composite: boolean;
+  use_production?: boolean;
+  primary_supplier_id?: string | null;
+  track_stock?: boolean;
   /** IDs of modifier groups attached to this item */
   modifier_ids: string[];
+  /** IDs of tax rates attached to this item */
+  tax_ids?: string[];
+  /** Component variants for composite items */
+  components?: Array<{ variant_id: string; quantity: number }>;
   form: string;
+  handle?: string | null;
   image_url: string | null;
   color: string | null;
+  option1_name?: string | null;
+  option2_name?: string | null;
+  option3_name?: string | null;
   variants: LoyverseRawVariant[];
   created_at: string;
   updated_at: string;
@@ -62,6 +78,10 @@ export interface LoyverseRawModifierOption {
   id: string;
   name: string;
   price: number;
+  position?: number | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+  deleted_at?: string | null;
 }
 
 /**
@@ -72,9 +92,11 @@ export interface LoyverseRawModifierOption {
 export interface LoyverseRawModifier {
   id: string;
   name: string;
+  position?: number | null;
   min_select?: number | null;
   max_select?: number | null;
   required?: boolean;
+  stores?: Array<{ store_id: string }>;
   options?: LoyverseRawModifierOption[];
   created_at: string;
   updated_at: string;
