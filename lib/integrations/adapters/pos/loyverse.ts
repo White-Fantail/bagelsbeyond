@@ -735,49 +735,40 @@ export class LoyverseAdapter implements POSAdapter {
 
     try {
       interface LoyverseReceiptModifier {
-        modifier_id?: string;
-        modifier_set_id?: string;
-        name: string;
+        modifier_option_id: string;
         price: number;
       }
 
       const line_items = order.items.map((item) => ({
-        item_id: item.externalProductId !== "" ? item.externalProductId : null,
-        item_name: item.productName,
+        ...(item.externalProductId ? { variant_id: item.externalProductId } : {}),
         quantity: item.quantity,
         price: item.unitPrice,
-        total_money: item.lineTotal,
-        modifiers: (item.modifiers ?? []).map((m): LoyverseReceiptModifier => ({
-          ...(m.modifierId ? { modifier_id: m.modifierId } : {}),
-          ...(m.modifierGroupId ? { modifier_set_id: m.modifierGroupId } : {}),
-          name: m.name,
-          price: m.price,
-        })),
+        line_modifiers: (item.modifiers ?? [])
+          .filter((m) => !!m.modifierId)
+          .map((m): LoyverseReceiptModifier => ({
+            modifier_option_id: m.modifierId!,
+            price: m.price,
+          })),
       }));
 
       const payload = {
-        receipt_number: order.orderNumber ?? order.externalId,
+        order: order.orderNumber ?? order.externalId,
         store_id: this.storeId,
         note: order.note ?? null,
-        total_money: order.totalAmount,
+        receipt_date: order.createdAt.toISOString(),
         line_items,
-        created_at: order.createdAt.toISOString(),
       };
 
       console.info("[Loyverse] Sending receipt payload", {
-        receipt_number: payload.receipt_number,
+        order: payload.order,
         store_id: payload.store_id,
-        total_money: payload.total_money,
         line_item_count: line_items.length,
         line_items: line_items.map((li) => ({
-          item_id: li.item_id,
-          item_name: li.item_name,
+          variant_id: "variant_id" in li ? li.variant_id : null,
           quantity: li.quantity,
-          modifier_count: li.modifiers.length,
-          modifiers: li.modifiers.map((m) => ({
-            modifier_id: m.modifier_id ?? null,
-            modifier_set_id: m.modifier_set_id ?? null,
-            name: m.name,
+          line_modifier_count: li.line_modifiers.length,
+          line_modifiers: li.line_modifiers.map((m) => ({
+            modifier_option_id: m.modifier_option_id,
             price: m.price,
           })),
         })),

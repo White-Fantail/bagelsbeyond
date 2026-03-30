@@ -69,29 +69,23 @@ export interface ResolvedOptionMapping {
 
 export interface LoyverseModifierPayload {
   /** Loyverse modifier option id — MUST be a Loyverse id, never an internal id. */
-  modifier_id: string;
-  /** Loyverse modifier group id — present when available. */
-  modifier_set_id?: string;
-  name: string;
+  modifier_option_id: string;
   price: number;
 }
 
 export interface LoyverseLineItemPayload {
-  /** Loyverse item id (null for unmapped internal-only products). */
-  item_id: string | null;
-  item_name: string;
+  /** Loyverse variant id (null for unmapped internal-only products). */
+  variant_id: string | null;
   quantity: number;
   price: number;
-  total_money: number;
-  modifiers: LoyverseModifierPayload[];
+  line_modifiers: LoyverseModifierPayload[];
 }
 
 export interface LoyverseReceiptPayload {
-  receipt_number: string;
+  order: string;
   note: string | null;
-  total_money: number;
   line_items: LoyverseLineItemPayload[];
-  created_at: string;
+  receipt_date: string;
 }
 
 // ─── Mapper ───────────────────────────────────────────────────────────────────
@@ -142,31 +136,24 @@ export function buildLoyverseReceiptPayload(
       }
 
       const result: LoyverseModifierPayload = {
-        modifier_id: mapping.loyverseOptionId,
-        name: mapping.externalName ?? opt.optionNameSnapshot,
+        modifier_option_id: mapping.loyverseOptionId,
         price: opt.priceDeltaSnapshot,
       };
-      if (mapping.loyverseGroupId) {
-        result.modifier_set_id = mapping.loyverseGroupId;
-      }
       return result;
     });
 
     return {
-      item_id: loyverseProductId,
-      item_name: item.productNameSnapshot,
+      variant_id: loyverseProductId,
       quantity: item.quantity,
       price: item.unitPriceSnapshot,
-      total_money: item.lineTotal,
-      modifiers,
+      line_modifiers: modifiers,
     };
   });
 
   return {
-    receipt_number: order.orderNumber,
+    order: order.orderNumber,
     note,
-    total_money: order.totalAmount,
     line_items,
-    created_at: order.createdAt.toISOString(),
+    receipt_date: order.createdAt.toISOString(),
   };
 }
