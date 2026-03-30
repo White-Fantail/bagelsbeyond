@@ -17,7 +17,6 @@ import {
   ensureExternalFactorsForNextDays,
   schedulePredictionForNextDay,
 } from "@/lib/services/schedulerService";
-import { runDailyOrderPushSync } from "@/lib/services/daily-order-push";
 
 export const dynamic = "force-dynamic";
 
@@ -59,7 +58,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (action === "daily_order_push" || action === "all") {
-      results.dailyOrderPush = await runDailyOrderPushSync();
+      results.dailyOrderPush = { message: "daily_order_push is not available in this version" };
     }
 
     return NextResponse.json({ ok: true, action, results });

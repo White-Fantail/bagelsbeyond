@@ -49,8 +49,6 @@ export async function createImportJob(data: {
           parsedOtherSales: r.parsedOtherSales ?? null,
           parsedNotes: r.parsedNotes ?? null,
           status: r.status,
-          validationErrors:
-            r.validationErrors.length > 0 ? r.validationErrors.join("; ") : null,
         })),
       },
     },
@@ -101,7 +99,7 @@ export async function executeImport(
     if (!row.parsedDate) {
       await prisma.importRow.update({
         where: { id: row.id },
-        data: { status: "invalid", validationErrors: "Date information is missing" },
+        data: { status: "invalid" },
       });
       result.failedRows++;
       result.errors.push({ rowNumber: row.rowNumber, error: "Date information is missing" });
@@ -165,7 +163,7 @@ export async function executeImport(
       const errorMsg = err instanceof Error ? err.message : "Unknown error";
       await prisma.importRow.update({
         where: { id: row.id },
-        data: { status: "invalid", validationErrors: errorMsg },
+        data: { status: "invalid" },
       });
       result.failedRows++;
       result.errors.push({ rowNumber: row.rowNumber, error: errorMsg });

@@ -1,6 +1,6 @@
 // ─── POS Adapter Types ────────────────────────────────────────────────────────
-// Shared interface contract for all external POS systems.
-// Each POS adapter (Loyverse, Square, etc.) implements POSAdapter.
+// Shared raw API types for external POS systems.
+// Internal canonical types (Category, Item, etc.) are in prisma/schema.prisma.
 
 // ─── Loyverse Raw API Types ───────────────────────────────────────────────────
 // These reflect the actual Loyverse REST API v1.0 response shapes.
@@ -68,7 +68,6 @@ export interface LoyverseRawModifierOption {
  * A Loyverse "modifier" — equivalent to a modifier *group* in other systems.
  * Each modifier has a name and a list of selectable options.
  * Retrieved from GET /modifiers.
- * Docs: https://developer.loyverse.com/docs/#tag/Modifiers
  */
 export interface LoyverseRawModifier {
   id: string;
@@ -76,8 +75,6 @@ export interface LoyverseRawModifier {
   min_select?: number | null;
   max_select?: number | null;
   required?: boolean;
-  /** Selectable options within this modifier (e.g. milk choices, toppings).
-   * The Loyverse API may omit this field for modifiers with no options. */
   options?: LoyverseRawModifierOption[];
   created_at: string;
   updated_at: string;
@@ -100,87 +97,59 @@ export interface LoyverseCatalogRaw {
   modifiers: LoyverseRawModifier[];
 }
 
-// ─── Normalised External Types (POS-agnostic) ────────────────────────────────
-// These are the canonical types used by catalog-sync and catalog-mapper.
-
-export interface ExternalModifier {
-  externalId: string;
+/** Loyverse raw payment type */
+export interface LoyverseRawPaymentType {
+  id: string;
   name: string;
-  priceDelta: number;
+  type: string | null;
+  stores: Array<{ store_id: string }>;
+  created_at: string | null;
+  updated_at: string | null;
+  deleted_at: string | null;
 }
 
-export interface ExternalModifierGroup {
-  externalId: string;
-  name: string;
-  modifiers: ExternalModifier[];
+/** Loyverse raw receipt line item modifier */
+export interface LoyverseRawReceiptModifier {
+  modifier_option_id: string | null;
+  name: string | null;
+  price: number | null;
 }
 
-export interface ExternalProduct {
-  externalId: string;
-  name: string;
-  description?: string;
-  /** SKU / reference code from the external system, if available */
-  sku?: string;
-  price: number;
-  category?: string;
-  isActive: boolean;
-  modifierGroups?: ExternalModifierGroup[];
-  updatedAt?: string;
-}
-
-export interface ExternalOrderItemModifier {
-  name: string;
-  price: number;
-  quantity?: number;
-  /** Loyverse modifier option ID (externalOptionId from ExternalOptionMap). Must be set for Loyverse receipts. */
-  modifierId?: string;
-  /** Loyverse modifier group ID (externalGroupId from ExternalOptionMap). Optional for Loyverse receipts. */
-  modifierGroupId?: string;
-}
-
-export interface ExternalOrderItem {
-  externalProductId: string;
-  productName: string;
+/** Loyverse raw receipt line item */
+export interface LoyverseRawReceiptLineItem {
+  variant_id: string | null;
+  item_name: string | null;
   quantity: number;
-  unitPrice: number;
-  lineTotal: number;
-  /** Optional modifiers/options attached to this line item (e.g. Oat Milk +$0.80) */
-  modifiers?: ExternalOrderItemModifier[];
+  price: number | null;
+  cost: number | null;
+  note: string | null;
+  modifiers?: LoyverseRawReceiptModifier[];
 }
 
-export interface ExternalOrder {
-  externalId: string;
-  orderNumber?: string;
-  items: ExternalOrderItem[];
-  totalAmount: number;
-  createdAt: Date;
-  note?: string;
+/** Loyverse raw receipt payment */
+export interface LoyverseRawReceiptPayment {
+  payment_type_id: string | null;
+  name: string | null;
+  money_amount: number | null;
+  paid_at: string | null;
 }
 
+/** Loyverse raw receipt */
+export interface LoyverseRawReceipt {
+  id: string | null;
+  receipt_number: string | null;
+  store_id: string | null;
+  customer_id: string | null;
+  source: string | null;
+  receipt_date: string | null;
+  note: string | null;
+  line_items?: LoyverseRawReceiptLineItem[];
+  payments?: LoyverseRawReceiptPayment[];
+}
+
+/** Generic sync result wrapper */
 export interface SyncResult<T> {
   success: boolean;
   data?: T;
   error?: string;
-}
-
-export interface POSAdapter {
-  /** Fetch the full product catalogue from the external POS. */
-  fetchExternalCatalog(): Promise<SyncResult<ExternalProduct[]>>;
-
-  /** Push an internal order to the external POS. */
-  pushOrderToExternalPos(order: ExternalOrder): Promise<SyncResult<{ externalOrderId: string }>>;
-
-  /** Sync inventory levels from the external POS for a given date. */
-  syncInventoryFromExternal(date: Date): Promise<SyncResult<Record<string, number>>>;
-}
-
-/** Map a single ExternalProduct to the shape expected by Product upsert logic. */
-export function mapExternalProductToInternal(
-  ext: ExternalProduct
-): { name: string; basePrice: number; isActive: boolean } {
-  return {
-    name: ext.name,
-    basePrice: ext.price,
-    isActive: ext.isActive,
-  };
 }

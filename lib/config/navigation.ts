@@ -56,8 +56,6 @@ export const PUBLIC_NAV_GROUPS: NavGroup[] = [
     label: "Menu",
     items: [
       { href: "/", label: "Home" },
-      { href: "/order", label: "Order" },
-      { href: "/subscribe", label: "Subscriptions" },
     ],
   },
 ];
@@ -73,9 +71,6 @@ export const CUSTOMER_NAV: RoleNavConfig = {
       label: "Customer Menu",
       items: [
         { href: "/", label: "Home" },
-        { href: "/order", label: "Menu / Order" },
-        { href: "/account/subscriptions", label: "Manage Subscriptions" },
-        { href: "/account/orders", label: "My Orders" },
         { href: "/account", label: "My Account" },
       ],
     },
@@ -94,15 +89,6 @@ export const STAFF_NAV: RoleNavConfig = {
       items: [{ href: "/staff", label: "Operations Dashboard" }],
     },
     {
-      id: "orders",
-      label: "Orders / Subscriptions",
-      items: [
-        { href: "/admin/orders", label: "Order Management" },
-        { href: "/admin/subscriptions", label: "Manage Subscriptions" },
-        { href: "/admin/sync/orders", label: "Order Auto-Send Status" },
-      ],
-    },
-    {
       id: "sales",
       label: "Sales",
       items: [
@@ -112,10 +98,9 @@ export const STAFF_NAV: RoleNavConfig = {
       ],
     },
     {
-      id: "inventory",
-      label: "Inventory",
+      id: "availability",
+      label: "Availability",
       items: [
-        { href: "/admin/inventory", label: "Inventory Management" },
         { href: "/admin/bagel-availability", label: "Bagel Availability" },
       ],
     },
@@ -134,23 +119,11 @@ export const ADMIN_NAV: RoleNavConfig = {
       items: [{ href: "/admin", label: "Operations Dashboard" }],
     },
     {
-      id: "products",
-      label: "Products / Inventory",
+      id: "catalog",
+      label: "Catalog",
       items: [
-        { href: "/admin/products", label: "Product Management" },
-        { href: "/admin/modifiers", label: "Modifier Management" },
         { href: "/admin/categories", label: "Category Management" },
-        { href: "/admin/inventory", label: "Inventory Management" },
         { href: "/admin/bagel-availability", label: "Bagel Availability" },
-      ],
-    },
-    {
-      id: "orders",
-      label: "Orders / Subscriptions",
-      items: [
-        { href: "/admin/orders", label: "Order Management" },
-        { href: "/admin/subscriptions", label: "Manage Subscriptions" },
-        { href: "/admin/subscription-occurrences", label: "Subscription Plan Management" },
       ],
     },
     {
@@ -187,9 +160,7 @@ export const ADMIN_NAV: RoleNavConfig = {
       label: "Admin",
       items: [
         { href: "/admin/users", label: "Users" },
-        { href: "/admin/sync/orders", label: "Order Auto-Send Status" },
         { href: "/admin/integrations", label: "Integrations" },
-        // Loyverse Modifier mapping menu removed
         { href: "/settings", label: "Settings" },
       ],
     },
