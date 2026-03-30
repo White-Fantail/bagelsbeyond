@@ -35,8 +35,6 @@ model User {
 }
 
 // ─── Customer Profile ─────────────────────────────────────────────────────────
-// 1:1 extension of User for CUSTOMER-specific data.
-// Designed to hold order/subscription/address data in future phases.
 
 model CustomerProfile {
   id                   String   @id @default(cuid())
@@ -135,7 +133,6 @@ model SalesPrediction {
   confidenceScore          Float?
   method                   String   @default("rule_based_v2")
   notes                    String?
-  // Extended fields for advanced prediction
   projectedWasteRate       Float?
   projectedSellThroughRate Float?
   baselineSales            Float?
@@ -169,7 +166,7 @@ model PredictionFactorSnapshot {
 model ImportJob {
   id           String   @id @default(cuid())
   fileName     String
-  status       String   @default("pending") // pending, validating, ready, imported, failed
+  status       String   @default("pending")
   totalRows    Int      @default(0)
   successRows  Int      @default(0)
   failedRows   Int      @default(0)
@@ -195,7 +192,7 @@ model ImportRow {
   parsedDoordashSales  Float?
   parsedOtherSales     Float?
   parsedNotes          String?
-  status               String    @default("pending") // pending, valid, invalid, imported, skipped
+  status               String    @default("pending")
   validationErrors     String?
   linkedDailyRecordId  String?
   createdAt            DateTime  @default(now())
@@ -211,9 +208,9 @@ model ImportRow {
 
 model ScheduledTask {
   id            String    @id @default(cuid())
-  taskType      String    // collect_external_factors | generate_prediction
+  taskType      String
   targetDate    DateTime?
-  status        String    @default("pending") // pending | running | success | partial | failed | skipped
+  status        String    @default("pending")
   startedAt     DateTime?
   finishedAt    DateTime?
   errorMessage  String?
@@ -234,7 +231,7 @@ model TaskLog {
   id              String        @id @default(cuid())
   scheduledTaskId String
   message         String
-  level           String        @default("info") // info | warning | error
+  level           String        @default("info")
   createdAt       DateTime      @default(now())
 
   task            ScheduledTask @relation(fields: [scheduledTaskId], references: [id], onDelete: Cascade)
@@ -244,18 +241,14 @@ model TaskLog {
 }
 
 // ─── Admin Audit Log ──────────────────────────────────────────────────────────
-// Records admin actions on user accounts for auditability.
-// Extensible for future actions (e.g. password resets, invites).
-// Future extension: add a UI in /admin/audit-logs to view these records.
-// Future extension: lastLoginAt can be tracked by updating the User model on each login.
 
 model AdminActionLog {
   id            String   @id @default(cuid())
-  adminUserId   String   // The ADMIN who performed the action
-  targetUserId  String   // The user whose account was affected
-  actionType    String   // CHANGE_ROLE | ACTIVATE_USER | DEACTIVATE_USER
-  previousValue String   // Previous role or isActive value (stringified)
-  newValue      String   // New role or isActive value (stringified)
+  adminUserId   String
+  targetUserId  String
+  actionType    String
+  previousValue String
+  newValue      String
   createdAt     DateTime @default(now())
 
   @@index([adminUserId])
@@ -264,42 +257,7 @@ model AdminActionLog {
   @@map("admin_action_logs")
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// Phase 4 – Product / Menu / Inventory / Order Domain (POS-ready)
-// ═══════════════════════════════════════════════════════════════════════════════
-
-// ─── Enums ────────────────────────────────────────────────────────────────────
-
-// ─── Channel Architecture Enums ───────────────────────────────────────────────
-// ChannelType: identifies the external sales channel.
-// MappingStatus: tracks whether canonical entity is mapped to a channel entity.
-// SyncDirection: indicates the allowed sync direction for a mapped entity.
-// ProductStatus: canonical lifecycle status for products.
-
-enum ChannelType {
-  LOYVERSE
-  UBER_EATS
-  DOORDASH
-}
-
-enum MappingStatus {
-  ACTIVE
-  UNMAPPED
-  ERROR
-  DISABLED
-}
-
-enum SyncDirection {
-  PULL
-  PUSH
-  BIDIRECTIONAL
-}
-
-enum ProductStatus {
-  ACTIVE
-  INACTIVE
-  ARCHIVED
-}
+// ─── Order ────────────────────────────────────────────────────────────────────
 
 enum OrderStatus {
   DRAFT
@@ -336,256 +294,6 @@ enum IntegrationSource {
   OTHER
 }
 
-// ─── Canonical Category ───────────────────────────────────────────────────────
-// Source-of-truth category used by Beyond internally.
-// Populated by sync from Loyverse (or other channels) via CategoryChannelMapping.
-// Do NOT store external IDs here — use the mapping tables.
-
-model Category {
-  id           String   @id @default(cuid())
-  name         String
-  slug         String   @unique
-  description  String?
-  displayOrder Int      @default(0)
-  isVisible    Boolean  @default(true)
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  products       Product[]
-  channelMapping CategoryChannelMapping[]
-
-  @@index([isActive])
-  @@index([isVisible])
-  @@map("categories")
-}
-
-// ─── Product (canonical) ──────────────────────────────────────────────────────
-// Beyond-internal master data. All POS-imported items are eventually mapped here.
-// Loyverse-owned fields: name, basePrice, structure.
-// Beyond-owned fields: soldOut, voiceAlias, notes, display preferences.
-
-// ─── LoyverseCategory ────────────────────────────────────────────────────────
-// Mirror of Loyverse categories. Loyverse is the single source of truth.
-// Categories are never created locally; they are always synced from Loyverse.
-// DEPRECATED: use ChannelCategory + CategoryChannelMapping + Category instead.
-
-model LoyverseCategory {
-  id                 String   @id @default(cuid())
-  loyverseCategoryId String   @unique
-  name               String
-  color              String?
-  isActive           Boolean  @default(true)
-  isVisible          Boolean  @default(true)
-  displayOrder       Int      @default(0)
-  source             String   @default("LOYVERSE")
-  isSynced           Boolean  @default(true)
-  isEditable         Boolean  @default(false)
-  rawPayload         Json?
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
-
-  products Product[]
-
-  @@index([isActive])
-  @@index([isVisible])
-  @@map("loyverse_categories")
-}
-
-model Product {
-  id                     String          @id @default(cuid())
-  name                   String
-  slug                   String          @unique
-  description            String?
-  // Canonical category (Beyond internal). Populated via sync + CategoryChannelMapping.
-  categoryId             String?
-  // Legacy Loyverse category FK — kept for backward compatibility. Prefer categoryId.
-  loyverseCategoryId     String?
-  basePrice              Float
-  displayOrder           Int             @default(0)
-  isVisible              Boolean         @default(true)
-  isActive               Boolean         @default(true)
-  status                 ProductStatus   @default(ACTIVE)
-  imageUrl               String?
-  sku                    String?
-  trackInventory         Boolean         @default(false)
-  // Beyond-owned operational flags — NOT overwritten by Loyverse sync.
-  soldOut                Boolean         @default(false)
-  voiceAlias             String?
-  notes                  String?
-  isSubscriptionEligible Boolean         @default(false)
-  sortOrder              Int             @default(0)
-  createdAt              DateTime        @default(now())
-  updatedAt              DateTime        @updatedAt
-
-  category                   Category?                      @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  loyverseCategory           LoyverseCategory?              @relation(fields: [loyverseCategoryId], references: [id], onDelete: SetNull)
-  variants                   ProductVariant[]
-  optionGroups               ProductOptionGroup[]
-  // Shared modifier group assignments (many-to-many).
-  optionGroupAssignments     ProductOptionGroupAssignment[]
-  dailyInventory             DailyInventory[]
-  orderItems                 OrderItem[]
-  externalMappings           ExternalProductMap[]
-  subscriptionItems          SubscriptionItem[]
-  channelMapping             ProductChannelMapping[]
-
-  @@index([isActive])
-  @@index([categoryId])
-  @@index([loyverseCategoryId])
-  @@map("products")
-}
-
-// ─── ProductVariant ──────────────────────────────────────────────────────────
-// Optional size / bundle / bread-choice variants for a Product.
-
-model ProductVariant {
-  id         String   @id @default(cuid())
-  productId  String
-  name       String
-  priceDelta Float    @default(0)
-  isActive   Boolean  @default(true)
-  sortOrder  Int      @default(0)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-
-  @@index([productId])
-  @@map("product_variants")
-}
-
-// ─── ProductOptionGroup (canonical ModifierGroup) ─────────────────────────────
-// Canonical modifier group used by Beyond internally.
-// Loyverse-synced groups are created here and linked via ModifierGroupChannelMapping.
-//
-// productId is nullable so that groups can be managed independently from the
-// modifier menu before being linked to any product.
-//
-// Loyverse-synced groups keep productId set to the primary product that was
-// originally synced, for backward compatibility.
-// See docs/bagel-modifier-policy.md for full rationale.
-
-model ProductOptionGroup {
-  id           String          @id @default(cuid())
-  productId    String?
-  name         String
-  description  String?
-  minSelect    Int             @default(0)
-  maxSelect    Int             @default(1)
-  isRequired   Boolean         @default(false)
-  displayOrder Int             @default(0)
-  isVisible    Boolean         @default(true)
-  isActive     Boolean         @default(true)
-  sortOrder    Int             @default(0)
-  createdAt    DateTime        @default(now())
-  updatedAt    DateTime        @updatedAt
-
-  product         Product?                        @relation(fields: [productId], references: [id], onDelete: SetNull)
-  options         ProductOption[]
-  externalMapping ExternalOptionGroupMap?
-  // All products that use this modifier group
-  assignments     ProductOptionGroupAssignment[]
-  channelMapping  ModifierGroupChannelMapping[]
-
-  @@index([productId])
-  @@map("product_option_groups")
-}
-
-// ─── ProductOption (canonical ModifierOption) ────────────────────────────────
-// Individual selectable option within a canonical modifier group.
-// e.g. "Plain Bagel +$0", "Add Bacon +$2.50"
-//
-// tracksInventory: when true, this option is tracked in DailyOptionInventory.
-// Bagel choice is managed as modifier, NOT variant. See docs/bagel-modifier-policy.md.
-// Beyond-owned: soldOut, voiceAlias. NOT overwritten by Loyverse sync.
-
-model ProductOption {
-  id               String             @id @default(cuid())
-  optionGroupId    String
-  name             String
-  description      String?
-  priceDelta       Float              @default(0)
-  displayOrder     Int                @default(0)
-  isActive         Boolean            @default(true)
-  // Beyond-owned operational flags — NOT overwritten by Loyverse sync.
-  soldOut          Boolean            @default(false)
-  voiceAlias       String?
-  sortOrder        Int                @default(0)
-  sku              String?
-  tracksInventory  Boolean            @default(false)
-  createdAt        DateTime           @default(now())
-  updatedAt        DateTime           @updatedAt
-
-  optionGroup            ProductOptionGroup      @relation(fields: [optionGroupId], references: [id], onDelete: Cascade)
-  subscriptionOptions    SubscriptionItemOption[]
-  dailyOptionInventory   DailyOptionInventory[]
-  // Loyverse modifier mapping for this option (modifier-based, not variant-based).
-  // Orders can only be transmitted to Loyverse when a mapping exists here.
-  externalOptionMappings ExternalOptionMap[]
-  // Back-reference to OrderItemOptions that recorded this option
-  orderItemOptions       OrderItemOption[]
-  channelMapping         ModifierOptionChannelMapping[]
-
-  @@index([optionGroupId])
-  @@map("product_options")
-}
-
-// ─── DailyOptionInventory ────────────────────────────────────────────────────
-// Per-option, per-day inventory — only for options where tracksInventory = true.
-// Mirrors the shape of DailyInventory but targets a specific ProductOption rather
-// than a Product.  Use case: "How many Plain bagels do we need tomorrow?"
-
-model DailyOptionInventory {
-  id           String        @id @default(cuid())
-  optionId     String
-  date         DateTime      @db.Date
-  plannedQty   Int           @default(0)
-  reservedQty  Int           @default(0)
-  soldQty      Int           @default(0)
-  isSoldOut    Boolean       @default(false)
-  note         String?
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-
-  option       ProductOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
-
-  @@unique([optionId, date])
-  @@index([date])
-  @@map("daily_option_inventory")
-}
-
-// ─── DailyInventory ───────────────────────────────────────────────────────────
-// Per-product, per-day production & sales inventory.
-// Unlike traditional stock, this tracks daily baked/sold/remaining quantities.
-// Extension point: reservedQty will be populated by subscription + confirmed orders.
-// Extension point: soldQty can be auto-calculated from POS imports or internal orders.
-// Relation to DailyRecord: loosely coupled via date; future logic can join them.
-
-model DailyInventory {
-  id           String   @id @default(cuid())
-  productId    String
-  date         DateTime @db.Date
-  plannedQty   Int      @default(0)
-  bakedQty     Int      @default(0)
-  reservedQty  Int      @default(0)
-  soldQty      Int      @default(0)
-  isSoldOut    Boolean  @default(false)
-  note         String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  product      Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-
-  @@unique([productId, date])
-  @@index([date])
-  @@map("daily_inventory")
-}
-
-// ─── Order ────────────────────────────────────────────────────────────────────
-// Shared order structure for internal / subscription / POS-imported orders.
-// source field distinguishes the origin; all order flows share this model.
-
 model Order {
   id                    String          @id @default(cuid())
   orderNumber           String          @unique
@@ -606,8 +314,8 @@ model Order {
   createdAt             DateTime        @default(now())
   updatedAt             DateTime        @updatedAt
 
-  items                 OrderItem[]
-  externalMapping       ExternalOrderMap?
+  items                  OrderItem[]
+  externalMapping        ExternalOrderMap?
   subscriptionOccurrence SubscriptionOccurrence?
 
   @@index([status])
@@ -617,89 +325,16 @@ model Order {
   @@map("orders")
 }
 
-// ─── OrderItem ────────────────────────────────────────────────────────────────
-// Snapshot of product name/price at time of order to preserve history.
-
-model OrderItem {
-  id                   String           @id @default(cuid())
-  orderId              String
-  productId            String?
-  productNameSnapshot  String
-  unitPriceSnapshot    Float
-  quantity             Int
-  lineTotal            Float
-  note                 String?
-  createdAt            DateTime         @default(now())
-  updatedAt            DateTime         @updatedAt
-
-  order                Order            @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product              Product?         @relation(fields: [productId], references: [id], onDelete: SetNull)
-  options              OrderItemOption[]
-
-  @@index([orderId])
-  @@map("order_items")
-}
-
-// ─── OrderItemOption ─────────────────────────────────────────────────────────
-// Snapshot of selected option name/price at time of order.
-
-model OrderItemOption {
-  id                      String         @id @default(cuid())
-  orderItemId             String
-  // Optional reference to the source ProductOption.
-  // Set when created from a real product option; null for ad-hoc or imported options.
-  // Used for: Loyverse modifier mapping validation, shared option inventory tracking.
-  productOptionId         String?
-  optionGroupNameSnapshot String
-  optionNameSnapshot      String
-  priceDeltaSnapshot      Float          @default(0)
-  quantity                Int            @default(1)
-  createdAt               DateTime       @default(now())
-
-  orderItem               OrderItem      @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
-  productOption           ProductOption? @relation(fields: [productOptionId], references: [id], onDelete: SetNull)
-
-  @@index([orderItemId])
-  @@index([productOptionId])
-  @@map("order_item_options")
-}
-
-// ─── ExternalProductMap ───────────────────────────────────────────────────────
-// Maps an internal Product to an external POS product ID.
-// Used during Loyverse / other POS menu sync.
-
-model ExternalProductMap {
-  id                String            @id @default(cuid())
-  source            IntegrationSource
-  externalProductId String
-  productId         String
-  externalName      String?
-  lastSyncedAt      DateTime?
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @updatedAt
-
-  product           Product           @relation(fields: [productId], references: [id], onDelete: Cascade)
-
-  @@unique([source, externalProductId])
-  @@index([productId])
-  @@map("external_product_maps")
-}
-
-// ─── ExternalOrderMap ────────────────────────────────────────────────────────
-// Tracks sync status of an internal Order to an external POS order.
-// syncStatus values: pending | success | failed | skipped
-// Legacy value "synced" is treated as "success" in code.
-
 model ExternalOrderMap {
   id               String            @id @default(cuid())
   source           IntegrationSource
   orderId          String            @unique
-  externalOrderId  String?           // null until successfully pushed
-  syncStatus       String            @default("pending") // pending | success | failed | skipped
+  externalOrderId  String?
+  syncStatus       String            @default("pending")
   lastSyncedAt     DateTime?
   errorMessage     String?
-  requestSummary   String?           // JSON summary of what was sent to POS
-  responseSummary  String?           // JSON summary of POS response
+  requestSummary   String?
+  responseSummary  String?
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
 
@@ -710,92 +345,37 @@ model ExternalOrderMap {
   @@map("external_order_maps")
 }
 
-// ─── ExternalOptionGroupMap ──────────────────────────────────────────────────
-// Maps an internal ProductOptionGroup to an external POS modifier group ID.
-// Created during catalog sync; enables rename-safe lookup of modifier groups.
-// Without this, renaming a group in Loyverse would create a duplicate group on
-// the next sync instead of updating the existing one.
+model OrderItem {
+  id                   String           @id @default(cuid())
+  orderId              String
+  productNameSnapshot  String
+  unitPriceSnapshot    Float
+  quantity             Int
+  lineTotal            Float
+  note                 String?
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
 
-model ExternalOptionGroupMap {
-  id                      String             @id @default(cuid())
-  source                  IntegrationSource
-  externalOptionGroupId   String
-  optionGroupId           String             @unique
-  lastSyncedAt            DateTime?
-  createdAt               DateTime           @default(now())
-  updatedAt               DateTime           @updatedAt
+  order                Order            @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  options              OrderItemOption[]
 
-  optionGroup             ProductOptionGroup @relation(fields: [optionGroupId], references: [id], onDelete: Cascade)
-
-  @@unique([source, externalOptionGroupId])
-  @@index([optionGroupId])
-  @@map("external_option_group_maps")
+  @@index([orderId])
+  @@map("order_items")
 }
 
-// ─── ExternalOptionMap ────────────────────────────────────────────────────────
-// Maps an internal ProductOption to an external POS modifier option ID.
-//
-// Bagel choice policy:
-//   Plain / Sesame / Blueberry / Everything are managed as MODIFIER options,
-//   NOT as product variants.  mappingType is always "MODIFIER".
-//   Orders cannot be transmitted to Loyverse unless every required option has
-//   a row here.  See docs/bagel-modifier-policy.md for full rationale.
-//
-// Shared inventory: because one modifier option (e.g. "Plain") can be linked
-//   to multiple products (Bagel, Sandwich), the reservedQty is tracked at
-//   the option level in DailyOptionInventory — not per-product.
+model OrderItemOption {
+  id                      String         @id @default(cuid())
+  orderItemId             String
+  optionGroupNameSnapshot String
+  optionNameSnapshot      String
+  priceDeltaSnapshot      Float          @default(0)
+  quantity                Int            @default(1)
+  createdAt               DateTime       @default(now())
 
-model ExternalOptionMap {
-  id                String            @id @default(cuid())
-  source            IntegrationSource
-  productOptionId   String
-  externalOptionId  String
-  externalName      String?
-  externalGroupId   String?
-  externalGroupName String?
-  // mappingType is always "MODIFIER" — variant-based bagel mapping is not used.
-  mappingType       String            @default("MODIFIER")
-  lastSyncedAt      DateTime?
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @updatedAt
+  orderItem               OrderItem      @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
 
-  option            ProductOption     @relation(fields: [productOptionId], references: [id], onDelete: Cascade)
-
-  @@unique([source, externalOptionId])
-  @@unique([source, productOptionId])
-  @@index([productOptionId])
-  @@map("external_option_maps")
-}
-
-// ─── ProductOptionGroupAssignment (canonical ProductModifierGroup) ─────────────
-// Join table that allows one ProductOptionGroup (canonical ModifierGroup) to be
-// shared across multiple Products. This IS the ProductModifierGroup relation.
-//
-// Example: "Bagel Type" modifier group can be assigned to both the Bagel product
-// and the Sandwich product.  Both products then share the same set of options
-// (Plain / Sesame / Blueberry / Everything) and the same DailyOptionInventory rows.
-//
-// Loyverse sync rebuilds these links from modifier_ids on each item.
-// Beyond-owned fields: displayOrder, isRequired overrides.
-
-model ProductOptionGroupAssignment {
-  id                 String   @id @default(cuid())
-  productId          String
-  optionGroupId      String
-  displayOrder       Int      @default(0)
-  isRequired         Boolean  @default(false)
-  minSelectOverride  Int?
-  maxSelectOverride  Int?
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
-
-  product     Product            @relation(fields: [productId], references: [id], onDelete: Cascade)
-  optionGroup ProductOptionGroup @relation(fields: [optionGroupId], references: [id], onDelete: Cascade)
-
-  @@unique([productId, optionGroupId])
-  @@index([productId])
-  @@index([optionGroupId])
-  @@map("product_option_group_assignments")
+  @@index([orderItemId])
+  @@map("order_item_options")
 }
 
 // ─── Subscription ─────────────────────────────────────────────────────────────
@@ -837,34 +417,22 @@ model Subscription {
 model SubscriptionItem {
   id             String       @id @default(cuid())
   subscriptionId String
-  productId      String
+  itemId         String?
   quantity       Int
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
 
   subscription   Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
-  product        Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  item           Item?        @relation(fields: [itemId], references: [id], onDelete: SetNull)
   options        SubscriptionItemOption[]
 
   @@index([subscriptionId])
   @@map("subscription_items")
 }
 
-// ─── SubscriptionItemOption ───────────────────────────────────────────────────
-// Stores the selected option(s) for each subscription item.
-// When a SubscriptionOccurrence generates an Order, these options are copied
-// to OrderItemOption snapshots so the historical record is preserved.
-//
-// Fallback policy for deactivated options:
-//   - If an option becomes inactive after subscription creation, the existing
-//     SubscriptionItemOption row is retained (for reference) but flagged during
-//     occurrence → order conversion so an admin can review.
-//   - New subscriptions cannot select an inactive option.
-
 model SubscriptionItemOption {
   id                      String           @id @default(cuid())
   subscriptionItemId      String
-  optionId                String
   optionGroupNameSnapshot String
   optionNameSnapshot      String
   priceDeltaSnapshot      Float            @default(0)
@@ -872,10 +440,8 @@ model SubscriptionItemOption {
   updatedAt               DateTime         @updatedAt
 
   subscriptionItem        SubscriptionItem @relation(fields: [subscriptionItemId], references: [id], onDelete: Cascade)
-  option                  ProductOption    @relation(fields: [optionId], references: [id], onDelete: Restrict)
 
   @@index([subscriptionItemId])
-  @@index([optionId])
   @@map("subscription_item_options")
 }
 
@@ -895,148 +461,6 @@ model SubscriptionOccurrence {
   @@index([date])
   @@index([status])
   @@map("subscription_occurrences")
-}
-
-// ─── Loyverse Mirror Tables ───────────────────────────────────────────────────
-// These tables are a direct mirror of the Loyverse data structure.
-// All data is synced from Loyverse as the single source of truth.
-// Primary keys are the Loyverse IDs (not internal cuids).
-
-model LoyverseModifier {
-  id        String   @id  // Loyverse modifier ID
-  name      String
-  minSelect Int?
-  maxSelect Int?
-  required  Boolean  @default(false)
-  updatedAt DateTime
-
-  options   LoyverseModifierOption[]
-  items     LoyverseItemModifier[]
-
-  @@map("loyverse_modifiers")
-}
-
-model LoyverseModifierOption {
-  id         String   @id  // Loyverse option ID
-  modifierId String
-  name       String
-  price      Float
-  updatedAt  DateTime
-
-  modifier   LoyverseModifier @relation(fields: [modifierId], references: [id], onDelete: Cascade)
-
-  @@map("loyverse_modifier_options")
-}
-
-model LoyverseItem {
-  id          String   @id  // Loyverse item ID
-  name        String
-  description String?
-  categoryId  String?       // Raw Loyverse category ID string
-  price       Float?
-  updatedAt   DateTime
-
-  variants    LoyverseVariant[]
-  modifiers   LoyverseItemModifier[]
-
-  @@map("loyverse_items")
-}
-
-model LoyverseItemModifier {
-  id         String @id @default(cuid())
-  itemId     String
-  modifierId String
-
-  item       LoyverseItem     @relation(fields: [itemId], references: [id], onDelete: Cascade)
-  modifier   LoyverseModifier @relation(fields: [modifierId], references: [id], onDelete: Cascade)
-
-  @@unique([itemId, modifierId])
-  @@map("loyverse_item_modifiers")
-}
-
-model LoyverseVariant {
-  id        String   @id  // Loyverse variant_id
-  itemId    String
-  sku       String?
-  price     Float?
-  updatedAt DateTime
-
-  item            LoyverseItem             @relation(fields: [itemId], references: [id], onDelete: Cascade)
-  inventoryLevels LoyverseInventoryLevel[]
-
-  @@map("loyverse_variants")
-}
-
-model LoyverseInventoryLevel {
-  id        String   @id @default(cuid())
-  variantId String
-  inStock   Float?
-  updatedAt DateTime
-
-  variant   LoyverseVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
-
-  @@unique([variantId])
-  @@map("loyverse_inventory_levels")
-}
-
-// ─── LoyverseModifierSyncLog ──────────────────────────────────────────────────
-// Records each attempt to sync modifier groups from the Loyverse API.
-// The most recent successful entry is used as the cached modifier list in the
-// admin Modifier Mapping UI, so the UI does not need to hit the live API on
-// every page load.  A "Loyverse 새로고침" action triggers a new sync and writes
-// a fresh row here.
-//
-// status values:
-//   "success"  — modifiers fetched and stored in rawGroups
-//   "empty"    — API returned 200 but zero modifier groups
-//   "failed"   — API or parse error; see errorMessage / errorCode
-//
-// errorCode: HTTP status from Loyverse (401, 403, 404, 429, 5xx…); null when the
-//            error is non-HTTP (network, parse, normalize).
-
-model LoyverseModifierSyncLog {
-  id           String   @id @default(cuid())
-  syncedAt     DateTime @default(now())
-  status       String   // "success" | "empty" | "failed"
-  groupCount   Int      @default(0)
-  optionCount  Int      @default(0)
-  errorMessage String?
-  errorCode    Int?
-  rawGroups    Json?
-  createdAt    DateTime @default(now())
-
-  @@index([syncedAt])
-  @@map("loyverse_modifier_sync_logs")
-}
-
-// ─── LoyverseFullSyncLog ──────────────────────────────────────────────────────
-// Records each full (unified) Loyverse sync run.
-
-model LoyverseFullSyncLog {
-  id                    String   @id @default(cuid())
-  syncedAt              DateTime @default(now())
-  status                String   // "success" | "partial" | "failed"
-  categoriesFetched     Int      @default(0)
-  categoriesUpserted    Int      @default(0)
-  productsFetched       Int      @default(0)
-  productsCreated       Int      @default(0)
-  productsUpdated       Int      @default(0)
-  modifierGroupsFetched Int      @default(0)
-  modifierGroupsUpserted Int     @default(0)
-  modifierOptionsFetched Int     @default(0)
-  modifierOptionsUpserted Int    @default(0)
-  categoryLinksUpdated           Int      @default(0)
-  modifierLinksUpdated           Int      @default(0)
-  staleLinksRemoved              Int      @default(0)
-  skippedCount                   Int      @default(0)
-  errorCount                     Int      @default(0)
-  errorMessage                   String?
-  itemModifierLinksAttempted     Int      @default(0)
-  itemModifierLinksPersisted     Int      @default(0)
-  createdAt                      DateTime @default(now())
-
-  @@index([syncedAt])
-  @@map("loyverse_full_sync_logs")
 }
 
 // ─── Bagel Type Availability Control ─────────────────────────────────────────
@@ -1210,287 +634,682 @@ model AvailabilitySyncJob {
   @@map("availability_sync_jobs")
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// NEW ARCHITECTURE: Channel Mirror Layer
-// These tables store external channel data exactly as received, per channel.
-// Source-of-truth mirror: never transform business logic here.
-// LOYVERSE is the first channel. Structure is extensible to UBER_EATS, DOORDASH.
-// Soft delete: use isDeleted instead of hard delete during sync.
-// ═══════════════════════════════════════════════════════════════════════════════
+// ─── ARCHITECTURE NOTE ────────────────────────────────────────────────────────
+// Internal canonical tables: service source-of-truth. No external IDs stored here.
+// Channel mirror tables:      channel_ prefix. Mirrors upstream external data.
+// Mapping tables:             *_channel_mappings. Connects internal ↔ channel.
+// Rule: external API calls MUST use mapped external IDs, never internal IDs.
+// ─────────────────────────────────────────────────────────────────────────────
 
-// ─── ChannelCategory ──────────────────────────────────────────────────────────
-// Mirrors a category as it exists in an external channel (e.g. Loyverse category).
-// rawPayload: full JSON from the external API for debugging / repair.
+enum Channel {
+  LOYVERSE
+  UBER
+  DOORDASH
+}
+
+enum MappingStatus {
+  ACTIVE
+  UNMAPPED
+  ERROR
+  DISABLED
+}
+
+// ─── Internal Canonical Tables ────────────────────────────────────────────────
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String
+  color       String?
+  sortOrder   Int      @default(0)
+  isVisible   Boolean  @default(true)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  items                   Item[]
+  categoryChannelMappings CategoryChannelMapping[]
+
+  @@index([isActive])
+  @@map("categories")
+}
+
+model Item {
+  id             String   @id @default(cuid())
+  categoryId     String?
+  name           String
+  description    String?
+  sku            String?
+  basePrice      Decimal? @db.Decimal(10, 2)
+  trackStock     Boolean  @default(false)
+  soldByWeight   Boolean  @default(false)
+  isComposite    Boolean  @default(false)
+  useProduction  Boolean  @default(false)
+  form           String?
+  color          String?
+  imageUrl       String?
+  sortOrder      Int      @default(0)
+  isVisible      Boolean  @default(true)
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  category            Category?            @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  variants            ItemVariant[]
+  itemModifierGroups  ItemModifierGroup[]
+  itemChannelMappings ItemChannelMapping[]
+  subscriptionItems   SubscriptionItem[]
+
+  @@index([categoryId])
+  @@index([isActive])
+  @@map("items")
+}
+
+model ItemVariant {
+  id              String   @id @default(cuid())
+  itemId          String
+  name            String
+  sku             String?
+  barcode         String?
+  price           Decimal? @db.Decimal(10, 2)
+  cost            Decimal? @db.Decimal(10, 2)
+  purchaseCost    Decimal? @db.Decimal(10, 2)
+  option1Value    String?
+  option2Value    String?
+  option3Value    String?
+  sortOrder       Int      @default(0)
+  isDefault       Boolean  @default(false)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  item                       Item                       @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  itemVariantChannelMappings ItemVariantChannelMapping[]
+
+  @@index([itemId])
+  @@map("item_variants")
+}
+
+model ModifierGroup {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  minSelect   Int?
+  maxSelect   Int?
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  modifierOptions              ModifierOption[]
+  itemModifierGroups           ItemModifierGroup[]
+  modifierGroupChannelMappings ModifierGroupChannelMapping[]
+
+  @@index([isActive])
+  @@map("modifier_groups")
+}
+
+model ModifierOption {
+  id              String   @id @default(cuid())
+  modifierGroupId String
+  name            String
+  priceDelta      Decimal  @default(0) @db.Decimal(10, 2)
+  sortOrder       Int      @default(0)
+  isDefault       Boolean  @default(false)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  modifierGroup                 ModifierGroup                 @relation(fields: [modifierGroupId], references: [id], onDelete: Cascade)
+  modifierOptionChannelMappings ModifierOptionChannelMapping[]
+
+  @@index([modifierGroupId])
+  @@map("modifier_options")
+}
+
+model ItemModifierGroup {
+  id              String   @id @default(cuid())
+  itemId          String
+  modifierGroupId String
+  sortOrder       Int      @default(0)
+  isRequired      Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  item          Item          @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  modifierGroup ModifierGroup @relation(fields: [modifierGroupId], references: [id], onDelete: Cascade)
+
+  @@unique([itemId, modifierGroupId])
+  @@index([itemId])
+  @@index([modifierGroupId])
+  @@map("item_modifier_groups")
+}
+
+// ─── Channel Mirror Tables ────────────────────────────────────────────────────
 
 model ChannelCategory {
-  id                  String      @id @default(cuid())
-  channel             ChannelType
-  externalId          String
-  name                String
-  description         String?
-  displayOrder        Int?
-  isVisible           Boolean?
-  isActive            Boolean?
-  rawPayload          Json
-  externalCreatedAt   DateTime?
-  externalUpdatedAt   DateTime?
-  lastSyncedAt        DateTime
-  isDeleted           Boolean     @default(false)
-  createdAt           DateTime    @default(now())
-  updatedAt           DateTime    @updatedAt
+  id                String    @id @default(cuid())
+  channel           Channel
+  externalId        String
+  name              String
+  color             String?
+  externalCreatedAt DateTime?
+  externalUpdatedAt DateTime?
+  externalDeletedAt DateTime?
+  rawPayload        Json
+  syncedAt          DateTime
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
-  channelMapping CategoryChannelMapping?
+  channelItems            ChannelItem[]
+  categoryChannelMappings CategoryChannelMapping[]
 
   @@unique([channel, externalId])
-  @@index([channel])
-  @@index([isDeleted])
+  @@index([channel, externalId])
+  @@index([syncedAt])
   @@map("channel_categories")
 }
 
-// ─── ChannelProduct ───────────────────────────────────────────────────────────
-// Mirrors a product/item as it exists in an external channel.
-// externalCategoryId: raw category ID string from the channel (not internal FK).
+model ChannelItem {
+  id                   String    @id @default(cuid())
+  channel              Channel
+  externalId           String
+  channelCategoryId    String?
+  handle               String?
+  itemName             String
+  description          String?
+  referenceId          String?
+  trackStock           Boolean   @default(false)
+  soldByWeight         Boolean   @default(false)
+  isComposite          Boolean   @default(false)
+  useProduction        Boolean   @default(false)
+  primarySupplierId    String?
+  form                 String?
+  color                String?
+  imageUrl             String?
+  option1Name          String?
+  option2Name          String?
+  option3Name          String?
+  externalCreatedAt    DateTime?
+  externalUpdatedAt    DateTime?
+  externalDeletedAt    DateTime?
+  rawPayload           Json
+  syncedAt             DateTime
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
 
-model ChannelProduct {
-  id                  String      @id @default(cuid())
-  channel             ChannelType
-  externalId          String
-  externalCategoryId  String?
-  name                String
-  description         String?
-  price               Float?
-  sku                 String?
-  imageUrl            String?
-  displayOrder        Int?
-  isVisible           Boolean?
-  isActive            Boolean?
-  rawPayload          Json
-  externalCreatedAt   DateTime?
-  externalUpdatedAt   DateTime?
-  lastSyncedAt        DateTime
-  isDeleted           Boolean     @default(false)
-  createdAt           DateTime    @default(now())
-  updatedAt           DateTime    @updatedAt
-
-  channelMapping         ProductChannelMapping?
-  modifierGroupLinks     ChannelProductModifierGroupLink[]
+  channelCategory               ChannelCategory?               @relation(fields: [channelCategoryId], references: [id], onDelete: SetNull)
+  channelVariants               ChannelVariant[]
+  channelItemComponents         ChannelItemComponent[]
+  channelItemTaxLinks           ChannelItemTaxLink[]
+  channelItemModifierGroupLinks ChannelItemModifierGroupLink[]
+  itemChannelMappings           ItemChannelMapping[]
 
   @@unique([channel, externalId])
-  @@index([channel])
-  @@index([isDeleted])
-  @@map("channel_products")
+  @@index([channel, externalId])
+  @@index([syncedAt])
+  @@map("channel_items")
 }
 
-// ─── ChannelModifierGroup ─────────────────────────────────────────────────────
-// Mirrors a modifier group as it exists in an external channel.
+model ChannelItemComponent {
+  id                       String   @id @default(cuid())
+  channel                  Channel
+  channelItemId            String
+  channelVariantExternalId String
+  quantity                 Decimal  @db.Decimal(10, 4)
+  rawPayload               Json?
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
 
-model ChannelModifierGroup {
-  id                  String      @id @default(cuid())
-  channel             ChannelType
-  externalId          String
-  name                String
-  description         String?
-  minSelect           Int?
-  maxSelect           Int?
-  rawPayload          Json
-  externalCreatedAt   DateTime?
-  externalUpdatedAt   DateTime?
-  lastSyncedAt        DateTime
-  isDeleted           Boolean     @default(false)
-  createdAt           DateTime    @default(now())
-  updatedAt           DateTime    @updatedAt
+  channelItem ChannelItem @relation(fields: [channelItemId], references: [id], onDelete: Cascade)
 
-  options        ChannelModifierOption[]
-  productLinks   ChannelProductModifierGroupLink[]
-  channelMapping ModifierGroupChannelMapping?
+  @@index([channelItemId])
+  @@map("channel_item_components")
+}
+
+model ChannelItemTaxLink {
+  id             String   @id @default(cuid())
+  channel        Channel
+  channelItemId  String
+  taxExternalId  String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  channelItem ChannelItem @relation(fields: [channelItemId], references: [id], onDelete: Cascade)
+
+  @@unique([channel, channelItemId, taxExternalId])
+  @@index([channelItemId])
+  @@map("channel_item_tax_links")
+}
+
+model ChannelItemModifierGroupLink {
+  id                             String   @id @default(cuid())
+  channel                        Channel
+  channelItemId                  String
+  channelModifierGroupExternalId String
+  createdAt                      DateTime @default(now())
+  updatedAt                      DateTime @updatedAt
+
+  channelItem ChannelItem @relation(fields: [channelItemId], references: [id], onDelete: Cascade)
+
+  @@unique([channel, channelItemId, channelModifierGroupExternalId])
+  @@index([channelItemId])
+  @@map("channel_item_modifier_group_links")
+}
+
+model ChannelVariant {
+  id                 String    @id @default(cuid())
+  channel            Channel
+  externalId         String
+  channelItemId      String
+  sku                String?
+  referenceVariantId String?
+  option1Value       String?
+  option2Value       String?
+  option3Value       String?
+  barcode            String?
+  cost               Decimal?  @db.Decimal(10, 2)
+  purchaseCost       Decimal?  @db.Decimal(10, 2)
+  defaultPricingType String?
+  defaultPrice       Decimal?  @db.Decimal(10, 2)
+  externalCreatedAt  DateTime?
+  externalUpdatedAt  DateTime?
+  externalDeletedAt  DateTime?
+  rawPayload         Json
+  syncedAt           DateTime
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  channelItem                ChannelItem                @relation(fields: [channelItemId], references: [id], onDelete: Cascade)
+  channelVariantStoreData    ChannelVariantStoreData[]
+  itemVariantChannelMappings ItemVariantChannelMapping[]
+  channelReceiptLineItems    ChannelReceiptLineItem[]
 
   @@unique([channel, externalId])
-  @@index([channel])
-  @@index([isDeleted])
+  @@index([channel, externalId])
+  @@index([syncedAt])
+  @@map("channel_variants")
+}
+
+model ChannelVariantStoreData {
+  id               String   @id @default(cuid())
+  channel          Channel
+  channelVariantId String
+  storeExternalId  String
+  pricingType      String?
+  price            Decimal? @db.Decimal(10, 2)
+  availableForSale Boolean?
+  optimalStock     Decimal? @db.Decimal(10, 4)
+  lowStock         Decimal? @db.Decimal(10, 4)
+  rawPayload       Json?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  channelVariant ChannelVariant @relation(fields: [channelVariantId], references: [id], onDelete: Cascade)
+
+  @@unique([channel, channelVariantId, storeExternalId])
+  @@index([channelVariantId])
+  @@map("channel_variant_store_data")
+}
+
+model ChannelModifierGroup {
+  id                String    @id @default(cuid())
+  channel           Channel
+  externalId        String
+  name              String
+  position          Int?
+  externalCreatedAt DateTime?
+  externalUpdatedAt DateTime?
+  externalDeletedAt DateTime?
+  rawPayload        Json
+  syncedAt          DateTime
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  channelModifierOptions         ChannelModifierOption[]
+  channelModifierGroupStoreLinks ChannelModifierGroupStoreLink[]
+  modifierGroupChannelMappings   ModifierGroupChannelMapping[]
+
+  @@unique([channel, externalId])
+  @@index([channel, externalId])
+  @@index([syncedAt])
   @@map("channel_modifier_groups")
 }
 
-// ─── ChannelModifierOption ────────────────────────────────────────────────────
-// Mirrors a modifier option as it exists in an external channel.
+model ChannelModifierGroupStoreLink {
+  id                     String   @id @default(cuid())
+  channel                Channel
+  channelModifierGroupId String
+  storeExternalId        String
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  channelModifierGroup ChannelModifierGroup @relation(fields: [channelModifierGroupId], references: [id], onDelete: Cascade)
+
+  @@unique([channel, channelModifierGroupId, storeExternalId])
+  @@index([channelModifierGroupId])
+  @@map("channel_modifier_group_store_links")
+}
 
 model ChannelModifierOption {
-  id                   String               @id @default(cuid())
-  channel              ChannelType
-  externalId           String
+  id                     String    @id @default(cuid())
+  channel                Channel
+  externalId             String
   channelModifierGroupId String
-  name                 String
-  priceDelta           Float                @default(0)
-  rawPayload           Json
-  externalCreatedAt    DateTime?
-  externalUpdatedAt    DateTime?
-  lastSyncedAt         DateTime
-  isDeleted            Boolean              @default(false)
-  createdAt            DateTime             @default(now())
-  updatedAt            DateTime             @updatedAt
+  name                   String
+  price                  Decimal?  @db.Decimal(10, 2)
+  position               Int?
+  externalCreatedAt      DateTime?
+  externalUpdatedAt      DateTime?
+  externalDeletedAt      DateTime?
+  rawPayload             Json
+  syncedAt               DateTime
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
 
-  channelModifierGroup ChannelModifierGroup         @relation(fields: [channelModifierGroupId], references: [id], onDelete: Cascade)
-  channelMapping       ModifierOptionChannelMapping?
+  channelModifierGroup            ChannelModifierGroup            @relation(fields: [channelModifierGroupId], references: [id], onDelete: Cascade)
+  modifierOptionChannelMappings   ModifierOptionChannelMapping[]
+  channelReceiptLineItemModifiers ChannelReceiptLineItemModifier[]
 
   @@unique([channel, externalId])
+  @@index([channel, externalId])
   @@index([channelModifierGroupId])
-  @@index([isDeleted])
+  @@index([syncedAt])
   @@map("channel_modifier_options")
 }
 
-// ─── ChannelProductModifierGroupLink ─────────────────────────────────────────
-// Mirrors the product-to-modifier-group relationship exactly as it comes from
-// the external channel. Built from modifier_ids on Loyverse items.
-// This is NOT a canonical relation — it reflects the channel structure.
+model ChannelPaymentType {
+  id                String    @id @default(cuid())
+  channel           Channel
+  externalId        String
+  name              String
+  paymentTypeCode   String?
+  externalCreatedAt DateTime?
+  externalUpdatedAt DateTime?
+  externalDeletedAt DateTime?
+  rawPayload        Json
+  syncedAt          DateTime
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
-model ChannelProductModifierGroupLink {
-  id                     String               @id @default(cuid())
-  channel                ChannelType
-  channelProductId       String
-  channelModifierGroupId String
-  displayOrder           Int?
-  isRequired             Boolean?
-  rawPayload             Json                 @default("{}")
-  lastSyncedAt           DateTime
-  isDeleted              Boolean              @default(false)
-  createdAt              DateTime             @default(now())
-  updatedAt              DateTime             @updatedAt
+  channelPaymentTypeStoreLinks ChannelPaymentTypeStoreLink[]
+  channelReceiptPayments       ChannelReceiptPayment[]
 
-  channelProduct       ChannelProduct       @relation(fields: [channelProductId], references: [id], onDelete: Cascade)
-  channelModifierGroup ChannelModifierGroup @relation(fields: [channelModifierGroupId], references: [id], onDelete: Cascade)
-
-  @@unique([channel, channelProductId, channelModifierGroupId])
-  @@index([channelProductId])
-  @@index([channelModifierGroupId])
-  @@map("channel_product_modifier_group_links")
+  @@unique([channel, externalId])
+  @@index([channel, externalId])
+  @@index([syncedAt])
+  @@map("channel_payment_types")
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// NEW ARCHITECTURE: Mapping Layer
-// These tables connect canonical Beyond entities to their channel mirrors.
-// RULE: Any external channel API call MUST resolve the external ID through here.
-//       Never pass a Beyond internal ID directly to an external channel.
-// ═══════════════════════════════════════════════════════════════════════════════
+model ChannelPaymentTypeStoreLink {
+  id                   String   @id @default(cuid())
+  channel              Channel
+  channelPaymentTypeId String
+  storeExternalId      String
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 
-// ─── CategoryChannelMapping ───────────────────────────────────────────────────
-// Maps a canonical Category to a channel's mirrored ChannelCategory.
+  channelPaymentType ChannelPaymentType @relation(fields: [channelPaymentTypeId], references: [id], onDelete: Cascade)
+
+  @@unique([channel, channelPaymentTypeId, storeExternalId])
+  @@index([channelPaymentTypeId])
+  @@map("channel_payment_type_store_links")
+}
+
+// ─── Mapping Tables ───────────────────────────────────────────────────────────
 
 model CategoryChannelMapping {
   id                String        @id @default(cuid())
   categoryId        String
-  channel           ChannelType
-  channelCategoryId String        @unique
-  status            MappingStatus @default(ACTIVE)
-  syncDirection     SyncDirection @default(PULL)
-  lastMappedAt      DateTime
-  lastSyncAt        DateTime?
-  lastPushAt        DateTime?
-  lastError         String?
+  channel           Channel
+  channelCategoryId String
+  mappingStatus     MappingStatus @default(ACTIVE)
+  isPrimary         Boolean       @default(false)
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
 
   category        Category        @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   channelCategory ChannelCategory @relation(fields: [channelCategoryId], references: [id], onDelete: Cascade)
 
-  @@unique([categoryId, channel])
+  @@unique([categoryId, channel, channelCategoryId])
+  @@index([categoryId])
   @@index([channel])
+  @@index([mappingStatus])
   @@map("category_channel_mappings")
 }
 
-// ─── ProductChannelMapping ────────────────────────────────────────────────────
-// Maps a canonical Product to a channel's mirrored ChannelProduct.
-// RULE: Always resolve channelProduct.externalId through this mapping when
-//       communicating with an external API. Never use Product.id as external ID.
+model ItemChannelMapping {
+  id            String        @id @default(cuid())
+  itemId        String
+  channel       Channel
+  channelItemId String
+  mappingStatus MappingStatus @default(ACTIVE)
+  isPrimary     Boolean       @default(false)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 
-model ProductChannelMapping {
+  item        Item        @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  channelItem ChannelItem @relation(fields: [channelItemId], references: [id], onDelete: Cascade)
+
+  @@unique([itemId, channel, channelItemId])
+  @@index([itemId])
+  @@index([channel])
+  @@index([mappingStatus])
+  @@map("item_channel_mappings")
+}
+
+model ItemVariantChannelMapping {
   id               String        @id @default(cuid())
-  productId        String
-  channel          ChannelType
-  channelProductId String        @unique
-  status           MappingStatus @default(ACTIVE)
-  syncDirection    SyncDirection @default(PULL)
-  lastMappedAt     DateTime
-  lastSyncAt       DateTime?
-  lastPushAt       DateTime?
-  lastError        String?
+  itemVariantId    String
+  channel          Channel
+  channelVariantId String
+  mappingStatus    MappingStatus @default(ACTIVE)
+  isPrimary        Boolean       @default(false)
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
 
-  product        Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
-  channelProduct ChannelProduct @relation(fields: [channelProductId], references: [id], onDelete: Cascade)
+  itemVariant    ItemVariant    @relation(fields: [itemVariantId], references: [id], onDelete: Cascade)
+  channelVariant ChannelVariant @relation(fields: [channelVariantId], references: [id], onDelete: Cascade)
 
-  @@unique([productId, channel])
+  @@unique([itemVariantId, channel, channelVariantId])
+  @@index([itemVariantId])
   @@index([channel])
-  @@map("product_channel_mappings")
+  @@index([mappingStatus])
+  @@map("item_variant_channel_mappings")
 }
 
-// ─── ModifierGroupChannelMapping ──────────────────────────────────────────────
-// Maps a canonical ProductOptionGroup (ModifierGroup) to a channel's mirrored
-// ChannelModifierGroup.
-
 model ModifierGroupChannelMapping {
-  id                     String               @id @default(cuid())
+  id                     String        @id @default(cuid())
   modifierGroupId        String
-  channel                ChannelType
-  channelModifierGroupId String               @unique
-  status                 MappingStatus        @default(ACTIVE)
-  syncDirection          SyncDirection        @default(PULL)
-  lastMappedAt           DateTime
-  lastSyncAt             DateTime?
-  lastPushAt             DateTime?
-  lastError              String?
-  createdAt              DateTime             @default(now())
-  updatedAt              DateTime             @updatedAt
+  channel                Channel
+  channelModifierGroupId String
+  mappingStatus          MappingStatus @default(ACTIVE)
+  isPrimary              Boolean       @default(false)
+  createdAt              DateTime      @default(now())
+  updatedAt              DateTime      @updatedAt
 
-  modifierGroup        ProductOptionGroup   @relation(fields: [modifierGroupId], references: [id], onDelete: Cascade)
+  modifierGroup        ModifierGroup        @relation(fields: [modifierGroupId], references: [id], onDelete: Cascade)
   channelModifierGroup ChannelModifierGroup @relation(fields: [channelModifierGroupId], references: [id], onDelete: Cascade)
 
-  @@unique([modifierGroupId, channel])
+  @@unique([modifierGroupId, channel, channelModifierGroupId])
+  @@index([modifierGroupId])
   @@index([channel])
+  @@index([mappingStatus])
   @@map("modifier_group_channel_mappings")
 }
 
-// ─── ModifierOptionChannelMapping ─────────────────────────────────────────────
-// Maps a canonical ProductOption (ModifierOption) to a channel's mirrored
-// ChannelModifierOption.
-
 model ModifierOptionChannelMapping {
-  id                      String                @id @default(cuid())
+  id                      String        @id @default(cuid())
   modifierOptionId        String
-  channel                 ChannelType
-  channelModifierOptionId String                @unique
-  status                  MappingStatus         @default(ACTIVE)
-  syncDirection           SyncDirection         @default(PULL)
-  lastMappedAt            DateTime
-  lastSyncAt              DateTime?
-  lastPushAt              DateTime?
-  lastError               String?
-  createdAt               DateTime              @default(now())
-  updatedAt               DateTime              @updatedAt
+  channel                 Channel
+  channelModifierOptionId String
+  mappingStatus           MappingStatus @default(ACTIVE)
+  isPrimary               Boolean       @default(false)
+  createdAt               DateTime      @default(now())
+  updatedAt               DateTime      @updatedAt
 
-  modifierOption        ProductOption         @relation(fields: [modifierOptionId], references: [id], onDelete: Cascade)
+  modifierOption        ModifierOption        @relation(fields: [modifierOptionId], references: [id], onDelete: Cascade)
   channelModifierOption ChannelModifierOption @relation(fields: [channelModifierOptionId], references: [id], onDelete: Cascade)
 
-  @@unique([modifierOptionId, channel])
+  @@unique([modifierOptionId, channel, channelModifierOptionId])
+  @@index([modifierOptionId])
   @@index([channel])
+  @@index([mappingStatus])
   @@map("modifier_option_channel_mappings")
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// NEW ARCHITECTURE: Sync Job Log
-// Tracks each sync run for observability and debugging.
-// ═══════════════════════════════════════════════════════════════════════════════
+// ─── Channel Sales Mirror Tables ──────────────────────────────────────────────
+
+model ChannelReceipt {
+  id                 String    @id @default(cuid())
+  channel            Channel
+  externalId         String?
+  storeExternalId    String?
+  orderCode          String?
+  customerExternalId String?
+  source             String?
+  receiptDate        DateTime?
+  note               String?
+  rawPayload         Json
+  syncedAt           DateTime
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  channelReceiptDiscounts ChannelReceiptDiscount[]
+  channelReceiptLineItems ChannelReceiptLineItem[]
+  channelReceiptPayments  ChannelReceiptPayment[]
+
+  @@unique([channel, externalId])
+  @@index([channel, externalId])
+  @@index([receiptDate])
+  @@index([syncedAt])
+  @@map("channel_receipts")
+}
+
+model ChannelReceiptDiscount {
+  id                 String   @id @default(cuid())
+  channel            Channel
+  channelReceiptId   String
+  externalDiscountId String?
+  percentage         Decimal? @db.Decimal(5, 2)
+  moneyAmount        Decimal? @db.Decimal(10, 2)
+  scope              String?
+  rawPayload         Json?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  channelReceipt ChannelReceipt @relation(fields: [channelReceiptId], references: [id], onDelete: Cascade)
+
+  @@index([channelReceiptId])
+  @@map("channel_receipt_discounts")
+}
+
+model ChannelReceiptLineItem {
+  id                       String   @id @default(cuid())
+  channel                  Channel
+  channelReceiptId         String
+  channelVariantExternalId String?
+  channelVariantId         String?
+  quantity                 Decimal  @db.Decimal(10, 4)
+  price                    Decimal? @db.Decimal(10, 2)
+  cost                     Decimal? @db.Decimal(10, 2)
+  lineNote                 String?
+  rawPayload               Json
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+
+  channelReceipt                  ChannelReceipt                   @relation(fields: [channelReceiptId], references: [id], onDelete: Cascade)
+  channelVariant                  ChannelVariant?                  @relation(fields: [channelVariantId], references: [id], onDelete: SetNull)
+  channelReceiptLineItemDiscounts ChannelReceiptLineItemDiscount[]
+  channelReceiptLineItemTaxes     ChannelReceiptLineItemTax[]
+  channelReceiptLineItemModifiers ChannelReceiptLineItemModifier[]
+
+  @@index([channelReceiptId])
+  @@index([channelVariantId])
+  @@map("channel_receipt_line_items")
+}
+
+model ChannelReceiptLineItemDiscount {
+  id                       String   @id @default(cuid())
+  channel                  Channel
+  channelReceiptLineItemId String
+  externalDiscountId       String?
+  rawPayload               Json?
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+
+  channelReceiptLineItem ChannelReceiptLineItem @relation(fields: [channelReceiptLineItemId], references: [id], onDelete: Cascade)
+
+  @@index([channelReceiptLineItemId])
+  @@map("channel_receipt_line_item_discounts")
+}
+
+model ChannelReceiptLineItemTax {
+  id                       String   @id @default(cuid())
+  channel                  Channel
+  channelReceiptLineItemId String
+  externalTaxId            String?
+  rawPayload               Json?
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+
+  channelReceiptLineItem ChannelReceiptLineItem @relation(fields: [channelReceiptLineItemId], references: [id], onDelete: Cascade)
+
+  @@index([channelReceiptLineItemId])
+  @@map("channel_receipt_line_item_taxes")
+}
+
+model ChannelReceiptLineItemModifier {
+  id                              String   @id @default(cuid())
+  channel                         Channel
+  channelReceiptLineItemId        String
+  channelModifierOptionExternalId String?
+  channelModifierOptionId         String?
+  price                           Decimal? @db.Decimal(10, 2)
+  rawPayload                      Json?
+  createdAt                       DateTime @default(now())
+  updatedAt                       DateTime @updatedAt
+
+  channelReceiptLineItem ChannelReceiptLineItem @relation(fields: [channelReceiptLineItemId], references: [id], onDelete: Cascade)
+  channelModifierOption  ChannelModifierOption? @relation(fields: [channelModifierOptionId], references: [id], onDelete: SetNull)
+
+  @@index([channelReceiptLineItemId])
+  @@index([channelModifierOptionId])
+  @@map("channel_receipt_line_item_modifiers")
+}
+
+model ChannelReceiptPayment {
+  id                           String    @id @default(cuid())
+  channel                      Channel
+  channelReceiptId             String
+  channelPaymentTypeExternalId String?
+  channelPaymentTypeId         String?
+  paidAt                       DateTime?
+  amount                       Decimal?  @db.Decimal(10, 2)
+  rawPayload                   Json
+  createdAt                    DateTime  @default(now())
+  updatedAt                    DateTime  @updatedAt
+
+  channelReceipt     ChannelReceipt      @relation(fields: [channelReceiptId], references: [id], onDelete: Cascade)
+  channelPaymentType ChannelPaymentType? @relation(fields: [channelPaymentTypeId], references: [id], onDelete: SetNull)
+
+  @@index([channelReceiptId])
+  @@index([channelPaymentTypeId])
+  @@map("channel_receipt_payments")
+}
+
+// ─── Sync Job Tables ──────────────────────────────────────────────────────────
 
 model SyncJob {
-  id           String      @id @default(cuid())
-  channel      ChannelType
-  syncType     String      // e.g. "FULL_PULL", "CATEGORY_PULL", "PRODUCT_PUSH"
-  status       String      @default("PENDING") // PENDING | RUNNING | SUCCESS | PARTIAL | FAILED
-  startedAt    DateTime    @default(now())
+  id           String    @id @default(cuid())
+  channel      Channel
+  syncType     String
+  status       String    @default("PENDING")
+  startedAt    DateTime  @default(now())
   finishedAt   DateTime?
   summary      Json?
   errorMessage String?
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
   logs SyncJobLog[]
 
@@ -1502,10 +1321,10 @@ model SyncJob {
 model SyncJobLog {
   id               String   @id @default(cuid())
   syncJobId        String
-  entityType       String   // e.g. "CATEGORY", "PRODUCT", "MODIFIER_GROUP"
+  entityType       String
   entityExternalId String?
-  action           String   // e.g. "UPSERT_MIRROR", "CREATE_CANONICAL", "UPDATE_MAPPING"
-  status           String   // "OK" | "SKIPPED" | "ERROR"
+  action           String
+  status           String
   message          String
   payload          Json?
   createdAt        DateTime @default(now())
