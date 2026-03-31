@@ -87,14 +87,16 @@ export type PredictionResult = {
 
 // ─── Recency Weighting ────────────────────────────────────────────────────────
 
-// Records from RECENCY_HALF_LIFE_DAYS ago receive half the weight of today's records.
-// This ensures the full history is used while recent data dominates the baseline.
-const RECENCY_HALF_LIFE_DAYS = 30;
-
+// Tiered recency weights: last 30 days get full weight, the prior 90 days
+// (days 31–120) get medium weight, and anything older gets low weight.
+// This gives meaningful importance to recent history without over-indexing on
+// a single day.
 function computeRecencyWeight(targetDate: Date, recordDate: Date): number {
   const msPerDay = 1000 * 60 * 60 * 24;
-  const daysAgo = Math.max(0, (targetDate.getTime() - recordDate.getTime()) / msPerDay);
-  return Math.pow(0.5, daysAgo / RECENCY_HALF_LIFE_DAYS);
+  const daysAgo = Math.max(0, (targetDate.getTime() - new Date(recordDate).getTime()) / msPerDay);
+  if (daysAgo <= 30) return 1.0;
+  if (daysAgo <= 120) return 0.4;
+  return 0.1;
 }
 
 // ─── Input Builder ────────────────────────────────────────────────────────────

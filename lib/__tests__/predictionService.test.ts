@@ -122,10 +122,13 @@ describe("calculateBaselineMetrics — recency weighting", () => {
     ];
     const metrics = calculateBaselineMetrics(makeInput(targetDate, records));
 
-    // avgWasteRate should be closer to 0.05 (recent) than 0.225 (simple average)
-    expect(metrics.avgWasteRate).toBeLessThan(0.15);
-    // avgSoldToBakedRatio should be closer to recent high sell-through
-    expect(metrics.avgSoldToBakedRatio).toBeGreaterThan(0.88);
+    // avgWasteRate should be closer to 0.05 (recent) than 0.225 (simple average).
+    // With tiered weights (1-day → 1.0, 90-day → 0.4) the result is ~0.15, which
+    // is well below the simple midpoint of 0.225.
+    expect(metrics.avgWasteRate).toBeLessThan(0.20);
+    // avgSoldToBakedRatio should be closer to recent high sell-through.
+    // With tiered weights the result is ~0.85, above the simple average of 0.775.
+    expect(metrics.avgSoldToBakedRatio).toBeGreaterThan(0.82);
   });
 
   it("blends same-day and overall averages (60/40) when same-day records exist", () => {

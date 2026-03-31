@@ -2,12 +2,35 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getDayOfWeekKey, safeNumber } from "@/lib/prediction-utils";
 
-// Conservative nudge factor applied to the average relative error per factor.
-const WEIGHT_LEARNING_RATE = 0.5;
+// Conservative nudge factor: how far we move the current weight toward the
+// computed ideal on each optimize run.
+const WEIGHT_LEARNING_RATE = 0.4;
+
+// Minimum number of sales records in a factor group before we trust the signal
+// enough to suggest a weight change for that factor.
+const MIN_FACTOR_DATA_POINTS = 3;
+
+// Tiered recency weights that mirror the prediction baseline logic:
+//  • last 30 days      → full weight  (1.0)
+//  • 31–120 days ago   → medium weight (0.4)
+//  • 120+ days ago     → low weight   (0.1)
+function computeTieredWeight(today: Date, recordDate: Date): number {
+  const msPerDay = 1000 * 60 * 60 * 24;
+  const daysAgo = Math.max(0, (today.getTime() - new Date(recordDate).getTime()) / msPerDay);
+  if (daysAgo <= 30) return 1.0;
+  if (daysAgo <= 120) return 0.4;
+  return 0.1;
+}
+
+function tieredWeightedAvg(values: number[], weights: number[]): number {
+  const totalWeight = weights.reduce((s, w) => s + w, 0);
+  if (totalWeight === 0) return 0;
+  return values.reduce((s, v, i) => s + v * weights[i], 0) / totalWeight;
+}
 
 // POST /api/weight-sets/optimize
-// Analyses recent prediction accuracy vs actual sales and returns a suggested
-// set of adjusted weights (does NOT persist anything – user must approve).
+// Derives suggested weights from ALL historical bagel sales records using tiered
+// recency weighting.  Does NOT persist anything — the user must approve the result.
 export async function POST() {
   try {
     // Load current active weights
@@ -15,15 +38,13 @@ export async function POST() {
     const weightMap: Record<string, number> = {};
     for (const w of currentWeights) weightMap[w.factorKey] = w.weightValue;
 
-    // Load last 30 predictions with their factor snapshots
-    const predictions = await prisma.salesPrediction.findMany({
-      orderBy: { targetDate: "desc" },
-      take: 30,
-      include: { factorSnapshots: true },
+    // Load all sales records with their external factors
+    const allRecords = await prisma.dailyRecord.findMany({
+      orderBy: { date: "desc" },
+      include: { externalFactor: true },
     });
 
-    // Fetch all actual daily records that fall within the prediction date range in one query
-    if (predictions.length === 0) {
+    if (allRecords.length === 0) {
       const allWeights = await prisma.predictionWeight.findMany({ orderBy: { factorKey: "asc" } });
       return NextResponse.json({
         suggestedEntries: allWeights.map((w) => ({
@@ -33,73 +54,109 @@ export async function POST() {
           description: w.description ?? undefined,
         })),
         dataPointCount: 0,
-        message: "No prediction history available — returning current weights unchanged",
+        message: "No sales history available — returning current weights unchanged",
       });
     }
 
-    const earliest = new Date(predictions[predictions.length - 1].targetDate);
-    earliest.setHours(0, 0, 0, 0);
-    const latest = new Date(predictions[0].targetDate);
-    latest.setHours(23, 59, 59, 999);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-    const actualRecords = await prisma.dailyRecord.findMany({
-      where: { date: { gte: earliest, lte: latest } },
-    });
-
-    // Build a lookup: date string (YYYY-MM-DD) → total sales
-    const actualSalesMap: Record<string, number> = {};
-    for (const r of actualRecords) {
-      const key = new Date(r.date).toISOString().split("T")[0];
-      actualSalesMap[key] =
+    // Pre-compute total sales, tiered recency weight, and day-of-week for each record
+    const records = allRecords.map((r) => ({
+      ...r,
+      totalSales:
         safeNumber(r.storeSales) +
         safeNumber(r.uberSales) +
         safeNumber(r.doordashSales) +
-        safeNumber(r.otherSales);
+        safeNumber(r.otherSales),
+      recencyWeight: computeTieredWeight(today, r.date),
+      dow: getDayOfWeekKey(new Date(r.date)),
+    }));
+
+    // Overall tiered-weighted average — used as baseline for day-of-week comparisons
+    const overallAvg = tieredWeightedAvg(
+      records.map((r) => r.totalSales),
+      records.map((r) => r.recencyWeight)
+    );
+
+    if (overallAvg === 0) {
+      const allWeights = await prisma.predictionWeight.findMany({ orderBy: { factorKey: "asc" } });
+      return NextResponse.json({
+        suggestedEntries: allWeights.map((w) => ({
+          factorKey: w.factorKey,
+          weightValue: w.weightValue,
+          isActive: w.isActive,
+          description: w.description ?? undefined,
+        })),
+        dataPointCount: records.length,
+        message: "Sales totals are zero — returning current weights unchanged",
+      });
     }
 
-    // Compute per-factor errors
-    type FactorError = { sum: number; count: number };
-    const factorErrors: Record<string, FactorError> = {};
-    let dataPointCount = 0;
-
-    for (const pred of predictions) {
-      const dateKey = new Date(pred.targetDate).toISOString().split("T")[0];
-      const actualSales = actualSalesMap[dateKey];
-      if (actualSales === undefined) continue;
-
-      const predictedSales = safeNumber(pred.predictedSales);
-      if (predictedSales === 0) continue;
-
-      dataPointCount += 1;
-      const relativeError = (actualSales - predictedSales) / predictedSales;
-
-      for (const snap of pred.factorSnapshots) {
-        if (!factorErrors[snap.factorKey]) factorErrors[snap.factorKey] = { sum: 0, count: 0 };
-        factorErrors[snap.factorKey].sum += relativeError;
-        factorErrors[snap.factorKey].count += 1;
-      }
-
-      // Also track day-of-week key for this prediction
-      const dowKey = getDayOfWeekKey(new Date(pred.targetDate));
-      if (!factorErrors[dowKey]) factorErrors[dowKey] = { sum: 0, count: 0 };
-      factorErrors[dowKey].sum += relativeError;
-      factorErrors[dowKey].count += 1;
-    }
-
-    // Build suggested weights: nudge each weight by the average error
     const suggested: Record<string, number> = { ...weightMap };
 
-    for (const [key, err] of Object.entries(factorErrors)) {
-      if (err.count < 3) continue; // not enough data for this factor
-      const avgError = err.sum / err.count;
-      const current = weightMap[key] ?? 0;
-      const nudge = avgError * WEIGHT_LEARNING_RATE;
-      // Clamp to [-1, 1]
-      suggested[key] = Math.max(-1, Math.min(1, current + nudge));
+    // ── Day-of-week weights ────────────────────────────────────────────────────
+    // Each day's suggested weight is the ratio of its tiered-weighted average
+    // sales to the overall tiered-weighted average, minus 1.
+    const daysOfWeek = [
+      "sunday", "monday", "tuesday", "wednesday",
+      "thursday", "friday", "saturday",
+    ] as const;
+
+    for (const dowKey of daysOfWeek) {
+      const dowRecords = records.filter((r) => r.dow === dowKey);
+      if (dowRecords.length < MIN_FACTOR_DATA_POINTS) continue;
+
+      const dowAvg = tieredWeightedAvg(
+        dowRecords.map((r) => r.totalSales),
+        dowRecords.map((r) => r.recencyWeight)
+      );
+
+      const rawSuggested = dowAvg / overallAvg - 1;
+      const current = weightMap[dowKey] ?? 0;
+      suggested[dowKey] = Math.max(-1, Math.min(1, current + (rawSuggested - current) * WEIGHT_LEARNING_RATE));
     }
 
-    // Build the final list — union of existing weight records and any factors newly
-    // discovered through factorSnapshots (handles the case where no weights exist yet).
+    // ── Binary event / condition factors ──────────────────────────────────────
+    // For each factor we compare the tiered-weighted average on "active" days vs
+    // "inactive" days to derive a ratio-based suggested weight.
+    type BinaryFactorDef = {
+      key: string;
+      isActive: (r: (typeof records)[0]) => boolean;
+    };
+
+    const binaryFactors: BinaryFactorDef[] = [
+      { key: "weather_rain",   isActive: (r) => safeNumber(r.externalFactor?.rainMm, 0) > 0 },
+      { key: "weather_hot",    isActive: (r) => safeNumber(r.externalFactor?.maxTemp, 0) > 28 },
+      { key: "holiday",        isActive: (r) => !!r.externalFactor?.holidayName },
+      { key: "local_event",    isActive: (r) => !!r.externalFactor?.localEventName },
+      { key: "school_holiday", isActive: (r) => r.externalFactor?.schoolHoliday === true },
+    ];
+
+    for (const factor of binaryFactors) {
+      const activeRecords   = records.filter((r) =>  factor.isActive(r));
+      const inactiveRecords = records.filter((r) => !factor.isActive(r));
+
+      if (activeRecords.length < MIN_FACTOR_DATA_POINTS || inactiveRecords.length < MIN_FACTOR_DATA_POINTS) continue;
+
+      const activeAvg = tieredWeightedAvg(
+        activeRecords.map((r) => r.totalSales),
+        activeRecords.map((r) => r.recencyWeight)
+      );
+      const inactiveAvg = tieredWeightedAvg(
+        inactiveRecords.map((r) => r.totalSales),
+        inactiveRecords.map((r) => r.recencyWeight)
+      );
+
+      if (inactiveAvg === 0) continue;
+
+      const rawSuggested = activeAvg / inactiveAvg - 1;
+      const current = weightMap[factor.key] ?? 0;
+      suggested[factor.key] = Math.max(-1, Math.min(1, current + (rawSuggested - current) * WEIGHT_LEARNING_RATE));
+    }
+
+    // Build the final list — union of existing weight records and any factors
+    // derived above (handles the case where no weights exist yet).
     const allWeights = await prisma.predictionWeight.findMany({ orderBy: { factorKey: "asc" } });
     const weightsLookup = new Map(allWeights.map((w) => [w.factorKey as string, w]));
     const allKeys = [...new Set([...weightsLookup.keys(), ...Object.keys(suggested)])].sort();
@@ -107,7 +164,10 @@ export async function POST() {
       const existing = weightsLookup.get(key);
       return {
         factorKey: key,
-        weightValue: suggested[key] !== undefined ? Math.round(suggested[key] * 1000) / 1000 : (existing?.weightValue ?? 0),
+        weightValue:
+          suggested[key] !== undefined
+            ? Math.round(suggested[key] * 1000) / 1000
+            : (existing?.weightValue ?? 0),
         isActive: existing?.isActive ?? true,
         description: existing?.description ?? undefined,
       };
@@ -115,8 +175,8 @@ export async function POST() {
 
     return NextResponse.json({
       suggestedEntries,
-      dataPointCount,
-      message: `Suggestion based on ${dataPointCount} comparable prediction(s)`,
+      dataPointCount: records.length,
+      message: `Suggestion based on ${records.length} sales record(s) with tiered recency weighting`,
     });
   } catch (_error) {
     return NextResponse.json({ message: "Optimization failed" }, { status: 500 });
