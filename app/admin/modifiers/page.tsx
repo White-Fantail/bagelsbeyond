@@ -1,15 +1,15 @@
 export const dynamic = "force-dynamic";
 
 import { requireAdmin } from "@/lib/auth/dal";
-import { listCategories } from "@/lib/catalog/queries/categories";
+import { listModifierGroups } from "@/lib/catalog/queries/modifiers";
 import { Suspense } from "react";
 import Link from "next/link";
-import CategoriesTable from "@/components/admin/catalog/CategoriesTable";
+import ModifiersTable from "@/components/admin/catalog/ModifiersTable";
 import CatalogSearchFilter from "@/components/admin/catalog/CatalogSearchFilter";
 
 type SearchParams = { search?: string };
 
-export default async function CategoriesPage({
+export default async function ModifiersPage({
   searchParams,
 }: {
   searchParams: Promise<SearchParams>;
@@ -18,7 +18,11 @@ export default async function CategoriesPage({
   const sp = await searchParams;
   const search = sp.search?.trim() ?? "";
 
-  const categories = await listCategories(search || undefined);
+  const groups = await listModifierGroups(search || undefined);
+
+  const totalOptions = groups.reduce((sum, g) => sum + g.optionCount, 0);
+  const syncedCount = groups.filter((g) => g.sourceChannel === "LOYVERSE").length;
+  const linkedCount = groups.filter((g) => g.linkedItemCount > 0).length;
 
   return (
     <div className="space-y-6">
@@ -30,11 +34,11 @@ export default async function CategoriesPage({
               Admin Dashboard
             </Link>
             <span>/</span>
-            <span className="text-gray-700 font-medium">Categories</span>
+            <span className="text-gray-700 font-medium">Modifiers</span>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">Categories</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Modifiers</h1>
           <p className="text-gray-500 mt-0.5 text-sm">
-            Manage display order and visibility of synced catalog categories.
+            View synced modifier groups and their options from the connected POS system.
           </p>
         </div>
         <div className="flex gap-2 flex-shrink-0">
@@ -45,7 +49,7 @@ export default async function CategoriesPage({
             🔄 Sync from Loyverse
           </Link>
           <Link
-            href="/admin/categories"
+            href="/admin/modifiers"
             className="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors"
           >
             ↺ Refresh
@@ -56,32 +60,26 @@ export default async function CategoriesPage({
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="bg-white rounded-xl border border-gray-200 p-4">
-          <p className="text-xs text-gray-500">Total Categories</p>
-          <p className="text-2xl font-bold text-gray-900 mt-1">{categories.length}</p>
+          <p className="text-xs text-gray-500">Modifier Groups</p>
+          <p className="text-2xl font-bold text-gray-900 mt-1">{groups.length}</p>
         </div>
-        <div className="bg-white rounded-xl border border-green-100 p-4">
-          <p className="text-xs text-green-500">Visible</p>
-          <p className="text-2xl font-bold text-green-700 mt-1">
-            {categories.filter((c) => c.isVisible).length}
-          </p>
+        <div className="bg-white rounded-xl border border-purple-100 p-4">
+          <p className="text-xs text-purple-500">Total Options</p>
+          <p className="text-2xl font-bold text-purple-700 mt-1">{totalOptions}</p>
         </div>
         <div className="bg-white rounded-xl border border-blue-100 p-4">
           <p className="text-xs text-blue-500">Synced (Loyverse)</p>
-          <p className="text-2xl font-bold text-blue-700 mt-1">
-            {categories.filter((c) => c.sourceChannel === "LOYVERSE").length}
-          </p>
+          <p className="text-2xl font-bold text-blue-700 mt-1">{syncedCount}</p>
         </div>
-        <div className="bg-white rounded-xl border border-yellow-100 p-4">
-          <p className="text-xs text-yellow-600">Unmapped</p>
-          <p className="text-2xl font-bold text-yellow-700 mt-1">
-            {categories.filter((c) => !c.sourceChannel).length}
-          </p>
+        <div className="bg-white rounded-xl border border-amber-100 p-4">
+          <p className="text-xs text-amber-600">Linked to Items</p>
+          <p className="text-2xl font-bold text-amber-700 mt-1">{linkedCount}</p>
         </div>
       </div>
 
       {/* Search filter */}
       <Suspense fallback={null}>
-        <CatalogSearchFilter basePath="/admin/categories" placeholder="Search categories…" />
+        <CatalogSearchFilter basePath="/admin/modifiers" placeholder="Search modifier groups…" />
       </Suspense>
 
       {/* Results info */}
@@ -89,17 +87,17 @@ export default async function CategoriesPage({
         {search ? (
           <>
             Results for &ldquo;<strong className="text-gray-700">{search}</strong>&rdquo; —{" "}
-            <strong className="text-gray-700">{categories.length}</strong> found
+            <strong className="text-gray-700">{groups.length}</strong> found
           </>
         ) : (
           <>
-            All <strong className="text-gray-700">{categories.length}</strong> categories
+            All <strong className="text-gray-700">{groups.length}</strong> modifier groups
           </>
         )}
       </div>
 
       {/* Table */}
-      <CategoriesTable categories={categories} />
+      <ModifiersTable groups={groups} />
     </div>
   );
 }
