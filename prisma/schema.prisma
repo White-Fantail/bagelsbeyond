@@ -29,6 +29,8 @@ model User {
 
   customerProfile         CustomerProfile?
   bagelAvailabilityStates BagelAvailabilityState[]
+  orders                  Order[]          @relation("CustomerOrders")
+  subscriptions           Subscription[]   @relation("CustomerSubscriptions")
 
   @@map("users")
 }
@@ -496,6 +498,8 @@ model Item {
   variants            ItemVariant[]
   itemModifierGroups  ItemModifierGroup[]
   itemChannelMappings ItemChannelMapping[]
+  orderLines          OrderLine[]
+  subscriptionItems   SubscriptionItem[]
 
   @@index([categoryId])
   @@index([isActive])
@@ -559,6 +563,7 @@ model ModifierOption {
 
   modifierGroup                 ModifierGroup                 @relation(fields: [modifierGroupId], references: [id], onDelete: Cascade)
   modifierOptionChannelMappings ModifierOptionChannelMapping[]
+  orderLineModifiers            OrderLineModifier[]
 
   @@index([modifierGroupId])
   @@map("modifier_options")
@@ -1132,4 +1137,139 @@ model SyncJobLog {
   @@index([syncJobId])
   @@index([status])
   @@map("sync_job_logs")
+}
+
+// ─── Customer Order & Subscription ────────────────────────────────────────────
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  READY
+  COMPLETED
+  CANCELLED
+
+  @@map("order_status")
+}
+
+enum OrderOrigin {
+  CUSTOMER_WEB
+  ADMIN
+  SUBSCRIPTION
+
+  @@map("order_origin")
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAUSED
+  CANCELLED
+
+  @@map("subscription_status")
+}
+
+enum SubscriptionFrequency {
+  WEEKLY
+  BIWEEKLY
+  MONTHLY
+
+  @@map("subscription_frequency")
+}
+
+model Order {
+  id             String      @id @default(cuid())
+  orderNumber    String      @unique
+  customerId     String
+  status         OrderStatus @default(PENDING)
+  origin         OrderOrigin @default(CUSTOMER_WEB)
+  pickupDate     DateTime
+  pickupTime     String
+  subtotal       Decimal     @db.Decimal(10, 2)
+  total          Decimal     @db.Decimal(10, 2)
+  note           String?
+  subscriptionId String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  customer     User          @relation("CustomerOrders", fields: [customerId], references: [id])
+  subscription Subscription? @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+  lines        OrderLine[]
+
+  @@index([customerId])
+  @@index([status])
+  @@index([pickupDate])
+  @@map("orders")
+}
+
+model OrderLine {
+  id        String   @id @default(cuid())
+  orderId   String
+  itemId    String?
+  itemName  String
+  unitPrice Decimal  @db.Decimal(10, 2)
+  quantity  Int
+  lineTotal Decimal  @db.Decimal(10, 2)
+  note      String?
+  createdAt DateTime @default(now())
+
+  order     Order               @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  item      Item?               @relation(fields: [itemId], references: [id], onDelete: SetNull)
+  modifiers OrderLineModifier[]
+
+  @@index([orderId])
+  @@map("order_lines")
+}
+
+model OrderLineModifier {
+  id               String   @id @default(cuid())
+  orderLineId      String
+  modifierOptionId String?
+  optionName       String
+  priceDelta       Decimal  @db.Decimal(10, 2)
+  createdAt        DateTime @default(now())
+
+  orderLine      OrderLine       @relation(fields: [orderLineId], references: [id], onDelete: Cascade)
+  modifierOption ModifierOption? @relation(fields: [modifierOptionId], references: [id], onDelete: SetNull)
+
+  @@index([orderLineId])
+  @@map("order_line_modifiers")
+}
+
+model Subscription {
+  id          String                @id @default(cuid())
+  customerId  String
+  status      SubscriptionStatus    @default(ACTIVE)
+  frequency   SubscriptionFrequency @default(WEEKLY)
+  pickupDays  String[]
+  pickupTime  String
+  startDate   DateTime
+  pausedAt    DateTime?
+  cancelledAt DateTime?
+  note        String?
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+
+  customer User               @relation("CustomerSubscriptions", fields: [customerId], references: [id])
+  items    SubscriptionItem[]
+  orders   Order[]
+
+  @@index([customerId])
+  @@index([status])
+  @@map("subscriptions")
+}
+
+model SubscriptionItem {
+  id             String   @id @default(cuid())
+  subscriptionId String
+  itemId         String?
+  itemName       String
+  unitPrice      Decimal  @db.Decimal(10, 2)
+  quantity       Int
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  subscription Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  item         Item?        @relation(fields: [itemId], references: [id], onDelete: SetNull)
+
+  @@index([subscriptionId])
+  @@map("subscription_items")
 }
