@@ -1,16 +1,25 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, Suspense } from "react";
 import { loginAction, LoginState } from "@/app/actions/auth";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 
 const initialState: LoginState = {};
 
-export default function LoginPage() {
-  const [state, action, isPending] = useActionState(loginAction, initialState);
+function ForbiddenBanner() {
   const searchParams = useSearchParams();
   const isForbidden = searchParams.get("error") === "forbidden";
+  if (!isForbidden) return null;
+  return (
+    <div className="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+      You do not have permission to access this page..
+    </div>
+  );
+}
+
+export default function LoginPage() {
+  const [state, action, isPending] = useActionState(loginAction, initialState);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
@@ -24,11 +33,9 @@ export default function LoginPage() {
 
         {/* Card */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
-          {isForbidden && (
-            <div className="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
-              You do not have permission to access this page..
-            </div>
-          )}
+          <Suspense>
+            <ForbiddenBanner />
+          </Suspense>
 
           {state.message && (
             <div className="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
