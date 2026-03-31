@@ -15,6 +15,7 @@ type Props = {
     defaultCountry?: string;
     defaultEventRegion?: string;
     autoCollectExternalData?: boolean;
+    predictionLookbackDays?: number;
   };
 };
 
@@ -114,6 +115,23 @@ export default function SettingsForm({ initialData }: Props) {
           <p className="mt-1 text-xs text-gray-400">e.g. 1.1 = produce 10% more than predicted qty</p>
           {errors.defaultSafetyBuffer && (
             <p className="mt-1 text-xs text-red-600">{errors.defaultSafetyBuffer.message}</p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Prediction Data Lookback Period (days)</label>
+          <input
+            type="number"
+            step="1"
+            min="1"
+            {...register("predictionLookbackDays")}
+            className={`w-full px-3 py-2 border rounded-md text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 ${
+              errors.predictionLookbackDays ? "border-red-300 bg-red-50" : "border-gray-300"
+            }`}
+          />
+          <p className="mt-1 text-xs text-gray-400">Only sales records within this many days are used for predictions and weight optimization (e.g. 365 = last 1 year)</p>
+          {errors.predictionLookbackDays && (
+            <p className="mt-1 text-xs text-red-600">{errors.predictionLookbackDays.message}</p>
           )}
         </div>
       </div>

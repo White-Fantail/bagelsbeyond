@@ -39,7 +39,7 @@ function makeInput(
     sameDayRecords: sameDayRecords ?? [],
     weights: {},
     externalFactors: {},
-    settings: { defaultTargetWasteRatio: 0.05, defaultSafetyBuffer: 1.1 },
+    settings: { defaultTargetWasteRatio: 0.05, defaultSafetyBuffer: 1.1, predictionLookbackDays: 365 },
   };
 }
 
@@ -148,5 +148,67 @@ describe("calculateBaselineMetrics — recency weighting", () => {
     const metrics = calculateBaselineMetrics(makeInput(targetDate, records, []));
 
     expect(metrics.blendedAvgSales).toBeCloseTo(metrics.avgSales);
+  });
+});
+
+// ─── Lookback window filtering ────────────────────────────────────────────────
+// buildPredictionInput filters records by predictionLookbackDays before calling
+// calculateBaselineMetrics. These tests verify that the downstream calculation
+// only sees the records that fall within the window (the filtering itself is an
+// integration concern; here we confirm the baseline is correct when older records
+// are excluded).
+
+describe("calculateBaselineMetrics — predictionLookbackDays effect", () => {
+  it("excludes records beyond the lookback window from the baseline", () => {
+    const targetDate = new Date("2025-06-15");
+
+    // Simulate a 90-day lookback: only records within 90 days are included.
+    // A record at 91 days would be excluded by buildPredictionInput.
+    const within = [
+      makeRecord(1,  targetDate, { storeSales: 400, uberSales: 0, doordashSales: 0, otherSales: 0 }),
+      makeRecord(89, targetDate, { storeSales: 400, uberSales: 0, doordashSales: 0, otherSales: 0 }),
+    ];
+
+    // With the old behavior (no filter), an ancient record would also be included.
+    const withAncient = [
+      ...within,
+      makeRecord(400, targetDate, { storeSales: 0, uberSales: 0, doordashSales: 0, otherSales: 0 }),
+    ];
+
+    const metricsFiltered = calculateBaselineMetrics(makeInput(targetDate, within));
+    const metricsUnfiltered = calculateBaselineMetrics(makeInput(targetDate, withAncient));
+
+    // The filtered baseline (all $400) should be higher than unfiltered (pulled down by $0 record)
+    expect(metricsFiltered.avgSales).toBeGreaterThan(metricsUnfiltered.avgSales);
+    // Filtered should equal roughly 400
+    expect(metricsFiltered.avgSales).toBeCloseTo(400, 0);
+  });
+
+  it("returns fallback values when all records are outside the lookback window (empty recentRecords)", () => {
+    // buildPredictionInput would pass an empty array when every record is older than
+    // predictionLookbackDays. The baseline must gracefully return fallback values.
+    const targetDate = new Date("2025-06-15");
+    const metrics = calculateBaselineMetrics(makeInput(targetDate, []));
+
+    expect(metrics.avgSales).toBe(300);
+    expect(metrics.avgBagelsSold).toBe(60);
+    expect(metrics.dataPointCount).toBe(0);
+  });
+
+  it("correctly uses only records within a short window (30 days)", () => {
+    const targetDate = new Date("2025-06-15");
+
+    // Only records from the last 30 days should be present (simulating a 30-day lookback)
+    const records = [
+      makeRecord(5,  targetDate, { storeSales: 600, uberSales: 0, doordashSales: 0, otherSales: 0 }),
+      makeRecord(29, targetDate, { storeSales: 600, uberSales: 0, doordashSales: 0, otherSales: 0 }),
+    ];
+
+    const metrics = calculateBaselineMetrics(
+      { ...makeInput(targetDate, records), settings: { defaultTargetWasteRatio: 0.05, defaultSafetyBuffer: 1.1, predictionLookbackDays: 30 } }
+    );
+
+    expect(metrics.dataPointCount).toBe(2);
+    expect(metrics.avgSales).toBeCloseTo(600, 0);
   });
 });

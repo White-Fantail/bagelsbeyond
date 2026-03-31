@@ -28,6 +28,7 @@ export type ExternalFactorInput = {
 export type AppSettingInput = {
   defaultTargetWasteRatio: number;
   defaultSafetyBuffer: number;
+  predictionLookbackDays: number;
 };
 
 export type PredictionInput = {
@@ -102,8 +103,18 @@ function computeRecencyWeight(targetDate: Date, recordDate: Date): number {
 // ─── Input Builder ────────────────────────────────────────────────────────────
 
 export async function buildPredictionInput(targetDate: Date): Promise<PredictionInput> {
+  const settingsRow = await prisma.appSetting.findFirst();
+  const settings: AppSettingInput = {
+    defaultTargetWasteRatio: safeNumber(settingsRow?.defaultTargetWasteRatio, 0.05),
+    defaultSafetyBuffer: safeNumber(settingsRow?.defaultSafetyBuffer, 1.1),
+    predictionLookbackDays: safeNumber(settingsRow?.predictionLookbackDays, 365),
+  };
+
+  const lookbackCutoff = new Date(targetDate);
+  lookbackCutoff.setDate(lookbackCutoff.getDate() - settings.predictionLookbackDays);
+
   const recentRecords = await prisma.dailyRecord.findMany({
-    where: { date: { lt: targetDate } },
+    where: { date: { gte: lookbackCutoff, lt: targetDate } },
     orderBy: { date: "desc" },
     include: { externalFactor: true },
   }) as DailyRecord[];
@@ -146,12 +157,6 @@ export async function buildPredictionInput(targetDate: Date): Promise<Prediction
       console.warn(`[prediction] No external factors found for ${targetDate.toISOString().split("T")[0]} — prediction will use default values`);
     }
   }
-
-  const settingsRow = await prisma.appSetting.findFirst();
-  const settings: AppSettingInput = {
-    defaultTargetWasteRatio: safeNumber(settingsRow?.defaultTargetWasteRatio, 0.05),
-    defaultSafetyBuffer: safeNumber(settingsRow?.defaultSafetyBuffer, 1.1),
-  };
 
   return { targetDate, recentRecords, sameDayRecords, weights, externalFactors, settings };
 }
