@@ -399,51 +399,6 @@ async function main() {
     });
   }
 
-  // ── BagelTypes ──────────────────────────────────────────────────────────────
-  const bagelTypes = [
-    { code: "plain",      name: "Plain",      sortOrder: 1 },
-    { code: "sesame",     name: "Sesame",     sortOrder: 2 },
-    { code: "everything", name: "Everything", sortOrder: 3 },
-    { code: "blueberry",  name: "Blueberry",  sortOrder: 4 },
-  ];
-
-  for (const bt of bagelTypes) {
-    const bagelType = await prisma.bagelType.upsert({
-      where: { code: bt.code },
-      update: { name: bt.name, sortOrder: bt.sortOrder },
-      create: { code: bt.code, name: bt.name, sortOrder: bt.sortOrder, isActive: true },
-    });
-
-    // Seed initial availability state (all ON)
-    const latestState = await prisma.bagelAvailabilityState.findFirst({
-      where: { bagelTypeId: bagelType.id },
-      orderBy: { createdAt: "desc" },
-    });
-    if (!latestState) {
-      await prisma.bagelAvailabilityState.create({
-        data: {
-          bagelTypeId: bagelType.id,
-          isAvailable: true,
-          changeSource: "system",
-          note: "Initial seed",
-        },
-      });
-    }
-
-    // Seed placeholder channel sync statuses
-    for (const channel of ["loyverse", "uber_eats", "doordash"] as const) {
-      await prisma.channelSyncStatus.upsert({
-        where: { bagelTypeId_channel: { bagelTypeId: bagelType.id, channel } },
-        update: {},
-        create: {
-          bagelTypeId: bagelType.id,
-          channel,
-          lastResult: "pending",
-        },
-      });
-    }
-  }
-  console.log("  ✓ BagelTypes seeded");
 
   console.log("✅ Seeding complete!");
 }

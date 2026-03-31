@@ -12,9 +12,9 @@
  *  2. The sidebar components pick it up automatically.
  *
  * Route areas:
- *  Public    : /  /order  /subscribe  /login  /signup
+ *  Public    : /  /login  /signup
  *  Customer  : /account/**
- *  Staff     : /staff  /admin/orders  /admin/subscriptions  /sales  /calendar  /admin/inventory
+ *  Staff     : /staff  /sales  /calendar
  *  Admin     : /admin/**  /analytics  /weights  /settings  /imports  /external-factors  /tasks
  */
 
@@ -162,7 +162,6 @@ export const ADMIN_NAV: RoleNavConfig = {
       label: "Admin",
       items: [
         { href: "/admin/users", label: "Users" },
-        { href: "/admin/integrations", label: "Integrations" },
         { href: "/settings", label: "Settings" },
       ],
     },
