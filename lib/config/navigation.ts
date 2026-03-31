@@ -119,16 +119,6 @@ export const ADMIN_NAV: RoleNavConfig = {
       items: [{ href: "/admin", label: "Operations Dashboard" }],
     },
     {
-      id: "catalog",
-      label: "Catalog",
-      items: [
-        { href: "/admin/categories", label: "Categories" },
-        { href: "/admin/items", label: "Items" },
-        { href: "/admin/modifiers", label: "Modifiers" },
-        { href: "/admin/bagel-availability", label: "Bagel Availability" },
-      ],
-    },
-    {
       id: "sales",
       label: "Sales",
       items: [
