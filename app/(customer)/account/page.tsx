@@ -93,48 +93,6 @@ export default async function AccountPage() {
         </div>
       </div>
 
-      {/* Future feature sections */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {/* Orders */}
-        <Link href="/account/orders" className="block bg-white rounded-xl border border-amber-200 p-5 hover:border-amber-400 transition-colors">
-          <div className="flex items-center gap-3 mb-2">
-            <span className="text-2xl">📦</span>
-            <h2 className="font-semibold text-gray-900">My Orders</h2>
-          </div>
-          <p className="text-sm text-gray-500">View your order history and status.</p>
-          <p className="mt-3 text-xs text-amber-600 font-medium">View Orders →</p>
-        </Link>
-
-        {/* Subscriptions */}
-        <Link href="/account/subscriptions" className="block bg-white rounded-xl border border-amber-200 p-5 hover:border-amber-400 transition-colors">
-          <div className="flex items-center gap-3 mb-2">
-            <span className="text-2xl">🔄</span>
-            <h2 className="font-semibold text-gray-900">My Subscriptions</h2>
-          </div>
-          <p className="text-sm text-gray-500">Manage your recurring subscriptions and plans.</p>
-          <p className="mt-3 text-xs text-amber-600 font-medium">View Subscriptions →</p>
-        </Link>
-
-        {/* Pickup / Contact */}
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
-          <div className="flex items-center gap-3 mb-2">
-            <span className="text-2xl">📍</span>
-            <h2 className="font-semibold text-gray-900">Pickup Info</h2>
-          </div>
-          <p className="text-sm text-gray-500">Manage your saved pickup notes and contact info.</p>
-          <p className="mt-3 text-xs text-amber-600 font-medium">Coming soon</p>
-        </div>
-
-        {/* Payment */}
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
-          <div className="flex items-center gap-3 mb-2">
-            <span className="text-2xl">💳</span>
-            <h2 className="font-semibold text-gray-900">Payment Method</h2>
-          </div>
-          <p className="text-sm text-gray-500">View and manage your registered payment methods.</p>
-          <p className="mt-3 text-xs text-amber-600 font-medium">Coming soon</p>
-        </div>
-      </div>
     </div>
   );
 }
