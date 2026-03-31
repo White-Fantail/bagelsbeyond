@@ -85,15 +85,23 @@ export type PredictionResult = {
   factorContributions: FactorContribution[];
 };
 
+// ─── Recency Weighting ────────────────────────────────────────────────────────
+
+// Records from RECENCY_HALF_LIFE_DAYS ago receive half the weight of today's records.
+// This ensures the full history is used while recent data dominates the baseline.
+const RECENCY_HALF_LIFE_DAYS = 30;
+
+function computeRecencyWeight(targetDate: Date, recordDate: Date): number {
+  const msPerDay = 1000 * 60 * 60 * 24;
+  const daysAgo = Math.max(0, (targetDate.getTime() - recordDate.getTime()) / msPerDay);
+  return Math.pow(0.5, daysAgo / RECENCY_HALF_LIFE_DAYS);
+}
+
 // ─── Input Builder ────────────────────────────────────────────────────────────
 
 export async function buildPredictionInput(targetDate: Date): Promise<PredictionInput> {
-  const LOOKBACK_DAYS = 30;
-  const cutoff = new Date(targetDate);
-  cutoff.setDate(cutoff.getDate() - LOOKBACK_DAYS);
-
   const recentRecords = await prisma.dailyRecord.findMany({
-    where: { date: { gte: cutoff, lt: targetDate } },
+    where: { date: { lt: targetDate } },
     orderBy: { date: "desc" },
     include: { externalFactor: true },
   }) as DailyRecord[];
@@ -149,52 +157,63 @@ export async function buildPredictionInput(targetDate: Date): Promise<Prediction
 // ─── Baseline Metrics ─────────────────────────────────────────────────────────
 
 export function calculateBaselineMetrics(input: PredictionInput): BaselineMetrics {
-  const { recentRecords, sameDayRecords } = input;
+  const { targetDate, recentRecords, sameDayRecords } = input;
 
   const getTotalSales = (r: DailyRecord) =>
     safeNumber(r.storeSales) + safeNumber(r.uberSales) + safeNumber(r.doordashSales) + safeNumber(r.otherSales);
   const getSold = (r: DailyRecord) => Math.max(0, safeNumber(r.bagelsBaked) - safeNumber(r.bagelsLeft));
 
+  // Recency weights for all records — recent records contribute more to the baseline
+  const recencyWeights = recentRecords.map((r) => computeRecencyWeight(targetDate, r.date));
+  const totalRecencyWeight = recencyWeights.reduce((s, w) => s + w, 0);
+
   const avgSales =
-    recentRecords.length > 0
-      ? recentRecords.reduce((s, r) => s + getTotalSales(r), 0) / recentRecords.length
+    recentRecords.length > 0 && totalRecencyWeight > 0
+      ? recentRecords.reduce((s, r, i) => s + getTotalSales(r) * recencyWeights[i], 0) / totalRecencyWeight
       : 300;
 
   const avgBagelsSold =
-    recentRecords.length > 0
-      ? recentRecords.reduce((s, r) => s + getSold(r), 0) / recentRecords.length
+    recentRecords.length > 0 && totalRecencyWeight > 0
+      ? recentRecords.reduce((s, r, i) => s + getSold(r) * recencyWeights[i], 0) / totalRecencyWeight
       : 60;
 
+  // Same-day recency weights (same weekday historical records)
+  const sameDayRecencyWeights = sameDayRecords.map((r) => computeRecencyWeight(targetDate, r.date));
+  const totalSameDayWeight = sameDayRecencyWeights.reduce((s, w) => s + w, 0);
+
   const sameDayAvgSales =
-    sameDayRecords.length > 0
-      ? sameDayRecords.reduce((s, r) => s + getTotalSales(r), 0) / sameDayRecords.length
+    sameDayRecords.length > 0 && totalSameDayWeight > 0
+      ? sameDayRecords.reduce((s, r, i) => s + getTotalSales(r) * sameDayRecencyWeights[i], 0) / totalSameDayWeight
       : avgSales;
 
   const sameDayAvgBagels =
-    sameDayRecords.length > 0
-      ? sameDayRecords.reduce((s, r) => s + getSold(r), 0) / sameDayRecords.length
+    sameDayRecords.length > 0 && totalSameDayWeight > 0
+      ? sameDayRecords.reduce((s, r, i) => s + getSold(r) * sameDayRecencyWeights[i], 0) / totalSameDayWeight
       : avgBagelsSold;
 
   // Blend: weight same-day data more when available
-  const sameDayWeight = sameDayRecords.length > 0 ? 0.6 : 0;
-  const overallWeight = 1 - sameDayWeight;
-  const blendedAvgSales = sameDayWeight * sameDayAvgSales + overallWeight * avgSales;
-  const blendedAvgBagels = sameDayWeight * sameDayAvgBagels + overallWeight * avgBagelsSold;
+  const sameDayBlendWeight = sameDayRecords.length > 0 ? 0.6 : 0;
+  const overallBlendWeight = 1 - sameDayBlendWeight;
+  const blendedAvgSales = sameDayBlendWeight * sameDayAvgSales + overallBlendWeight * avgSales;
+  const blendedAvgBagels = sameDayBlendWeight * sameDayAvgBagels + overallBlendWeight * avgBagelsSold;
 
-  // Waste rate: bagelsLeft / bagelsBaked (skip records with invalid/zero baked count)
+  // Waste rate: bagelsLeft / bagelsBaked — recency-weighted, skip zero-baked records
   const validWasteRecords = recentRecords.filter((r) => safeNumber(r.bagelsBaked) > 0);
+  const validWasteWeights = validWasteRecords.map((r) => computeRecencyWeight(targetDate, r.date));
+  const totalValidWasteWeight = validWasteWeights.reduce((s, w) => s + w, 0);
+
   const avgWasteRate =
-    validWasteRecords.length > 0
-      ? validWasteRecords.reduce((s, r) => s + safeNumber(r.bagelsLeft) / safeNumber(r.bagelsBaked), 0) / validWasteRecords.length
+    validWasteRecords.length > 0 && totalValidWasteWeight > 0
+      ? validWasteRecords.reduce((s, r, i) => s + (safeNumber(r.bagelsLeft) / safeNumber(r.bagelsBaked)) * validWasteWeights[i], 0) / totalValidWasteWeight
       : 0.05;
 
-  // sold/baked ratio (skip records with invalid/zero baked count)
+  // sold/baked ratio — recency-weighted, skip zero-baked records
   const avgSoldToBakedRatio =
-    validWasteRecords.length > 0
-      ? validWasteRecords.reduce((s, r) => {
+    validWasteRecords.length > 0 && totalValidWasteWeight > 0
+      ? validWasteRecords.reduce((s, r, i) => {
           const sold = getSold(r);
-          return s + sold / safeNumber(r.bagelsBaked);
-        }, 0) / validWasteRecords.length
+          return s + (sold / safeNumber(r.bagelsBaked)) * validWasteWeights[i];
+        }, 0) / totalValidWasteWeight
       : 0.95;
 
   return {
@@ -425,7 +444,7 @@ export function buildPredictionExplanation(
   } else {
     items.push({
       type: "baseline",
-      text: `Recent ${metrics.dataPointCount}-day avg. sales ($${Math.round(metrics.avgSales).toLocaleString("en-NZ")}) used as baseline`,
+      text: `Recency-weighted avg. sales ($${Math.round(metrics.avgSales).toLocaleString("en-NZ")}) from ${metrics.dataPointCount} historical records (recent data weighted higher)`,
     });
   }
 
@@ -521,7 +540,7 @@ export function calculateRuleBasedPrediction(input: PredictionInput): Prediction
     : "No adjustment added";
 
   const noteParts = [
-    `baseline Data: recent ${metrics.dataPointCount} days`,
+    `baseline Data: ${metrics.dataPointCount} records (recency-weighted)`,
     metrics.sameDayDataPointCount > 0 ? `same-day ${metrics.sameDayDataPointCount} data points` : null,
     `Applied Factor: ${factors.length}`,
   ].filter(Boolean);
@@ -537,7 +556,7 @@ export function calculateRuleBasedPrediction(input: PredictionInput): Prediction
     baselineSales: roundSalesValue(metrics.blendedAvgSales),
     baselineBagelsSold: roundBagelCount(metrics.blendedAvgBagels),
     confidenceScore,
-    method: "rule_based_v2",
+    method: "rule_based_v3",
     notes: noteParts.join(" | "),
     adjustmentSummary,
     explanationJson: JSON.stringify(explanation),
