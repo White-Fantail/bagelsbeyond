@@ -45,6 +45,30 @@ export type PredictionWeight = {
   description?: string | null;
 };
 
+// ─── Weight Set Versioning ─────────────────────────────────────────────────────
+
+export type WeightSetEntry = {
+  id: string;
+  weightSetId: string;
+  factorKey: string;
+  weightValue: number;
+  isActive: boolean;
+  description?: string | null;
+  createdAt: Date;
+};
+
+export type WeightSet = {
+  id: string;
+  version: number;
+  name: string;
+  description?: string | null;
+  isActive: boolean;
+  source: string;
+  createdAt: Date;
+  updatedAt: Date;
+  entries?: WeightSetEntry[];
+};
+
 export type AppSetting = {
   id: string;
   shopName: string;
