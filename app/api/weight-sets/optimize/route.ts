@@ -29,8 +29,9 @@ function tieredWeightedAvg(values: number[], weights: number[]): number {
 }
 
 // POST /api/weight-sets/optimize
-// Derives suggested weights from ALL historical bagel sales records using tiered
-// recency weighting.  Does NOT persist anything — the user must approve the result.
+// Derives suggested weights from historical bagel sales records within the
+// configured lookback window, using tiered recency weighting.
+// Does NOT persist anything — the user must approve the result.
 export async function POST() {
   try {
     // Load current active weights
@@ -38,8 +39,17 @@ export async function POST() {
     const weightMap: Record<string, number> = {};
     for (const w of currentWeights) weightMap[w.factorKey] = w.weightValue;
 
-    // Load all sales records with their external factors
+    // Determine the lookback window from settings (default 365 days)
+    const settingsRow = await prisma.appSetting.findFirst();
+    const lookbackDays = Math.max(1, safeNumber(settingsRow?.predictionLookbackDays, 365));
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const lookbackCutoff = new Date(today);
+    lookbackCutoff.setDate(lookbackCutoff.getDate() - lookbackDays);
+
+    // Load sales records within the lookback window with their external factors
     const allRecords = await prisma.dailyRecord.findMany({
+      where: { date: { gte: lookbackCutoff } },
       orderBy: { date: "desc" },
       include: { externalFactor: true },
     });
@@ -57,9 +67,6 @@ export async function POST() {
         message: "No sales history available — returning current weights unchanged",
       });
     }
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
 
     // Pre-compute total sales, tiered recency weight, and day-of-week for each record
     const records = allRecords.map((r) => ({
@@ -176,7 +183,7 @@ export async function POST() {
     return NextResponse.json({
       suggestedEntries,
       dataPointCount: records.length,
-      message: `Suggestion based on ${records.length} sales record(s) with tiered recency weighting`,
+      message: `Suggestion based on ${records.length} sales record(s) within the last ${lookbackDays} days (tiered recency weighting)`,
     });
   } catch (_error) {
     return NextResponse.json({ message: "Optimization failed" }, { status: 500 });

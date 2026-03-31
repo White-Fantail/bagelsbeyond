@@ -128,6 +128,7 @@ model AppSetting {
   defaultCountry          String   @default("NZ")
   defaultEventRegion      String   @default("Christchurch")
   autoCollectExternalData Boolean  @default(true)
+  predictionLookbackDays  Int      @default(365)
   createdAt               DateTime @default(now())
   updatedAt               DateTime @updatedAt
 

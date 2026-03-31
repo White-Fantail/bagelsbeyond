@@ -35,6 +35,7 @@ export default async function SettingsPage() {
             defaultCountry: "NZ",
             defaultEventRegion: "Christchurch",
             autoCollectExternalData: true,
+            predictionLookbackDays: 365,
           }
         }
       />

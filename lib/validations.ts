@@ -36,6 +36,7 @@ export const settingsSchema = z.object({
   defaultCountry: z.string().optional(),
   defaultEventRegion: z.string().optional(),
   autoCollectExternalData: z.boolean().optional(),
+  predictionLookbackDays: z.coerce.number().int().min(1, "Lookback period must be at least 1 day").optional(),
 });
 
 export type SettingsSchema = z.infer<typeof settingsSchema>;
