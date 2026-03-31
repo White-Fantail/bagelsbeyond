@@ -5,6 +5,10 @@ import { useRouter } from "next/navigation";
 import type { ModifierGroupWithOptions } from "@/lib/catalog/queries/modifiers";
 import SourceBadge, { SOURCE_REF_PREVIEW_LENGTH } from "./SourceBadge";
 
+interface ModifiersTableProps {
+  groups: ModifierGroupWithOptions[];
+}
+
 function SelectRule({ min, max }: { min: number | null; max: number | null }) {
   if (min === null && max === null) return <span className="text-gray-400 text-xs">—</span>;
   return (
