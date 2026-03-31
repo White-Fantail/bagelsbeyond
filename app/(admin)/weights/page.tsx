@@ -15,14 +15,14 @@ export default async function WeightsPage() {
     <div className="space-y-8">
       <PageHeader
         title="Predictions Weights"
-        description="Manage sales prediction weights by factor"
+        description="Manage prediction weights by factor — weights affect both bagel quantity and sales predictions, with bagel count being the primary operational metric"
       />
       <WeightsManager initialWeights={weights} />
 
       <div>
         <h2 className="text-lg font-semibold text-gray-900 mb-1">Weight Set Versions</h2>
         <p className="text-sm text-gray-500 mb-4">
-          Save the current weights as a named version, auto-optimize from historical accuracy, compare versions side-by-side, or roll back to a previous set.
+          Save the current weights as a named version, auto-optimize from historical bagel count accuracy, compare versions side-by-side, or roll back to a previous set.
         </p>
         <WeightSetsManager initialSets={weightSets} />
       </div>

@@ -46,6 +46,12 @@ async function getPerformanceData() {
         ? comparable.reduce((s, r) => s + Math.abs(r.comparison!.salesErrorPct), 0) / comparable.length
         : 0;
 
+    const avgBagelsErrorPct =
+      comparable.length > 0
+        ? comparable.reduce((s, r) => s + Math.abs(r.comparison!.bagelsErrorPct), 0) / comparable.length
+        : 0;
+
+    // Accuracy is determined by bagel count error (the operationally critical metric)
     const accurateCount = comparable.filter((r) => r.comparison!.direction === "accurate").length;
 
     return {
@@ -56,6 +62,7 @@ async function getPerformanceData() {
         avgSalesError: Math.round(avgSalesError * 100) / 100,
         avgBagelsError: Math.round(avgBagelsError * 10) / 10,
         avgSalesErrorPct: Math.round(avgSalesErrorPct * 10) / 10,
+        avgBagelsErrorPct: Math.round(avgBagelsErrorPct * 10) / 10,
         accurateCount,
         accuracyRate: comparable.length > 0 ? Math.round((accurateCount / comparable.length) * 100) : 0,
       },
@@ -69,6 +76,7 @@ async function getPerformanceData() {
         avgSalesError: 0,
         avgBagelsError: 0,
         avgSalesErrorPct: 0,
+        avgBagelsErrorPct: 0,
         accurateCount: 0,
         accuracyRate: 0,
       },
@@ -105,6 +113,20 @@ export default async function PredictionPerformancePage() {
       {/* Summary Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
         <StatCard
+          title="🥯 Average Bagel Error Rate"
+          value={`${stats.avgBagelsErrorPct.toFixed(1)}%`}
+          sub={`Avg. absolute error ${stats.avgBagelsError.toFixed(1)} bagels`}
+          color={stats.avgBagelsErrorPct <= 10 ? "green" : stats.avgBagelsErrorPct <= 20 ? "yellow" : "red"}
+          primary
+        />
+        <StatCard
+          title="🥯 Accurate Predictions"
+          value={`${stats.accurateCount}`}
+          sub={`Bagel error ≤5% · ${stats.accuracyRate}%`}
+          color={stats.accuracyRate >= 60 ? "green" : stats.accuracyRate >= 40 ? "yellow" : "red"}
+          primary
+        />
+        <StatCard
           title="Total Predictions"
           value={`${stats.total}`}
           sub="Based on last 30 items"
@@ -117,27 +139,15 @@ export default async function PredictionPerformancePage() {
           color="gray"
         />
         <StatCard
-          title="accurate Predictions"
-          value={`${stats.accurateCount}`}
-          sub={`Error rate ≤5% · ${stats.accuracyRate}%`}
-          color={stats.accuracyRate >= 60 ? "green" : stats.accuracyRate >= 40 ? "yellow" : "red"}
-        />
-        <StatCard
-          title="Avg. Sales Error Rate"
+          title="Average Sales Error Rate"
           value={`${stats.avgSalesErrorPct.toFixed(1)}%`}
-          sub={`Avg. absolute error ${formatCurrency(stats.avgSalesError)}`}
+          sub={`Average absolute error ${formatCurrency(stats.avgSalesError)}`}
           color={stats.avgSalesErrorPct <= 10 ? "green" : stats.avgSalesErrorPct <= 20 ? "yellow" : "red"}
         />
         <StatCard
-          title="Avg. Sales Error"
+          title="Average Sales Error"
           value={formatCurrency(stats.avgSalesError)}
           sub="Average Absolute Error"
-          color="gray"
-        />
-        <StatCard
-          title="average Bagel Error"
-          value={`${stats.avgBagelsError.toFixed(1)}`}
-          sub="Absolute Sales Error"
           color="gray"
         />
       </div>
@@ -175,12 +185,12 @@ export default async function PredictionPerformancePage() {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Date</th>
+                  <th className="px-4 py-2 text-right text-xs font-medium text-amber-600">🥯 Predicted Bagels</th>
+                  <th className="px-4 py-2 text-right text-xs font-medium text-amber-600">🥯 Actual Bagels</th>
+                  <th className="px-4 py-2 text-right text-xs font-medium text-amber-600">Bagel Error</th>
                   <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">Predicted Sales</th>
                   <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">Actual Sales</th>
                   <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">Sales Error</th>
-                  <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">Predicted Bagels</th>
-                  <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">Actual Bagels</th>
-                  <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">Bagel Error</th>
                   <th className="px-4 py-2 text-center text-xs font-medium text-gray-500">Accuracy</th>
                   <th className="px-4 py-2 text-right text-xs font-medium text-gray-500"></th>
                 </tr>
@@ -193,6 +203,19 @@ export default async function PredictionPerformancePage() {
                         {formatDate(prediction.targetDate)}
                       </Link>
                     </td>
+                    <td className="px-4 py-3 text-sm text-amber-700 text-right font-medium">
+                      {prediction.predictedBagelsSold}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-900 text-right font-semibold">
+                      {comparison ? `${comparison.actualBagelsSold}` : <span className="text-gray-300">-</span>}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-right">
+                      {comparison ? (
+                        <ErrorBadge value={comparison.bagelsError} pct={comparison.bagelsErrorPct} />
+                      ) : (
+                        <span className="text-xs text-gray-300">-</span>
+                      )}
+                    </td>
                     <td className="px-4 py-3 text-sm text-gray-600 text-right">
                       {formatCurrency(prediction.predictedSales)}
                     </td>
@@ -204,19 +227,6 @@ export default async function PredictionPerformancePage() {
                         <ErrorBadge value={comparison.salesError} pct={comparison.salesErrorPct} isCurrency />
                       ) : (
                         <span className="text-xs text-gray-300">No Data</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-600 text-right">
-                      {prediction.predictedBagelsSold}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-900 text-right font-medium">
-                      {comparison ? `${comparison.actualBagelsSold}` : <span className="text-gray-300">-</span>}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-right">
-                      {comparison ? (
-                        <ErrorBadge value={comparison.bagelsError} pct={comparison.bagelsErrorPct} />
-                      ) : (
-                        <span className="text-xs text-gray-300">-</span>
                       )}
                     </td>
                     <td className="px-4 py-3 text-center">
@@ -252,6 +262,16 @@ export default async function PredictionPerformancePage() {
                   )}
                 </div>
                 <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div className="bg-amber-50 rounded p-2">
+                    <p className="text-xs text-amber-600 font-medium">🥯 Predicted Bagels</p>
+                    <p className="font-semibold text-amber-800">{prediction.predictedBagelsSold}</p>
+                  </div>
+                  {comparison && (
+                    <div className="bg-amber-50 rounded p-2">
+                      <p className="text-xs text-amber-600 font-medium">🥯 Actual Bagels</p>
+                      <p className="font-semibold text-amber-800">{comparison.actualBagelsSold}</p>
+                    </div>
+                  )}
                   <div>
                     <p className="text-xs text-gray-500">Predicted Sales</p>
                     <p className="text-gray-600">{formatCurrency(prediction.predictedSales)}</p>
@@ -262,20 +282,10 @@ export default async function PredictionPerformancePage() {
                       <p className="font-medium text-gray-900">{formatCurrency(comparison!.actualSales)}</p>
                     </div>
                   )}
-                  <div>
-                    <p className="text-xs text-gray-500">Predicted Bagels</p>
-                    <p className="text-gray-600">{prediction.predictedBagelsSold}</p>
-                  </div>
-                  {comparison && (
-                    <div>
-                      <p className="text-xs text-gray-500">Actual Bagels</p>
-                      <p className="font-medium text-gray-900">{comparison.actualBagelsSold}</p>
-                    </div>
-                  )}
                   {comparison && (
                     <div className="col-span-2">
-                      <p className="text-xs text-gray-500">Error</p>
-                      <ErrorBadge value={comparison.salesError} pct={comparison.salesErrorPct} isCurrency />
+                      <p className="text-xs text-gray-500">Bagel Error</p>
+                      <ErrorBadge value={comparison.bagelsError} pct={comparison.bagelsErrorPct} />
                     </div>
                   )}
                 </div>
@@ -286,13 +296,14 @@ export default async function PredictionPerformancePage() {
       )}
 
       {/* Interpretation Guide */}
-      <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 text-sm text-blue-800">
-        <p className="font-semibold mb-2">📌 Accuracy Baseline Guide</p>
-        <ul className="space-y-1 text-xs text-blue-700">
-          <li>• <strong>accurate</strong>: Error rate within ±5%</li>
-          <li>• <strong>slightly high/low Predictions</strong>: Error rate ±5~10%</li>
-          <li>• <strong>high/low Predictions</strong>: Error rate ±10~20%</li>
-          <li>• <strong>significantly high/low Predictions</strong>: Error rate &gt; 20%</li>
+      <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm text-amber-900">
+        <p className="font-semibold mb-2">🥯 Accuracy Baseline Guide (based on bagel count)</p>
+        <p className="text-xs text-amber-700 mb-2">Accuracy is measured by how closely the predicted bagel count matches actual bagels sold — this is the key metric for production planning.</p>
+        <ul className="space-y-1 text-xs text-amber-800">
+          <li>• <strong>Accurate</strong>: Bagel count error within ±5%</li>
+          <li>• <strong>Slightly high/low predictions</strong>: Bagel count error ±5~10%</li>
+          <li>• <strong>High/low predictions</strong>: Bagel count error ±10~20%</li>
+          <li>• <strong>Significantly high/low predictions</strong>: Bagel count error &gt; 20%</li>
         </ul>
       </div>
     </div>
@@ -304,11 +315,13 @@ function StatCard({
   value,
   sub,
   color = "gray",
+  primary = false,
 }: {
   title: string;
   value: string;
   sub: string;
   color?: "blue" | "green" | "yellow" | "red" | "gray";
+  primary?: boolean;
 }) {
   const colorMap = {
     blue: "border-blue-200 bg-blue-50",
@@ -325,7 +338,7 @@ function StatCard({
     gray: "text-gray-900",
   };
   return (
-    <div className={`rounded-lg border p-4 ${colorMap[color]}`}>
+    <div className={`rounded-lg border p-4 ${colorMap[color]} ${primary ? "ring-2 ring-amber-300" : ""}`}>
       <p className="text-xs text-gray-500">{title}</p>
       <p className={`text-xl font-bold mt-1 ${textMap[color]}`}>{value}</p>
       <p className="text-xs text-gray-400 mt-1">{sub}</p>

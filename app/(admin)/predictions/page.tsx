@@ -30,7 +30,7 @@ export default async function PredictionsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Predictions List</h1>
-          <p className="text-gray-500 mt-1">Sales Predictions results ({predictions.length} items)</p>
+          <p className="text-gray-500 mt-1">Bagel count & production predictions ({predictions.length} items)</p>
         </div>
         <div className="flex gap-2">
           <Link
@@ -67,7 +67,7 @@ export default async function PredictionsPage() {
               <Link
                 key={p.id}
                 href={`/predictions/${p.id}`}
-                className="block bg-white rounded-lg border border-gray-200 p-4 hover:border-blue-300 hover:bg-blue-50 transition-colors"
+                className="block bg-white rounded-lg border border-gray-200 p-4 hover:border-amber-300 hover:bg-amber-50 transition-colors"
               >
                 <div className="flex justify-between items-start">
                   <span className="font-medium text-gray-900">{formatDate(p.targetDate)}</span>
@@ -75,12 +75,11 @@ export default async function PredictionsPage() {
                     {METHOD_LABELS[p.method] ?? p.method}
                   </span>
                 </div>
-                <div className="mt-1 text-sm text-gray-600">
-                  Predicted Sales: <span className="font-medium">{formatCurrency(p.predictedSales)}</span>
+                <div className="mt-1 text-sm font-semibold text-amber-700">
+                  🥯 {p.predictedBagelsSold} bagels · Production: {p.recommendedBagelsToBake}
                 </div>
                 <div className="mt-1 text-xs text-gray-500 flex gap-3">
-                  <span>{p.predictedBagelsSold} bagels</span>
-                  <span>Recommended Production {p.recommendedBagelsToBake}</span>
+                  <span>Sales: {formatCurrency(p.predictedSales)}</span>
                   {p.confidenceScore != null && (
                     <span>Confidence {p.confidenceScore}%</span>
                   )}
@@ -95,9 +94,9 @@ export default async function PredictionsPage() {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Predictions Date</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-amber-600 uppercase">🥯 Estimated Sold Qty</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-amber-600 uppercase">🥯 Recommended Production</th>
                   <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Predicted Sales</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Estimated Sold Qty</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Recommended Production</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Method</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Created Date</th>
                 </tr>
@@ -110,9 +109,9 @@ export default async function PredictionsPage() {
                         {formatDate(p.targetDate)}
                       </Link>
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-900 text-right">{formatCurrency(p.predictedSales)}</td>
-                    <td className="px-4 py-3 text-sm text-gray-900 text-right">{p.predictedBagelsSold}</td>
-                    <td className="px-4 py-3 text-sm text-gray-900 text-right">{p.recommendedBagelsToBake}</td>
+                    <td className="px-4 py-3 text-sm font-semibold text-amber-700 text-right">{p.predictedBagelsSold}</td>
+                    <td className="px-4 py-3 text-sm font-semibold text-amber-700 text-right">{p.recommendedBagelsToBake}</td>
+                    <td className="px-4 py-3 text-sm text-gray-600 text-right">{formatCurrency(p.predictedSales)}</td>
                     <td className="px-4 py-3 text-sm text-gray-500">
                       <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs">
                         {METHOD_LABELS[p.method] ?? p.method}
