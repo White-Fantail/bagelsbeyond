@@ -133,13 +133,17 @@ projectedSellThroughRate = 1 - projectedWasteRate
 ---
 
 ## 🛠️ 기술 스택
-- **Next.js 16** (App Router, RSC)
-- **TypeScript** (strict)
-- **Tailwind CSS**
-- **Prisma 7** (PostgreSQL adapter)
-- **PostgreSQL**
-- **Zod** (validation)
-- **React Hook Form**
+- **Next.js 16** (App Router, RSC, Server Components)
+- **React 19** (with Server Actions)
+- **TypeScript 5** (strict)
+- **Tailwind CSS 4**
+- **Prisma 7** (PostgreSQL adapter via `@prisma/adapter-pg`)
+- **PostgreSQL** (`pg` 드라이버)
+- **Zod 4** (validation)
+- **React Hook Form 7**
+- **jose** (JWT)
+- **bcryptjs** (password hashing)
+- **Vitest 4** (testing)
 
 ---
 
@@ -156,6 +160,7 @@ cp .env.example .env
 | 변수명 | 예시 값 | 목적 | 발급 방법 |
 |--------|---------|------|-----------|
 | `DATABASE_URL` | `postgresql://postgres:postgres@localhost:5432/beyond_dev` | Prisma가 PostgreSQL에 연결하는 데 사용하는 DB 접속 URL | 로컬: 직접 PostgreSQL 설치 후 설정. 클라우드: [Supabase](https://supabase.com/), [Neon](https://neon.tech/), [Railway](https://railway.app/) 등에서 Connection String 복사 |
+| `SESSION_SECRET` | `openssl rand -base64 32` 출력값 | JWT 세션 서명 키 (서버 재시작 시 기존 세션 무효화됨) | `openssl rand -base64 32` 명령으로 임의의 강력한 시크릿 생성 |
 
 ### 뉴스 API (선택 — 없으면 뉴스 수집만 건너뜀)
 
@@ -192,6 +197,9 @@ cp .env.example .env
 | 변수명 | 목적 | 참고 |
 |--------|------|------|
 | `EVENTFINDA_API_KEY` | Eventfinda NZ 이벤트 API 연동 시 사용 예정 | [https://www.eventfinda.co.nz/api/v2/](https://www.eventfinda.co.nz/api/v2/) — 현재 이벤트 프로바이더는 Placeholder로 항상 빈 배열 반환 |
+| `INTERNAL_JOB_SECRET` | `/api/internal/jobs/daily-order-push` 엔드포인트 보호 | 미설정 시 해당 엔드포인트는 403 반환 (비활성화). `openssl rand -base64 32` 로 생성 |
+| `APP_TIMEZONE` | 일별 주문 push 등 cron 작업에서 "오늘" 기준이 되는 타임존 | 미설정 시 `DEFAULT_TIMEZONE`, 없으면 `Pacific/Auckland` 사용 |
+| `SEED_DEFAULT_PASSWORD` | 시딩(seed) 시 테스트 계정에 부여할 기본 패스워드 | 개발 환경 전용 — 프로덕션에서는 사용하지 말 것 (기본값: `Dev@12345!`) |
 
 ---
 
@@ -444,64 +452,30 @@ CRON_SECRET=your-random-secret-here
 
 ---
 
-## 🔌 Loyverse POS 연동 (Phase 5)
+## 🔌 Loyverse POS 연동 (향후 계획)
+
+> **⚠️ 미구현**: 아래 내용은 구현 예정 설계입니다. 현재 코드베이스에 해당 파일 및 API가 존재하지 않습니다.
 
 ### 개요
 
-Loyverse POS의 상품 카탈로그를 내부 Product 구조로 자동 동기화하고, 내부 주문을 Loyverse 영수증으로 전송하며, Loyverse 영수증 내역으로부터 일별 판매 수량을 가져오는 기능이 구현되어 있습니다.
+Loyverse POS의 상품 카탈로그를 내부 Product 구조로 자동 동기화하고, 내부 주문을 Loyverse 영수증으로 전송하며, Loyverse 영수증 내역으로부터 일별 판매 수량을 가져오는 기능을 구현할 예정입니다.
 
-### 구현 범위
+### 계획 범위
 
-| 기능 | 상태 | 파일 |
-|------|------|------|
-| 카탈로그 동기화 (Loyverse → Product) | ✅ Phase 5A | `lib/integrations/services/catalog-sync.ts` |
-| 카탈로그 매퍼 (Raw → ExternalProduct) | ✅ Phase 5A | `lib/integrations/services/catalog-mapper.ts` |
-| 주문 POS 전송 (POST /receipts) | ✅ Phase 5B | `lib/integrations/adapters/pos/loyverse.ts` |
-| 일별 판매 수량 동기화 (GET /receipts) | ✅ Phase 5B | `lib/integrations/adapters/pos/loyverse.ts` |
-| 모디파이어 그룹 이름 변경 안전성 | ✅ Phase 5B | `ExternalOptionGroupMap` 모델 |
-| 관리자 UI (`/admin/integrations/loyverse`) | ✅ Phase 5A | `app/admin/integrations/loyverse/` |
+| 기능 | 상태 |
+|------|------|
+| 카탈로그 동기화 (Loyverse → Product) | 🔲 미구현 |
+| 카탈로그 매퍼 (Raw → ExternalProduct) | 🔲 미구현 |
+| 주문 POS 전송 (POST /receipts) | 🔲 미구현 |
+| 일별 판매 수량 동기화 (GET /receipts) | 🔲 미구현 |
+| 관리자 UI (`/admin/integrations/loyverse`) | 🔲 미구현 |
 
-### ExternalOptionGroupMap (Phase 5B 신규)
+### 관련 환경 변수 (연동 구현 후 사용)
 
-Phase 5A에서는 모디파이어 그룹을 `(productId, name)` 으로 식별했기 때문에, Loyverse에서 그룹 이름을 변경하면 기존 그룹이 유지된 채 새 그룹이 추가되는 문제가 있었습니다.
-
-Phase 5B에서 `ExternalOptionGroupMap` 테이블을 추가하여 `(source, externalOptionGroupId)` 기반으로 그룹을 식별하도록 개선했습니다.
-
-- 기존(Phase 5A 이전) 그룹: 이름 매칭으로 채택 후 매핑 생성 (마이그레이션 호환)
-- 이후 sync: `externalId` 기반 lookup → 이름 변경 시에도 기존 그룹 갱신
-
-### Loyverse 어댑터 메서드
-
-| 메서드 | 설명 |
+| 변수명 | 목적 |
 |--------|------|
-| `fetchExternalCatalog()` | 전체 카탈로그 fetch + 정규화 |
-| `pushOrderToExternalPos(order)` | 내부 주문 → Loyverse POST /receipts |
-| `syncInventoryFromExternal(date)` | 특정 날짜 Loyverse 영수증 → 판매 수량 집계 |
-
-**Mock 모드 (`LOYVERSE_MOCK=true` 또는 토큰 미설정):**
-- `fetchExternalCatalog` → 내장 목 데이터 반환
-- `pushOrderToExternalPos` → `MOCK-{orderNumber}` 반환
-- `syncInventoryFromExternal` → 빈 객체 반환
-
-### 동기화 정책
-
-```
-외부 상품 1개 → 내부 Product 1개
-덮어쓰는 필드: name, description, basePrice, isActive, category
-보호되는 필드: slug, sortOrder, isSubscriptionEligible
-
-모디파이어 그룹:
-  • ExternalOptionGroupMap(source, externalId) 기반 lookup (rename-safe)
-  • minSelect / maxSelect / isRequired: 첫 생성 시만 기본값 적용 (이후 sync에서 보호)
-  • Option.priceDelta: 매 sync마다 POS 값으로 덮어씀
-```
-
-### 관련 API 엔드포인트
-
-| 경로 | 메서드 | 설명 |
-|------|--------|------|
-| `GET /api/admin/integrations/loyverse/status` | GET | 연동 상태 + 매핑된 상품 수 |
-| `POST /api/admin/integrations/loyverse/sync` | POST | 카탈로그 즉시 동기화 트리거 |
+| `LOYVERSE_ACCESS_TOKEN` | Loyverse API 인증 토큰 |
+| `LOYVERSE_MOCK` | `true` 설정 시 Mock 모드 동작 |
 
 ---
 
@@ -524,150 +498,199 @@ Phase 5B에서 `ExternalOptionGroupMap` 테이블을 추가하여 `(source, exte
 
 ```
 ├── app/
-│   ├── page.tsx                    # 운영 대시보드 (작업 상태 + 분석 요약 포함)
-│   ├── analytics/
-│   │   ├── layout.tsx              # 분석 레이아웃 (서브 네비게이션)
-│   │   ├── page.tsx                # 분석 대시보드 (기간 선택, 요약, 비교)
-│   │   ├── daily/page.tsx          # 일별 분석
-│   │   ├── weekly/page.tsx         # 주별 분석
-│   │   ├── monthly/page.tsx        # 월별 분석
-│   │   └── segments/page.tsx       # 세그먼트 비교
-│   ├── calendar/                   # 달력 (실적 + 예측)
-│   ├── predictions/
-│   │   ├── page.tsx                # 예측 목록
-│   │   ├── new/                    # 새 예측 (내일 자동 제안)
-│   │   ├── [id]/                   # 예측 상세 + 근거 + 비교
-│   │   └── performance/            # 예측 성과 페이지
-│   ├── tasks/
-│   │   ├── page.tsx                # 자동화 작업 목록
-│   │   └── [id]/page.tsx           # 작업 상세 + TaskLog + 재시도
-│   ├── sales/                      # 매출 CRUD
-│   ├── imports/                    # CSV 임포트
-│   ├── weights/                    # 가중치 관리
-│   └── settings/                   # 앱 설정
-├── app/api/
-│   ├── analytics/
-│   │   ├── route.ts                # 기간 요약 + 비교
-│   │   ├── daily/route.ts          # 일별 분석 API
-│   │   ├── weekly/route.ts         # 주별 분석 API
-│   │   ├── monthly/route.ts        # 월별 분석 API
-│   │   └── segments/route.ts       # 세그먼트 비교 API
-│   ├── cron/run/route.ts           # cron trigger 엔드포인트
-│   └── tasks/
-│       ├── route.ts                # 작업 목록/생성
-│       └── [id]/
-│           ├── route.ts            # 작업 상세
-│           └── retry/route.ts      # 재시도
-├── lib/
-│   ├── services/
+│   ├── page.tsx                    # 루트 — 대시보드로 리다이렉트
+│   ├── layout.tsx                  # 루트 레이아웃
+│   ├── login/page.tsx              # 로그인 페이지
+│   ├── signup/page.tsx             # 회원가입 페이지
+│   ├── actions/auth.ts             # 인증 Server Actions (login, signup, logout)
+│   ├── (admin)/                    # 관리자/스태프 전용 레이아웃 그룹
+│   │   ├── layout.tsx              # 사이드바 + 네비게이션 레이아웃
+│   │   ├── dashboard/page.tsx      # 운영 대시보드 (작업 상태 + 분석 요약 포함)
 │   │   ├── analytics/
-│   │   │   └── index.ts            # 분석 서비스 레이어 (집계, 비교, 세그먼트)
-│   │   ├── predictionService.ts    # 예측 핵심 로직
-│   │   ├── externalFactorService.ts# 외부요인 수집
-│   │   ├── importService.ts        # CSV 임포트
-│   │   ├── taskService.ts          # Task 생명주기 관리
-│   │   └── schedulerService.ts     # 고수준 자동화 오케스트레이션
-│   ├── analytics-utils.ts          # 분석 유틸 (포맷, 날짜, 변화율)
-│   ├── task-utils.ts               # Task 유틸 (날짜, 상태 표시 등)
-│   ├── prediction-utils.ts         # 예측 유틸 함수
-│   ├── analytics.ts                # 기본 분석 함수
-│   └── utils.ts                    # 공통 유틸
+│   │   │   ├── layout.tsx          # 분석 레이아웃 (서브 네비게이션)
+│   │   │   ├── page.tsx            # 분석 대시보드 (기간 선택, 요약, 비교)
+│   │   │   ├── daily/page.tsx      # 일별 분석
+│   │   │   ├── weekly/page.tsx     # 주별 분석
+│   │   │   ├── monthly/page.tsx    # 월별 분석
+│   │   │   └── segments/page.tsx   # 세그먼트 비교
+│   │   ├── calendar/page.tsx       # 달력 (실적 + 예측)
+│   │   ├── predictions/
+│   │   │   ├── page.tsx            # 예측 목록
+│   │   │   ├── new/page.tsx        # 새 예측 (내일 자동 제안)
+│   │   │   ├── [id]/page.tsx       # 예측 상세 + 근거 + 비교
+│   │   │   └── performance/page.tsx # 예측 성과 페이지
+│   │   ├── tasks/
+│   │   │   ├── page.tsx            # 자동화 작업 목록
+│   │   │   └── [id]/page.tsx       # 작업 상세 + TaskLog + 재시도
+│   │   ├── sales/
+│   │   │   ├── page.tsx            # 매출 목록
+│   │   │   ├── new/page.tsx        # 새 매출 기록
+│   │   │   └── [id]/
+│   │   │       ├── page.tsx        # 매출 상세
+│   │   │       └── edit/page.tsx   # 매출 수정
+│   │   ├── imports/
+│   │   │   ├── page.tsx            # CSV 임포트 목록
+│   │   │   ├── new/page.tsx        # 새 임포트 (CSV 업로드 + 검증)
+│   │   │   └── [id]/page.tsx       # 임포트 상세 (행 검증 UI)
+│   │   ├── external-factors/
+│   │   │   ├── page.tsx            # 외부요인 목록 + 날짜 필터
+│   │   │   └── [date]/page.tsx     # 특정 날짜 외부요인 수정
+│   │   ├── weights/page.tsx        # 예측 가중치 관리
+│   │   ├── settings/page.tsx       # 앱 설정 (타임존, 위치, 폐기 목표 등)
+│   │   ├── staff/page.tsx          # 스태프 관리
+│   │   └── admin/
+│   │       ├── page.tsx            # 관리자 대시보드
+│   │       └── users/page.tsx      # 사용자 관리 (역할/활성화)
+│   ├── (customer)/                 # 고객 전용 레이아웃 그룹
+│   │   ├── layout.tsx              # 고객 레이아웃
+│   │   └── account/
+│   │       ├── page.tsx            # 고객 계정 메인
+│   │       ├── profile/page.tsx    # 프로필 수정
+│   │       └── security/page.tsx   # 비밀번호 변경
+│   └── api/
+│       ├── analytics/
+│       │   ├── route.ts            # 기간 요약 + 비교
+│       │   ├── daily/route.ts      # 일별 분석 API
+│       │   ├── weekly/route.ts     # 주별 분석 API
+│       │   ├── monthly/route.ts    # 월별 분석 API
+│       │   └── segments/route.ts   # 세그먼트 비교 API
+│       ├── sales/
+│       │   ├── route.ts            # 매출 목록/생성
+│       │   └── [id]/
+│       │       ├── route.ts        # 매출 상세/수정/삭제
+│       │       └── collect-external/route.ts # 특정 날짜 외부요인 수집
+│       ├── predictions/
+│       │   ├── route.ts            # 예측 목록/생성
+│       │   ├── performance/route.ts # 예측 성과 통계
+│       │   └── [id]/route.ts       # 예측 상세/삭제
+│       ├── imports/
+│       │   ├── route.ts            # 임포트 목록/생성
+│       │   └── [id]/
+│       │       ├── route.ts        # 임포트 상세
+│       │       ├── execute/route.ts # 임포트 행 DB 적용
+│       │       └── collect-external/route.ts # 임포트된 날짜 외부요인 수집
+│       ├── external-factors/
+│       │   ├── route.ts            # 외부요인 목록/생성
+│       │   └── [date]/route.ts     # 특정 날짜 외부요인 조회/수정
+│       ├── weights/
+│       │   ├── route.ts            # 가중치 목록
+│       │   └── [id]/route.ts       # 가중치 수정
+│       ├── settings/route.ts       # 앱 설정 조회/수정
+│       ├── tasks/
+│       │   ├── route.ts            # 작업 목록/생성
+│       │   └── [id]/
+│       │       ├── route.ts        # 작업 상세
+│       │       └── retry/route.ts  # 재시도
+│       ├── cron/run/route.ts       # cron trigger 엔드포인트
+│       ├── admin/users/
+│       │   ├── route.ts            # 전체 사용자 목록 (ADMIN 전용)
+│       │   └── [id]/route.ts       # 사용자 역할/상태 수정 (ADMIN 전용)
+│       └── account/
+│           ├── profile/route.ts    # 고객 프로필 업데이트
+│           └── password/route.ts   # 비밀번호 변경
 ├── components/
+│   ├── navigation/
+│   │   ├── Sidebar.tsx             # 사이드바 네비게이션 (admin 전용)
+│   │   ├── SidebarSection.tsx      # 접을 수 있는 섹션
+│   │   ├── SidebarItem.tsx         # 네비게이션 항목
+│   │   └── MobileDrawer.tsx        # 모바일 네비게이션 드로어
 │   ├── analytics/
 │   │   ├── AnalyticsSubNav.tsx     # 분석 서브 네비게이션 (client)
 │   │   ├── TrendBar.tsx            # CSS 비율 바 차트
 │   │   ├── ChannelBar.tsx          # 채널 비중 스택 바
 │   │   ├── ComparisonCard.tsx      # 세그먼트 비교 카드
-│   │   └── PeriodComparisonSection.tsx # 기간 비교 섹션
+│   │   ├── PeriodComparisonSection.tsx # 기간 비교 섹션
+│   │   └── DayOfWeekTable.tsx      # 요일별 매출 표
+│   ├── customer/
+│   │   ├── header.tsx              # 고객 헤더
+│   │   ├── customer-layout-inner.tsx # 고객 레이아웃 래퍼
+│   │   └── account-nav.tsx         # 계정 네비게이션
 │   ├── TaskActionButton.tsx        # 작업 실행 버튼 (client)
 │   ├── RetryTaskButton.tsx         # 재시도 버튼 (client)
+│   ├── CollectExternalButton.tsx   # 외부요인 수집 버튼 (client)
+│   ├── RefreshExternalFactorButton.tsx # 외부요인 갱신 버튼 (client)
 │   ├── CalendarView.tsx            # 달력 컴포넌트
-│   └── WeightsManager.tsx          # 가중치 관리 UI
+│   ├── WeightsManager.tsx          # 가중치 관리 UI
+│   ├── SalesForm.tsx               # 매출 입력 폼
+│   ├── SettingsForm.tsx            # 설정 폼
+│   ├── PageHeader.tsx              # 페이지 제목 + 브레드크럼
+│   ├── FilterBar.tsx               # 날짜/필터 바
+│   ├── StatCard.tsx                # 요약 통계 카드
+│   ├── EmptyState.tsx              # 빈 상태 플레이스홀더
+│   ├── ConfirmDeleteDialog.tsx     # 삭제 확인 모달
+│   ├── DeleteRecordButton.tsx      # 레코드 삭제 버튼
+│   ├── DeletePredictionButton.tsx  # 예측 삭제 버튼
+│   └── Navigation.tsx              # 상단 네비게이션 바
+├── lib/
+│   ├── auth/
+│   │   ├── index.ts                # 인증 exports
+│   │   ├── session.ts              # 세션 관리 (getSession, setSession)
+│   │   ├── session-edge.ts         # Edge 호환 세션 처리
+│   │   └── dal.ts                  # 인증 데이터 접근 레이어
+│   ├── services/
+│   │   ├── analytics/
+│   │   │   └── index.ts            # 분석 서비스 레이어 (집계, 비교, 세그먼트)
+│   │   ├── predictionService.ts    # 예측 핵심 로직
+│   │   ├── externalFactorService.ts # 외부요인 수집
+│   │   ├── importService.ts        # CSV 임포트
+│   │   ├── taskService.ts          # Task 생명주기 관리
+│   │   └── schedulerService.ts     # 고수준 자동화 오케스트레이션
+│   ├── providers/
+│   │   ├── weather/index.ts        # Open-Meteo 날씨 프로바이더 (+ mock)
+│   │   ├── holiday/index.ts        # Nager.at 공휴일 프로바이더 (+ mock)
+│   │   ├── school-holiday/index.ts # 규칙 기반 NZ 방학 프로바이더
+│   │   ├── events/index.ts         # 지역 이벤트 플레이스홀더
+│   │   ├── news/index.ts           # NewsAPI.org 프로바이더 (+ mock)
+│   │   └── index.ts                # 프로바이더 팩토리
+│   ├── config/
+│   │   └── navigation.ts           # 네비게이션 메뉴 구조
+│   ├── utils/
+│   │   ├── business-date.ts        # 영업일 날짜 유틸
+│   │   └── weather-icon.ts         # 날씨 → 이모지 매핑
+│   ├── translations/
+│   │   └── en.ts                   # 영문 번역
+│   ├── analytics-utils.ts          # 분석 유틸 (포맷, 날짜, 변화율)
+│   ├── analytics.ts                # 기본 분석 함수
+│   ├── task-utils.ts               # Task 유틸 (상태 표시 등)
+│   ├── prediction-utils.ts         # 예측 유틸 함수
+│   ├── csv-parser.ts               # CSV 파싱 로직
+│   ├── validations.ts              # Zod 유효성 스키마
+│   ├── useTranslation.ts           # 번역 훅
+│   ├── db.ts                       # Prisma 클라이언트
+│   └── utils.ts                    # 공통 유틸 (통화/날짜 포맷 등)
 ├── prisma/
 │   ├── schema.prisma               # DB 스키마 (ScheduledTask, TaskLog 포함)
 │   └── seed.ts                     # 샘플 데이터 (Task 샘플 포함)
-└── types/
-    └── index.ts                    # TypeScript 타입 정의 (TaskStatus 등 포함)
+├── types/
+│   └── index.ts                    # TypeScript 타입 정의 (TaskStatus 등 포함)
+└── docs/                           # 추가 문서
+    ├── AUTH.md                     # 인증 흐름
+    ├── ADMIN_USER_MANAGEMENT.md    # 관리자 & 사용자 관리
+    ├── CUSTOMER_ACCOUNT.md         # 고객 계정 기능
+    ├── DOMAIN_DESIGN.md            # 도메인 모델 설계
+    └── NAVIGATION.md               # 네비게이션 구조
 ```
 
 ---
 
-## 🗂️ Admin Catalog Management (카탈로그 관리)
+## 🗂️ Admin Catalog Management — 향후 계획
+
+> **⚠️ 미구현**: 아래 내용은 구현 예정 설계입니다. 현재 코드베이스에 해당 페이지 및 API 엔드포인트가 존재하지 않습니다.
 
 ### Overview / 개요
 
-카탈로그 관리 화면은 외부 POS(Loyverse) 에서 동기화된 카테고리/아이템/모디파이어 데이터를 관리자가 확인하고 내부 표시 설정을 조정하는 화면입니다.
+Loyverse POS 연동이 완료된 후, 카탈로그 관리 화면을 통해 동기화된 카테고리/아이템/모디파이어 데이터를 관리자가 확인하고 내부 표시 설정을 조정할 예정입니다.
 
 > **철학**: 카탈로그 데이터는 외부 소스(Loyverse)가 source-of-truth입니다.
 > 관리자 화면에서 핵심 필드(이름, 가격 등)를 임의로 수정하지 않고,
 > 내부 관리 필드(표시순서, 노출여부)만 조정합니다.
 > 데이터를 변경하려면 먼저 Loyverse에서 수정 후 동기화를 실행하세요.
 
-### Pages / 관리 페이지
+### 계획 페이지
 
-| 경로 | 설명 |
-|------|------|
-| `/admin/categories` | 카테고리 표시 순서 및 노출 여부 관리 |
-| `/admin/items` | 동기화된 상품 조회 및 내부 상태 관리 |
-| `/admin/modifiers` | 동기화된 modifier group / option 조회 |
-
-### Categories (`/admin/categories`)
-
-- 카테고리 목록 조회 (DB 기반, 하드코딩 상수 사용 안 함)
-- `sortOrder` (표시순서) 인라인 수정 가능 — blur 또는 Enter 시 저장
-- `isVisible` 토글 스위치로 즉시 변경
-- source type / source ref / sync status / synced at 표시
-- 검색 필터 지원
-
-### Items (`/admin/items`)
-
-- 동기화된 아이템 목록 조회 (카테고리 필터 / 검색 지원)
-- 이미지 썸네일, 가격, 카테고리, 소스 정보, modifier group count 표시
-- `isVisible` 토글로 노출 여부 즉시 변경
-- Details 버튼으로 모달 상세 보기 — modifier group 연결 정보 확인 가능
-- 외부 소스 기반 아이템은 핵심 필드 표시만 (수정 불가 구조)
-
-### Modifiers (`/admin/modifiers`)
-
-- modifier group 목록 조회
-- 각 그룹의 option 수, min/max 선택 규칙, 연결된 아이템 수 표시
-- 행 옆 ▶/▼ 버튼으로 option 목록 펼치기 — option명, 가격 추가금, default 여부, 활성 상태 표시
-- `isActive` 토글로 그룹 활성/비활성 변경
-- source type / source ref / synced at 표시
-
-### Data Philosophy / 데이터 철학
-
-1. **Mirror-First**: Loyverse 데이터 → `channel_*` 미러 테이블 → 정규 canonical 테이블
-2. **Source-of-Truth**: 외부 POS가 원본. 관리자 화면에서 이름/가격 등 core field는 수정하지 않음
-3. **Internal Fields Only**: `sortOrder`, `isVisible`, `isActive` 같은 내부 관리 필드만 관리자 화면에서 변경 가능
-4. **Sync to Update**: 외부 원본 변경 → Loyverse에서 수정 → `/admin/integrations/loyverse` 에서 🔄 Sync 실행
-
-### Access Control / 권한
-
-| 역할 | 접근 가능 여부 |
-|------|-----------|
-| ADMIN | ✅ 카탈로그 관리 전체 접근 |
-| STAFF | ❌ 카탈로그 관리 접근 불가 |
-| CUSTOMER | ❌ 카탈로그 관리 접근 불가 |
-
-모든 `/admin/catalog/*` API 엔드포인트는 ADMIN 권한을 요구합니다.
-
-### Sync Flow / 동기화 흐름
-
-```
-Loyverse POS
-  └→ POST /api/admin/integrations/loyverse/catalog-sync
-       └→ Mirror Phase: ChannelCategory / ChannelItem / ChannelModifierGroup 등 upsert
-       └→ Canonical Phase: Category / Item / ModifierGroup 생성 + Mapping 연결
-            └→ /admin/categories, /admin/items, /admin/modifiers 에서 확인 가능
-```
-
-### API Endpoints / API 엔드포인트
-
-| 경로 | 메서드 | 설명 |
-|------|--------|------|
-| `PATCH /api/admin/catalog/categories/[id]` | PATCH | 카테고리 sortOrder / isVisible 업데이트 |
-| `PATCH /api/admin/catalog/items/[id]` | PATCH | 아이템 isVisible / isActive 업데이트 |
-| `PATCH /api/admin/catalog/modifiers/[id]` | PATCH | modifier group isActive 업데이트 |
-| `GET /api/admin/catalog/items/[id]/modifiers` | GET | 아이템에 연결된 modifier group 목록 |
+| 경로 | 설명 | 상태 |
+|------|------|------|
+| `/admin/categories` | 카테고리 표시 순서 및 노출 여부 관리 | 🔲 미구현 |
+| `/admin/items` | 동기화된 상품 조회 및 내부 상태 관리 | 🔲 미구현 |
+| `/admin/modifiers` | 동기화된 modifier group / option 조회 | 🔲 미구현 |
 
