@@ -43,7 +43,7 @@ export default async function proxy(req: NextRequest) {
   // Redirect authenticated users away from login page
   if (isPublicRoute(path) && isAuthenticated) {
     const dest =
-      role === Role.ADMIN ? "/admin" :
+      role === Role.ADMIN ? "/dashboard" :
       role === Role.STAFF ? "/staff" :
       "/account";
     return NextResponse.redirect(new URL(dest, req.nextUrl));

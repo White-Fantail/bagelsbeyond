@@ -82,7 +82,7 @@ export async function loginAction(
 
   // Redirect based on role
   const destination =
-    user.role === "ADMIN" ? "/admin" :
+    user.role === "ADMIN" ? "/dashboard" :
     user.role === "STAFF" ? "/staff" :
     "/account";
 

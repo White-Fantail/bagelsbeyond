@@ -101,8 +101,8 @@ export default async function AdminUsersPage({
       <div className="flex items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
-            <Link href="/admin" className="hover:text-amber-600 transition-colors">
-              Admin Dashboard
+            <Link href="/dashboard" className="hover:text-amber-600 transition-colors">
+              Operations Dashboard
             </Link>
             <span>/</span>
             <span className="text-gray-700 font-medium">Users</span>
