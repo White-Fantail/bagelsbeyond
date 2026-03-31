@@ -140,7 +140,9 @@ export async function syncLoyverseModifiers(
       groups_upserted++;
 
       // Reconcile store links
-      const upstreamStoreIds = (mod.stores ?? []).map((s) => s.store_id);
+      const upstreamStoreIds = (mod.stores ?? [])
+        .map((s) => s.store_id)
+        .filter((id): id is string => id != null);
       if (upstreamStoreIds.length > 0) {
         for (const storeId of upstreamStoreIds) {
           try {
@@ -166,13 +168,19 @@ export async function syncLoyverseModifiers(
           }
         }
         // Remove stale store links
-        await prisma.channelModifierGroupStoreLink.deleteMany({
-          where: {
-            channel: Channel.LOYVERSE,
-            channelModifierGroupId: channelModGroup.id,
-            storeExternalId: { notIn: upstreamStoreIds },
-          },
-        });
+        try {
+          await prisma.channelModifierGroupStoreLink.deleteMany({
+            where: {
+              channel: Channel.LOYVERSE,
+              channelModifierGroupId: channelModGroup.id,
+              storeExternalId: { notIn: upstreamStoreIds },
+            },
+          });
+        } catch (err) {
+          warnings.push(
+            `modifier group ${mod.id} store link cleanup: ${err instanceof Error ? err.message : String(err)}`
+          );
+        }
       }
 
       // Upsert modifier options
@@ -261,7 +269,9 @@ export async function syncLoyversePaymentTypes(
       upserted++;
 
       // Reconcile store links
-      const upstreamStoreIds = (pt.stores ?? []).map((s) => s.store_id);
+      const upstreamStoreIds = (pt.stores ?? [])
+        .map((s) => s.store_id)
+        .filter((id): id is string => id != null);
       for (const storeId of upstreamStoreIds) {
         try {
           await prisma.channelPaymentTypeStoreLink.upsert({
@@ -286,13 +296,19 @@ export async function syncLoyversePaymentTypes(
         }
       }
       if (upstreamStoreIds.length > 0) {
-        await prisma.channelPaymentTypeStoreLink.deleteMany({
-          where: {
-            channel: Channel.LOYVERSE,
-            channelPaymentTypeId: channelPt.id,
-            storeExternalId: { notIn: upstreamStoreIds },
-          },
-        });
+        try {
+          await prisma.channelPaymentTypeStoreLink.deleteMany({
+            where: {
+              channel: Channel.LOYVERSE,
+              channelPaymentTypeId: channelPt.id,
+              storeExternalId: { notIn: upstreamStoreIds },
+            },
+          });
+        } catch (err) {
+          warnings.push(
+            `payment type ${pt.id} store link cleanup: ${err instanceof Error ? err.message : String(err)}`
+          );
+        }
       }
     } catch (err) {
       warnings.push(`payment type ${pt.id}: ${err instanceof Error ? err.message : String(err)}`);
