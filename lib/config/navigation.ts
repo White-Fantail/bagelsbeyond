@@ -15,7 +15,7 @@
  *  Public    : /  /login  /signup
  *  Customer  : /account/**
  *  Staff     : /staff  /sales  /calendar
- *  Admin     : /admin/**  /analytics  /weights  /settings  /imports  /external-factors  /tasks
+ *  Admin     : /dashboard  /analytics  /weights  /settings  /imports  /external-factors  /tasks  /admin/**
  */
 
 import type { Role } from "@/app/generated/prisma/enums";
@@ -110,13 +110,13 @@ export const STAFF_NAV: RoleNavConfig = {
 // ── Admin ─────────────────────────────────────────────────────────────────────
 
 export const ADMIN_NAV: RoleNavConfig = {
-  dashboardHref: "/admin",
-  dashboardLabel: "Admin Dashboard",
+  dashboardHref: "/dashboard",
+  dashboardLabel: "Operations Dashboard",
   groups: [
     {
       id: "dashboard",
       label: "Dashboard",
-      items: [{ href: "/admin", label: "Operations Dashboard" }],
+      items: [{ href: "/dashboard", label: "Operations Dashboard" }],
     },
     {
       id: "sales",
