@@ -42,18 +42,7 @@ User (prisma model)
 ├─ role = CUSTOMER
 ├─ isActive = true
 ├─ createdAt, updatedAt
-└─ customerProfile? (1:1 관계, 향후 확장용)
-
-CustomerProfile (prisma model, 선택적)
-├─ userId (User 참조)
-├─ phone
-├─ preferredPickupNote
-├─ marketingOptIn
-├─ createdAt, updatedAt
 ```
-
-`CustomerProfile`은 향후 주문/구독/픽업 메모/마케팅 동의 등을 저장하기 위한 확장 포인트입니다.  
-현재는 모델 구조만 정의되어 있으며, UI는 추후 단계에서 연결됩니다.
 
 ---
 
@@ -69,7 +58,7 @@ CustomerProfile (prisma model, 선택적)
 
 - 📦 **내 주문** — 향후 주문 내역 연결 예정
 - 🔄 **내 구독** — 향후 정기 구독 플랜 연결 예정
-- 📍 **픽업 정보** — 향후 CustomerProfile.preferredPickupNote 연결 예정
+- 📍 **픽업 정보** — 향후 연결 예정
 - 💳 **결제 수단** — 향후 결제 시스템 연결 예정
 
 ---
@@ -136,7 +125,7 @@ model Subscription {
 ```
 
 - `/account` 페이지의 "내 주문", "내 구독" 카드에 실제 링크 연결
-- `CustomerProfile`에 픽업 메모, 연락처 등 추가
+- 픽업 메모, 연락처 등은 User 모델 확장 또는 별도 모델로 추가
 - 각 기능은 `userId = session.userId` 기준으로만 데이터 접근
 
 ---
@@ -158,5 +147,5 @@ model Subscription {
 ## 10. 후속 추천 작업
 
 1. **이메일 인증 추가** — 회원가입 시 이메일 인증 링크 발송 (`isEmailVerified` 필드)
-2. **CustomerProfile UI 연결** — 전화번호, 픽업 메모, 마케팅 동의 수정 기능
+2. **픽업 메모·연락처 추가** — User 모델 확장 또는 별도 모델로 전화번호, 픽업 메모 저장
 3. **주문 내역 페이지** — `Order` 모델 추가 후 `/account` 주문 섹션 연결
