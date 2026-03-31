@@ -87,6 +87,37 @@ model PredictionWeight {
   @@map("prediction_weights")
 }
 
+// ─── Weight Set Versioning ────────────────────────────────────────────────────
+
+model WeightSet {
+  id          String           @id @default(cuid())
+  version     Int
+  name        String
+  description String?
+  isActive    Boolean          @default(false)
+  source      String           @default("manual") // manual | auto_optimized
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  entries     WeightSetEntry[]
+
+  @@map("weight_sets")
+}
+
+model WeightSetEntry {
+  id          String     @id @default(cuid())
+  weightSetId String
+  factorKey   String
+  weightValue Float
+  isActive    Boolean    @default(true)
+  description String?
+  createdAt   DateTime   @default(now())
+
+  weightSet   WeightSet  @relation(fields: [weightSetId], references: [id], onDelete: Cascade)
+
+  @@map("weight_set_entries")
+}
+
 model AppSetting {
   id                      String   @id @default(cuid())
   shopName                String   @default("Bagels Beyond")
