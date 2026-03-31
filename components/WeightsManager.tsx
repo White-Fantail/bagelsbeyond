@@ -206,9 +206,9 @@ export default function WeightsManager({ initialWeights }: Props) {
       </div>
 
       {/* Guide */}
-      <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 text-xs text-blue-700">
-        <strong>💡 Weights Guide:</strong> Weights are ratios relative to Predicted Sales. <code>+0.2</code> = 20% increase, <code>-0.15</code> = 15% decrease.
-        Typically recommended range: <strong>-1.0 ~ +1.0</strong>.
+      <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-800">
+        <strong>🥯 Weights Guide:</strong> Weights are percentage multipliers applied to both predicted <strong>bagel count</strong> (the primary operational metric) and sales. <code>+0.2</code> = 20% increase, <code>-0.15</code> = 15% decrease.
+        Typically recommended range: <strong>-1.0 ~ +1.0</strong>. Accuracy is assessed based on bagel count prediction error.
       </div>
 
       {/* Weights Table */}

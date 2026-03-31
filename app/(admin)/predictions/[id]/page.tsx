@@ -84,9 +84,9 @@ export default async function PredictionDetailPage({
 
       {/* Main Results */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <ResultCard title="Predicted Total Sales" value={formatCurrency(prediction.predictedSales)} highlight />
-        <ResultCard title="Predicted Sold Bagels" value={`${prediction.predictedBagelsSold}`} />
-        <ResultCard title="Recommended Production" value={`${prediction.recommendedBagelsToBake}`} highlight />
+        <ResultCard title="🥯 Predicted Sold Bagels" value={`${prediction.predictedBagelsSold}`} highlight />
+        <ResultCard title="🥯 Recommended Production" value={`${prediction.recommendedBagelsToBake}`} highlight />
+        <ResultCard title="Predicted Total Sales" value={formatCurrency(prediction.predictedSales)} />
         <ResultCard title="Predicted Remaining" value={`${prediction.predictedLeftovers}`} />
       </div>
 
@@ -156,33 +156,46 @@ export default async function PredictionDetailPage({
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
           <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
             <h2 className="text-sm font-semibold text-gray-700">Impact by Applied Factor</h2>
+            <p className="text-xs text-gray-400 mt-0.5">Weight effects on predicted bagel count and sales</p>
           </div>
           <table className="min-w-full divide-y divide-gray-100">
             <thead>
               <tr className="bg-gray-50">
                 <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Factor</th>
                 <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Value</th>
-                <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">Weights</th>
-                <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">Impact (Sales)</th>
+                <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">Weight</th>
+                <th className="px-4 py-2 text-right text-xs font-medium text-amber-600">🥯 Bagel Impact</th>
+                <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">Sales Impact</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {prediction.factorSnapshots.map((f) => (
-                <tr key={f.id}>
-                  <td className="px-4 py-2 text-sm text-gray-900">{f.factorLabel}</td>
-                  <td className="px-4 py-2 text-sm text-gray-500">{f.factorValue}</td>
-                  <td className="px-4 py-2 text-sm text-right">
-                    <span className={`font-medium ${f.appliedWeight >= 0 ? "text-green-600" : "text-red-600"}`}>
-                      {f.appliedWeight >= 0 ? "+" : ""}{(f.appliedWeight * 100).toFixed(0)}%
-                    </span>
-                  </td>
-                  <td className="px-4 py-2 text-sm text-right">
-                    <span className={f.impactScore >= 0 ? "text-green-600" : "text-red-600"}>
-                      {f.impactScore >= 0 ? "+" : ""}{formatCurrency(f.impactScore)}
-                    </span>
-                  </td>
-                </tr>
-              ))}
+              {prediction.factorSnapshots.map((f) => {
+                // Estimate bagel impact: impactScore is in sales units; convert via baseline ratio
+                const bagelImpactEstimate = prediction.predictedSales > 0
+                  ? Math.round((f.impactScore / prediction.predictedSales) * prediction.predictedBagelsSold)
+                  : 0;
+                return (
+                  <tr key={f.id}>
+                    <td className="px-4 py-2 text-sm text-gray-900">{f.factorLabel}</td>
+                    <td className="px-4 py-2 text-sm text-gray-500">{f.factorValue}</td>
+                    <td className="px-4 py-2 text-sm text-right">
+                      <span className={`font-medium ${f.appliedWeight >= 0 ? "text-green-600" : "text-red-600"}`}>
+                        {f.appliedWeight >= 0 ? "+" : ""}{(f.appliedWeight * 100).toFixed(0)}%
+                      </span>
+                    </td>
+                    <td className="px-4 py-2 text-sm text-right">
+                      <span className={`font-semibold ${bagelImpactEstimate >= 0 ? "text-green-600" : "text-red-600"}`}>
+                        {bagelImpactEstimate >= 0 ? "+" : ""}{bagelImpactEstimate}
+                      </span>
+                    </td>
+                    <td className="px-4 py-2 text-sm text-right">
+                      <span className={f.impactScore >= 0 ? "text-green-600" : "text-red-600"}>
+                        {f.impactScore >= 0 ? "+" : ""}{formatCurrency(f.impactScore)}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -190,26 +203,20 @@ export default async function PredictionDetailPage({
 
       {/* Actual vs Predicted */}
       {comparison && (
-        <div className="bg-white rounded-lg border border-blue-200 overflow-hidden">
-          <div className="px-4 py-3 border-b border-blue-100 bg-blue-50 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-blue-800">📊 Predictions vs Actual Comparison</h2>
+        <div className="bg-white rounded-lg border border-amber-200 overflow-hidden">
+          <div className="px-4 py-3 border-b border-amber-100 bg-amber-50 flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-amber-900">🥯 Predictions vs Actual Comparison</h2>
             <AccuracyBadge direction={comparison.direction} label={comparison.label} />
           </div>
           <div className="p-4">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <CompareRow
-                label="Total Sales"
-                predicted={formatCurrency(comparison.predictedSales)}
-                actual={formatCurrency(comparison.actualSales)}
-                error={`${comparison.salesError >= 0 ? "+" : ""}${formatCurrency(comparison.salesError)}`}
-                errorPct={comparison.salesErrorPct}
-              />
-              <CompareRow
-                label="Sold Bagels"
+                label="🥯 Sold Bagels"
                 predicted={`${comparison.predictedBagelsSold}`}
                 actual={`${comparison.actualBagelsSold}`}
                 error={`${comparison.bagelsError >= 0 ? "+" : ""}${comparison.bagelsError}`}
                 errorPct={comparison.bagelsErrorPct}
+                primary
               />
               <CompareRow
                 label="Remaining Bagels"
@@ -217,6 +224,13 @@ export default async function PredictionDetailPage({
                 actual={`${comparison.actualLeftovers}`}
                 error={`${comparison.leftoversError >= 0 ? "+" : ""}${comparison.leftoversError}`}
                 errorPct={comparison.predictedLeftovers > 0 ? comparison.leftoversError / comparison.predictedLeftovers * 100 : 0}
+              />
+              <CompareRow
+                label="Total Sales"
+                predicted={formatCurrency(comparison.predictedSales)}
+                actual={formatCurrency(comparison.actualSales)}
+                error={`${comparison.salesError >= 0 ? "+" : ""}${formatCurrency(comparison.salesError)}`}
+                errorPct={comparison.salesErrorPct}
               />
             </div>
           </div>
@@ -285,18 +299,20 @@ function CompareRow({
   actual,
   error,
   errorPct,
+  primary = false,
 }: {
   label: string;
   predicted: string;
   actual: string;
   error: string;
   errorPct: number;
+  primary?: boolean;
 }) {
   const absPct = Math.abs(errorPct);
   const pctColor = absPct <= 5 ? "text-green-600" : absPct <= 15 ? "text-yellow-600" : "text-red-600";
   return (
-    <div className="space-y-1 p-3 bg-gray-50 rounded-lg">
-      <p className="text-xs font-semibold text-gray-500 uppercase">{label}</p>
+    <div className={`space-y-1 p-3 rounded-lg ${primary ? "bg-amber-50 ring-1 ring-amber-200" : "bg-gray-50"}`}>
+      <p className={`text-xs font-semibold uppercase ${primary ? "text-amber-700" : "text-gray-500"}`}>{label}</p>
       <div className="flex justify-between text-sm">
         <span className="text-gray-500">Predictions</span>
         <span className="text-gray-700">{predicted}</span>

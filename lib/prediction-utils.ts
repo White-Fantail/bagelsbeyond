@@ -85,13 +85,14 @@ export function comparePredictedVsActual(
   const leftoversError = actualLeftovers - safeNumber(prediction.predictedLeftovers);
   const leftoversErrorAbs = Math.abs(leftoversError);
 
-  const absSalesPct = Math.abs(salesErrorPct);
+  // Accuracy direction is based on bagel count, not revenue — bagel count is what drives operations
+  const absBagelsPct = Math.abs(bagelsErrorPct);
   let direction: "over" | "under" | "accurate";
-  if (absSalesPct <= 5) direction = "accurate";
-  else if (salesError < 0) direction = "over"; // predicted more than actual
-  else direction = "under"; // predicted less than actual
+  if (absBagelsPct <= 5) direction = "accurate";
+  else if (bagelsError < 0) direction = "over"; // predicted more bagels than actually sold
+  else direction = "under"; // predicted fewer bagels than actually sold
 
-  const label = getPredictionAccuracyLabel(salesErrorPct);
+  const label = getBagelAccuracyLabel(bagelsErrorPct);
 
   return {
     predictedSales: prediction.predictedSales,
@@ -119,6 +120,15 @@ export function getPredictionAccuracyLabel(salesErrorPct: number): string {
   if (abs <= 10) return salesErrorPct > 0 ? "Slightly underpredicted" : "Slightly overpredicted";
   if (abs <= 20) return salesErrorPct > 0 ? "Underpredicted" : "Overpredicted";
   return salesErrorPct > 0 ? "Significantly underpredicted" : "Significantly overpredicted";
+}
+
+// Bagel-count accuracy label (used as the primary accuracy signal)
+export function getBagelAccuracyLabel(bagelsErrorPct: number): string {
+  const abs = Math.abs(bagelsErrorPct);
+  if (abs <= 5) return "Accurate";
+  if (abs <= 10) return bagelsErrorPct > 0 ? "Slightly underpredicted" : "Slightly overpredicted";
+  if (abs <= 20) return bagelsErrorPct > 0 ? "Underpredicted" : "Overpredicted";
+  return bagelsErrorPct > 0 ? "Significantly underpredicted" : "Significantly overpredicted";
 }
 
 export function calculateErrorRate(predicted: number, actual: number): number {
