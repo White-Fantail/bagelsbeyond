@@ -452,64 +452,30 @@ CRON_SECRET=your-random-secret-here
 
 ---
 
-## 🔌 Loyverse POS 연동 (Phase 5)
+## 🔌 Loyverse POS 연동 (향후 계획)
+
+> **⚠️ 미구현**: 아래 내용은 구현 예정 설계입니다. 현재 코드베이스에 해당 파일 및 API가 존재하지 않습니다.
 
 ### 개요
 
-Loyverse POS의 상품 카탈로그를 내부 Product 구조로 자동 동기화하고, 내부 주문을 Loyverse 영수증으로 전송하며, Loyverse 영수증 내역으로부터 일별 판매 수량을 가져오는 기능이 구현되어 있습니다.
+Loyverse POS의 상품 카탈로그를 내부 Product 구조로 자동 동기화하고, 내부 주문을 Loyverse 영수증으로 전송하며, Loyverse 영수증 내역으로부터 일별 판매 수량을 가져오는 기능을 구현할 예정입니다.
 
-### 구현 범위
+### 계획 범위
 
-| 기능 | 상태 | 파일 |
-|------|------|------|
-| 카탈로그 동기화 (Loyverse → Product) | ✅ Phase 5A | `lib/integrations/services/catalog-sync.ts` |
-| 카탈로그 매퍼 (Raw → ExternalProduct) | ✅ Phase 5A | `lib/integrations/services/catalog-mapper.ts` |
-| 주문 POS 전송 (POST /receipts) | ✅ Phase 5B | `lib/integrations/adapters/pos/loyverse.ts` |
-| 일별 판매 수량 동기화 (GET /receipts) | ✅ Phase 5B | `lib/integrations/adapters/pos/loyverse.ts` |
-| 모디파이어 그룹 이름 변경 안전성 | ✅ Phase 5B | `ExternalOptionGroupMap` 모델 |
-| 관리자 UI (`/admin/integrations/loyverse`) | ✅ Phase 5A | `app/admin/integrations/loyverse/` |
+| 기능 | 상태 |
+|------|------|
+| 카탈로그 동기화 (Loyverse → Product) | 🔲 미구현 |
+| 카탈로그 매퍼 (Raw → ExternalProduct) | 🔲 미구현 |
+| 주문 POS 전송 (POST /receipts) | 🔲 미구현 |
+| 일별 판매 수량 동기화 (GET /receipts) | 🔲 미구현 |
+| 관리자 UI (`/admin/integrations/loyverse`) | 🔲 미구현 |
 
-### ExternalOptionGroupMap (Phase 5B 신규)
+### 관련 환경 변수 (연동 구현 후 사용)
 
-Phase 5A에서는 모디파이어 그룹을 `(productId, name)` 으로 식별했기 때문에, Loyverse에서 그룹 이름을 변경하면 기존 그룹이 유지된 채 새 그룹이 추가되는 문제가 있었습니다.
-
-Phase 5B에서 `ExternalOptionGroupMap` 테이블을 추가하여 `(source, externalOptionGroupId)` 기반으로 그룹을 식별하도록 개선했습니다.
-
-- 기존(Phase 5A 이전) 그룹: 이름 매칭으로 채택 후 매핑 생성 (마이그레이션 호환)
-- 이후 sync: `externalId` 기반 lookup → 이름 변경 시에도 기존 그룹 갱신
-
-### Loyverse 어댑터 메서드
-
-| 메서드 | 설명 |
+| 변수명 | 목적 |
 |--------|------|
-| `fetchExternalCatalog()` | 전체 카탈로그 fetch + 정규화 |
-| `pushOrderToExternalPos(order)` | 내부 주문 → Loyverse POST /receipts |
-| `syncInventoryFromExternal(date)` | 특정 날짜 Loyverse 영수증 → 판매 수량 집계 |
-
-**Mock 모드 (`LOYVERSE_MOCK=true` 또는 토큰 미설정):**
-- `fetchExternalCatalog` → 내장 목 데이터 반환
-- `pushOrderToExternalPos` → `MOCK-{orderNumber}` 반환
-- `syncInventoryFromExternal` → 빈 객체 반환
-
-### 동기화 정책
-
-```
-외부 상품 1개 → 내부 Product 1개
-덮어쓰는 필드: name, description, basePrice, isActive, category
-보호되는 필드: slug, sortOrder, isSubscriptionEligible
-
-모디파이어 그룹:
-  • ExternalOptionGroupMap(source, externalId) 기반 lookup (rename-safe)
-  • minSelect / maxSelect / isRequired: 첫 생성 시만 기본값 적용 (이후 sync에서 보호)
-  • Option.priceDelta: 매 sync마다 POS 값으로 덮어씀
-```
-
-### 관련 API 엔드포인트
-
-| 경로 | 메서드 | 설명 |
-|------|--------|------|
-| `GET /api/admin/integrations/loyverse/status` | GET | 연동 상태 + 매핑된 상품 수 |
-| `POST /api/admin/integrations/loyverse/sync` | POST | 카탈로그 즉시 동기화 트리거 |
+| `LOYVERSE_ACCESS_TOKEN` | Loyverse API 인증 토큰 |
+| `LOYVERSE_MOCK` | `true` 설정 시 Mock 모드 동작 |
 
 ---
 
@@ -707,82 +673,24 @@ Phase 5B에서 `ExternalOptionGroupMap` 테이블을 추가하여 `(source, exte
 
 ---
 
-## 🗂️ Admin Catalog Management (카탈로그 관리)
+## 🗂️ Admin Catalog Management — 향후 계획
+
+> **⚠️ 미구현**: 아래 내용은 구현 예정 설계입니다. 현재 코드베이스에 해당 페이지 및 API 엔드포인트가 존재하지 않습니다.
 
 ### Overview / 개요
 
-카탈로그 관리 화면은 외부 POS(Loyverse) 에서 동기화된 카테고리/아이템/모디파이어 데이터를 관리자가 확인하고 내부 표시 설정을 조정하는 화면입니다.
+Loyverse POS 연동이 완료된 후, 카탈로그 관리 화면을 통해 동기화된 카테고리/아이템/모디파이어 데이터를 관리자가 확인하고 내부 표시 설정을 조정할 예정입니다.
 
 > **철학**: 카탈로그 데이터는 외부 소스(Loyverse)가 source-of-truth입니다.
 > 관리자 화면에서 핵심 필드(이름, 가격 등)를 임의로 수정하지 않고,
 > 내부 관리 필드(표시순서, 노출여부)만 조정합니다.
 > 데이터를 변경하려면 먼저 Loyverse에서 수정 후 동기화를 실행하세요.
 
-### Pages / 관리 페이지
+### 계획 페이지
 
-| 경로 | 설명 |
-|------|------|
-| `/admin/categories` | 카테고리 표시 순서 및 노출 여부 관리 |
-| `/admin/items` | 동기화된 상품 조회 및 내부 상태 관리 |
-| `/admin/modifiers` | 동기화된 modifier group / option 조회 |
-
-### Categories (`/admin/categories`)
-
-- 카테고리 목록 조회 (DB 기반, 하드코딩 상수 사용 안 함)
-- `sortOrder` (표시순서) 인라인 수정 가능 — blur 또는 Enter 시 저장
-- `isVisible` 토글 스위치로 즉시 변경
-- source type / source ref / sync status / synced at 표시
-- 검색 필터 지원
-
-### Items (`/admin/items`)
-
-- 동기화된 아이템 목록 조회 (카테고리 필터 / 검색 지원)
-- 이미지 썸네일, 가격, 카테고리, 소스 정보, modifier group count 표시
-- `isVisible` 토글로 노출 여부 즉시 변경
-- Details 버튼으로 모달 상세 보기 — modifier group 연결 정보 확인 가능
-- 외부 소스 기반 아이템은 핵심 필드 표시만 (수정 불가 구조)
-
-### Modifiers (`/admin/modifiers`)
-
-- modifier group 목록 조회
-- 각 그룹의 option 수, min/max 선택 규칙, 연결된 아이템 수 표시
-- 행 옆 ▶/▼ 버튼으로 option 목록 펼치기 — option명, 가격 추가금, default 여부, 활성 상태 표시
-- `isActive` 토글로 그룹 활성/비활성 변경
-- source type / source ref / synced at 표시
-
-### Data Philosophy / 데이터 철학
-
-1. **Mirror-First**: Loyverse 데이터 → `channel_*` 미러 테이블 → 정규 canonical 테이블
-2. **Source-of-Truth**: 외부 POS가 원본. 관리자 화면에서 이름/가격 등 core field는 수정하지 않음
-3. **Internal Fields Only**: `sortOrder`, `isVisible`, `isActive` 같은 내부 관리 필드만 관리자 화면에서 변경 가능
-4. **Sync to Update**: 외부 원본 변경 → Loyverse에서 수정 → `/admin/integrations/loyverse` 에서 🔄 Sync 실행
-
-### Access Control / 권한
-
-| 역할 | 접근 가능 여부 |
-|------|-----------|
-| ADMIN | ✅ 카탈로그 관리 전체 접근 |
-| STAFF | ❌ 카탈로그 관리 접근 불가 |
-| CUSTOMER | ❌ 카탈로그 관리 접근 불가 |
-
-모든 `/admin/catalog/*` API 엔드포인트는 ADMIN 권한을 요구합니다.
-
-### Sync Flow / 동기화 흐름
-
-```
-Loyverse POS
-  └→ POST /api/admin/integrations/loyverse/catalog-sync
-       └→ Mirror Phase: ChannelCategory / ChannelItem / ChannelModifierGroup 등 upsert
-       └→ Canonical Phase: Category / Item / ModifierGroup 생성 + Mapping 연결
-            └→ /admin/categories, /admin/items, /admin/modifiers 에서 확인 가능
-```
-
-### API Endpoints / API 엔드포인트
-
-| 경로 | 메서드 | 설명 |
-|------|--------|------|
-| `PATCH /api/admin/catalog/categories/[id]` | PATCH | 카테고리 sortOrder / isVisible 업데이트 |
-| `PATCH /api/admin/catalog/items/[id]` | PATCH | 아이템 isVisible / isActive 업데이트 |
-| `PATCH /api/admin/catalog/modifiers/[id]` | PATCH | modifier group isActive 업데이트 |
-| `GET /api/admin/catalog/items/[id]/modifiers` | GET | 아이템에 연결된 modifier group 목록 |
+| 경로 | 설명 | 상태 |
+|------|------|------|
+| `/admin/categories` | 카테고리 표시 순서 및 노출 여부 관리 | 🔲 미구현 |
+| `/admin/items` | 동기화된 상품 조회 및 내부 상태 관리 | 🔲 미구현 |
+| `/admin/modifiers` | 동기화된 modifier group / option 조회 | 🔲 미구현 |
 
