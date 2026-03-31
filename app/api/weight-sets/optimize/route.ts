@@ -98,14 +98,20 @@ export async function POST() {
       suggested[key] = Math.max(-1, Math.min(1, current + nudge));
     }
 
-    // Build the final list — keep all existing keys, fill in suggested values
+    // Build the final list — union of existing weight records and any factors newly
+    // discovered through factorSnapshots (handles the case where no weights exist yet).
     const allWeights = await prisma.predictionWeight.findMany({ orderBy: { factorKey: "asc" } });
-    const suggestedEntries = allWeights.map((w) => ({
-      factorKey: w.factorKey,
-      weightValue: suggested[w.factorKey] !== undefined ? Math.round(suggested[w.factorKey] * 1000) / 1000 : w.weightValue,
-      isActive: w.isActive,
-      description: w.description ?? undefined,
-    }));
+    const weightsLookup = new Map(allWeights.map((w) => [w.factorKey as string, w]));
+    const allKeys = [...new Set([...weightsLookup.keys(), ...Object.keys(suggested)])].sort();
+    const suggestedEntries = allKeys.map((key) => {
+      const existing = weightsLookup.get(key);
+      return {
+        factorKey: key,
+        weightValue: suggested[key] !== undefined ? Math.round(suggested[key] * 1000) / 1000 : (existing?.weightValue ?? 0),
+        isActive: existing?.isActive ?? true,
+        description: existing?.description ?? undefined,
+      };
+    });
 
     return NextResponse.json({
       suggestedEntries,
