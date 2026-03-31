@@ -452,33 +452,6 @@ CRON_SECRET=your-random-secret-here
 
 ---
 
-## 🔌 Loyverse POS 연동 (향후 계획)
-
-> **⚠️ 미구현**: 아래 내용은 구현 예정 설계입니다. 현재 코드베이스에 해당 파일 및 API가 존재하지 않습니다.
-
-### 개요
-
-Loyverse POS의 상품 카탈로그를 내부 Product 구조로 자동 동기화하고, 내부 주문을 Loyverse 영수증으로 전송하며, Loyverse 영수증 내역으로부터 일별 판매 수량을 가져오는 기능을 구현할 예정입니다.
-
-### 계획 범위
-
-| 기능 | 상태 |
-|------|------|
-| 카탈로그 동기화 (Loyverse → Product) | 🔲 미구현 |
-| 카탈로그 매퍼 (Raw → ExternalProduct) | 🔲 미구현 |
-| 주문 POS 전송 (POST /receipts) | 🔲 미구현 |
-| 일별 판매 수량 동기화 (GET /receipts) | 🔲 미구현 |
-| 관리자 UI (`/admin/integrations/loyverse`) | 🔲 미구현 |
-
-### 관련 환경 변수 (연동 구현 후 사용)
-
-| 변수명 | 목적 |
-|--------|------|
-| `LOYVERSE_ACCESS_TOKEN` | Loyverse API 인증 토큰 |
-| `LOYVERSE_MOCK` | `true` 설정 시 Mock 모드 동작 |
-
----
-
 ## 🔮 향후 개선 아이디어
 
 - ~~**자동 예측 생성**: cron job으로 매일 자정에 내일 예측 자동 생성~~ ✅ 6단계에서 구현
@@ -670,27 +643,4 @@ Loyverse POS의 상품 카탈로그를 내부 Product 구조로 자동 동기화
     ├── DOMAIN_DESIGN.md            # 도메인 모델 설계
     └── NAVIGATION.md               # 네비게이션 구조
 ```
-
----
-
-## 🗂️ Admin Catalog Management — 향후 계획
-
-> **⚠️ 미구현**: 아래 내용은 구현 예정 설계입니다. 현재 코드베이스에 해당 페이지 및 API 엔드포인트가 존재하지 않습니다.
-
-### Overview / 개요
-
-Loyverse POS 연동이 완료된 후, 카탈로그 관리 화면을 통해 동기화된 카테고리/아이템/모디파이어 데이터를 관리자가 확인하고 내부 표시 설정을 조정할 예정입니다.
-
-> **철학**: 카탈로그 데이터는 외부 소스(Loyverse)가 source-of-truth입니다.
-> 관리자 화면에서 핵심 필드(이름, 가격 등)를 임의로 수정하지 않고,
-> 내부 관리 필드(표시순서, 노출여부)만 조정합니다.
-> 데이터를 변경하려면 먼저 Loyverse에서 수정 후 동기화를 실행하세요.
-
-### 계획 페이지
-
-| 경로 | 설명 | 상태 |
-|------|------|------|
-| `/admin/categories` | 카테고리 표시 순서 및 노출 여부 관리 | 🔲 미구현 |
-| `/admin/items` | 동기화된 상품 조회 및 내부 상태 관리 | 🔲 미구현 |
-| `/admin/modifiers` | 동기화된 modifier group / option 조회 | 🔲 미구현 |
 
