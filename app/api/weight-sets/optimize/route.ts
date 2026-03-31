@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getDayOfWeekKey, safeNumber } from "@/lib/prediction-utils";
 
+// Conservative nudge factor applied to the average relative error per factor.
+const WEIGHT_LEARNING_RATE = 0.5;
+
 // POST /api/weight-sets/optimize
 // Analyses recent prediction accuracy vs actual sales and returns a suggested
 // set of adjusted weights (does NOT persist anything – user must approve).
@@ -12,37 +15,62 @@ export async function POST() {
     const weightMap: Record<string, number> = {};
     for (const w of currentWeights) weightMap[w.factorKey] = w.weightValue;
 
-    // Load last 30 predictions that have matching actual records
+    // Load last 30 predictions with their factor snapshots
     const predictions = await prisma.salesPrediction.findMany({
       orderBy: { targetDate: "desc" },
       take: 30,
       include: { factorSnapshots: true },
     });
 
-    // For each prediction, find actual record and compute per-factor error
+    // Fetch all actual daily records that fall within the prediction date range in one query
+    if (predictions.length === 0) {
+      const allWeights = await prisma.predictionWeight.findMany({ orderBy: { factorKey: "asc" } });
+      return NextResponse.json({
+        suggestedEntries: allWeights.map((w) => ({
+          factorKey: w.factorKey,
+          weightValue: w.weightValue,
+          isActive: w.isActive,
+          description: w.description ?? undefined,
+        })),
+        dataPointCount: 0,
+        message: "No prediction history available — returning current weights unchanged",
+      });
+    }
+
+    const earliest = new Date(predictions[predictions.length - 1].targetDate);
+    earliest.setHours(0, 0, 0, 0);
+    const latest = new Date(predictions[0].targetDate);
+    latest.setHours(23, 59, 59, 999);
+
+    const actualRecords = await prisma.dailyRecord.findMany({
+      where: { date: { gte: earliest, lte: latest } },
+    });
+
+    // Build a lookup: date string (YYYY-MM-DD) → total sales
+    const actualSalesMap: Record<string, number> = {};
+    for (const r of actualRecords) {
+      const key = new Date(r.date).toISOString().split("T")[0];
+      actualSalesMap[key] =
+        safeNumber(r.storeSales) +
+        safeNumber(r.uberSales) +
+        safeNumber(r.doordashSales) +
+        safeNumber(r.otherSales);
+    }
+
+    // Compute per-factor errors
     type FactorError = { sum: number; count: number };
     const factorErrors: Record<string, FactorError> = {};
+    let dataPointCount = 0;
 
     for (const pred of predictions) {
-      const dayStart = new Date(pred.targetDate);
-      dayStart.setHours(0, 0, 0, 0);
-      const dayEnd = new Date(pred.targetDate);
-      dayEnd.setHours(23, 59, 59, 999);
-
-      const actual = await prisma.dailyRecord.findFirst({
-        where: { date: { gte: dayStart, lte: dayEnd } },
-      });
-      if (!actual) continue;
-
-      const actualSales =
-        safeNumber(actual.storeSales) +
-        safeNumber(actual.uberSales) +
-        safeNumber(actual.doordashSales) +
-        safeNumber(actual.otherSales);
+      const dateKey = new Date(pred.targetDate).toISOString().split("T")[0];
+      const actualSales = actualSalesMap[dateKey];
+      if (actualSales === undefined) continue;
 
       const predictedSales = safeNumber(pred.predictedSales);
       if (predictedSales === 0) continue;
 
+      dataPointCount += 1;
       const relativeError = (actualSales - predictedSales) / predictedSales;
 
       for (const snap of pred.factorSnapshots) {
@@ -59,14 +87,13 @@ export async function POST() {
     }
 
     // Build suggested weights: nudge each weight by the average error
-    const LEARNING_RATE = 0.5; // conservative
     const suggested: Record<string, number> = { ...weightMap };
 
     for (const [key, err] of Object.entries(factorErrors)) {
-      if (err.count < 3) continue; // not enough data
+      if (err.count < 3) continue; // not enough data for this factor
       const avgError = err.sum / err.count;
       const current = weightMap[key] ?? 0;
-      const nudge = avgError * LEARNING_RATE;
+      const nudge = avgError * WEIGHT_LEARNING_RATE;
       // Clamp to [-1, 1]
       suggested[key] = Math.max(-1, Math.min(1, current + nudge));
     }
@@ -80,8 +107,6 @@ export async function POST() {
       description: w.description ?? undefined,
     }));
 
-    const dataPointCount = predictions.filter((p) => p.factorSnapshots.length > 0).length;
-
     return NextResponse.json({
       suggestedEntries,
       dataPointCount,
@@ -91,3 +116,4 @@ export async function POST() {
     return NextResponse.json({ message: "Optimization failed" }, { status: 500 });
   }
 }
+
