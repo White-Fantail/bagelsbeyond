@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { apiRequireStaffOrAdmin, isNextResponse } from "@/lib/auth/dal";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
 // POST /api/weight-sets/[id]/activate
 // Activates the requested weight set and overwrites PredictionWeight with its entries.
 export async function POST(_req: NextRequest, { params }: RouteContext) {
+  const authResult = await apiRequireStaffOrAdmin();
+  if (isNextResponse(authResult)) return authResult;
+
   try {
     const { id } = await params;
 

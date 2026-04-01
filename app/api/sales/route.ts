@@ -5,6 +5,9 @@ import { Prisma } from "@/app/generated/prisma/client";
 import { apiRequireStaffOrAdmin, isNextResponse } from "@/lib/auth/dal";
 
 export async function GET() {
+  const authResult = await apiRequireStaffOrAdmin();
+  if (isNextResponse(authResult)) return authResult;
+
   try {
     const records = await prisma.dailyRecord.findMany({
       orderBy: { date: "desc" },

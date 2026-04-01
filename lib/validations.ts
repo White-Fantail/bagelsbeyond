@@ -48,3 +48,21 @@ export const weightSchema = z.object({
   description: z.string().optional(),
 });
 export type WeightSchema = z.infer<typeof weightSchema>;
+
+export const createPredictionSchema = z.object({
+  targetDate: z.string().min(1, "Please enter a date"),
+  autoCollect: z.boolean().optional().default(true),
+  externalFactors: z.object({
+    weatherSummary: z.string().optional().nullable(),
+    minTemp: z.number().optional().nullable(),
+    maxTemp: z.number().optional().nullable(),
+    rainMm: z.number().optional().nullable(),
+    windKph: z.number().optional().nullable(),
+    holidayName: z.string().optional().nullable(),
+    localEventName: z.string().optional().nullable(),
+    schoolHoliday: z.boolean().optional(),
+    nzNewsSummary: z.string().optional().nullable(),
+    worldNewsSummary: z.string().optional().nullable(),
+  }).optional(),
+});
+export type CreatePredictionSchema = z.infer<typeof createPredictionSchema>;

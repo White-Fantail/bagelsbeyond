@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getDayOfWeekKey, safeNumber } from "@/lib/prediction-utils";
+import { apiRequireStaffOrAdmin, isNextResponse } from "@/lib/auth/dal";
 
 // Conservative nudge factor: how far we move the current weight toward the
 // computed ideal on each optimize run.
@@ -33,6 +34,9 @@ function tieredWeightedAvg(values: number[], weights: number[]): number {
 // configured lookback window, using tiered recency weighting.
 // Does NOT persist anything — the user must approve the result.
 export async function POST() {
+  const authResult = await apiRequireStaffOrAdmin();
+  if (isNextResponse(authResult)) return authResult;
+
   try {
     // Load current active weights
     const currentWeights = await prisma.predictionWeight.findMany({ where: { isActive: true } });

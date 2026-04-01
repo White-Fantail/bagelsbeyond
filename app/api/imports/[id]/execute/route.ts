@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { executeImport } from "@/lib/services/importService";
 import { triggerPostImportTasks } from "@/lib/services/schedulerService";
+import { apiRequireStaffOrAdmin, isNextResponse } from "@/lib/auth/dal";
 
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const authResult = await apiRequireStaffOrAdmin();
+  if (isNextResponse(authResult)) return authResult;
+
   try {
     const { id } = await params;
     const body = await req.json() as { overwrite?: boolean };

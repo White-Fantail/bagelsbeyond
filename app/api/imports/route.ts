@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { listImportJobs, createImportJob } from "@/lib/services/importService";
+import { apiRequireStaffOrAdmin, isNextResponse } from "@/lib/auth/dal";
 
 export async function GET() {
+  const authResult = await apiRequireStaffOrAdmin();
+  if (isNextResponse(authResult)) return authResult;
+
   try {
     const jobs = await listImportJobs();
     return NextResponse.json(jobs);
@@ -11,6 +15,9 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const authResult = await apiRequireStaffOrAdmin();
+  if (isNextResponse(authResult)) return authResult;
+
   try {
     const body = await req.json() as { fileName?: string; csvText?: string };
     const { csvText } = body;

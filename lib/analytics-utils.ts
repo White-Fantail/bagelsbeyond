@@ -1,9 +1,4 @@
-export function formatCurrencyNZD(amount: number): string {
-  return new Intl.NumberFormat("en-NZ", {
-    style: "currency",
-    currency: "NZD",
-  }).format(amount);
-}
+export { formatCurrency as formatCurrencyNZD } from "@/lib/utils";
 
 export function formatPercentage(value: number, decimals = 1): string {
   return `${(value * 100).toFixed(decimals)}%`;

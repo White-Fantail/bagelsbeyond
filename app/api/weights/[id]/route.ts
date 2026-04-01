@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { weightSchema } from "@/lib/validations";
+import { apiRequireStaffOrAdmin, isNextResponse } from "@/lib/auth/dal";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
 export async function PUT(req: NextRequest, { params }: RouteContext) {
+  const authResult = await apiRequireStaffOrAdmin();
+  if (isNextResponse(authResult)) return authResult;
+
   try {
     const { id } = await params;
     const body = await req.json();
@@ -28,6 +32,9 @@ export async function PUT(req: NextRequest, { params }: RouteContext) {
 }
 
 export async function DELETE(_req: NextRequest, { params }: RouteContext) {
+  const authResult = await apiRequireStaffOrAdmin();
+  if (isNextResponse(authResult)) return authResult;
+
   try {
     const { id } = await params;
     await prisma.predictionWeight.delete({ where: { id } });
