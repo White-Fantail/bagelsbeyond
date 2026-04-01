@@ -46,6 +46,14 @@ export default function SalesForm({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
+      if (res.status === 409 && !recordId) {
+        const err = await res.json();
+        if (err.existingId) {
+          router.push(`/sales/${err.existingId}/edit`);
+          return;
+        }
+        throw new Error(err.message || "Save failed");
+      }
       if (!res.ok) {
         const err = await res.json();
         throw new Error(err.message || "Save failed");

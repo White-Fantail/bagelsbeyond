@@ -20,43 +20,43 @@ export async function POST(req: NextRequest) {
   const authResult = await apiRequireStaffOrAdmin();
   if (isNextResponse(authResult)) return authResult;
 
+  const body = await req.json();
+  const parsed = salesFormSchema.safeParse(body);
+
+  if (!parsed.success) {
+    return NextResponse.json(
+      { message: "Invalid input", errors: parsed.error.flatten() },
+      { status: 400 }
+    );
+  }
+
+  const {
+    date,
+    bagelsBaked,
+    bagelsLeft,
+    storeSales,
+    uberSales,
+    doordashSales,
+    otherSales,
+    notes,
+    weatherSummary,
+    minTemp,
+    maxTemp,
+    rainMm,
+    windKph,
+    holidayName,
+    localEventName,
+    schoolHoliday,
+    nzNewsSummary,
+    worldNewsSummary,
+  } = parsed.data;
+
+  const hasExternalFactor =
+    weatherSummary || minTemp !== undefined || maxTemp !== undefined ||
+    rainMm !== undefined || windKph !== undefined || holidayName ||
+    localEventName || schoolHoliday || nzNewsSummary || worldNewsSummary;
+
   try {
-    const body = await req.json();
-    const parsed = salesFormSchema.safeParse(body);
-
-    if (!parsed.success) {
-      return NextResponse.json(
-        { message: "Invalid input", errors: parsed.error.flatten() },
-        { status: 400 }
-      );
-    }
-
-    const {
-      date,
-      bagelsBaked,
-      bagelsLeft,
-      storeSales,
-      uberSales,
-      doordashSales,
-      otherSales,
-      notes,
-      weatherSummary,
-      minTemp,
-      maxTemp,
-      rainMm,
-      windKph,
-      holidayName,
-      localEventName,
-      schoolHoliday,
-      nzNewsSummary,
-      worldNewsSummary,
-    } = parsed.data;
-
-    const hasExternalFactor =
-      weatherSummary || minTemp !== undefined || maxTemp !== undefined ||
-      rainMm !== undefined || windKph !== undefined || holidayName ||
-      localEventName || schoolHoliday || nzNewsSummary || worldNewsSummary;
-
     const record = await prisma.dailyRecord.create({
       data: {
         date: new Date(date),
@@ -92,7 +92,14 @@ export async function POST(req: NextRequest) {
   } catch (_error) {
     console.error(_error);
     if (_error instanceof Prisma.PrismaClientKnownRequestError && _error.code === "P2002") {
-      return NextResponse.json({ message: "A record already exists for this date. To edit it, use the Edit page." }, { status: 409 });
+      const existing = await prisma.dailyRecord.findUnique({
+        where: { date: new Date(date) },
+        select: { id: true },
+      });
+      return NextResponse.json(
+        { message: "A record already exists for this date.", existingId: existing?.id },
+        { status: 409 }
+      );
     }
     return NextResponse.json({ message: "Save failed" }, { status: 500 });
   }
