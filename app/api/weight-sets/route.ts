@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { z } from "zod";
+import { apiRequireStaffOrAdmin, isNextResponse } from "@/lib/auth/dal";
 
 const createSetSchema = z.object({
   name: z.string().min(1, "Please enter a name"),
@@ -20,6 +21,9 @@ const createSetSchema = z.object({
 
 // GET /api/weight-sets – list all weight sets (without entries)
 export async function GET() {
+  const authResult = await apiRequireStaffOrAdmin();
+  if (isNextResponse(authResult)) return authResult;
+
   try {
     const sets = await prisma.weightSet.findMany({
       orderBy: { version: "desc" },
@@ -33,6 +37,9 @@ export async function GET() {
 // POST /api/weight-sets – create a new weight set version
 // If no entries are provided in the body the current PredictionWeight rows are snapshotted.
 export async function POST(req: NextRequest) {
+  const authResult = await apiRequireStaffOrAdmin();
+  if (isNextResponse(authResult)) return authResult;
+
   try {
     const body = await req.json();
     const parsed = createSetSchema.safeParse(body);

@@ -2,9 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { buildPredictionInput, calculateRuleBasedPrediction, savePredictionResult } from "@/lib/services/predictionService";
 import { ensureExternalFactorsForPredictionDate } from "@/lib/services/externalFactorService";
-import { z } from "zod";
+import { apiRequireStaffOrAdmin, isNextResponse } from "@/lib/auth/dal";
+import { createPredictionSchema } from "@/lib/validations";
 
 export async function GET() {
+  const authResult = await apiRequireStaffOrAdmin();
+  if (isNextResponse(authResult)) return authResult;
+
   try {
     const predictions = await prisma.salesPrediction.findMany({
       orderBy: { targetDate: "desc" },
@@ -16,24 +20,10 @@ export async function GET() {
   }
 }
 
-const createPredictionSchema = z.object({
-  targetDate: z.string().min(1, "Please enter a date"),
-  autoCollect: z.boolean().optional().default(true),
-  externalFactors: z.object({
-    weatherSummary: z.string().optional().nullable(),
-    minTemp: z.number().optional().nullable(),
-    maxTemp: z.number().optional().nullable(),
-    rainMm: z.number().optional().nullable(),
-    windKph: z.number().optional().nullable(),
-    holidayName: z.string().optional().nullable(),
-    localEventName: z.string().optional().nullable(),
-    schoolHoliday: z.boolean().optional(),
-    nzNewsSummary: z.string().optional().nullable(),
-    worldNewsSummary: z.string().optional().nullable(),
-  }).optional(),
-});
-
 export async function POST(req: NextRequest) {
+  const authResult = await apiRequireStaffOrAdmin();
+  if (isNextResponse(authResult)) return authResult;
+
   try {
     const body = await req.json();
     const parsed = createPredictionSchema.safeParse(body);

@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { apiRequireStaffOrAdmin, isNextResponse } from "@/lib/auth/dal";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
 // GET /api/weight-sets/[id] – fetch one set with entries
 export async function GET(_req: NextRequest, { params }: RouteContext) {
+  const authResult = await apiRequireStaffOrAdmin();
+  if (isNextResponse(authResult)) return authResult;
+
   try {
     const { id } = await params;
     const set = await prisma.weightSet.findUnique({
@@ -20,6 +24,9 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
 
 // DELETE /api/weight-sets/[id] – delete a set (cannot delete active set)
 export async function DELETE(_req: NextRequest, { params }: RouteContext) {
+  const authResult = await apiRequireStaffOrAdmin();
+  if (isNextResponse(authResult)) return authResult;
+
   try {
     const { id } = await params;
     const set = await prisma.weightSet.findUnique({ where: { id } });

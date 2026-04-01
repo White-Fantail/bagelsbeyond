@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { upsertExternalFactorsByDate } from "@/lib/services/externalFactorService";
+import { apiRequireStaffOrAdmin, isNextResponse } from "@/lib/auth/dal";
 
 export const dynamic = "force-dynamic";
 
 type Params = { params: Promise<{ date: string }> };
 
 export async function GET(_req: NextRequest, { params }: Params) {
+  const authResult = await apiRequireStaffOrAdmin();
+  if (isNextResponse(authResult)) return authResult;
+
   try {
     const { date: dateParam } = await params;
     const date = new Date(`${dateParam}T00:00:00.000Z`);
@@ -28,6 +32,9 @@ export async function GET(_req: NextRequest, { params }: Params) {
 
 // POST /api/external-factors/[date] — collect/refresh external factors for a date
 export async function POST(_req: NextRequest, { params }: Params) {
+  const authResult = await apiRequireStaffOrAdmin();
+  if (isNextResponse(authResult)) return authResult;
+
   try {
     const { date: dateParam } = await params;
     const date = new Date(`${dateParam}T00:00:00.000Z`);
