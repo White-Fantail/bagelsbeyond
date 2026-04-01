@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { settingsSchema } from "@/lib/validations";
+import { apiRequireAdmin, isNextResponse } from "@/lib/auth/dal";
 
 export async function GET() {
+  const authResult = await apiRequireAdmin();
+  if (isNextResponse(authResult)) return authResult;
+
   try {
     let settings = await prisma.appSetting.findFirst();
     if (!settings) {
@@ -17,6 +21,9 @@ export async function GET() {
 }
 
 export async function PUT(req: NextRequest) {
+  const authResult = await apiRequireAdmin();
+  if (isNextResponse(authResult)) return authResult;
+
   try {
     const body = await req.json();
     const parsed = settingsSchema.safeParse(body);

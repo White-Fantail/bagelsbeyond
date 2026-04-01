@@ -7,6 +7,9 @@ import { apiRequireStaffOrAdmin, isNextResponse } from "@/lib/auth/dal";
 type RouteContext = { params: Promise<{ id: string }> };
 
 export async function GET(_req: NextRequest, { params }: RouteContext) {
+  const authResult = await apiRequireStaffOrAdmin();
+  if (isNextResponse(authResult)) return authResult;
+
   try {
     const { id } = await params;
     const record = await prisma.dailyRecord.findUnique({

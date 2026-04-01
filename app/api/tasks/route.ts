@@ -11,10 +11,14 @@ import {
   runExternalFactorCollectionTask,
   runPredictionGenerationTask,
 } from "@/lib/services/taskService";
+import { apiRequireStaffOrAdmin, isNextResponse } from "@/lib/auth/dal";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
+  const authResult = await apiRequireStaffOrAdmin();
+  if (isNextResponse(authResult)) return authResult;
+
   try {
     const { searchParams } = req.nextUrl;
     const status = searchParams.get("status") ?? undefined;
@@ -50,6 +54,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const authResult = await apiRequireStaffOrAdmin();
+  if (isNextResponse(authResult)) return authResult;
+
   try {
     const body = await req.json() as { taskType: string; targetDate?: string; runNow?: boolean };
     const { taskType, targetDate, runNow } = body;
