@@ -3,21 +3,13 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { IngredientCategoryRow } from "@/lib/services/ingredientService";
+import { slugify } from "@/lib/utils";
 
 interface Props {
   initialCategories: IngredientCategoryRow[];
 }
 
 type FormMode = { type: "create" } | { type: "edit"; category: IngredientCategoryRow };
-
-function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .replace(/\s+/g, "-")
-    .replace(/[^a-z0-9-]/g, "")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "");
-}
 
 export default function IngredientCategoriesManager({ initialCategories }: Props) {
   const router = useRouter();

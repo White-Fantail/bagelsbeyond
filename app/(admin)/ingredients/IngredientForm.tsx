@@ -14,15 +14,6 @@ const UNIT_OPTIONS = Object.values(UnitType);
 
 type FormErrors = Record<string, string | undefined>;
 
-function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .replace(/\s+/g, "-")
-    .replace(/[^a-z0-9-]/g, "")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "");
-}
-
 export default function IngredientForm({ ingredient, categories }: IngredientFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -337,5 +328,3 @@ export default function IngredientForm({ ingredient, categories }: IngredientFor
     </form>
   );
 }
-
-export { slugify };
