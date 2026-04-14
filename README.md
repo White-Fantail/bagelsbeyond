@@ -644,3 +644,39 @@ CRON_SECRET=your-random-secret-here
     └── NAVIGATION.md               # 네비게이션 구조
 ```
 
+
+---
+
+## 🥯 Phase 1: Menu Costing Foundation
+
+### Added Routes
+
+| Route | Description |
+|-------|-------------|
+| `/ingredients` | Ingredient list with search/category/status filters |
+| `/ingredients/new` | Create new ingredient |
+| `/ingredients/[id]/edit` | Edit ingredient |
+| `/ingredient-categories` | Manage ingredient categories |
+| `GET /api/admin/ingredients` | List ingredients (supports ?search, ?categoryId, ?isActive) |
+| `POST /api/admin/ingredients` | Create ingredient |
+| `GET /api/admin/ingredients/[id]` | Get ingredient by ID |
+| `PATCH /api/admin/ingredients/[id]` | Update ingredient |
+| `DELETE /api/admin/ingredients/[id]` | Archive ingredient (soft disable) |
+| `GET /api/admin/ingredient-categories` | List categories |
+| `POST /api/admin/ingredient-categories` | Create category |
+| `PATCH /api/admin/ingredient-categories/[id]` | Update category |
+
+### Added Prisma Models
+
+**Enum: `UnitType`** — `G`, `KG`, `ML`, `L`, `EA`, `PACK`, `BOX`
+
+**Model: `IngredientCategory`** — `id`, `name` (unique), `slug` (unique), `sortOrder`, `isActive`, timestamps
+
+**Model: `Ingredient`** — `id`, `name`, `categoryId` (nullable FK), `description`, `purchasePrice` (Decimal 10,2), `purchaseQuantity` (Decimal 10,3), `purchaseUnit`, `baseUnit`, `taxIncluded`, `isActive`, `notes`, timestamps
+
+### Next Recommended Step (Phase 2)
+
+- Add unit conversion table (e.g. 1 KG = 1000 G) so cost-per-base-unit can be calculated
+- Add `standardCostPerBaseUnit` computed/stored field on `Ingredient`
+- Add recipe model linking ingredients to menu items with usage quantities
+- Add costing calculation engine: `recipe cost = Σ (usageQty × costPerBaseUnit)`
