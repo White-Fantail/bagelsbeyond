@@ -271,3 +271,22 @@ export const ingredientSupplierLinkSchema = z.object({
 });
 
 export type IngredientSupplierLinkSchema = z.infer<typeof ingredientSupplierLinkSchema>;
+
+// ─── Supplier API Credentials (Phase 9) ───────────────────────────────────────
+
+export const supplierCredentialsSchema = z.object({
+  adapterKey: z.string().min(1, "Adapter is required"),
+  credentials: z.record(z.string(), z.string()),
+  notes: z.string().optional().nullable(),
+});
+
+export type SupplierCredentialsSchema = z.infer<typeof supplierCredentialsSchema>;
+
+// ─── Supplier product search (Phase 9) ────────────────────────────────────────
+
+export const supplierSearchSchema = z.object({
+  query: z.string().optional().default(""),
+  limit: z.coerce.number().int().min(1).max(100).optional().default(20),
+});
+
+export type SupplierSearchSchema = z.infer<typeof supplierSearchSchema>;

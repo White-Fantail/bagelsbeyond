@@ -136,6 +136,14 @@ export default function SupplierTable({ suppliers }: SupplierTableProps) {
                           >
                             Edit
                           </Link>
+                          {supplier.integrationType === "API" && (
+                            <Link
+                              href={`/suppliers/${supplier.id}/api`}
+                              className="text-xs px-3 py-1.5 rounded-md border border-blue-300 text-blue-600 hover:bg-blue-50 transition-colors"
+                            >
+                              API Sync
+                            </Link>
+                          )}
                           <button
                             onClick={() => toggleActive(supplier)}
                             disabled={isLoading}
@@ -194,6 +202,14 @@ export default function SupplierTable({ suppliers }: SupplierTableProps) {
                     >
                       Edit
                     </Link>
+                    {supplier.integrationType === "API" && (
+                      <Link
+                        href={`/suppliers/${supplier.id}/api`}
+                        className="text-xs px-3 py-1.5 rounded-md border border-blue-300 text-blue-600 hover:bg-blue-50"
+                      >
+                        API Sync
+                      </Link>
+                    )}
                     <button
                       onClick={() => toggleActive(supplier)}
                       disabled={isLoading}
