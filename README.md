@@ -1230,3 +1230,96 @@ Phase 9 — Supplier API sync: connect supplier links with `syncMode = API_READY
 ### Next Recommended Step
 
 Phase 12 — Procurement recommendations: surface actionable "switch to cheaper supplier" recommendations based on Phase 11 comparison data, with estimated monthly savings projections based on recipe usage volumes. Also consider adding ingredient alert thresholds and notification hooks when prices exceed configured change limits.
+
+---
+
+## Phase 12 — Production Planning & Forecast-Cost Integration
+
+### Overview
+
+Phase 12 connects forecasted sales, production planning, recipe explosion, ingredient requirements, and costing/profitability into a daily production planning workflow. Operators can now decide what to produce tomorrow, how many batches to make, what raw ingredients are needed, and what the expected revenue, cost, and gross profit will be.
+
+### New Schema Changes
+
+| Model / Field | Description |
+|---|---|
+| `ForecastOverride` | Per-product manual forecast override for a specific date. Supports `targetDate`, `productId`, `predictedSalesQty`, `sourceType` (MANUAL/SYSTEM), `notes`. |
+| `MenuProduct.isProductionPlannable` | Boolean flag to include a product in daily production planning. |
+| `MenuProduct.productionBatchSize` | Optional batch size for this product. Used to calculate batch counts and recommended production quantities. |
+| `MenuProduct.productionBufferPercent` | Optional per-product buffer override. Falls back to global setting. |
+| `MenuProduct.planningRoundingMode` | Optional per-product rounding mode. Falls back to global setting. |
+| `AppSetting.planningBufferPercent` | Global default buffer percent (default 10%). |
+| `AppSetting.planningRoundingMode` | Global default rounding mode for non-batch products. |
+| `AppSetting.planningBatchHandlingMode` | Global default batch handling mode. |
+
+### New Planning Service Layer
+
+| File | Description |
+|---|---|
+| `lib/planning/production-plan.ts` | Pure calculation helpers: `applyRounding`, `calculateBufferedTarget`, `calculateBatchCount`, `buildProductionRecommendation`. No I/O; used in tests and services. |
+| `lib/planning/bom-explosion.ts` | Recursive BOM explosion: `explodeRecipe`, `aggregateIngredientNeeds`. Supports component products, yield adjustment, and cycle detection. |
+| `lib/planning/profit-forecast.ts` | Profit forecast calculations: `calculateProductProfit`, `calculateExpectedProfit`. Returns per-product and total revenue/cost/gross profit. |
+| `lib/planning/forecast-input.ts` | Server-only: `getForecastOverridesForDate`, `getEffectiveForecastForDate`, `upsertForecastOverride`, `deleteForecastOverride`. |
+| `lib/planning/ingredient-needs.ts` | Server-only orchestration: `getPlanningSettings`, `buildProductionPlan`. Combines forecast, recipe explosion, and profit forecast into a single plan object. |
+
+### New API Routes
+
+| Route | Method | Description |
+|---|---|---|
+| `/api/admin/planning/forecast-overrides` | GET | List overrides for a date (`?date=YYYY-MM-DD`) |
+| `/api/admin/planning/forecast-overrides` | POST | Upsert a manual forecast override |
+| `/api/admin/planning/forecast-overrides` | DELETE | Delete an override by ID (`?id=`) |
+| `/api/admin/planning/production-plan` | GET | Full production plan for a date (`?date=YYYY-MM-DD`) |
+
+### New UI Pages
+
+| Route | Description |
+|---|---|
+| `/forecast/production-plan` | Production Plan: date picker, per-product forecast qty vs recommended production qty, batch counts, unit cost, selling price, profitability summary bar |
+| `/forecast/ingredient-needs` | Ingredient Needs: component requirements and raw ingredient requirements with yield-adjusted quantities |
+| `/forecast/profitability` | Forecast Profitability: total and per-product revenue, cost, gross profit, margin %, top profit/cost contributors |
+
+### Production Recommendation Logic
+
+```
+predictedSalesQty × (1 + bufferPercent/100) = bufferedTargetQty
+bufferedTargetQty / batchSize → ceil → recommendedBatchCount
+recommendedBatchCount × batchSize = recommendedProductionQty
+
+Example:
+  predicted = 19, buffer = 10% → buffered = 20.9
+  batchSize = 6, ROUND_UP → batches = 4 → production = 24
+```
+
+### BOM Explosion
+
+Recursive explosion traverses recipe items, expands component products into their own recipes, and aggregates raw ingredient requirements. Yield adjustment is applied at the leaf level. Cycle detection prevents infinite recursion.
+
+### Tests Added
+
+- `lib/__tests__/planning.test.ts` — 27 tests covering:
+  - `applyRounding` with all modes
+  - `calculateBufferedTarget`
+  - `calculateBatchCount` with ROUND_UP / ROUND_NEAREST
+  - `buildProductionRecommendation` — spec examples, batch-based, no-batch, zero qty
+  - Batch-output recipe support (24 EA output, 50 required → 3 batches → 72)
+  - `explodeRecipe` — direct ingredient, yield adjustment, recursive component product
+  - Cycle prevention (A → B → A)
+  - `aggregateIngredientNeeds` — multi-product aggregation
+  - `calculateProductProfit` and `calculateExpectedProfit` — revenue/cost/profit/margin
+
+### Key Design Decisions
+
+- **Forecast qty and production qty are always separate concepts.** `predictedSalesQty` drives revenue/cost projections; `recommendedProductionQty` drives ingredient needs.
+- **BOM explosion uses recommended production qty** to determine raw material needs.
+- **Profit forecast uses predicted sales qty** (demand) for revenue/cost projections — not overproduction.
+- Yield adjustment follows the same formula as the recipe costing service (`effectiveQty = qty / (yieldPercent / 100)`).
+- Per-product settings override global settings where configured.
+- The planning service imports `getRecipeCostSummary` from the existing recipe service — no duplicate costing formulas.
+
+### Next Recommended Step
+
+- **Forecast override UI**: Build an inline form on the Production Plan page to set/edit forecast overrides per product per date, replacing the API-only workflow.
+- **Product settings UI**: Add planning fields (isProductionPlannable, productionBatchSize, productionBufferPercent) to the existing product edit form.
+- **On-hand inventory**: Add simple on-hand quantity fields to ingredients and surface shortage indicators (required vs. available) in the Ingredient Needs page.
+- **Procurement recommendations**: Surface "you need to order X more of Y" based on shortage detection.
