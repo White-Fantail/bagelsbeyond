@@ -510,16 +510,17 @@ export async function getProductPricingHealth(
   // Get adjusted cost per unit for each product via its recipe
   const productIds = products.map((p) => p.id);
 
-  // Batch-load active recipes with items
+  // Batch-load active recipes with items (both INGREDIENT and PRODUCT source types)
   const recipes = await prisma.recipe.findMany({
     where: { productId: { in: productIds }, isActive: true },
     select: {
       productId: true,
       outputQuantity: true,
       items: {
-        where: { sourceType: RecipeItemSourceType.INGREDIENT },
         select: {
+          sourceType: true,
           quantity: true,
+          componentProductId: true,
           ingredient: {
             select: {
               purchasePrice: true,
@@ -534,6 +535,66 @@ export async function getProductPricingHealth(
     },
   });
 
+  // Collect all component product IDs used across all recipes
+  const componentProductIds = new Set<string>();
+  for (const recipe of recipes) {
+    for (const item of recipe.items) {
+      if (item.sourceType === RecipeItemSourceType.PRODUCT && item.componentProductId) {
+        componentProductIds.add(item.componentProductId);
+      }
+    }
+  }
+
+  // Resolve per-unit cost for each component product via its own active recipe
+  const componentCostMap = new Map<string, number | null>();
+  if (componentProductIds.size > 0) {
+    const componentRecipes = await prisma.recipe.findMany({
+      where: { productId: { in: [...componentProductIds] }, isActive: true },
+      select: {
+        productId: true,
+        outputQuantity: true,
+        items: {
+          where: { sourceType: RecipeItemSourceType.INGREDIENT },
+          select: {
+            quantity: true,
+            ingredient: {
+              select: {
+                purchasePrice: true,
+                purchaseQuantity: true,
+                purchaseUnit: true,
+                baseUnit: true,
+                yieldPercent: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    for (const recipe of componentRecipes) {
+      let batchCost = 0;
+      let complete = true;
+      const outputQty = parseFloat(recipe.outputQuantity.toString());
+
+      for (const item of recipe.items) {
+        if (!item.ingredient) { complete = false; break; }
+        const price = parseFloat(item.ingredient.purchasePrice.toString());
+        const qty = parseFloat(item.ingredient.purchaseQuantity.toString());
+        const yield_ = parseFloat(item.ingredient.yieldPercent.toString());
+        const amount = parseFloat((item.quantity as Prisma.Decimal).toString());
+        const effectiveQty = calculateEffectiveQuantity(amount, yield_);
+        const costRes = calculateStandardUnitCost(price, qty, item.ingredient.purchaseUnit, item.ingredient.baseUnit);
+        if (!costRes.isConvertible) { complete = false; break; }
+        batchCost += effectiveQty * costRes.standardUnitCost;
+      }
+
+      componentCostMap.set(
+        recipe.productId,
+        complete && outputQty > 0 ? batchCost / outputQty : null
+      );
+    }
+  }
+
   // Build a map of productId → adjustedCostPerUnit
   const costMap = new Map<string, number | null>();
   for (const recipe of recipes) {
@@ -542,15 +603,24 @@ export async function getProductPricingHealth(
     const outputQty = parseFloat(recipe.outputQuantity.toString());
 
     for (const item of recipe.items) {
-      if (!item.ingredient) { complete = false; break; }
-      const price = parseFloat(item.ingredient.purchasePrice.toString());
-      const qty = parseFloat(item.ingredient.purchaseQuantity.toString());
-      const yield_ = parseFloat(item.ingredient.yieldPercent.toString());
       const amount = parseFloat((item.quantity as Prisma.Decimal).toString());
-      const effectiveQty = calculateEffectiveQuantity(amount, yield_);
-      const costRes = calculateStandardUnitCost(price, qty, item.ingredient.purchaseUnit, item.ingredient.baseUnit);
-      if (!costRes.isConvertible) { complete = false; break; }
-      batchCost += effectiveQty * costRes.standardUnitCost;
+
+      if (item.sourceType === RecipeItemSourceType.PRODUCT) {
+        if (!item.componentProductId) { complete = false; break; }
+        const componentUnitCost = componentCostMap.get(item.componentProductId) ?? null;
+        if (componentUnitCost === null) { complete = false; break; }
+        batchCost += amount * componentUnitCost;
+      } else {
+        // INGREDIENT
+        if (!item.ingredient) { complete = false; break; }
+        const price = parseFloat(item.ingredient.purchasePrice.toString());
+        const qty = parseFloat(item.ingredient.purchaseQuantity.toString());
+        const yield_ = parseFloat(item.ingredient.yieldPercent.toString());
+        const effectiveQty = calculateEffectiveQuantity(amount, yield_);
+        const costRes = calculateStandardUnitCost(price, qty, item.ingredient.purchaseUnit, item.ingredient.baseUnit);
+        if (!costRes.isConvertible) { complete = false; break; }
+        batchCost += effectiveQty * costRes.standardUnitCost;
+      }
     }
 
     costMap.set(
