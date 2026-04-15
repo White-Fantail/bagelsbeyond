@@ -5,7 +5,7 @@ import {
   updateIngredient,
   archiveIngredient,
 } from "@/lib/services/ingredientService";
-import { ingredientSchema } from "@/lib/validations";
+import { ingredientSchema, ingredientUpdateSchema } from "@/lib/validations";
 import { UnitType } from "@/app/generated/prisma/enums";
 
 export async function GET(
@@ -39,7 +39,7 @@ export async function PATCH(
     return NextResponse.json({ message: "Invalid request body" }, { status: 400 });
   }
 
-  const parsed = ingredientSchema.partial().safeParse(body);
+  const parsed = ingredientUpdateSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
       { message: "Validation failed", errors: parsed.error.flatten() },
