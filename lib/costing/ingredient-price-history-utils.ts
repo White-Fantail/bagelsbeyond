@@ -31,6 +31,7 @@ export type PriceHistoryRow = {
   effectiveFrom: string;
   createdAt: string;
   createdByUserId: string | null;
+  ingredientSupplierLinkId?: string | null;
   // Derived
   standardUnitCost: string | null;
   standardUnitDisplay: string | null;

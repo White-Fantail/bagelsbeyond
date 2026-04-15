@@ -155,6 +155,8 @@ export const ADMIN_NAV: RoleNavConfig = {
         { href: "/ingredients", label: "Ingredients" },
         { href: "/ingredient-categories", label: "Ingredient Categories" },
         { href: "/suppliers", label: "Suppliers" },
+        { href: "/costing/prices/bulk", label: "Bulk Price Update" },
+        { href: "/costing/prices/import", label: "CSV Price Import" },
       ],
     },
     {

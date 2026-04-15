@@ -93,6 +93,8 @@ export type CreateIngredientInput = {
   effectiveFrom?: Date | string | null;
   changeNote?: string | null;
   createdByUserId?: string | null;
+  // Phase 8 supplier link traceability
+  ingredientSupplierLinkId?: string | null;
 };
 
 export type UpdateIngredientInput = Partial<CreateIngredientInput>;
@@ -454,6 +456,7 @@ export async function updateIngredient(
         notes: input.changeNote ?? null,
         effectiveFrom,
         createdByUserId: input.createdByUserId ?? null,
+        ingredientSupplierLinkId: input.ingredientSupplierLinkId ?? null,
       },
       tx
     );
@@ -484,4 +487,57 @@ export async function archiveIngredient(id: string): Promise<IngredientRow> {
     },
   });
   return toIngredientRow(row);
+}
+
+// ─── Bulk Update ──────────────────────────────────────────────────────────────
+
+export type BulkUpdateIngredientItem = {
+  ingredientId: string;
+  purchasePrice?: number;
+  purchaseQuantity?: number;
+  purchaseUnit?: UnitType;
+  baseUnit?: UnitType;
+  yieldPercent?: number;
+  taxIncluded?: boolean;
+  effectiveFrom?: Date | string | null;
+  changeNote?: string | null;
+  ingredientSupplierLinkId?: string | null;
+  sourceType?: PriceHistorySourceType;
+};
+
+export type BulkUpdateResult = {
+  updatedCount: number;
+  skippedCount: number;
+  errors: Array<{ ingredientId: string; message: string }>;
+};
+
+export async function bulkUpdateIngredients(
+  items: BulkUpdateIngredientItem[],
+  createdByUserId?: string | null
+): Promise<BulkUpdateResult> {
+  let updatedCount = 0;
+  let skippedCount = 0;
+  const errors: Array<{ ingredientId: string; message: string }> = [];
+
+  for (const item of items) {
+    try {
+      await updateIngredient(item.ingredientId, {
+        purchasePrice: item.purchasePrice,
+        purchaseQuantity: item.purchaseQuantity,
+        purchaseUnit: item.purchaseUnit,
+        baseUnit: item.baseUnit,
+        yieldPercent: item.yieldPercent,
+        taxIncluded: item.taxIncluded,
+        effectiveFrom: item.effectiveFrom,
+        changeNote: item.changeNote,
+        createdByUserId: createdByUserId ?? null,
+        ingredientSupplierLinkId: item.ingredientSupplierLinkId ?? null,
+      });
+      updatedCount++;
+    } catch (e) {
+      errors.push({ ingredientId: item.ingredientId, message: e instanceof Error ? e.message : "Unknown error" });
+    }
+  }
+
+  return { updatedCount, skippedCount, errors };
 }
