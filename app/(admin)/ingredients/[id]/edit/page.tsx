@@ -119,6 +119,42 @@ export default async function EditIngredientPage({
 
       <IngredientForm ingredient={ingredient} categories={categories} />
 
+      {/* Supplier Links Section */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900">Supplier Links</h2>
+            <p className="text-sm text-gray-500 mt-0.5">
+              Manage suppliers linked to this ingredient
+            </p>
+          </div>
+          <Link
+            href={`/ingredients/${ingredient.id}/suppliers`}
+            className="text-sm text-amber-600 hover:underline"
+          >
+            Manage suppliers →
+          </Link>
+        </div>
+        <div className="bg-white rounded-xl border border-gray-200 p-5">
+          {ingredient.supplierLinkCount === 0 ? (
+            <p className="text-sm text-gray-400 italic">No supplier links yet.</p>
+          ) : (
+            <p className="text-sm text-gray-700">
+              <span className="font-medium">{ingredient.supplierLinkCount}</span> active{" "}
+              {ingredient.supplierLinkCount === 1 ? "link" : "links"}
+              {ingredient.primarySupplierName && (
+                <span className="text-gray-500">
+                  {" "}· Primary:{" "}
+                  <span className="text-amber-700 font-medium">
+                    {ingredient.primarySupplierName}
+                  </span>
+                </span>
+              )}
+            </p>
+          )}
+        </div>
+      </div>
+
       {/* Price History Section */}
       <div className="space-y-3 max-w-full">
         <div>

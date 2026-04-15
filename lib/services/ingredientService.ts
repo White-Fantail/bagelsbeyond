@@ -52,6 +52,9 @@ export type IngredientRow = {
   lastPriceUpdatedAt: string | null;
   lastPriceDelta: string | null;
   lastPriceDeltaPct: string | null;
+  // Phase 7 supplier info
+  primarySupplierName: string | null;
+  supplierLinkCount: number;
 };
 
 export type ListIngredientsFilter = {
@@ -157,6 +160,11 @@ function toIngredientRow(r: {
     baseUnit: UnitType;
     effectiveFrom: Date;
   }>;
+  supplierLinks?: Array<{
+    isPrimary: boolean;
+    isActive: boolean;
+    supplier: { name: string };
+  }>;
 }): IngredientRow {
   const price = parseFloat(r.purchasePrice.toString());
   const qty = parseFloat(r.purchaseQuantity.toString());
@@ -182,6 +190,9 @@ function toIngredientRow(r: {
         prevPrice !== 0 ? (((delta) / prevPrice) * 100).toFixed(2) : null;
     }
   }
+
+  const activeLinks = r.supplierLinks?.filter((l) => l.isActive) ?? [];
+  const primaryLink = activeLinks.find((l) => l.isPrimary) ?? null;
 
   return {
     id: r.id,
@@ -210,6 +221,8 @@ function toIngredientRow(r: {
     lastPriceUpdatedAt,
     lastPriceDelta,
     lastPriceDeltaPct,
+    primarySupplierName: primaryLink?.supplier.name ?? null,
+    supplierLinkCount: activeLinks.length,
   };
 }
 
@@ -244,6 +257,14 @@ export async function listIngredients(
           effectiveFrom: true,
         },
       },
+      supplierLinks: {
+        where: { isActive: true },
+        select: {
+          isPrimary: true,
+          isActive: true,
+          supplier: { select: { name: true } },
+        },
+      },
     },
   });
 
@@ -264,6 +285,14 @@ export async function getIngredientById(id: string): Promise<IngredientRow | nul
           purchaseUnit: true,
           baseUnit: true,
           effectiveFrom: true,
+        },
+      },
+      supplierLinks: {
+        where: { isActive: true },
+        select: {
+          isPrimary: true,
+          isActive: true,
+          supplier: { select: { name: true } },
         },
       },
     },
@@ -318,7 +347,7 @@ export async function createIngredient(
     return created;
   });
 
-  return toIngredientRow({ ...row, priceHistory: [] });
+  return toIngredientRow({ ...row, priceHistory: [], supplierLinks: [] });
 }
 
 export async function updateIngredient(
