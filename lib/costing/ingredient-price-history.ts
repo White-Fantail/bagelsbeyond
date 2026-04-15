@@ -27,6 +27,7 @@ export type CreateHistorySnapshotInput = CostingSnapshot & {
   notes?: string | null;
   effectiveFrom?: Date;
   createdByUserId?: string | null;
+  ingredientSupplierLinkId?: string | null;
 };
 
 // ─── History snapshot creation ────────────────────────────────────────────────
@@ -49,6 +50,7 @@ export async function createIngredientHistorySnapshot(
       notes: input.notes ?? null,
       effectiveFrom: input.effectiveFrom ?? new Date(),
       createdByUserId: input.createdByUserId ?? null,
+      ingredientSupplierLinkId: input.ingredientSupplierLinkId ?? null,
     },
   });
 }
@@ -69,6 +71,7 @@ function toPriceHistoryRow(r: {
   effectiveFrom: Date;
   createdAt: Date;
   createdByUserId: string | null;
+  ingredientSupplierLinkId?: string | null;
 }): PriceHistoryRow {
   const price = parseFloat(r.purchasePrice.toString());
   const qty = parseFloat(r.purchaseQuantity.toString());
@@ -88,6 +91,7 @@ function toPriceHistoryRow(r: {
     effectiveFrom: r.effectiveFrom.toISOString(),
     createdAt: r.createdAt.toISOString(),
     createdByUserId: r.createdByUserId,
+    ingredientSupplierLinkId: r.ingredientSupplierLinkId ?? null,
     standardUnitCost: costResult.isConvertible
       ? costResult.standardUnitCost.toFixed(6)
       : null,

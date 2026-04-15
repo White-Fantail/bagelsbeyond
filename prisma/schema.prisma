@@ -27,6 +27,18 @@ enum PriceHistorySourceType {
   SYSTEM
 }
 
+enum PriceImportMode {
+  INGREDIENT
+  SUPPLIER_LINK
+}
+
+enum PriceImportRowStatus {
+  READY
+  WARNING
+  ERROR
+  SKIPPED
+}
+
 enum RecipeItemSourceType {
   INGREDIENT
   PRODUCT
@@ -119,12 +131,16 @@ model IngredientPriceHistory {
   createdByUserId  String?
 
   ingredient       Ingredient             @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
+  ingredientSupplierLinkId String?
+  ingredientSupplierLink   IngredientSupplierLink? @relation(fields: [ingredientSupplierLinkId], references: [id], onDelete: SetNull)
+
   createdByUser    User?                  @relation(fields: [createdByUserId], references: [id], onDelete: SetNull)
 
   @@index([ingredientId])
   @@index([effectiveFrom])
   @@index([createdAt])
   @@index([sourceType])
+  @@index([ingredientSupplierLinkId])
   @@map("ingredient_price_history")
 }
 
@@ -168,12 +184,50 @@ model IngredientSupplierLink {
 
   ingredient Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
   supplier   Supplier   @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  priceHistoryLinks IngredientPriceHistory[]
 
   @@index([ingredientId])
   @@index([supplierId])
   @@index([isPrimary])
   @@index([isActive])
   @@map("ingredient_supplier_links")
+}
+
+model PriceImportBatch {
+  id              String                 @id @default(cuid())
+  mode            PriceImportMode
+  sourceType      PriceHistorySourceType
+  fileName        String?
+  totalRows       Int                    @default(0)
+  successRows     Int                    @default(0)
+  errorRows       Int                    @default(0)
+  createdAt       DateTime               @default(now())
+  createdByUserId String?
+
+  createdByUser   User?                  @relation(fields: [createdByUserId], references: [id], onDelete: SetNull)
+  rows            PriceImportRow[]
+
+  @@index([createdAt])
+  @@index([mode])
+  @@map("price_import_batches")
+}
+
+model PriceImportRow {
+  id                       String               @id @default(cuid())
+  batchId                  String
+  rowNumber                Int
+  rawPayload               Json
+  status                   PriceImportRowStatus
+  ingredientId             String?
+  ingredientSupplierLinkId String?
+  message                  String?
+  createdAt                DateTime             @default(now())
+
+  batch PriceImportBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+
+  @@index([batchId])
+  @@index([status])
+  @@map("price_import_rows")
 }
 
 // ─── Menu Products & Recipes ──────────────────────────────────────────────────
@@ -260,6 +314,7 @@ model User {
   updatedAt    DateTime @updatedAt
 
   ingredientPriceHistory IngredientPriceHistory[]
+  priceImportBatches     PriceImportBatch[]
 
   @@map("users")
 }

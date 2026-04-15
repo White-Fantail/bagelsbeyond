@@ -1163,3 +1163,28 @@ Updated routes now accept `outputQuantity` and `outputUnit` in recipe PUT body, 
 - Full cycle detection across component chains
 - Bulk/CSV price import from supplier invoices
 - Ingredient price change alerts
+
+## Phase 8 – Bulk & CSV Price Update Workflows
+
+### New routes
+- `POST /api/admin/ingredients/bulk-update` — bulk manual price update for multiple ingredients
+- `POST /api/admin/prices/import/preview` — CSV preview (ingredient mode or supplier-link mode)
+- `POST /api/admin/prices/import/apply` — apply a validated CSV preview
+- `GET /api/admin/prices/import/template` — download a CSV template for either mode
+
+### UI pages
+- `/costing/prices/bulk` — searchable inline-editable bulk price update table
+- `/costing/prices/import` — CSV import with mode selection, preview, and apply
+
+### Import modes
+- **Ingredient mode**: rows identify ingredients by `ingredientId` or `ingredientName`
+- **Supplier Link mode**: rows identify a linked supplier product; the matching ingredient is updated automatically
+
+### History integration
+All successful price updates append an `IngredientPriceHistory` record with `sourceType = CSV_IMPORT` (CSV flows) or `MANUAL` (bulk/single edits). The `ingredientSupplierLinkId` field links history entries to their source supplier link for traceability.
+
+### Batch logging
+`PriceImportBatch` and `PriceImportRow` models log every import operation for auditability.
+
+### Next recommended step
+Phase 9 — Supplier API sync: connect supplier links with `syncMode = API_READY` to live supplier product price endpoints and auto-update ingredient pricing.
