@@ -120,3 +120,42 @@ export const ingredientSchema = ingredientBaseSchema.superRefine((data, ctx) => 
 });
 
 export type IngredientSchema = z.infer<typeof ingredientBaseSchema>;
+
+// ─── Menu Product ──────────────────────────────────────────────────────────────
+
+export const menuProductSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  sku: z.string().optional().nullable(),
+  isActive: z.boolean().default(true),
+  notes: z.string().optional().nullable(),
+});
+
+export type MenuProductSchema = z.infer<typeof menuProductSchema>;
+
+// ─── Recipe ────────────────────────────────────────────────────────────────────
+
+export const recipeSchema = z.object({
+  name: z.string().min(1, "Recipe name is required"),
+});
+
+export type RecipeSchema = z.infer<typeof recipeSchema>;
+
+// ─── Recipe Item ──────────────────────────────────────────────────────────────
+
+export const recipeItemSchema = z.object({
+  ingredientId: z.string().min(1, "Ingredient is required"),
+  quantity: z.coerce.number().positive("Quantity must be greater than 0"),
+  unit: z.enum(Object.values(UnitType) as [string, ...string[]], {
+    message: "Unit is required",
+  }),
+  notes: z.string().optional().nullable(),
+  sortOrder: z.coerce.number().int().min(0).default(0),
+});
+
+export type RecipeItemSchema = z.infer<typeof recipeItemSchema>;
+
+export const updateRecipeItemSchema = recipeItemSchema
+  .omit({ ingredientId: true, unit: true })
+  .partial();
+
+export type UpdateRecipeItemSchema = z.infer<typeof updateRecipeItemSchema>;

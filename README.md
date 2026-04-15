@@ -716,8 +716,6 @@ CRON_SECRET=your-random-secret-here
 ### Known Limitations (Phase 2)
 
 - **PACK/BOX → EA** is not supported yet. These COUNT units only support same-unit pairings for now. Support for PACK-to-EA conversion (e.g. 12 buns per pack) is deferred to a later phase when a custom conversion table is introduced.
-- No recipe costing yet (Phase 3).
-- No supplier sync, price history, or waste/yield tracking yet.
 - Standard costs are derived at read time; they are not stored as database columns.
 
 ### Validation Updates
@@ -730,9 +728,72 @@ CRON_SECRET=your-random-secret-here
 - **Ingredient form**: Live inline warning when an incompatible unit pair is selected
 - **Edit page**: Added *Costing Summary* block showing purchase details, converted base quantity, and standard cost per base unit
 
-### Next Recommended Step (Phase 3)
+---
 
-- Add `Recipe` and `RecipeIngredient` models
-- Link ingredients to menu items with usage quantities and base units
-- Implement recipe cost calculation: `cost = Σ (usageQty × standardUnitCost)`
+## 🍽️ Phase 3: Recipe-Based Direct Costing
+
+Phase 3 links menu products to their ingredient recipes so the system can calculate the direct ingredient cost of producing one unit.
+
+### Added Models
+
+| Model | Table | Description |
+|-------|-------|-------------|
+| `MenuProduct` | `menu_products` | Canonical internal product/menu item |
+| `Recipe` | `recipes` | Named recipe belonging to one product; one active recipe per product |
+| `RecipeItem` | `recipe_items` | One ingredient line in a recipe with quantity and unit |
+
+**Key constraints:**
+- One active recipe per product (enforced at service layer)
+- `RecipeItem.unit` must exactly match `ingredient.baseUnit` (Phase 3: no cross-unit conversion)
+- `unique(recipeId, ingredientId)` prevents duplicate ingredient rows
+
+### Added Routes
+
+| Path | Description |
+|------|-------------|
+| `/products` | Product list with recipe status, ingredient count, and recipe cost |
+| `/products/new` | Create a new menu product |
+| `/products/[productId]/recipe` | Recipe management — create recipe, add/edit/remove ingredients |
+
+### Added API Routes
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET/POST | `/api/admin/products` | List or create products |
+| GET/PATCH | `/api/admin/products/[productId]` | Get or update a product |
+| GET/PUT | `/api/admin/products/[productId]/recipe` | Get recipe cost summary or upsert recipe |
+| POST | `/api/admin/products/[productId]/recipe/items` | Add ingredient to recipe |
+| PATCH/DELETE | `/api/admin/products/[productId]/recipe/items/[itemId]` | Edit or remove recipe item |
+
+### Cost Calculation
+
+For each recipe item:
+```
+lineCost = quantity × ingredient.standardUnitCost
+```
+
+For the recipe total:
+```
+totalCost = Σ lineCost (all items)
+```
+
+- Costs are derived at read time — not stored in the database
+- If any ingredient has no standard unit cost, `totalCost` is `null` and the recipe is flagged as *incomplete*
+- Pure calculation helpers live in `lib/costing/recipe-cost.ts` (importable from tests)
+
+### Phase 3 Limitations (deferred to Phase 4+)
+
+- No waste/yield adjustment yet
+- No prepared component / sub-recipe support yet
+- No recipe versioning yet
+- No recommended selling price yet
+- No channel-specific profitability yet
+
+### Next Recommended Step (Phase 4)
+
+- Add `wasteFactor` (e.g. 1.05 for 5% waste) to `RecipeItem`
+- Adjust line cost: `lineCost = quantity × wasteFactor × standardUnitCost`
+- Add packaging cost line items
+- Add `PackagingComponent` model and link to recipes
+
 
