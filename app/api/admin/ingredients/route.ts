@@ -57,6 +57,8 @@ export async function POST(req: NextRequest) {
       taxIncluded: data.taxIncluded,
       isActive: data.isActive,
       notes: data.notes,
+      effectiveFrom: data.effectiveFrom ?? null,
+      changeNote: data.changeNote ?? null,
     });
     return NextResponse.json({ ingredient }, { status: 201 });
   } catch {

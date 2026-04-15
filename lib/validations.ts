@@ -114,6 +114,9 @@ const ingredientBaseSchema = z.object({
   taxIncluded: z.boolean().default(true),
   isActive: z.boolean().default(true),
   notes: z.string().optional().nullable(),
+  // Phase 6: price history metadata
+  effectiveFrom: z.string().datetime({ offset: true }).optional().nullable(),
+  changeNote: z.string().optional().nullable(),
 });
 
 export const ingredientSchema = ingredientBaseSchema.superRefine((data, ctx) => {

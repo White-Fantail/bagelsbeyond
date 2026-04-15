@@ -1,11 +1,19 @@
 import "server-only";
 import { prisma } from "@/lib/db";
-import { UnitType } from "@/app/generated/prisma/enums";
+import { UnitType, PriceHistorySourceType } from "@/app/generated/prisma/enums";
 import type { Prisma } from "@/app/generated/prisma/client";
 import {
   calculateStandardUnitCost,
   formatConvertedBaseQuantity,
 } from "@/lib/costing/ingredient-cost";
+import {
+  createIngredientHistorySnapshot,
+  detectCostingFieldChanges,
+  type PriceHistoryRow,
+  type PriceHistoryRowWithDelta,
+  type IngredientHistoryViewModel,
+} from "@/lib/costing/ingredient-price-history";
+export type { PriceHistoryRow, PriceHistoryRowWithDelta, IngredientHistoryViewModel };
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -40,6 +48,10 @@ export type IngredientRow = {
   standardUnitCost: string | null;
   standardUnitDisplay: string | null;
   conversionStatus: "ok" | "unsupported";
+  // Phase 6 price history summary
+  lastPriceUpdatedAt: string | null;
+  lastPriceDelta: string | null;
+  lastPriceDeltaPct: string | null;
 };
 
 export type ListIngredientsFilter = {
@@ -74,6 +86,10 @@ export type CreateIngredientInput = {
   taxIncluded?: boolean;
   isActive?: boolean;
   notes?: string | null;
+  // Phase 6 history fields
+  effectiveFrom?: Date | string | null;
+  changeNote?: string | null;
+  createdByUserId?: string | null;
 };
 
 export type UpdateIngredientInput = Partial<CreateIngredientInput>;
@@ -134,10 +150,38 @@ function toIngredientRow(r: {
   createdAt: Date;
   updatedAt: Date;
   category: { name: string } | null;
+  priceHistory?: Array<{
+    purchasePrice: Prisma.Decimal;
+    purchaseQuantity: Prisma.Decimal;
+    purchaseUnit: UnitType;
+    baseUnit: UnitType;
+    effectiveFrom: Date;
+  }>;
 }): IngredientRow {
   const price = parseFloat(r.purchasePrice.toString());
   const qty = parseFloat(r.purchaseQuantity.toString());
   const costResult = calculateStandardUnitCost(price, qty, r.purchaseUnit, r.baseUnit);
+
+  // Compute last price update summary from first two history entries (sorted desc by effectiveFrom)
+  const history = r.priceHistory ?? [];
+  const latest = history[0] ?? null;
+  const previous = history[1] ?? null;
+
+  let lastPriceUpdatedAt: string | null = null;
+  let lastPriceDelta: string | null = null;
+  let lastPriceDeltaPct: string | null = null;
+
+  if (latest) {
+    lastPriceUpdatedAt = latest.effectiveFrom.toISOString();
+    if (previous) {
+      const latestPrice = parseFloat(latest.purchasePrice.toString());
+      const prevPrice = parseFloat(previous.purchasePrice.toString());
+      const delta = latestPrice - prevPrice;
+      lastPriceDelta = delta.toFixed(2);
+      lastPriceDeltaPct =
+        prevPrice !== 0 ? (((delta) / prevPrice) * 100).toFixed(2) : null;
+    }
+  }
 
   return {
     id: r.id,
@@ -163,6 +207,9 @@ function toIngredientRow(r: {
       : null,
     standardUnitDisplay: costResult.isConvertible ? costResult.displayLabel : null,
     conversionStatus: costResult.isConvertible ? "ok" : "unsupported",
+    lastPriceUpdatedAt,
+    lastPriceDelta,
+    lastPriceDeltaPct,
   };
 }
 
@@ -184,7 +231,20 @@ export async function listIngredients(
   const rows = await prisma.ingredient.findMany({
     where,
     orderBy: { name: "asc" },
-    include: { category: { select: { name: true } } },
+    include: {
+      category: { select: { name: true } },
+      priceHistory: {
+        orderBy: [{ effectiveFrom: "desc" }, { createdAt: "desc" }],
+        take: 2,
+        select: {
+          purchasePrice: true,
+          purchaseQuantity: true,
+          purchaseUnit: true,
+          baseUnit: true,
+          effectiveFrom: true,
+        },
+      },
+    },
   });
 
   return rows.map(toIngredientRow);
@@ -193,7 +253,20 @@ export async function listIngredients(
 export async function getIngredientById(id: string): Promise<IngredientRow | null> {
   const row = await prisma.ingredient.findUnique({
     where: { id },
-    include: { category: { select: { name: true } } },
+    include: {
+      category: { select: { name: true } },
+      priceHistory: {
+        orderBy: [{ effectiveFrom: "desc" }, { createdAt: "desc" }],
+        take: 2,
+        select: {
+          purchasePrice: true,
+          purchaseQuantity: true,
+          purchaseUnit: true,
+          baseUnit: true,
+          effectiveFrom: true,
+        },
+      },
+    },
   });
   if (!row) return null;
   return toIngredientRow(row);
@@ -202,29 +275,82 @@ export async function getIngredientById(id: string): Promise<IngredientRow | nul
 export async function createIngredient(
   input: CreateIngredientInput
 ): Promise<IngredientRow> {
-  const row = await prisma.ingredient.create({
-    data: {
-      name: input.name,
-      categoryId: input.categoryId ?? null,
-      description: input.description ?? null,
-      purchasePrice: String(input.purchasePrice),
-      purchaseQuantity: String(input.purchaseQuantity),
-      purchaseUnit: input.purchaseUnit,
-      baseUnit: input.baseUnit,
-      yieldPercent: input.yieldPercent !== undefined ? String(input.yieldPercent) : "100.00",
-      taxIncluded: input.taxIncluded ?? true,
-      isActive: input.isActive ?? true,
-      notes: input.notes ?? null,
-    },
-    include: { category: { select: { name: true } } },
+  const effectiveFrom = input.effectiveFrom ? new Date(input.effectiveFrom) : new Date();
+
+  const row = await prisma.$transaction(async (tx) => {
+    const created = await tx.ingredient.create({
+      data: {
+        name: input.name,
+        categoryId: input.categoryId ?? null,
+        description: input.description ?? null,
+        purchasePrice: String(input.purchasePrice),
+        purchaseQuantity: String(input.purchaseQuantity),
+        purchaseUnit: input.purchaseUnit,
+        baseUnit: input.baseUnit,
+        yieldPercent: input.yieldPercent !== undefined ? String(input.yieldPercent) : "100.00",
+        taxIncluded: input.taxIncluded ?? true,
+        isActive: input.isActive ?? true,
+        notes: input.notes ?? null,
+      },
+      include: {
+        category: { select: { name: true } },
+        priceHistory: { take: 0 },
+      },
+    });
+
+    await createIngredientHistorySnapshot(
+      {
+        ingredientId: created.id,
+        purchasePrice: parseFloat(String(input.purchasePrice)),
+        purchaseQuantity: parseFloat(String(input.purchaseQuantity)),
+        purchaseUnit: input.purchaseUnit,
+        baseUnit: input.baseUnit,
+        taxIncluded: input.taxIncluded ?? true,
+        yieldPercent: input.yieldPercent ?? 100,
+        sourceType: PriceHistorySourceType.MANUAL,
+        notes: input.changeNote ?? null,
+        effectiveFrom,
+        createdByUserId: input.createdByUserId ?? null,
+      },
+      tx
+    );
+
+    return created;
   });
-  return toIngredientRow(row);
+
+  return toIngredientRow({ ...row, priceHistory: [] });
 }
 
 export async function updateIngredient(
   id: string,
   input: UpdateIngredientInput
 ): Promise<IngredientRow> {
+  const effectiveFrom = input.effectiveFrom ? new Date(input.effectiveFrom) : new Date();
+
+  // Fetch current state for change detection
+  const current = await prisma.ingredient.findUnique({ where: { id } });
+  if (!current) throw new Error(`Ingredient ${id} not found`);
+
+  const costingSnapshot = {
+    purchasePrice: parseFloat(current.purchasePrice.toString()),
+    purchaseQuantity: parseFloat(current.purchaseQuantity.toString()),
+    purchaseUnit: current.purchaseUnit,
+    baseUnit: current.baseUnit,
+    taxIncluded: current.taxIncluded,
+    yieldPercent: parseFloat(current.yieldPercent.toString()),
+  };
+
+  const incomingCosting = {
+    purchasePrice: input.purchasePrice !== undefined ? parseFloat(String(input.purchasePrice)) : undefined,
+    purchaseQuantity: input.purchaseQuantity !== undefined ? parseFloat(String(input.purchaseQuantity)) : undefined,
+    purchaseUnit: input.purchaseUnit,
+    baseUnit: input.baseUnit,
+    taxIncluded: input.taxIncluded,
+    yieldPercent: input.yieldPercent !== undefined ? Number(input.yieldPercent) : undefined,
+  };
+
+  const hasCostingChange = detectCostingFieldChanges(costingSnapshot, incomingCosting);
+
   const data: Prisma.IngredientUpdateInput = {};
   if (input.name !== undefined) data.name = input.name;
   if (input.description !== undefined) data.description = input.description;
@@ -242,11 +368,70 @@ export async function updateIngredient(
       : { disconnect: true };
   }
 
-  const row = await prisma.ingredient.update({
-    where: { id },
-    data,
-    include: { category: { select: { name: true } } },
+  if (!hasCostingChange) {
+    // No costing change — just update without creating history
+    const row = await prisma.ingredient.update({
+      where: { id },
+      data,
+      include: {
+        category: { select: { name: true } },
+        priceHistory: {
+          orderBy: [{ effectiveFrom: "desc" }, { createdAt: "desc" }],
+          take: 2,
+          select: {
+            purchasePrice: true,
+            purchaseQuantity: true,
+            purchaseUnit: true,
+            baseUnit: true,
+            effectiveFrom: true,
+          },
+        },
+      },
+    });
+    return toIngredientRow(row);
+  }
+
+  // Costing changed — update and create history in a transaction
+  const row = await prisma.$transaction(async (tx) => {
+    const updated = await tx.ingredient.update({
+      where: { id },
+      data,
+      include: {
+        category: { select: { name: true } },
+        priceHistory: {
+          orderBy: [{ effectiveFrom: "desc" }, { createdAt: "desc" }],
+          take: 2,
+          select: {
+            purchasePrice: true,
+            purchaseQuantity: true,
+            purchaseUnit: true,
+            baseUnit: true,
+            effectiveFrom: true,
+          },
+        },
+      },
+    });
+
+    await createIngredientHistorySnapshot(
+      {
+        ingredientId: id,
+        purchasePrice: parseFloat(updated.purchasePrice.toString()),
+        purchaseQuantity: parseFloat(updated.purchaseQuantity.toString()),
+        purchaseUnit: updated.purchaseUnit,
+        baseUnit: updated.baseUnit,
+        taxIncluded: updated.taxIncluded,
+        yieldPercent: parseFloat(updated.yieldPercent.toString()),
+        sourceType: PriceHistorySourceType.MANUAL,
+        notes: input.changeNote ?? null,
+        effectiveFrom,
+        createdByUserId: input.createdByUserId ?? null,
+      },
+      tx
+    );
+
+    return updated;
   });
+
   return toIngredientRow(row);
 }
 
@@ -254,7 +439,20 @@ export async function archiveIngredient(id: string): Promise<IngredientRow> {
   const row = await prisma.ingredient.update({
     where: { id },
     data: { isActive: false },
-    include: { category: { select: { name: true } } },
+    include: {
+      category: { select: { name: true } },
+      priceHistory: {
+        orderBy: [{ effectiveFrom: "desc" }, { createdAt: "desc" }],
+        take: 2,
+        select: {
+          purchasePrice: true,
+          purchaseQuantity: true,
+          purchaseUnit: true,
+          baseUnit: true,
+          effectiveFrom: true,
+        },
+      },
+    },
   });
   return toIngredientRow(row);
 }

@@ -54,6 +54,8 @@ export async function PATCH(
       ...data,
       purchaseUnit: data.purchaseUnit as UnitType | undefined,
       baseUnit: data.baseUnit as UnitType | undefined,
+      effectiveFrom: data.effectiveFrom ?? null,
+      changeNote: data.changeNote ?? null,
     });
     return NextResponse.json({ ingredient });
   } catch {
