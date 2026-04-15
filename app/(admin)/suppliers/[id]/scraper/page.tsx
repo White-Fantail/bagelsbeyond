@@ -50,10 +50,7 @@ export default async function SupplierScraperPage({
             Suppliers
           </Link>
           <span>/</span>
-          <Link
-            href={`/suppliers/${id}/edit`}
-            className="hover:text-amber-600 transition-colors"
-          >
+          <Link href={`/suppliers/${id}`} className="hover:text-amber-600 transition-colors">
             {supplier.name}
           </Link>
           <span>/</span>
@@ -68,6 +65,12 @@ export default async function SupplierScraperPage({
 
       {/* Quick nav */}
       <div className="flex gap-2 text-sm flex-wrap">
+        <Link
+          href={`/suppliers/${id}`}
+          className="px-3 py-1.5 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
+        >
+          View Supplier
+        </Link>
         <Link
           href={`/suppliers/${id}/edit`}
           className="px-3 py-1.5 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
