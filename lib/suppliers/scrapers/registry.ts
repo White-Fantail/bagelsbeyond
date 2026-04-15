@@ -1,5 +1,7 @@
 import type { ScraperAdapterBase } from "./base";
 import { DemoScraperAdapter } from "./demo";
+import { BidfoodScraperAdapter } from "./bidfood";
+import { ServiceFoodScraperAdapter } from "./servicefood";
 
 // ─── Scraper adapter registry ─────────────────────────────────────────────────
 
@@ -11,7 +13,11 @@ import { DemoScraperAdapter } from "./demo";
  * this directory alongside demo.ts.  They are registered here just like the
  * demo adapter.
  */
-const SCRAPERS: ScraperAdapterBase[] = [new DemoScraperAdapter()];
+const SCRAPERS: ScraperAdapterBase[] = [
+  new DemoScraperAdapter(),
+  new BidfoodScraperAdapter(),
+  new ServiceFoodScraperAdapter(),
+];
 
 const registry = new Map<string, ScraperAdapterBase>(
   SCRAPERS.map((a) => [a.adapterKey, a])
