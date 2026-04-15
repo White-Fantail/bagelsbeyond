@@ -155,7 +155,7 @@ export function roundRecommendedPrice(
 
 /**
  * Determines the pricing status by comparing recommended price to selling price.
- * A tolerance of 1% is applied for ON_TARGET.
+ * A tolerance of 0.5% is applied for ON_TARGET.
  */
 export function calculatePricingStatus(
   recommendedPrice: number | null,

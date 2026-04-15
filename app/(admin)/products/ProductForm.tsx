@@ -49,7 +49,7 @@ export default function ProductForm({ product }: ProductFormProps) {
     const newErrors: FormErrors = {};
     if (!name.trim()) newErrors.name = "Name is required";
     const sellingPriceNum = sellingPrice !== "" ? parseFloat(String(sellingPrice)) : null;
-    if (sellingPrice !== "" && (isNaN(sellingPriceNum!) || sellingPriceNum! <= 0)) {
+    if (sellingPriceNum !== null && (isNaN(sellingPriceNum) || sellingPriceNum <= 0)) {
       newErrors.sellingPrice = "Selling price must be greater than 0";
     }
     if (useOverride) {

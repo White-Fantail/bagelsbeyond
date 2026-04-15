@@ -220,7 +220,7 @@ export default function SettingsForm({ initialData }: Props) {
             <option value={PricingTargetType.MARGIN_PERCENT}>Margin % (target profit margin)</option>
           </select>
           <p className="mt-1 text-xs text-gray-400">
-            Cost %: recommendedPrice = cost ÷ (target% ÷ 100). Margin %: recommendedPrice = cost ÷ (1 − target% ÷ 100).
+            Cost %: recommendedPrice = cost / (target% / 100). Margin %: recommendedPrice = cost / (1 - target% / 100).
           </p>
         </div>
 
