@@ -78,6 +78,7 @@ export default function IngredientTable({ ingredients }: IngredientTableProps) {
                   <th className="text-right px-4 py-3 font-medium text-gray-600">Purchase Qty</th>
                   <th className="text-left px-4 py-3 font-medium text-gray-600">Purchase Unit</th>
                   <th className="text-left px-4 py-3 font-medium text-gray-600">Base Unit</th>
+                  <th className="text-right px-4 py-3 font-medium text-gray-600">Yield %</th>
                   <th className="text-right px-4 py-3 font-medium text-gray-600">Converted Base Qty</th>
                   <th className="text-right px-4 py-3 font-medium text-gray-600">Standard Cost</th>
                   <th className="text-center px-4 py-3 font-medium text-gray-600">Conversion</th>
@@ -115,6 +116,11 @@ export default function IngredientTable({ ingredients }: IngredientTableProps) {
                       <td className="px-4 py-3">
                         <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-50 text-purple-700">
                           {ingredient.baseUnit}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-right font-mono text-xs">
+                        <span className={parseFloat(ingredient.yieldPercent) < 100 ? "text-amber-700 font-medium" : "text-gray-600"}>
+                          {ingredient.yieldPercent}%
                         </span>
                       </td>
                       <td className="px-4 py-3 text-right text-gray-700 font-mono text-xs">
@@ -224,6 +230,12 @@ export default function IngredientTable({ ingredients }: IngredientTableProps) {
                     <span className="ml-1 text-xs text-blue-600">{ingredient.purchaseUnit}</span>
                     <span className="ml-2 text-xs text-gray-400">
                       base: <span className="text-purple-600">{ingredient.baseUnit}</span>
+                    </span>
+                    <span className="ml-2 text-xs">
+                      yield:{" "}
+                      <span className={parseFloat(ingredient.yieldPercent) < 100 ? "text-amber-700 font-medium" : "text-gray-500"}>
+                        {ingredient.yieldPercent}%
+                      </span>
                     </span>
                   </div>
                   <div className="text-xs text-gray-600 space-y-0.5">

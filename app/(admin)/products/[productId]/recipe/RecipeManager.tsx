@@ -143,7 +143,7 @@ export default function RecipeManager({
   }
 
   // ── Recipe exists ─────────────────────────────────────────────────────────────
-  const { recipe, items, totalCost, isFullyCosted } = summary;
+  const { recipe, items, directTotalCost, adjustedTotalCost, isFullyCosted } = summary;
 
   return (
     <div className="space-y-6">
@@ -159,18 +159,37 @@ export default function RecipeManager({
               {items.length} ingredient{items.length !== 1 ? "s" : ""}
             </p>
           </div>
-          <div className="text-right">
-            <p className="text-xs text-gray-500 mb-0.5">Total Recipe Cost</p>
-            {totalCost ? (
-              <p className="text-2xl font-bold text-gray-900">${totalCost}</p>
-            ) : items.length > 0 && !isFullyCosted ? (
-              <div>
-                <p className="text-sm font-semibold text-amber-600">Incomplete costing</p>
-                <p className="text-xs text-gray-400">Some ingredients have no standard cost</p>
-              </div>
-            ) : (
-              <p className="text-sm text-gray-400 italic">No ingredients yet</p>
-            )}
+          <div className="flex items-start gap-6">
+            {/* Direct Total */}
+            <div className="text-right">
+              <p className="text-xs text-gray-500 mb-0.5">Direct Cost</p>
+              {directTotalCost ? (
+                <p className="text-xl font-semibold text-gray-700">${directTotalCost}</p>
+              ) : items.length > 0 && !isFullyCosted ? (
+                <p className="text-sm font-semibold text-amber-600">Incomplete</p>
+              ) : (
+                <p className="text-sm text-gray-400 italic">—</p>
+              )}
+            </div>
+            {/* Adjusted Total */}
+            <div className="text-right">
+              <p className="text-xs text-gray-500 mb-0.5">Adjusted Cost</p>
+              {adjustedTotalCost ? (
+                <p className="text-2xl font-bold text-gray-900">${adjustedTotalCost}</p>
+              ) : items.length > 0 && !isFullyCosted ? (
+                <div>
+                  <p className="text-sm font-semibold text-amber-600">Incomplete costing</p>
+                  <p className="text-xs text-gray-400">Some ingredients have no standard cost</p>
+                </div>
+              ) : (
+                <p className="text-sm text-gray-400 italic">No ingredients yet</p>
+              )}
+              {adjustedTotalCost && directTotalCost && adjustedTotalCost !== directTotalCost && (
+                <p className="text-xs text-orange-600 mt-0.5">
+                  +${(parseFloat(adjustedTotalCost) - parseFloat(directTotalCost)).toFixed(4)} yield loss
+                </p>
+              )}
+            </div>
           </div>
         </div>
       </div>

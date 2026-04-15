@@ -46,6 +46,7 @@ model Ingredient {
   purchaseQuantity Decimal             @db.Decimal(10, 3)
   purchaseUnit     UnitType
   baseUnit         UnitType
+  yieldPercent     Decimal             @default(100.00) @db.Decimal(5, 2)
   taxIncluded      Boolean             @default(true)
   isActive         Boolean             @default(true)
   notes            String?

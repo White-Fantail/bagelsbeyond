@@ -99,6 +99,11 @@ const ingredientBaseSchema = z.object({
     .positive("Purchase quantity must be greater than 0"),
   purchaseUnit: z.enum(UNIT_VALUES, "Purchase unit is required"),
   baseUnit: z.enum(UNIT_VALUES, "Base unit is required"),
+  yieldPercent: z.coerce
+    .number()
+    .gt(0, "Yield % must be greater than 0")
+    .max(100, "Yield % must be 100 or less")
+    .default(100),
   taxIncluded: z.boolean().default(true),
   isActive: z.boolean().default(true),
   notes: z.string().optional().nullable(),

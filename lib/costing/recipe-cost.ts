@@ -17,6 +17,34 @@ export function calculateRecipeItemCost(
 }
 
 /**
+ * Calculates the effective quantity after applying yield adjustment.
+ * effectiveQuantity = quantity / (yieldPercent / 100)
+ * When yieldPercent is 100, effectiveQuantity equals quantity.
+ */
+export function calculateEffectiveQuantity(
+  quantity: number,
+  yieldPercent: number
+): number {
+  if (yieldPercent === 100) return quantity;
+  return quantity / (yieldPercent / 100);
+}
+
+/**
+ * Calculates the yield-adjusted line cost for a single recipe item.
+ * adjustedLineCost = effectiveQuantity × standardUnitCost
+ * Returns null if standardUnitCost is unavailable.
+ */
+export function calculateAdjustedLineCost(
+  quantity: number,
+  yieldPercent: number,
+  standardUnitCost: number | null
+): number | null {
+  if (standardUnitCost === null) return null;
+  const effectiveQty = calculateEffectiveQuantity(quantity, yieldPercent);
+  return effectiveQty * standardUnitCost;
+}
+
+/**
  * Calculates the total cost from an array of line costs.
  * Returns null if any line cost is null (incomplete costing).
  */

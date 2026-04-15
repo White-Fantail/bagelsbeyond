@@ -29,6 +29,7 @@ export type IngredientRow = {
   purchaseQuantity: string;
   purchaseUnit: UnitType;
   baseUnit: UnitType;
+  yieldPercent: string;
   taxIncluded: boolean;
   isActive: boolean;
   notes: string | null;
@@ -69,6 +70,7 @@ export type CreateIngredientInput = {
   purchaseQuantity: string | number;
   purchaseUnit: UnitType;
   baseUnit: UnitType;
+  yieldPercent?: number;
   taxIncluded?: boolean;
   isActive?: boolean;
   notes?: string | null;
@@ -125,6 +127,7 @@ function toIngredientRow(r: {
   purchaseQuantity: Prisma.Decimal;
   purchaseUnit: UnitType;
   baseUnit: UnitType;
+  yieldPercent: Prisma.Decimal;
   taxIncluded: boolean;
   isActive: boolean;
   notes: string | null;
@@ -146,6 +149,7 @@ function toIngredientRow(r: {
     purchaseQuantity: r.purchaseQuantity.toFixed(3),
     purchaseUnit: r.purchaseUnit,
     baseUnit: r.baseUnit,
+    yieldPercent: r.yieldPercent.toFixed(2),
     taxIncluded: r.taxIncluded,
     isActive: r.isActive,
     notes: r.notes,
@@ -207,6 +211,7 @@ export async function createIngredient(
       purchaseQuantity: String(input.purchaseQuantity),
       purchaseUnit: input.purchaseUnit,
       baseUnit: input.baseUnit,
+      yieldPercent: input.yieldPercent !== undefined ? String(input.yieldPercent) : "100.00",
       taxIncluded: input.taxIncluded ?? true,
       isActive: input.isActive ?? true,
       notes: input.notes ?? null,
@@ -227,6 +232,7 @@ export async function updateIngredient(
   if (input.purchaseQuantity !== undefined) data.purchaseQuantity = String(input.purchaseQuantity);
   if (input.purchaseUnit !== undefined) data.purchaseUnit = input.purchaseUnit;
   if (input.baseUnit !== undefined) data.baseUnit = input.baseUnit;
+  if (input.yieldPercent !== undefined) data.yieldPercent = String(input.yieldPercent);
   if (input.taxIncluded !== undefined) data.taxIncluded = input.taxIncluded;
   if (input.isActive !== undefined) data.isActive = input.isActive;
   if (input.notes !== undefined) data.notes = input.notes;
