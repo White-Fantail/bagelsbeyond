@@ -64,14 +64,14 @@ export function calculateStandardUnitCost(
 
 /**
  * Format a standard unit cost with sensible precision for small amounts.
- * Uses 4–6 decimal places depending on magnitude.
+ * - >= 0.01 → 4 decimal places
+ * - >= 0.001 → 5 decimal places
+ * - < 0.001 → 6 decimal places
  */
 export function formatStandardUnitCost(cost: number, unit: UnitType): string {
   let decimals: number;
   const abs = Math.abs(cost);
-  if (abs >= 1) {
-    decimals = 4;
-  } else if (abs >= 0.01) {
+  if (abs >= 0.01) {
     decimals = 4;
   } else if (abs >= 0.001) {
     decimals = 5;

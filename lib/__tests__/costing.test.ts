@@ -193,12 +193,18 @@ describe("calculateConvertedBaseQuantity", () => {
 // ─── Formatting helpers ───────────────────────────────────────────────────────
 
 describe("formatStandardUnitCost", () => {
-  it("formats small cost (>=0.001) with 5 decimal places", () => {
-    // 0.00192 >= 0.001 → 5 decimal places
+  it("formats cost >= 0.01 with 4 decimal places", () => {
+    // 0.0725 >= 0.01 → 4 decimal places: "0.0725"
+    expect(formatStandardUnitCost(0.0725, UnitType.ML)).toBe("$0.0725 / ML");
+  });
+  it("formats cost in [0.001, 0.01) with 5 decimal places", () => {
+    // 0.002 is in [0.001, 0.01) → 5 decimal places: "0.00200"
+    expect(formatStandardUnitCost(0.002, UnitType.G)).toBe("$0.00200 / G");
+    // 0.00192 is in [0.001, 0.01) → 5 decimal places: "0.00192"
     expect(formatStandardUnitCost(0.00192, UnitType.G)).toBe("$0.00192 / G");
   });
-  it("formats very small cost (<0.001) with 6 decimal places", () => {
-    // 0.0001 < 0.001 → 6 decimal places
+  it("formats cost < 0.001 with 6 decimal places", () => {
+    // 0.0001 < 0.001 → 6 decimal places: "0.000100"
     expect(formatStandardUnitCost(0.0001, UnitType.G)).toBe("$0.000100 / G");
   });
   it("formats larger cost with 4 decimal places", () => {
