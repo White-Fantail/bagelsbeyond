@@ -129,15 +129,24 @@ export default function RecipeManager({
 
   async function handleReorderItems(orderedIds: string[]) {
     try {
-      await Promise.all(
-        orderedIds.map((id, index) =>
-          fetch(`/api/admin/products/${product.id}/recipe/items/${id}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ sortOrder: index }),
-          })
-        )
-      );
+      const currentItems = summary?.items ?? [];
+      const changedItems = orderedIds
+        .map((id, index) => ({ id, newSortOrder: index }))
+        .filter(({ id, newSortOrder }) => {
+          const current = currentItems.find((item) => item.id === id);
+          return current !== undefined && current.sortOrder !== newSortOrder;
+        });
+      if (changedItems.length > 0) {
+        await Promise.all(
+          changedItems.map(({ id, newSortOrder }) =>
+            fetch(`/api/admin/products/${product.id}/recipe/items/${id}`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ sortOrder: newSortOrder }),
+            })
+          )
+        );
+      }
       await refreshSummary();
     } catch {
       // silently fail

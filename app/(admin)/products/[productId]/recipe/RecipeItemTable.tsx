@@ -23,6 +23,7 @@ export default function RecipeItemTable({ items, onDelete, onUpdate, onReorder }
   const [saving, setSaving] = useState(false);
   const draggedIndexRef = useRef<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [isReordering, setIsReordering] = useState(false);
 
   useEffect(() => {
     setLocalItems(items);
@@ -67,19 +68,20 @@ export default function RecipeItemTable({ items, onDelete, onUpdate, onReorder }
   }
 
   function handleDragStart(index: number) {
+    if (isReordering) return;
     draggedIndexRef.current = index;
   }
 
   function handleDragOver(e: React.DragEvent, index: number) {
     e.preventDefault();
-    setDragOverIndex(index);
+    if (!isReordering) setDragOverIndex(index);
   }
 
   function handleDragLeave() {
     setDragOverIndex(null);
   }
 
-  function handleDrop(index: number) {
+  async function handleDrop(index: number) {
     const from = draggedIndexRef.current;
     if (from === null || from === index) {
       draggedIndexRef.current = null;
@@ -92,7 +94,9 @@ export default function RecipeItemTable({ items, onDelete, onUpdate, onReorder }
     setLocalItems(newItems);
     draggedIndexRef.current = null;
     setDragOverIndex(null);
-    onReorder(newItems.map((item) => item.id));
+    setIsReordering(true);
+    await onReorder(newItems.map((item) => item.id));
+    setIsReordering(false);
   }
 
   function handleDragEnd() {
