@@ -400,6 +400,101 @@ async function main() {
   }
 
 
+  // ── Ingredient Categories ────────────────────────────────────────────────────
+  const ingredientCategories = [
+    { name: "Bakery Base",  slug: "bakery-base",  sortOrder: 1 },
+    { name: "Dairy",        slug: "dairy",         sortOrder: 2 },
+    { name: "Produce",      slug: "produce",       sortOrder: 3 },
+    { name: "Packaging",    slug: "packaging",     sortOrder: 4 },
+  ];
+
+  const categoryMap: Record<string, string> = {};
+
+  for (const cat of ingredientCategories) {
+    const row = await prisma.ingredientCategory.upsert({
+      where: { slug: cat.slug },
+      update: { name: cat.name, sortOrder: cat.sortOrder },
+      create: { name: cat.name, slug: cat.slug, sortOrder: cat.sortOrder, isActive: true },
+    });
+    categoryMap[cat.slug] = row.id;
+    console.log(`  📂 Category: ${cat.name}`);
+  }
+
+  // ── Sample Ingredients ───────────────────────────────────────────────────────
+  type UnitTypeStr = "G" | "KG" | "ML" | "L" | "EA" | "PACK" | "BOX";
+
+  const sampleIngredients: {
+    name: string;
+    categorySlug: string;
+    description: string;
+    purchasePrice: string;
+    purchaseQuantity: string;
+    purchaseUnit: UnitTypeStr;
+    baseUnit: UnitTypeStr;
+    taxIncluded: boolean;
+  }[] = [
+    {
+      name: "High Gluten Flour",
+      categorySlug: "bakery-base",
+      description: "Strong bread flour for bagel production",
+      purchasePrice: "32.50",
+      purchaseQuantity: "25.000",
+      purchaseUnit: "KG",
+      baseUnit: "G",
+      taxIncluded: false,
+    },
+    {
+      name: "Cream Cheese",
+      categorySlug: "dairy",
+      description: "Full-fat cream cheese for bagel fillings",
+      purchasePrice: "8.90",
+      purchaseQuantity: "1.000",
+      purchaseUnit: "KG",
+      baseUnit: "G",
+      taxIncluded: true,
+    },
+    {
+      name: "Smoked Salmon",
+      categorySlug: "produce",
+      description: "Cold-smoked salmon slices",
+      purchasePrice: "28.00",
+      purchaseQuantity: "500.000",
+      purchaseUnit: "G",
+      baseUnit: "G",
+      taxIncluded: true,
+    },
+    {
+      name: "Paper Bag",
+      categorySlug: "packaging",
+      description: "Branded paper bags for takeaway orders",
+      purchasePrice: "18.50",
+      purchaseQuantity: "500.000",
+      purchaseUnit: "PACK",
+      baseUnit: "EA",
+      taxIncluded: true,
+    },
+  ];
+
+  for (const ing of sampleIngredients) {
+    const existing = await prisma.ingredient.findFirst({ where: { name: ing.name } });
+    if (!existing) {
+      await prisma.ingredient.create({
+        data: {
+          name: ing.name,
+          categoryId: categoryMap[ing.categorySlug],
+          description: ing.description,
+          purchasePrice: ing.purchasePrice,
+          purchaseQuantity: ing.purchaseQuantity,
+          purchaseUnit: ing.purchaseUnit,
+          baseUnit: ing.baseUnit,
+          taxIncluded: ing.taxIncluded,
+          isActive: true,
+        },
+      });
+      console.log(`  🧂 Ingredient: ${ing.name}`);
+    }
+  }
+
   console.log("✅ Seeding complete!");
 }
 

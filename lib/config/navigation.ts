@@ -148,6 +148,14 @@ export const ADMIN_NAV: RoleNavConfig = {
       ],
     },
     {
+      id: "costing",
+      label: "Menu Costing",
+      items: [
+        { href: "/ingredients", label: "Ingredients" },
+        { href: "/ingredient-categories", label: "Ingredient Categories" },
+      ],
+    },
+    {
       id: "admin",
       label: "Admin",
       items: [

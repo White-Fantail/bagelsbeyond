@@ -9,6 +9,57 @@ datasource db {
   provider = "postgresql"
 }
 
+// ─── Ingredient / Menu Costing ────────────────────────────────────────────────
+
+enum UnitType {
+  G
+  KG
+  ML
+  L
+  EA
+  PACK
+  BOX
+}
+
+model IngredientCategory {
+  id          String       @id @default(cuid())
+  name        String       @unique
+  slug        String       @unique
+  sortOrder   Int          @default(0)
+  isActive    Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  ingredients Ingredient[]
+
+  @@index([sortOrder])
+  @@index([isActive])
+  @@map("ingredient_categories")
+}
+
+model Ingredient {
+  id               String              @id @default(cuid())
+  name             String
+  categoryId       String?
+  description      String?
+  purchasePrice    Decimal             @db.Decimal(10, 2)
+  purchaseQuantity Decimal             @db.Decimal(10, 3)
+  purchaseUnit     UnitType
+  baseUnit         UnitType
+  taxIncluded      Boolean             @default(true)
+  isActive         Boolean             @default(true)
+  notes            String?
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+
+  category         IngredientCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  @@index([name])
+  @@index([categoryId])
+  @@index([isActive])
+  @@map("ingredients")
+}
+
 // ─── User & Role ──────────────────────────────────────────────────────────────
 
 enum Role {

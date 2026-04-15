@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { UnitType } from "@/app/generated/prisma/enums";
 
 export const salesFormSchema = z.object({
   date: z.string().min(1, "Please enter a date"),
@@ -66,3 +67,40 @@ export const createPredictionSchema = z.object({
   }).optional(),
 });
 export type CreatePredictionSchema = z.infer<typeof createPredictionSchema>;
+
+// ─── Ingredient Category ───────────────────────────────────────────────────────
+
+export const ingredientCategorySchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  slug: z
+    .string()
+    .min(1, "Slug is required")
+    .regex(/^[a-z0-9-]+$/, "Slug must contain only lowercase letters, numbers, and hyphens"),
+  sortOrder: z.coerce.number().int().min(0).default(0),
+  isActive: z.boolean().default(true),
+});
+
+export type IngredientCategorySchema = z.infer<typeof ingredientCategorySchema>;
+
+// ─── Ingredient ────────────────────────────────────────────────────────────────
+
+const UNIT_VALUES = Object.values(UnitType) as [string, ...string[]];
+
+export const ingredientSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  categoryId: z.string().optional().nullable(),
+  description: z.string().optional().nullable(),
+  purchasePrice: z.coerce
+    .number()
+    .positive("Purchase price must be greater than 0"),
+  purchaseQuantity: z.coerce
+    .number()
+    .positive("Purchase quantity must be greater than 0"),
+  purchaseUnit: z.enum(UNIT_VALUES, "Purchase unit is required"),
+  baseUnit: z.enum(UNIT_VALUES, "Base unit is required"),
+  taxIncluded: z.boolean().default(true),
+  isActive: z.boolean().default(true),
+  notes: z.string().optional().nullable(),
+});
+
+export type IngredientSchema = z.infer<typeof ingredientSchema>;
