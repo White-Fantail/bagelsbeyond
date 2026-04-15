@@ -98,16 +98,19 @@ export default async function EditIngredientPage({
               <dt className="text-gray-500">Last Price Update</dt>
               <dd className="text-gray-700 text-xs">
                 {new Date(ingredient.lastPriceUpdatedAt).toLocaleString("en-NZ")}
-                {ingredient.lastPriceDelta !== null && (
-                  <span className={`ml-2 font-mono ${parseFloat(ingredient.lastPriceDelta) > 0 ? "text-red-600" : parseFloat(ingredient.lastPriceDelta) < 0 ? "text-green-600" : "text-gray-500"}`}>
-                    {parseFloat(ingredient.lastPriceDelta) > 0 ? "+" : ""}${Math.abs(parseFloat(ingredient.lastPriceDelta)).toFixed(2)}
-                    {ingredient.lastPriceDeltaPct !== null && (
-                      <span className="ml-1 text-gray-400">
-                        ({parseFloat(ingredient.lastPriceDelta) > 0 ? "+" : ""}{ingredient.lastPriceDeltaPct}%)
-                      </span>
-                    )}
-                  </span>
-                )}
+                {ingredient.lastPriceDelta !== null && (() => {
+                  const delta = parseFloat(ingredient.lastPriceDelta!);
+                  return (
+                    <span className={`ml-2 font-mono ${delta > 0 ? "text-red-600" : delta < 0 ? "text-green-600" : "text-gray-500"}`}>
+                      {delta > 0 ? "+" : ""}${Math.abs(delta).toFixed(2)}
+                      {ingredient.lastPriceDeltaPct !== null && (
+                        <span className="ml-1 text-gray-400">
+                          ({delta > 0 ? "+" : ""}{ingredient.lastPriceDeltaPct}%)
+                        </span>
+                      )}
+                    </span>
+                  );
+                })()}
               </dd>
             </>
           )}

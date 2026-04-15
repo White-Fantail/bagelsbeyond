@@ -170,16 +170,19 @@ export default function IngredientTable({ ingredients }: IngredientTableProps) {
                           : <span className="italic">—</span>}
                       </td>
                       <td className="px-4 py-3 text-right">
-                        {ingredient.lastPriceDelta !== null ? (
-                          <span className={`text-xs font-mono ${parseFloat(ingredient.lastPriceDelta) > 0 ? "text-red-600" : parseFloat(ingredient.lastPriceDelta) < 0 ? "text-green-600" : "text-gray-500"}`}>
-                            {parseFloat(ingredient.lastPriceDelta) > 0 ? "+" : ""}${Math.abs(parseFloat(ingredient.lastPriceDelta)).toFixed(2)}
-                            {ingredient.lastPriceDeltaPct !== null && (
-                              <span className="ml-1 text-gray-400">
-                                ({parseFloat(ingredient.lastPriceDelta) > 0 ? "+" : ""}{ingredient.lastPriceDeltaPct}%)
-                              </span>
-                            )}
-                          </span>
-                        ) : (
+                        {ingredient.lastPriceDelta !== null ? (() => {
+                          const delta = parseFloat(ingredient.lastPriceDelta!);
+                          return (
+                            <span className={`text-xs font-mono ${delta > 0 ? "text-red-600" : delta < 0 ? "text-green-600" : "text-gray-500"}`}>
+                              {delta > 0 ? "+" : ""}${Math.abs(delta).toFixed(2)}
+                              {ingredient.lastPriceDeltaPct !== null && (
+                                <span className="ml-1 text-gray-400">
+                                  ({delta > 0 ? "+" : ""}{ingredient.lastPriceDeltaPct}%)
+                                </span>
+                              )}
+                            </span>
+                          );
+                        })() : (
                           <span className="text-gray-400 text-xs">—</span>
                         )}
                       </td>

@@ -120,7 +120,7 @@ export default function IngredientForm({ ingredient, categories }: IngredientFor
 
     // Client-side validation
     const newErrors: FormErrors = {};
-    if (!String(payload.name).trim()) newErrors.name = "Name is required";
+    if (!name.trim()) newErrors.name = "Name is required";
     if (isNaN(payload.purchasePrice as number) || (payload.purchasePrice as number) <= 0)
       newErrors.purchasePrice = "Purchase price must be greater than 0";
     if (isNaN(payload.purchaseQuantity as number) || (payload.purchaseQuantity as number) <= 0)
