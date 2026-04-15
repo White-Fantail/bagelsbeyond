@@ -290,3 +290,22 @@ export const supplierSearchSchema = z.object({
 });
 
 export type SupplierSearchSchema = z.infer<typeof supplierSearchSchema>;
+
+// ─── Supplier Scraper Credentials (Phase 10) ──────────────────────────────────
+
+export const scraperCredentialsSchema = z.object({
+  adapterKey: z.string().min(1, "Adapter is required"),
+  credentials: z.record(z.string(), z.string()),
+  notes: z.string().optional().nullable(),
+});
+
+export type ScraperCredentialsSchema = z.infer<typeof scraperCredentialsSchema>;
+
+// ─── Scraper product search (Phase 10) ────────────────────────────────────────
+
+export const scraperSearchSchema = z.object({
+  query: z.string().optional().default(""),
+  limit: z.coerce.number().int().min(1).max(100).optional().default(20),
+});
+
+export type ScraperSearchSchema = z.infer<typeof scraperSearchSchema>;
