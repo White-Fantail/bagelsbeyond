@@ -21,6 +21,12 @@ enum UnitType {
   BOX
 }
 
+enum PriceHistorySourceType {
+  MANUAL
+  CSV_IMPORT
+  SYSTEM
+}
+
 // ─── Pricing Target ───────────────────────────────────────────────────────────
 
 enum PricingTargetType {
@@ -67,13 +73,39 @@ model Ingredient {
   createdAt        DateTime            @default(now())
   updatedAt        DateTime            @updatedAt
 
-  category         IngredientCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  category         IngredientCategory?    @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   recipeItems      RecipeItem[]
+  priceHistory     IngredientPriceHistory[]
 
   @@index([name])
   @@index([categoryId])
   @@index([isActive])
   @@map("ingredients")
+}
+
+model IngredientPriceHistory {
+  id               String                 @id @default(cuid())
+  ingredientId     String
+  purchasePrice    Decimal                @db.Decimal(10, 2)
+  purchaseQuantity Decimal                @db.Decimal(10, 3)
+  purchaseUnit     UnitType
+  baseUnit         UnitType
+  taxIncluded      Boolean
+  yieldPercent     Decimal                @db.Decimal(5, 2)
+  sourceType       PriceHistorySourceType @default(MANUAL)
+  notes            String?
+  effectiveFrom    DateTime
+  createdAt        DateTime               @default(now())
+  createdByUserId  String?
+
+  ingredient       Ingredient             @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
+  createdByUser    User?                  @relation(fields: [createdByUserId], references: [id], onDelete: SetNull)
+
+  @@index([ingredientId])
+  @@index([effectiveFrom])
+  @@index([createdAt])
+  @@index([sourceType])
+  @@map("ingredient_price_history")
 }
 
 // ─── Menu Products & Recipes ──────────────────────────────────────────────────
@@ -150,6 +182,8 @@ model User {
   isActive     Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+
+  ingredientPriceHistory IngredientPriceHistory[]
 
   @@map("users")
 }

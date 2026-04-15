@@ -933,3 +933,73 @@ buildPricingSummaryForProduct(product, adjustedCost, globalSettings)
 - Add supplier-linked ingredient cost updates (when supplier invoice price changes, flag affected products)
 - Add channel-specific profitability (e.g., Uber Eats markup analysis)
 
+---
+
+## Phase 6 — Ingredient Price History Tracking
+
+### Overview
+
+Phase 6 adds append-only price history tracking for ingredients. Every time a costing-relevant field changes (price, quantity, units, tax, yield), a new `IngredientPriceHistory` row is inserted. The `Ingredient` table continues to store the current/live state; the history table provides full traceability.
+
+### New Schema
+
+**`IngredientPriceHistory`** (table: `ingredient_price_history`)
+
+| Field | Type | Notes |
+|---|---|---|
+| `id` | cuid | Primary key |
+| `ingredientId` | String | FK → Ingredient |
+| `purchasePrice` | Decimal(10,2) | |
+| `purchaseQuantity` | Decimal(10,3) | |
+| `purchaseUnit` | UnitType | |
+| `baseUnit` | UnitType | |
+| `taxIncluded` | Boolean | |
+| `yieldPercent` | Decimal(5,2) | |
+| `sourceType` | PriceHistorySourceType | MANUAL / CSV_IMPORT / SYSTEM |
+| `notes` | String? | Optional change reason |
+| `effectiveFrom` | DateTime | When the price became effective |
+| `createdAt` | DateTime | Auto-set to now() |
+| `createdByUserId` | String? | FK → User |
+
+**New enum:** `PriceHistorySourceType { MANUAL, CSV_IMPORT, SYSTEM }`
+
+### History Creation Triggers
+
+- **Ingredient created** → always inserts an initial history row (source: MANUAL)
+- **Ingredient updated with costing change** → inserts a new history row
+- **Ingredient updated without costing change** → no history row inserted
+
+Costing-relevant fields: `purchasePrice`, `purchaseQuantity`, `purchaseUnit`, `baseUnit`, `taxIncluded`, `yieldPercent`
+
+### Service Layer (`lib/costing/`)
+
+- **`ingredient-price-history-utils.ts`** — Pure/testable helpers:
+  - `detectCostingFieldChanges(current, incoming)` — returns `true` if any costing field changed
+  - `computeHistoryDeltas(rows)` — computes price delta, percent delta, and standard cost delta % for each row vs previous
+- **`ingredient-price-history.ts`** — Server-only DB access:
+  - `createIngredientHistorySnapshot(input, tx?)` — inserts a history row (supports transaction)
+  - `listIngredientPriceHistory(ingredientId)` — full history, newest first
+  - `getLatestIngredientHistory(ingredientId)` — most recent entry
+  - `buildIngredientHistoryViewModel(ingredientId)` — history rows with deltas
+
+### UI Changes
+
+- **Ingredient form** (`/ingredients/new`, `/ingredients/[id]/edit`) — "Price History Record" section appears automatically on create and when costing fields are edited, with optional `effectiveFrom` and `changeNote` fields
+- **Edit page** (`/ingredients/[id]/edit`) — new "Price History" section shows full history table with: Effective From, Price, Qty, Units, Tax, Yield %, Standard Cost, Price Δ, Cost Δ%, Source, Note, Recorded At
+- **Ingredient list** (`/ingredients`) — new "Last Price Update" and "Price Δ" summary columns
+
+### Tests (`lib/__tests__/ingredient-price-history.test.ts`)
+
+20 tests covering:
+- `detectCostingFieldChanges` — no-change cases, all 6 costing field change cases
+- Historical standard unit cost calculation
+- Delta calculation: price delta, percent delta, standard cost delta percent
+- `effectiveFrom` behavior — custom date and default-to-now
+- `computeHistoryDeltas` — multi-row deltas, oldest row null-delta, single-row
+
+### Next Recommended Step (Phase 7)
+
+- Supplier mapping: link ingredients to supplier records for invoice-driven price updates
+- Bulk/CSV price import: create CSV_IMPORT history rows from supplier invoices
+- Repricing alerts: flag recipe costs that have changed significantly due to ingredient price history
+

@@ -84,6 +84,8 @@ export default function IngredientTable({ ingredients }: IngredientTableProps) {
                   <th className="text-center px-4 py-3 font-medium text-gray-600">Conversion</th>
                   <th className="text-center px-4 py-3 font-medium text-gray-600">Tax</th>
                   <th className="text-center px-4 py-3 font-medium text-gray-600">Active</th>
+                   <th className="text-left px-4 py-3 font-medium text-gray-600">Last Price Update</th>
+                   <th className="text-right px-4 py-3 font-medium text-gray-600">Price Δ</th>
                   <th className="text-left px-4 py-3 font-medium text-gray-600">Updated</th>
                   <th className="text-right px-4 py-3 font-medium text-gray-600">Actions</th>
                 </tr>
@@ -161,6 +163,25 @@ export default function IngredientTable({ ingredients }: IngredientTableProps) {
                         >
                           {ingredient.isActive ? "Active" : "Inactive"}
                         </span>
+                      </td>
+                      <td className="px-4 py-3 text-gray-400 text-xs">
+                        {ingredient.lastPriceUpdatedAt
+                          ? new Date(ingredient.lastPriceUpdatedAt).toLocaleDateString("en-NZ")
+                          : <span className="italic">—</span>}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        {ingredient.lastPriceDelta !== null ? (
+                          <span className={`text-xs font-mono ${parseFloat(ingredient.lastPriceDelta) > 0 ? "text-red-600" : parseFloat(ingredient.lastPriceDelta) < 0 ? "text-green-600" : "text-gray-500"}`}>
+                            {parseFloat(ingredient.lastPriceDelta) > 0 ? "+" : ""}${Math.abs(parseFloat(ingredient.lastPriceDelta)).toFixed(2)}
+                            {ingredient.lastPriceDeltaPct !== null && (
+                              <span className="ml-1 text-gray-400">
+                                ({parseFloat(ingredient.lastPriceDelta) > 0 ? "+" : ""}{ingredient.lastPriceDeltaPct}%)
+                              </span>
+                            )}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400 text-xs">—</span>
+                        )}
                       </td>
                       <td className="px-4 py-3 text-gray-400 text-xs">
                         {new Date(ingredient.updatedAt).toLocaleDateString("en-NZ")}

@@ -15,6 +15,15 @@ const UNIT_OPTIONS = Object.values(UnitType);
 
 type FormErrors = Record<string, string | undefined>;
 
+const COSTING_FIELDS = [
+  "purchasePrice",
+  "purchaseQuantity",
+  "purchaseUnit",
+  "baseUnit",
+  "taxIncluded",
+  "yieldPercent",
+] as const;
+
 export default function IngredientForm({ ingredient, categories }: IngredientFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -33,6 +42,10 @@ export default function IngredientForm({ ingredient, categories }: IngredientFor
   const [isActive, setIsActive] = useState(ingredient?.isActive ?? true);
   const [notes, setNotes] = useState(ingredient?.notes ?? "");
 
+  // Phase 6 history fields
+  const [effectiveFrom, setEffectiveFrom] = useState("");
+  const [changeNote, setChangeNote] = useState("");
+
   const [errors, setErrors] = useState<FormErrors>({});
   const [serverError, setServerError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -47,12 +60,45 @@ export default function IngredientForm({ ingredient, categories }: IngredientFor
     return check.errorMessage;
   }, [purchaseUnit, baseUnit]);
 
+  // Detect whether a costing field has changed relative to the existing ingredient
+  const hasCostingChange = useMemo(() => {
+    if (!isEditing || !ingredient) return false;
+    const current = {
+      purchasePrice: ingredient.purchasePrice,
+      purchaseQuantity: ingredient.purchaseQuantity,
+      purchaseUnit: ingredient.purchaseUnit,
+      baseUnit: ingredient.baseUnit,
+      taxIncluded: ingredient.taxIncluded,
+      yieldPercent: ingredient.yieldPercent,
+    };
+    const incoming = {
+      purchasePrice,
+      purchaseQuantity,
+      purchaseUnit,
+      baseUnit,
+      taxIncluded,
+      yieldPercent,
+    };
+    return COSTING_FIELDS.some(
+      (k) => String(incoming[k]) !== String(current[k])
+    );
+  }, [
+    isEditing,
+    ingredient,
+    purchasePrice,
+    purchaseQuantity,
+    purchaseUnit,
+    baseUnit,
+    taxIncluded,
+    yieldPercent,
+  ]);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setErrors({});
     setServerError(null);
 
-    const payload = {
+    const payload: Record<string, unknown> = {
       name,
       categoryId: categoryId || null,
       description: description || null,
@@ -66,19 +112,25 @@ export default function IngredientForm({ ingredient, categories }: IngredientFor
       notes: notes || null,
     };
 
+    // Include history fields if editing and costing changed (or always on create)
+    if (!isEditing || hasCostingChange) {
+      if (effectiveFrom) payload.effectiveFrom = new Date(effectiveFrom).toISOString();
+      if (changeNote) payload.changeNote = changeNote;
+    }
+
     // Client-side validation
     const newErrors: FormErrors = {};
-    if (!payload.name.trim()) newErrors.name = "Name is required";
-    if (isNaN(payload.purchasePrice) || payload.purchasePrice <= 0)
+    if (!String(payload.name).trim()) newErrors.name = "Name is required";
+    if (isNaN(payload.purchasePrice as number) || (payload.purchasePrice as number) <= 0)
       newErrors.purchasePrice = "Purchase price must be greater than 0";
-    if (isNaN(payload.purchaseQuantity) || payload.purchaseQuantity <= 0)
+    if (isNaN(payload.purchaseQuantity as number) || (payload.purchaseQuantity as number) <= 0)
       newErrors.purchaseQuantity = "Purchase quantity must be greater than 0";
     if (!payload.purchaseUnit) newErrors.purchaseUnit = "Purchase unit is required";
     if (!payload.baseUnit) newErrors.baseUnit = "Base unit is required";
     if (unitConversionHint) newErrors.baseUnit = unitConversionHint;
-    if (isNaN(payload.yieldPercent) || payload.yieldPercent <= 0)
+    if (isNaN(payload.yieldPercent as number) || (payload.yieldPercent as number) <= 0)
       newErrors.yieldPercent = "Yield % must be greater than 0";
-    else if (payload.yieldPercent > 100)
+    else if ((payload.yieldPercent as number) > 100)
       newErrors.yieldPercent = "Yield % must be 100 or less";
 
     if (Object.keys(newErrors).length > 0) {
@@ -314,6 +366,48 @@ export default function IngredientForm({ ingredient, categories }: IngredientFor
           </label>
         </div>
       </div>
+
+      {/* Price History metadata — shown on create, or on edit when costing fields changed */}
+      {(!isEditing || hasCostingChange) && (
+        <div className="bg-amber-50 rounded-xl border border-amber-200 p-6 space-y-4">
+          <div>
+            <h2 className="text-sm font-semibold text-amber-800 uppercase tracking-wide">
+              Price History Record
+            </h2>
+            <p className="text-xs text-amber-700 mt-1">
+              {isEditing
+                ? "A price history entry will be recorded because costing fields have changed."
+                : "An initial price history entry will be recorded on creation."}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className={labelClass}>Effective From</label>
+              <input
+                type="datetime-local"
+                value={effectiveFrom}
+                onChange={(e) => setEffectiveFrom(e.target.value)}
+                disabled={isPending}
+                className={inputClass}
+              />
+              <p className="text-xs text-gray-400 mt-1">Leave blank to use current time</p>
+            </div>
+
+            <div>
+              <label className={labelClass}>Change Note</label>
+              <input
+                type="text"
+                value={changeNote}
+                onChange={(e) => setChangeNote(e.target.value)}
+                disabled={isPending}
+                placeholder="e.g. Supplier price increase"
+                className={inputClass}
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Notes + Status */}
       <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">

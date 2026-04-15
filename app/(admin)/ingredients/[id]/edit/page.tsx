@@ -2,9 +2,11 @@ export const dynamic = "force-dynamic";
 
 import { requireAdmin } from "@/lib/auth/dal";
 import { getIngredientById, listIngredientCategories } from "@/lib/services/ingredientService";
+import { buildIngredientHistoryViewModel } from "@/lib/costing/ingredient-price-history";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import IngredientForm from "../../IngredientForm";
+import IngredientPriceHistoryTable from "../../IngredientPriceHistoryTable";
 
 export default async function EditIngredientPage({
   params,
@@ -14,9 +16,10 @@ export default async function EditIngredientPage({
   await requireAdmin();
   const { id } = await params;
 
-  const [ingredient, categories] = await Promise.all([
+  const [ingredient, categories, historyVm] = await Promise.all([
     getIngredientById(id),
     listIngredientCategories(),
+    buildIngredientHistoryViewModel(id),
   ]);
 
   if (!ingredient) notFound();
@@ -89,10 +92,43 @@ export default async function EditIngredientPage({
               </span>
             )}
           </dd>
+
+          {ingredient.lastPriceUpdatedAt && (
+            <>
+              <dt className="text-gray-500">Last Price Update</dt>
+              <dd className="text-gray-700 text-xs">
+                {new Date(ingredient.lastPriceUpdatedAt).toLocaleString("en-NZ")}
+                {ingredient.lastPriceDelta !== null && (
+                  <span className={`ml-2 font-mono ${parseFloat(ingredient.lastPriceDelta) > 0 ? "text-red-600" : parseFloat(ingredient.lastPriceDelta) < 0 ? "text-green-600" : "text-gray-500"}`}>
+                    {parseFloat(ingredient.lastPriceDelta) > 0 ? "+" : ""}${Math.abs(parseFloat(ingredient.lastPriceDelta)).toFixed(2)}
+                    {ingredient.lastPriceDeltaPct !== null && (
+                      <span className="ml-1 text-gray-400">
+                        ({parseFloat(ingredient.lastPriceDelta) > 0 ? "+" : ""}{ingredient.lastPriceDeltaPct}%)
+                      </span>
+                    )}
+                  </span>
+                )}
+              </dd>
+            </>
+          )}
         </dl>
       </div>
 
       <IngredientForm ingredient={ingredient} categories={categories} />
+
+      {/* Price History Section */}
+      <div className="space-y-3 max-w-full">
+        <div>
+          <h2 className="text-lg font-semibold text-gray-900">Price History</h2>
+          <p className="text-sm text-gray-500 mt-0.5">
+            Historical record of costing changes — {historyVm.rows.length}{" "}
+            {historyVm.rows.length === 1 ? "entry" : "entries"}
+          </p>
+        </div>
+        <div className="w-full">
+          <IngredientPriceHistoryTable rows={historyVm.rows} />
+        </div>
+      </div>
     </div>
   );
 }
