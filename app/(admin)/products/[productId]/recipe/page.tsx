@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { requireAdmin } from "@/lib/auth/dal";
 import { getMenuProductById } from "@/lib/services/menuProductService";
+import { listComponentProducts } from "@/lib/services/menuProductService";
 import { getRecipeCostSummary } from "@/lib/services/recipeService";
 import { listIngredients } from "@/lib/services/ingredientService";
 import { getGlobalPricingSettings, buildPricingSummaryForProduct } from "@/lib/services/pricingService";
@@ -19,19 +20,20 @@ export default async function RecipePage({
   await requireAdmin();
   const { productId } = await params;
 
-  const [product, summary, activeIngredients, globalPricingSettings] = await Promise.all([
+  const [product, summary, activeIngredients, componentProducts, globalPricingSettings] = await Promise.all([
     getMenuProductById(productId),
     getRecipeCostSummary(productId),
     listIngredients({ isActive: true }),
+    listComponentProducts(),
     getGlobalPricingSettings(),
   ]);
 
   if (!product) notFound();
 
-  const adjustedCost =
-    summary?.adjustedTotalCost != null ? parseFloat(summary.adjustedTotalCost) : null;
+  const adjustedCostPerUnit =
+    summary?.adjustedCostPerOutputUnit != null ? parseFloat(summary.adjustedCostPerOutputUnit) : null;
 
-  const pricingSummary = buildPricingSummaryForProduct(product, adjustedCost, globalPricingSettings);
+  const pricingSummary = buildPricingSummaryForProduct(product, adjustedCostPerUnit, globalPricingSettings);
 
   // Build human-readable target label
   const effectiveTarget = pricingSummary.effectiveTarget;
@@ -68,10 +70,11 @@ export default async function RecipePage({
         product={product}
         initialSummary={summary}
         activeIngredients={activeIngredients}
+        componentProducts={componentProducts}
       />
 
       {/* Pricing summary — only show when there's something meaningful to display */}
-      <RecipePricingSummary pricing={pricingSummary} targetLabel={targetLabel} />
+      <RecipePricingSummary pricing={pricingSummary} targetLabel={targetLabel} summary={summary} />
     </div>
   );
 }

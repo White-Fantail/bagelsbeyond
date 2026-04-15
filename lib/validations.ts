@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { UnitType, PricingTargetType, RecommendedPriceRounding, SupplierIntegrationType, SupplierSyncMode } from "@/app/generated/prisma/enums";
+import { UnitType, PricingTargetType, RecommendedPriceRounding, SupplierIntegrationType, SupplierSyncMode, RecipeItemSourceType } from "@/app/generated/prisma/enums";
 import { getConversionFactor } from "@/lib/costing/unit-conversion";
 
 export const salesFormSchema = z.object({
@@ -157,6 +157,7 @@ export const menuProductSchema = z.object({
       .nullable()
       .optional()
   ),
+  canBeUsedAsRecipeComponent: z.boolean().default(false).optional(),
 });
 
 export type MenuProductSchema = z.infer<typeof menuProductSchema>;
@@ -165,27 +166,71 @@ export type MenuProductSchema = z.infer<typeof menuProductSchema>;
 
 export const recipeSchema = z.object({
   name: z.string().min(1, "Recipe name is required"),
+  outputQuantity: z.preprocess(
+    (v) => (v === "" || v === null || v === undefined ? 1 : v),
+    z.coerce.number().positive("Output quantity must be greater than 0").default(1)
+  ),
+  outputUnit: z.nativeEnum(UnitType).default(UnitType.EA),
 });
 
 export type RecipeSchema = z.infer<typeof recipeSchema>;
 
 // ─── Recipe Item ──────────────────────────────────────────────────────────────
 
-export const recipeItemSchema = z.object({
-  ingredientId: z.string().min(1, "Ingredient is required"),
-  quantity: z.coerce.number().positive("Quantity must be greater than 0"),
-  unit: z.enum(Object.values(UnitType) as [string, ...string[]], {
-    message: "Unit is required",
-  }),
-  notes: z.string().optional().nullable(),
-  sortOrder: z.coerce.number().int().min(0).default(0),
-});
+export const recipeItemSchema = z
+  .object({
+    sourceType: z.nativeEnum(RecipeItemSourceType).default(RecipeItemSourceType.INGREDIENT),
+    ingredientId: z.string().optional().nullable(),
+    componentProductId: z.string().optional().nullable(),
+    quantity: z.coerce.number().positive("Quantity must be greater than 0"),
+    unit: z.enum(Object.values(UnitType) as [string, ...string[]], {
+      message: "Unit is required",
+    }),
+    notes: z.string().optional().nullable(),
+    sortOrder: z.coerce.number().int().min(0).default(0),
+  })
+  .superRefine((data, ctx) => {
+    if (data.sourceType === RecipeItemSourceType.INGREDIENT) {
+      if (!data.ingredientId) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Ingredient is required for INGREDIENT source type",
+          path: ["ingredientId"],
+        });
+      }
+      if (data.componentProductId) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "componentProductId must be null for INGREDIENT source type",
+          path: ["componentProductId"],
+        });
+      }
+    } else {
+      if (!data.componentProductId) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Component product is required for PRODUCT source type",
+          path: ["componentProductId"],
+        });
+      }
+      if (data.ingredientId) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "ingredientId must be null for PRODUCT source type",
+          path: ["ingredientId"],
+        });
+      }
+    }
+  });
 
 export type RecipeItemSchema = z.infer<typeof recipeItemSchema>;
 
-export const updateRecipeItemSchema = recipeItemSchema
-  .omit({ ingredientId: true, unit: true })
-  .partial();
+// Update schema only covers editable fields (quantity, notes, sortOrder)
+export const updateRecipeItemSchema = z.object({
+  quantity: z.coerce.number().positive("Quantity must be greater than 0").optional(),
+  notes: z.string().optional().nullable(),
+  sortOrder: z.coerce.number().int().min(0).optional(),
+});
 
 export type UpdateRecipeItemSchema = z.infer<typeof updateRecipeItemSchema>;
 

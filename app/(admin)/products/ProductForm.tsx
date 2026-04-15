@@ -19,6 +19,9 @@ export default function ProductForm({ product }: ProductFormProps) {
   const [sku, setSku] = useState(product?.sku ?? "");
   const [notes, setNotes] = useState(product?.notes ?? "");
   const [isActive, setIsActive] = useState(product?.isActive ?? true);
+  const [canBeUsedAsRecipeComponent, setCanBeUsedAsRecipeComponent] = useState(
+    product?.canBeUsedAsRecipeComponent ?? false
+  );
   const [sellingPrice, setSellingPrice] = useState(product?.sellingPrice ?? "");
   const [useOverride, setUseOverride] = useState(
     product?.pricingTargetType != null && product?.pricingTargetPercent != null
@@ -68,6 +71,7 @@ export default function ProductForm({ product }: ProductFormProps) {
       sku: sku.trim() || null,
       notes: notes.trim() || null,
       isActive,
+      canBeUsedAsRecipeComponent,
       sellingPrice: sellingPrice !== "" ? parseFloat(String(sellingPrice)) : null,
       pricingTargetType: useOverride ? pricingTargetType : null,
       pricingTargetPercent: useOverride && pricingTargetPercent !== ""
@@ -200,6 +204,23 @@ export default function ProductForm({ product }: ProductFormProps) {
           <label htmlFor="isActive" className="text-sm text-gray-700">
             Active
           </label>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <input
+            id="canBeUsedAsRecipeComponent"
+            type="checkbox"
+            checked={canBeUsedAsRecipeComponent}
+            onChange={(e) => setCanBeUsedAsRecipeComponent(e.target.checked)}
+            disabled={isPending}
+            className="w-4 h-4 rounded border-gray-300 text-amber-500 focus:ring-amber-500"
+          />
+          <label htmlFor="canBeUsedAsRecipeComponent" className="text-sm text-gray-700">
+            Can be used as recipe component
+          </label>
+          <span className="text-xs text-gray-400">
+            (allows this product to be added as an ingredient in other recipes)
+          </span>
         </div>
       </div>
 

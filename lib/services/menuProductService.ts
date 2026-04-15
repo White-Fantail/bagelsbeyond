@@ -13,6 +13,7 @@ export type MenuProductRow = {
   sellingPrice: string | null;
   pricingTargetType: PricingTargetType | null;
   pricingTargetPercent: string | null;
+  canBeUsedAsRecipeComponent: boolean;
   createdAt: string;
   updatedAt: string;
 };
@@ -25,6 +26,7 @@ export type CreateMenuProductInput = {
   sellingPrice?: number | null;
   pricingTargetType?: PricingTargetType | null;
   pricingTargetPercent?: number | null;
+  canBeUsedAsRecipeComponent?: boolean;
 };
 
 export type UpdateMenuProductInput = Partial<CreateMenuProductInput>;
@@ -40,6 +42,7 @@ function toMenuProductRow(r: {
   sellingPrice: { toString(): string } | null;
   pricingTargetType: PricingTargetType | null;
   pricingTargetPercent: { toString(): string } | null;
+  canBeUsedAsRecipeComponent: boolean;
   createdAt: Date;
   updatedAt: Date;
 }): MenuProductRow {
@@ -52,6 +55,7 @@ function toMenuProductRow(r: {
     sellingPrice: r.sellingPrice !== null ? r.sellingPrice.toString() : null,
     pricingTargetType: r.pricingTargetType,
     pricingTargetPercent: r.pricingTargetPercent !== null ? r.pricingTargetPercent.toString() : null,
+    canBeUsedAsRecipeComponent: r.canBeUsedAsRecipeComponent,
     createdAt: r.createdAt.toISOString(),
     updatedAt: r.updatedAt.toISOString(),
   };
@@ -87,6 +91,7 @@ export async function createMenuProduct(input: CreateMenuProductInput): Promise<
       sellingPrice: input.sellingPrice != null ? String(input.sellingPrice) : null,
       pricingTargetType: input.pricingTargetType ?? null,
       pricingTargetPercent: input.pricingTargetPercent != null ? String(input.pricingTargetPercent) : null,
+      canBeUsedAsRecipeComponent: input.canBeUsedAsRecipeComponent ?? false,
     },
   });
   return toMenuProductRow(row);
@@ -110,7 +115,21 @@ export async function updateMenuProduct(
       ...("pricingTargetPercent" in input
         ? { pricingTargetPercent: input.pricingTargetPercent != null ? String(input.pricingTargetPercent) : null }
         : {}),
+      ...("canBeUsedAsRecipeComponent" in input
+        ? { canBeUsedAsRecipeComponent: input.canBeUsedAsRecipeComponent ?? false }
+        : {}),
     },
   });
   return toMenuProductRow(row);
+}
+
+/**
+ * Returns all active products that can be used as recipe components.
+ */
+export async function listComponentProducts(): Promise<MenuProductRow[]> {
+  const rows = await prisma.menuProduct.findMany({
+    where: { canBeUsedAsRecipeComponent: true, isActive: true },
+    orderBy: { name: "asc" },
+  });
+  return rows.map(toMenuProductRow);
 }

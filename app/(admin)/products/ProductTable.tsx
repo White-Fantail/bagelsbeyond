@@ -78,8 +78,11 @@ export default function ProductTable({ products, recipeSummaries, pricingSummari
                       )}
                     </td>
                     <td className="px-4 py-3 text-right font-mono text-xs">
-                      {summary?.adjustedTotalCost ? (
-                        <span className="font-semibold text-gray-900">${summary.adjustedTotalCost}</span>
+                      {summary?.adjustedCostPerOutputUnit ? (
+                        <span className="font-semibold text-gray-900">
+                          ${summary.adjustedCostPerOutputUnit}
+                          <span className="text-gray-400 font-normal">/{summary.outputUnit}</span>
+                        </span>
                       ) : summary?.hasActiveRecipe ? (
                         <span className="text-amber-600 text-xs">Incomplete</span>
                       ) : (
@@ -161,10 +164,10 @@ export default function ProductTable({ products, recipeSummaries, pricingSummari
                     <span className="inline-flex items-center px-2 py-0.5 rounded-full font-medium bg-amber-100 text-amber-700">
                       {summary.recipeName ?? "Recipe"}
                     </span>
-                    <span className="text-gray-500">{summary.ingredientCount} ingredients</span>
-                    {summary.adjustedTotalCost ? (
+                    <span className="text-gray-500">{summary.ingredientCount} items</span>
+                    {summary.adjustedCostPerOutputUnit ? (
                       <span className="font-mono text-gray-600 ml-auto text-xs">
-                        Cost ${summary.adjustedTotalCost}
+                        ${summary.adjustedCostPerOutputUnit}/{summary.outputUnit}
                       </span>
                     ) : (
                       <span className="text-amber-600 ml-auto">Incomplete costing</span>

@@ -5,8 +5,11 @@ import {
   calculateRecipeTotalCost,
   calculateEffectiveQuantity,
   calculateAdjustedLineCost,
+  calculateCostPerOutputUnit,
+  calculateComponentProductLineCost,
 } from "@/lib/costing/recipe-cost";
 import { calculateStandardUnitCost } from "@/lib/costing/ingredient-cost";
+import { recipeItemSchema, recipeSchema } from "@/lib/validations";
 
 // ─── calculateRecipeItemCost ──────────────────────────────────────────────────
 
@@ -274,5 +277,291 @@ describe("yieldPercent validation rules (business rules)", () => {
     const directCost = calculateRecipeItemCost(1, 0.25); // paper bag
     const adjustedCost = calculateAdjustedLineCost(1, 100, 0.25);
     expect(directCost).toBeCloseTo(adjustedCost!, 6);
+  });
+});
+
+// ─── Phase 8: Batch output and component product costing ──────────────────────
+
+describe("calculateCostPerOutputUnit — batch recipe per-unit cost", () => {
+  it("plain bagel batch: $18.00 / 24 bagels = $0.75/ea", () => {
+    const perUnit = calculateCostPerOutputUnit(18.0, 24);
+    expect(perUnit).toBeCloseTo(0.75, 6);
+  });
+
+  it("returns null when batchTotalCost is null", () => {
+    expect(calculateCostPerOutputUnit(null, 24)).toBeNull();
+  });
+
+  it("returns null when outputQuantity is 0", () => {
+    expect(calculateCostPerOutputUnit(18.0, 0)).toBeNull();
+  });
+
+  it("returns null when outputQuantity is negative", () => {
+    expect(calculateCostPerOutputUnit(18.0, -1)).toBeNull();
+  });
+
+  it("returns the cost itself for a single-unit batch", () => {
+    const perUnit = calculateCostPerOutputUnit(5.5, 1);
+    expect(perUnit).toBeCloseTo(5.5, 6);
+  });
+
+  it("handles fractional outputQuantity", () => {
+    // $10.00 / 2.5 = $4.00/unit
+    const perUnit = calculateCostPerOutputUnit(10.0, 2.5);
+    expect(perUnit).toBeCloseTo(4.0, 6);
+  });
+});
+
+describe("calculateComponentProductLineCost — product-as-component costing", () => {
+  it("2 bagels × $0.75/bagel = $1.50", () => {
+    const cost = calculateComponentProductLineCost(2, 0.75);
+    expect(cost).toBeCloseTo(1.5, 5);
+  });
+
+  it("returns null when componentUnitCost is null", () => {
+    expect(calculateComponentProductLineCost(2, null)).toBeNull();
+  });
+
+  it("returns 0 for zero quantity", () => {
+    expect(calculateComponentProductLineCost(0, 0.75)).toBe(0);
+  });
+
+  it("handles fractional quantities", () => {
+    // 0.5 × $3.20 = $1.60
+    const cost = calculateComponentProductLineCost(0.5, 3.2);
+    expect(cost).toBeCloseTo(1.6, 5);
+  });
+});
+
+describe("Batch costing integration — plain bagel batch recipe", () => {
+  // Scenario:
+  // Plain Bagel batch recipe produces 24 EA
+  // Ingredients:
+  //   - High Gluten Flour: 1000 G × $0.00192/G = $1.92
+  //   - Water: 600 ML × $0.0001/ML = $0.06
+  //   - Salt: 20 G × $0.002/G = $0.04
+  //   - Yeast: 10 G × $0.05/G = $0.50
+  // Batch total = $2.52
+  // But with yield adjustments (say flour 95%, others 100%):
+  //   - Flour adjusted: 1000/0.95 × $0.00192 ≈ $2.021
+  // Adjusted batch total ≈ $2.621
+  // Per-unit cost ≈ $2.621 / 24 ≈ $0.1092
+
+  const flourLineCost = calculateRecipeItemCost(1000, 0.00192); // $1.92
+  const waterLineCost = calculateRecipeItemCost(600, 0.0001);   // $0.06
+  const saltLineCost  = calculateRecipeItemCost(20, 0.002);      // $0.04
+  const yeastLineCost = calculateRecipeItemCost(10, 0.05);       // $0.50
+
+  const flourAdjusted = calculateAdjustedLineCost(1000, 95, 0.00192); // 1000/0.95 × 0.00192 ≈ 2.021
+  const waterAdjusted = calculateAdjustedLineCost(600, 100, 0.0001);
+  const saltAdjusted  = calculateAdjustedLineCost(20, 100, 0.002);
+  const yeastAdjusted = calculateAdjustedLineCost(10, 100, 0.05);
+
+  it("direct batch total = $2.52", () => {
+    const total = calculateRecipeTotalCost([flourLineCost, waterLineCost, saltLineCost, yeastLineCost]);
+    expect(total).toBeCloseTo(2.52, 4);
+  });
+
+  it("direct cost per bagel = $2.52 / 24 ≈ $0.105", () => {
+    const batchTotal = calculateRecipeTotalCost([flourLineCost, waterLineCost, saltLineCost, yeastLineCost]);
+    const perUnit = calculateCostPerOutputUnit(batchTotal, 24);
+    expect(perUnit).toBeCloseTo(0.105, 4);
+  });
+
+  it("adjusted batch total > direct batch total when yield < 100", () => {
+    const directTotal = calculateRecipeTotalCost([flourLineCost, waterLineCost, saltLineCost, yeastLineCost]);
+    const adjustedTotal = calculateRecipeTotalCost([flourAdjusted, waterAdjusted, saltAdjusted, yeastAdjusted]);
+    expect(adjustedTotal!).toBeGreaterThan(directTotal!);
+  });
+
+  it("adjusted cost per bagel is higher than direct cost per bagel", () => {
+    const directBatch = calculateRecipeTotalCost([flourLineCost, waterLineCost, saltLineCost, yeastLineCost]);
+    const adjustedBatch = calculateRecipeTotalCost([flourAdjusted, waterAdjusted, saltAdjusted, yeastAdjusted]);
+    const directPerUnit = calculateCostPerOutputUnit(directBatch, 24);
+    const adjustedPerUnit = calculateCostPerOutputUnit(adjustedBatch, 24);
+    expect(adjustedPerUnit!).toBeGreaterThan(directPerUnit!);
+  });
+
+  it("null batch total gives null per-unit cost", () => {
+    // Simulate ingredient with no cost
+    const incompleteCosts: (number | null)[] = [flourLineCost, null, saltLineCost, yeastLineCost];
+    const batchTotal = calculateRecipeTotalCost(incompleteCosts);
+    const perUnit = calculateCostPerOutputUnit(batchTotal, 24);
+    expect(batchTotal).toBeNull();
+    expect(perUnit).toBeNull();
+  });
+});
+
+describe("Component product cost roll-up — sandwich uses plain bagel", () => {
+  // Plain Bagel: per-unit cost $0.75 (from its own batch recipe)
+  // BLT Bagel Sandwich recipe:
+  //   - 1 EA Plain Bagel × $0.75 = $0.75
+  //   - 30 G Lettuce × $0.005/G = $0.15
+  //   - 50 G Bacon × $0.02/G = $1.00
+  // Batch total = $1.90, output 1 EA
+  // Cost per sandwich = $1.90
+
+  const bagelLineCost = calculateComponentProductLineCost(1, 0.75); // $0.75
+  const lettuceLineCost = calculateRecipeItemCost(30, 0.005);        // $0.15
+  const baconLineCost = calculateRecipeItemCost(50, 0.02);           // $1.00
+
+  it("bagel component line cost = $0.75", () => {
+    expect(bagelLineCost).toBeCloseTo(0.75, 5);
+  });
+
+  it("sandwich batch total = $1.90", () => {
+    const total = calculateRecipeTotalCost([bagelLineCost, lettuceLineCost, baconLineCost]);
+    expect(total).toBeCloseTo(1.9, 4);
+  });
+
+  it("cost per sandwich = $1.90 (output 1 EA)", () => {
+    const total = calculateRecipeTotalCost([bagelLineCost, lettuceLineCost, baconLineCost]);
+    const perUnit = calculateCostPerOutputUnit(total, 1);
+    expect(perUnit).toBeCloseTo(1.9, 4);
+  });
+
+  it("unavailable bagel cost makes sandwich total null", () => {
+    const unavailableBagel = calculateComponentProductLineCost(1, null);
+    const total = calculateRecipeTotalCost([unavailableBagel, lettuceLineCost, baconLineCost]);
+    expect(total).toBeNull();
+  });
+});
+
+describe("recipeItemSchema validation — source type rules", () => {
+
+  it("INGREDIENT source: ingredientId required, componentProductId null", () => {
+    const result = recipeItemSchema.safeParse({
+      sourceType: "INGREDIENT",
+      ingredientId: "ing-123",
+      componentProductId: null,
+      quantity: 100,
+      unit: "G",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("INGREDIENT source: fails when ingredientId is missing", () => {
+    const result = recipeItemSchema.safeParse({
+      sourceType: "INGREDIENT",
+      ingredientId: null,
+      componentProductId: null,
+      quantity: 100,
+      unit: "G",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("INGREDIENT source: fails when componentProductId is set", () => {
+    const result = recipeItemSchema.safeParse({
+      sourceType: "INGREDIENT",
+      ingredientId: "ing-123",
+      componentProductId: "prod-456",
+      quantity: 100,
+      unit: "G",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("PRODUCT source: componentProductId required, ingredientId null", () => {
+    const result = recipeItemSchema.safeParse({
+      sourceType: "PRODUCT",
+      componentProductId: "prod-456",
+      ingredientId: null,
+      quantity: 1,
+      unit: "EA",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("PRODUCT source: fails when componentProductId is missing", () => {
+    const result = recipeItemSchema.safeParse({
+      sourceType: "PRODUCT",
+      componentProductId: null,
+      ingredientId: null,
+      quantity: 1,
+      unit: "EA",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("PRODUCT source: fails when ingredientId is set", () => {
+    const result = recipeItemSchema.safeParse({
+      sourceType: "PRODUCT",
+      componentProductId: "prod-456",
+      ingredientId: "ing-123",
+      quantity: 1,
+      unit: "EA",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("fails when quantity is 0", () => {
+    const result = recipeItemSchema.safeParse({
+      sourceType: "INGREDIENT",
+      ingredientId: "ing-123",
+      quantity: 0,
+      unit: "G",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("fails when quantity is negative", () => {
+    const result = recipeItemSchema.safeParse({
+      sourceType: "INGREDIENT",
+      ingredientId: "ing-123",
+      quantity: -5,
+      unit: "G",
+    });
+    expect(result.success).toBe(false);
+  });
+});
+
+describe("recipeSchema — batch output validation", () => {
+
+  it("accepts valid batch output", () => {
+    const result = recipeSchema.safeParse({
+      name: "Plain Bagel Recipe",
+      outputQuantity: 24,
+      outputUnit: "EA",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("defaults outputQuantity to 1 when not provided", () => {
+    const result = recipeSchema.safeParse({
+      name: "Plain Bagel Recipe",
+      outputUnit: "EA",
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.outputQuantity).toBe(1);
+    }
+  });
+
+  it("fails when outputQuantity is 0", () => {
+    const result = recipeSchema.safeParse({
+      name: "Plain Bagel Recipe",
+      outputQuantity: 0,
+      outputUnit: "EA",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("fails when outputQuantity is negative", () => {
+    const result = recipeSchema.safeParse({
+      name: "Plain Bagel Recipe",
+      outputQuantity: -1,
+      outputUnit: "EA",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("fails when name is empty", () => {
+    const result = recipeSchema.safeParse({
+      name: "",
+      outputQuantity: 24,
+      outputUnit: "EA",
+    });
+    expect(result.success).toBe(false);
   });
 });

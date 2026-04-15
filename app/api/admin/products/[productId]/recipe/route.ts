@@ -5,6 +5,7 @@ import {
   upsertRecipeForProduct,
 } from "@/lib/services/recipeService";
 import { recipeSchema } from "@/lib/validations";
+import { UnitType } from "@/app/generated/prisma/enums";
 
 export async function GET(
   _req: NextRequest,
@@ -47,12 +48,20 @@ export async function PUT(
   }
 
   try {
-    const recipe = await upsertRecipeForProduct(productId, parsed.data.name);
+    const recipe = await upsertRecipeForProduct(
+      productId,
+      parsed.data.name,
+      parsed.data.outputQuantity,
+      parsed.data.outputUnit as UnitType
+    );
     return NextResponse.json({ recipe });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "";
     if (msg === "PRODUCT_NOT_FOUND") {
       return NextResponse.json({ message: "Product not found" }, { status: 404 });
+    }
+    if (msg === "INVALID_OUTPUT_QUANTITY") {
+      return NextResponse.json({ message: "Output quantity must be greater than 0" }, { status: 422 });
     }
     return NextResponse.json({ message: "Failed to save recipe" }, { status: 500 });
   }

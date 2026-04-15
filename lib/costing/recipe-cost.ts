@@ -52,3 +52,29 @@ export function calculateRecipeTotalCost(lineCosts: (number | null)[]): number |
   if (lineCosts.some((c) => c === null)) return null;
   return (lineCosts as number[]).reduce((acc, c) => acc + c, 0);
 }
+
+/**
+ * Calculates the cost per output unit for a batch recipe.
+ * costPerUnit = batchTotalCost / outputQuantity
+ * Returns null if either argument is null or outputQuantity is 0.
+ */
+export function calculateCostPerOutputUnit(
+  batchTotalCost: number | null,
+  outputQuantity: number
+): number | null {
+  if (batchTotalCost === null || outputQuantity <= 0) return null;
+  return batchTotalCost / outputQuantity;
+}
+
+/**
+ * Calculates the line cost for a product-component recipe item.
+ * lineCost = quantity × componentUnitCost
+ * Returns null if componentUnitCost is unavailable.
+ */
+export function calculateComponentProductLineCost(
+  quantity: number,
+  componentUnitCost: number | null
+): number | null {
+  if (componentUnitCost === null) return null;
+  return quantity * componentUnitCost;
+}

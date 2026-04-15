@@ -1047,3 +1047,119 @@ Costing-relevant fields: `purchasePrice`, `purchaseQuantity`, `purchaseUnit`, `b
 - Bulk/CSV price import from supplier invoices (CSV_IMPORT history rows)
 - Supplier price change alerts: flag ingredients where the supplier price has changed significantly
 - API/Scraper integration stubs for suppliers with API_READY or SCRAPER_READY sync mode
+
+---
+
+## Phase 8: Batch Recipe Output & Intermediate Product Components
+
+### Goal
+
+Upgrade the recipe/costing structure so that:
+1. A recipe can represent a batch that produces multiple units of a product
+2. Certain products can be used as recipe components inside other recipes (e.g. plain bagels used in sandwich recipes)
+
+---
+
+### Schema Changes
+
+#### `recipes` table
+| New Column | Type | Default | Description |
+|---|---|---|---|
+| `outputQuantity` | `Decimal(10,3)` | `1` | How many units this batch produces |
+| `outputUnit` | `UnitType` | `EA` | Unit of the batch output |
+
+#### `menu_products` table
+| New Column | Type | Default | Description |
+|---|---|---|---|
+| `canBeUsedAsRecipeComponent` | `Boolean` | `false` | Allows this product to be used as a component in other recipes |
+
+#### `recipe_items` table
+
+**Breaking changes:**
+- `ingredientId` is now **nullable** (previously `NOT NULL`)
+- Unique constraint `(recipeId, ingredientId)` has been **removed** (duplicate prevention moved to service layer)
+
+**New columns:**
+| Column | Type | Default | Description |
+|---|---|---|---|
+| `sourceType` | `RecipeItemSourceType` | `INGREDIENT` | Whether item is from an ingredient or product |
+| `componentProductId` | `String?` | `null` | FK to `menu_products` for PRODUCT source type |
+
+#### New Enum: `RecipeItemSourceType`
+```
+INGREDIENT   — item references an Ingredient record
+PRODUCT      — item references a MenuProduct with canBeUsedAsRecipeComponent=true
+```
+
+---
+
+### Migration Behavior
+
+The migration (`20260415400000_phase8_batch_recipe_components`) safely upgrades existing data:
+
+- All existing `recipes` rows get `outputQuantity = 1` and `outputUnit = EA` by default
+- All existing `recipe_items` rows get `sourceType = INGREDIENT` by default
+- Existing `ingredientId` values are preserved (now nullable but populated for all legacy rows)
+- The old unique constraint is dropped; duplicate prevention is enforced at the service layer
+
+---
+
+### Costing Changes
+
+#### New batch cost fields in `RecipeCostSummary`
+
+| Field | Description |
+|---|---|
+| `batchDirectTotalCost` | Sum of all direct line costs for one production batch |
+| `batchAdjustedTotalCost` | Sum of all yield-adjusted line costs for one production batch |
+| `directCostPerOutputUnit` | `batchDirectTotalCost / outputQuantity` |
+| `adjustedCostPerOutputUnit` | `batchAdjustedTotalCost / outputQuantity` |
+| `outputQuantity` | Batch output quantity |
+| `outputUnit` | Batch output unit |
+
+Old fields `directTotalCost`, `adjustedTotalCost`, `totalCost` are kept as backward-compat aliases that point to the batch values.
+
+#### Product list pricing
+
+The Products page now shows **cost per output unit** (not batch total) in the "Adj. Cost" column. This ensures pricing targets are calculated against per-unit cost, which is correct for sellable products.
+
+---
+
+### How Parent/Child Recipe Costing Works
+
+When a recipe item references a component product (e.g. a BLT Sandwich recipe uses Plain Bagels):
+
+1. The system looks up the component product's **active recipe**
+2. Calls `getRecipeCostSummary()` recursively to get the `adjustedCostPerOutputUnit` of that sub-recipe
+3. The component item's `lineCost = quantity × componentProduct.adjustedCostPerOutputUnit`
+4. If the component product has no recipe or costing is incomplete, the line cost is `null` and the parent recipe is marked as incomplete
+
+**Direct self-reference prevention:** A product cannot reference itself as a component in its own recipe. The `addRecipeItem` service throws `SELF_REFERENCE` if `componentProductId === recipe.productId`.
+
+**TODO (Phase 9+):** Full graph-cycle detection across multi-hop component chains (A → B → A). A guard comment is in place in `addRecipeItem` for future implementation.
+
+---
+
+### New API Routes
+
+| Method | Route | Description |
+|---|---|---|
+| `GET` | `/api/admin/products/components` | List all active products with `canBeUsedAsRecipeComponent=true` |
+
+Updated routes now accept `outputQuantity` and `outputUnit` in recipe PUT body, and `sourceType`/`componentProductId` in recipe items POST body.
+
+---
+
+### New UI Features
+
+- **Product form**: Toggle for "Can be used as recipe component"
+- **Recipe manager**: Inline editor for batch output (quantity + unit); shows both batch total and per-unit cost
+- **Add recipe item form**: Source type selector (Ingredient vs Product Component); component product list filtered by `canBeUsedAsRecipeComponent=true`
+- **Recipe item table**: Shows component product badge, `—` for N/A yield columns, component unit cost per EA
+- **Recipe pricing summary**: New "Batch Costing" section showing batch totals and per-unit cost
+- **Products table**: "Adj. Cost" column now shows `$X.XX/EA` (per-unit) instead of batch total
+
+### Next Steps (Phase 9)
+- Full cycle detection across component chains
+- Bulk/CSV price import from supplier invoices
+- Ingredient price change alerts
