@@ -452,7 +452,7 @@ export async function getIngredientImpactOnRecipes(
     const target = getEffectivePricingTarget(
       {
         pricingTargetType: product.pricingTargetType,
-        pricingTargetPercent: product.pricingTargetPercent,
+        pricingTargetPercent: product.pricingTargetPercent?.toString() ?? null,
       },
       globalSettings
     );
@@ -563,14 +563,14 @@ export async function getProductPricingHealth(
     const adjustedCostPerUnit = costMap.get(p.id) ?? null;
     const sellingPrice = p.sellingPrice ? parseFloat(p.sellingPrice.toString()) : null;
     const target = getEffectivePricingTarget(
-      { pricingTargetType: p.pricingTargetType, pricingTargetPercent: p.pricingTargetPercent },
+      { pricingTargetType: p.pricingTargetType, pricingTargetPercent: p.pricingTargetPercent?.toString() ?? null },
       globalSettings
     );
 
     const summary = buildProductPricingSummary({
       sellingPrice,
       adjustedCost: adjustedCostPerUnit,
-      product: { pricingTargetType: p.pricingTargetType, pricingTargetPercent: p.pricingTargetPercent },
+      product: { pricingTargetType: p.pricingTargetType, pricingTargetPercent: p.pricingTargetPercent?.toString() ?? null },
       globalSettings,
     });
 
