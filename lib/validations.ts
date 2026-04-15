@@ -119,7 +119,10 @@ const ingredientBaseSchema = z.object({
   changeNote: z.string().optional().nullable(),
 });
 
-export const ingredientSchema = ingredientBaseSchema.superRefine((data, ctx) => {
+const unitCompatibilityRefinement = (
+  data: { purchaseUnit?: string; baseUnit?: string },
+  ctx: z.RefinementCtx
+) => {
   const purchaseUnit = data.purchaseUnit as UnitType | undefined;
   const baseUnit = data.baseUnit as UnitType | undefined;
   // Only validate if both units are present (full create or update with both fields)
@@ -132,7 +135,14 @@ export const ingredientSchema = ingredientBaseSchema.superRefine((data, ctx) => 
       path: ["baseUnit"],
     });
   }
-});
+};
+
+export const ingredientSchema = ingredientBaseSchema.superRefine(unitCompatibilityRefinement);
+
+// For partial updates (PATCH): partial() must come before superRefine() in Zod v4
+export const ingredientUpdateSchema = ingredientBaseSchema
+  .partial()
+  .superRefine(unitCompatibilityRefinement);
 
 export type IngredientSchema = z.infer<typeof ingredientBaseSchema>;
 
