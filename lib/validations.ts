@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { UnitType, PricingTargetType, RecommendedPriceRounding } from "@/app/generated/prisma/enums";
+import { UnitType, PricingTargetType, RecommendedPriceRounding, SupplierIntegrationType, SupplierSyncMode } from "@/app/generated/prisma/enums";
 import { getConversionFactor } from "@/lib/costing/unit-conversion";
 
 export const salesFormSchema = z.object({
@@ -188,3 +188,41 @@ export const updateRecipeItemSchema = recipeItemSchema
   .partial();
 
 export type UpdateRecipeItemSchema = z.infer<typeof updateRecipeItemSchema>;
+
+// ─── Supplier ──────────────────────────────────────────────────────────────────
+
+export const supplierSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  slug: z
+    .string()
+    .min(1, "Slug is required")
+    .regex(/^[a-z0-9-]+$/, "Slug must contain only lowercase letters, numbers, and hyphens"),
+  integrationType: z.nativeEnum(SupplierIntegrationType).default(SupplierIntegrationType.MANUAL),
+  websiteUrl: z.string().url("Must be a valid URL").optional().nullable(),
+  notes: z.string().optional().nullable(),
+  isActive: z.boolean().default(true),
+});
+
+export type SupplierSchema = z.infer<typeof supplierSchema>;
+
+// ─── IngredientSupplierLink ────────────────────────────────────────────────────
+
+export const ingredientSupplierLinkSchema = z.object({
+  ingredientId: z.string().min(1, "Ingredient is required"),
+  supplierId: z.string().min(1, "Supplier is required"),
+  supplierProductName: z.string().min(1, "Supplier product name is required"),
+  supplierProductCode: z.string().optional().nullable(),
+  supplierProductUrl: z.string().url("Must be a valid URL").optional().nullable(),
+  supplierPackageQuantity: z.preprocess(
+    (v) => (v === "" || v === null || v === undefined ? null : v),
+    z.coerce.number().positive("Package quantity must be greater than 0").nullable().optional()
+  ),
+  supplierPackageUnit: z.enum(UNIT_VALUES).optional().nullable(),
+  supplierBaseUnit: z.enum(UNIT_VALUES).optional().nullable(),
+  isPrimary: z.boolean().default(false),
+  isActive: z.boolean().default(true),
+  syncMode: z.nativeEnum(SupplierSyncMode).default(SupplierSyncMode.MANUAL_ONLY),
+  notes: z.string().optional().nullable(),
+});
+
+export type IngredientSupplierLinkSchema = z.infer<typeof ingredientSupplierLinkSchema>;

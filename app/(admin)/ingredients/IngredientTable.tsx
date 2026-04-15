@@ -86,6 +86,7 @@ export default function IngredientTable({ ingredients }: IngredientTableProps) {
                   <th className="text-center px-4 py-3 font-medium text-gray-600">Active</th>
                    <th className="text-left px-4 py-3 font-medium text-gray-600">Last Price Update</th>
                    <th className="text-right px-4 py-3 font-medium text-gray-600">Price Δ</th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-600">Suppliers</th>
                   <th className="text-left px-4 py-3 font-medium text-gray-600">Updated</th>
                   <th className="text-right px-4 py-3 font-medium text-gray-600">Actions</th>
                 </tr>
@@ -185,6 +186,14 @@ export default function IngredientTable({ ingredients }: IngredientTableProps) {
                         })() : (
                           <span className="text-gray-400 text-xs">—</span>
                         )}
+                      </td>
+                      <td className="px-4 py-3">
+                        <Link
+                          href={`/ingredients/${ingredient.id}/suppliers`}
+                          className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700 hover:bg-amber-100 transition-colors"
+                        >
+                          {ingredient.primarySupplierName ?? "None"} ({ingredient.supplierLinkCount})
+                        </Link>
                       </td>
                       <td className="px-4 py-3 text-gray-400 text-xs">
                         {new Date(ingredient.updatedAt).toLocaleDateString("en-NZ")}

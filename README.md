@@ -1003,3 +1003,47 @@ Costing-relevant fields: `purchasePrice`, `purchaseQuantity`, `purchaseUnit`, `b
 - Bulk/CSV price import: create CSV_IMPORT history rows from supplier invoices
 - Repricing alerts: flag recipe costs that have changed significantly due to ingredient price history
 
+
+## Phase 7: Supplier Master & Ingredient Mapping
+
+### What Was Added
+
+**New Prisma Models:**
+- `Supplier` — Master list of ingredient suppliers with integration type, website, and active status
+- `IngredientSupplierLink` — Junction table linking ingredients to suppliers with product-level details (SKU, URL, package quantity/unit, primary flag, sync mode)
+
+**New Enums:**
+- `SupplierIntegrationType` — MANUAL | API | SCRAPER | CSV
+- `SupplierSyncMode` — MANUAL_ONLY | API_READY | SCRAPER_READY | CSV_ONLY
+
+**New Service:** `lib/services/supplierService.ts`
+- Full CRUD for Supplier and IngredientSupplierLink
+- Business rules: duplicate prevention, primary-link management via transaction, package quantity validation
+- Read helpers: `getIngredientSupplierSummary`, `getSupplierUsageSummary`
+
+**New API Routes:**
+- `GET/POST /api/admin/suppliers`
+- `GET/PATCH/DELETE /api/admin/suppliers/[id]`
+- `GET/POST /api/admin/ingredients/[id]/supplier-links`
+- `GET/PATCH/DELETE /api/admin/ingredients/[id]/supplier-links/[linkId]`
+- `POST /api/admin/ingredients/[id]/supplier-links/[linkId]/set-primary`
+
+**New UI Pages:**
+- `/suppliers` — Supplier list with summary cards and table
+- `/suppliers/new` — Create supplier form
+- `/suppliers/[id]/edit` — Edit supplier form
+- `/ingredients/[id]/suppliers` — Supplier links for a specific ingredient
+- `/ingredients/[id]/suppliers/new` — Add supplier link form
+- `/ingredients/[id]/suppliers/[linkId]/edit` — Edit supplier link form
+
+**Updated:**
+- Navigation sidebar — Suppliers added to Menu Costing group
+- `IngredientRow` — Added `primarySupplierName` and `supplierLinkCount` fields
+- Ingredient table — New Suppliers column linking to supplier management
+- Ingredient edit page — New Supplier Links summary section
+
+### Next Recommended Step (Phase 8)
+
+- Bulk/CSV price import from supplier invoices (CSV_IMPORT history rows)
+- Supplier price change alerts: flag ingredients where the supplier price has changed significantly
+- API/Scraper integration stubs for suppliers with API_READY or SCRAPER_READY sync mode

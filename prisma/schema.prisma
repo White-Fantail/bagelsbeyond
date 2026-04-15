@@ -41,6 +41,20 @@ enum RecommendedPriceRounding {
   NEAREST_1_00
 }
 
+enum SupplierIntegrationType {
+  MANUAL
+  API
+  SCRAPER
+  CSV
+}
+
+enum SupplierSyncMode {
+  MANUAL_ONLY
+  API_READY
+  SCRAPER_READY
+  CSV_ONLY
+}
+
 model IngredientCategory {
   id          String       @id @default(cuid())
   name        String       @unique
@@ -76,6 +90,7 @@ model Ingredient {
   category         IngredientCategory?    @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   recipeItems      RecipeItem[]
   priceHistory     IngredientPriceHistory[]
+  supplierLinks    IngredientSupplierLink[]
 
   @@index([name])
   @@index([categoryId])
@@ -106,6 +121,54 @@ model IngredientPriceHistory {
   @@index([createdAt])
   @@index([sourceType])
   @@map("ingredient_price_history")
+}
+
+model Supplier {
+  id              String                    @id @default(cuid())
+  name            String                    @unique
+  slug            String                    @unique
+  integrationType SupplierIntegrationType   @default(MANUAL)
+  websiteUrl      String?
+  notes           String?
+  isActive        Boolean                   @default(true)
+  createdAt       DateTime                  @default(now())
+  updatedAt       DateTime                  @updatedAt
+
+  ingredientLinks IngredientSupplierLink[]
+
+  @@index([name])
+  @@index([slug])
+  @@index([isActive])
+  @@map("suppliers")
+}
+
+model IngredientSupplierLink {
+  id                      String           @id @default(cuid())
+  ingredientId            String
+  supplierId              String
+  supplierProductName     String
+  supplierProductCode     String?
+  supplierProductUrl      String?
+  supplierPackageQuantity Decimal?         @db.Decimal(10, 3)
+  supplierPackageUnit     UnitType?
+  supplierBaseUnit        UnitType?
+  isPrimary               Boolean          @default(false)
+  isActive                Boolean          @default(true)
+  syncMode                SupplierSyncMode @default(MANUAL_ONLY)
+  lastCheckedAt           DateTime?
+  lastSyncStatus          String?
+  notes                   String?
+  createdAt               DateTime         @default(now())
+  updatedAt               DateTime         @updatedAt
+
+  ingredient Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
+  supplier   Supplier   @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+
+  @@index([ingredientId])
+  @@index([supplierId])
+  @@index([isPrimary])
+  @@index([isActive])
+  @@map("ingredient_supplier_links")
 }
 
 // ─── Menu Products & Recipes ──────────────────────────────────────────────────
