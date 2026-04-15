@@ -91,7 +91,7 @@ export default function SupplierTable({ suppliers }: SupplierTableProps) {
                       <td className="px-4 py-3">
                         <Link
                           href={`/suppliers/${supplier.id}`}
-                          className="font-medium text-gray-900 hover:text-amber-600 transition-colors"
+                          className="block font-medium text-gray-900 hover:text-amber-600 transition-colors"
                         >
                           {supplier.name}
                         </Link>
