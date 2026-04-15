@@ -38,7 +38,7 @@ export default function IngredientForm({ ingredient, categories }: IngredientFor
   );
   const [baseUnit, setBaseUnit] = useState<string>(ingredient?.baseUnit ?? UnitType.G);
   const [yieldPercent, setYieldPercent] = useState(ingredient?.yieldPercent ?? "100.00");
-  const [taxIncluded, setTaxIncluded] = useState(ingredient?.taxIncluded ?? true);
+  const [taxIncluded, setTaxIncluded] = useState(ingredient?.taxIncluded ?? false);
   const [isActive, setIsActive] = useState(ingredient?.isActive ?? true);
   const [notes, setNotes] = useState(ingredient?.notes ?? "");
 
