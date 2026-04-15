@@ -75,8 +75,11 @@ export default function RecipeItemTable({ items, onDelete, onUpdate }: RecipeIte
               <th className="text-left px-4 py-3 font-medium text-gray-600">Ingredient</th>
               <th className="text-right px-4 py-3 font-medium text-gray-600">Quantity</th>
               <th className="text-left px-4 py-3 font-medium text-gray-600">Unit</th>
+              <th className="text-right px-4 py-3 font-medium text-gray-600">Yield %</th>
+              <th className="text-right px-4 py-3 font-medium text-gray-600">Effective Qty</th>
               <th className="text-right px-4 py-3 font-medium text-gray-600">Standard Cost</th>
-              <th className="text-right px-4 py-3 font-medium text-gray-600">Line Cost</th>
+              <th className="text-right px-4 py-3 font-medium text-gray-600">Direct Cost</th>
+              <th className="text-right px-4 py-3 font-medium text-gray-600">Adjusted Cost</th>
               <th className="text-left px-4 py-3 font-medium text-gray-600">Notes</th>
               <th className="text-right px-4 py-3 font-medium text-gray-600">Sort</th>
               <th className="text-right px-4 py-3 font-medium text-gray-600">Actions</th>
@@ -109,10 +112,17 @@ export default function RecipeItemTable({ items, onDelete, onUpdate }: RecipeIte
                       </span>
                     </td>
                     <td className="px-4 py-3 text-right text-gray-500 font-mono text-xs">
+                      <span className={parseFloat(item.yieldPercent) < 100 ? "text-amber-700 font-medium" : ""}>
+                        {item.yieldPercent}%
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-right text-gray-500 font-mono text-xs">—</td>
+                    <td className="px-4 py-3 text-right text-gray-500 font-mono text-xs">
                       {item.ingredientStandardUnitCost
                         ? `$${item.ingredientStandardUnitCost} / ${item.ingredientBaseUnit}`
                         : <span className="text-amber-600">Unavailable</span>}
                     </td>
+                    <td className="px-4 py-3 text-right text-gray-500 font-mono text-xs">—</td>
                     <td className="px-4 py-3 text-right text-gray-500 font-mono text-xs">—</td>
                     <td className="px-4 py-3">
                       <input
@@ -177,6 +187,17 @@ export default function RecipeItemTable({ items, onDelete, onUpdate }: RecipeIte
                       {item.unit}
                     </span>
                   </td>
+                  <td className="px-4 py-3 text-right font-mono text-xs">
+                    <span className={parseFloat(item.yieldPercent) < 100 ? "text-amber-700 font-medium" : "text-gray-600"}>
+                      {item.yieldPercent}%
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-right font-mono text-gray-700 text-xs">
+                    {parseFloat(item.effectiveQuantity).toLocaleString("en-NZ", {
+                      minimumFractionDigits: 0,
+                      maximumFractionDigits: 3,
+                    })}
+                  </td>
                   <td className="px-4 py-3 text-right font-mono text-gray-600 text-xs">
                     {item.ingredientStandardUnitCost ? (
                       `$${item.ingredientStandardUnitCost} / ${item.ingredientBaseUnit}`
@@ -184,9 +205,18 @@ export default function RecipeItemTable({ items, onDelete, onUpdate }: RecipeIte
                       <span className="text-amber-600 font-sans">Unavailable</span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-right font-mono text-gray-800 text-xs">
-                    {item.lineCost ? (
-                      `$${item.lineCost}`
+                  <td className="px-4 py-3 text-right font-mono text-gray-700 text-xs">
+                    {item.directLineCost ? (
+                      `$${item.directLineCost}`
+                    ) : (
+                      <span className="text-amber-600 font-sans text-xs">—</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-right font-mono text-xs">
+                    {item.adjustedLineCost ? (
+                      <span className={parseFloat(item.yieldPercent) < 100 ? "text-orange-700 font-medium" : "text-gray-700"}>
+                        ${item.adjustedLineCost}
+                      </span>
                     ) : (
                       <span className="text-amber-600 font-sans text-xs">—</span>
                     )}
@@ -241,13 +271,26 @@ export default function RecipeItemTable({ items, onDelete, onUpdate }: RecipeIte
                     <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-purple-50 text-purple-700">
                       {item.unit}
                     </span>
+                    <span className={`text-xs font-mono ${parseFloat(item.yieldPercent) < 100 ? "text-amber-700 font-medium" : "text-gray-400"}`}>
+                      yield {item.yieldPercent}%
+                    </span>
                   </div>
                 </div>
                 <div className="text-right flex-shrink-0">
-                  {item.lineCost ? (
-                    <p className="font-mono font-semibold text-gray-900 text-sm">
-                      ${item.lineCost}
-                    </p>
+                  {item.directLineCost ? (
+                    <div>
+                      <p className="font-mono text-gray-700 text-xs">Direct: ${item.directLineCost}</p>
+                      {item.adjustedLineCost && parseFloat(item.yieldPercent) < 100 && (
+                        <p className="font-mono font-semibold text-orange-700 text-sm">
+                          Adj: ${item.adjustedLineCost}
+                        </p>
+                      )}
+                      {item.adjustedLineCost && parseFloat(item.yieldPercent) >= 100 && (
+                        <p className="font-mono font-semibold text-gray-900 text-sm">
+                          ${item.adjustedLineCost}
+                        </p>
+                      )}
+                    </div>
                   ) : (
                     <p className="text-amber-600 text-xs">No cost</p>
                   )}

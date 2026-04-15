@@ -53,6 +53,7 @@ export async function POST(req: NextRequest) {
       purchaseQuantity: data.purchaseQuantity,
       purchaseUnit: data.purchaseUnit as UnitType,
       baseUnit: data.baseUnit as UnitType,
+      yieldPercent: data.yieldPercent,
       taxIncluded: data.taxIncluded,
       isActive: data.isActive,
       notes: data.notes,

@@ -767,33 +767,60 @@ Phase 3 links menu products to their ingredient recipes so the system can calcul
 
 ### Cost Calculation
 
-For each recipe item:
+For each recipe item (Phase 4):
 ```
-lineCost = quantity × ingredient.standardUnitCost
+directLineCost   = quantity × ingredient.standardUnitCost
+effectiveQty     = quantity / (yieldPercent / 100)
+adjustedLineCost = effectiveQty × ingredient.standardUnitCost
 ```
 
 For the recipe total:
 ```
-totalCost = Σ lineCost (all items)
+directTotalCost  = Σ directLineCost (all items)
+adjustedTotalCost = Σ adjustedLineCost (all items)
 ```
 
-- Costs are derived at read time — not stored in the database
-- If any ingredient has no standard unit cost, `totalCost` is `null` and the recipe is flagged as *incomplete*
+- All costs are derived at read time — not stored in the database
+- If any ingredient has no standard unit cost, totals are `null` and the recipe is flagged as *incomplete*
 - Pure calculation helpers live in `lib/costing/recipe-cost.ts` (importable from tests)
+- Packaging items use yieldPercent=100 and are added through the same ingredient flow
 
-### Phase 3 Limitations (deferred to Phase 4+)
+### Phase 4 Schema Changes
 
-- No waste/yield adjustment yet
+**Ingredient model** now includes:
+- `yieldPercent Decimal(5,2) @default(100.00)` — ingredient-level yield percentage
+  - 100.00 = no loss
+  - 85.00 = only 85% usable after trimming/prep
+  - Must be > 0 and ≤ 100
+
+**New derived fields per RecipeItem:**
+- `yieldPercent` — ingredient yield from master
+- `effectiveQuantity` — quantity adjusted for yield loss
+- `directLineCost` — quantity × standardUnitCost (no yield)
+- `adjustedLineCost` — effectiveQuantity × standardUnitCost (yield-adjusted)
+
+**New derived fields per Recipe:**
+- `directTotalCost` — sum of direct line costs
+- `adjustedTotalCost` — sum of yield-adjusted line costs
+
+### Packaging and Consumables
+
+Packaging items (e.g., paper bag, sandwich wrap, cup, sticker) are added through the standard Ingredient flow with `yieldPercent = 100`. No separate packaging model needed at this stage. Use existing `IngredientCategory` entries such as "Packaging" or "Consumables" to organise them.
+
+### Phase 4 Limitations (deferred to Phase 5+)
+
+- No recipe-level yield overrides yet
 - No prepared component / sub-recipe support yet
-- No recipe versioning yet
-- No recommended selling price yet
+- No selling price recommendations yet
 - No channel-specific profitability yet
+- No supplier sync yet
+- No price history yet
 
-### Next Recommended Step (Phase 4)
+### Next Recommended Step (Phase 5)
 
-- Add `wasteFactor` (e.g. 1.05 for 5% waste) to `RecipeItem`
-- Adjust line cost: `lineCost = quantity × wasteFactor × standardUnitCost`
-- Add packaging cost line items
-- Add `PackagingComponent` model and link to recipes
+- Add margin targets per product
+- Calculate recommended selling price based on adjustedTotalCost + target margin
+- Add channel-specific profitability analysis
+- Consider recipe versioning for cost history tracking
 
 

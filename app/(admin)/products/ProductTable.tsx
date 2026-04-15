@@ -36,7 +36,8 @@ export default function ProductTable({ products, recipeSummaries }: ProductTable
               <th className="text-center px-4 py-3 font-medium text-gray-600">Active</th>
               <th className="text-center px-4 py-3 font-medium text-gray-600">Recipe</th>
               <th className="text-right px-4 py-3 font-medium text-gray-600">Ingredients</th>
-              <th className="text-right px-4 py-3 font-medium text-gray-600">Recipe Cost</th>
+              <th className="text-right px-4 py-3 font-medium text-gray-600">Direct Cost</th>
+              <th className="text-right px-4 py-3 font-medium text-gray-600">Adjusted Cost</th>
               <th className="text-right px-4 py-3 font-medium text-gray-600">Actions</th>
             </tr>
           </thead>
@@ -76,9 +77,18 @@ export default function ProductTable({ products, recipeSummaries }: ProductTable
                       <span className="text-gray-400">—</span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-right font-mono text-gray-800 text-xs">
-                    {summary?.totalCost ? (
-                      `$${summary.totalCost}`
+                  <td className="px-4 py-3 text-right font-mono text-gray-700 text-xs">
+                    {summary?.directTotalCost ? (
+                      `$${summary.directTotalCost}`
+                    ) : summary?.hasActiveRecipe ? (
+                      <span className="text-amber-600 text-xs">Incomplete</span>
+                    ) : (
+                      <span className="text-gray-400">—</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-right font-mono text-xs">
+                    {summary?.adjustedTotalCost ? (
+                      <span className="font-semibold text-gray-900">${summary.adjustedTotalCost}</span>
                     ) : summary?.hasActiveRecipe ? (
                       <span className="text-amber-600 text-xs">Incomplete</span>
                     ) : (
@@ -132,8 +142,15 @@ export default function ProductTable({ products, recipeSummaries }: ProductTable
                       {summary.recipeName ?? "Recipe"}
                     </span>
                     <span className="text-gray-500">{summary.ingredientCount} ingredients</span>
-                    {summary.totalCost ? (
-                      <span className="font-mono text-gray-800 ml-auto">${summary.totalCost}</span>
+                    {summary.directTotalCost ? (
+                      <span className="font-mono text-gray-600 ml-auto text-xs">
+                        <span className="text-gray-400">Direct </span>${summary.directTotalCost}
+                        {summary.adjustedTotalCost && summary.adjustedTotalCost !== summary.directTotalCost && (
+                          <span className="ml-1 font-semibold text-gray-900">
+                            → ${summary.adjustedTotalCost}
+                          </span>
+                        )}
+                      </span>
                     ) : (
                       <span className="text-amber-600 ml-auto">Incomplete costing</span>
                     )}

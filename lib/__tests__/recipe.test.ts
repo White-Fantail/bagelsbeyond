@@ -3,6 +3,8 @@ import { UnitType } from "@/app/generated/prisma/enums";
 import {
   calculateRecipeItemCost,
   calculateRecipeTotalCost,
+  calculateEffectiveQuantity,
+  calculateAdjustedLineCost,
 } from "@/lib/costing/recipe-cost";
 import { calculateStandardUnitCost } from "@/lib/costing/ingredient-cost";
 
@@ -155,5 +157,122 @@ describe("Duplicate ingredient detection", () => {
   it("does not flag a new ingredient as a duplicate", () => {
     const isDuplicate = existingIngredientIds.includes("ing_salt");
     expect(isDuplicate).toBe(false);
+  });
+});
+
+// ─── Phase 4: Yield-adjusted costing ─────────────────────────────────────────
+
+describe("calculateEffectiveQuantity", () => {
+  it("yield=100 returns the same quantity (no loss)", () => {
+    expect(calculateEffectiveQuantity(10, 100)).toBe(10);
+  });
+
+  it("yield=85 means 10 G needs 10/0.85 ≈ 11.765 G to get 10 G usable", () => {
+    expect(calculateEffectiveQuantity(10, 85)).toBeCloseTo(11.7647, 3);
+  });
+
+  it("yield=50 doubles effective quantity", () => {
+    expect(calculateEffectiveQuantity(100, 50)).toBeCloseTo(200, 5);
+  });
+
+  it("yield=98 is close to 1:1 for cream cheese", () => {
+    expect(calculateEffectiveQuantity(35, 98)).toBeCloseTo(35.714, 2);
+  });
+});
+
+describe("calculateAdjustedLineCost", () => {
+  it("yield=100 adjusted cost equals direct cost", () => {
+    const directCost = calculateRecipeItemCost(10, 0.004);
+    const adjustedCost = calculateAdjustedLineCost(10, 100, 0.004);
+    expect(adjustedCost).toBeCloseTo(directCost!, 6);
+    expect(adjustedCost).toBeCloseTo(0.04, 5);
+  });
+
+  it("returns null when standardUnitCost is null", () => {
+    expect(calculateAdjustedLineCost(10, 85, null)).toBeNull();
+  });
+
+  it("onion: 10 G, yield 85%, cost 0.004/G → adjusted ~$0.04706", () => {
+    // effectiveQty = 10 / 0.85 ≈ 11.7647
+    // adjustedCost = 11.7647 × 0.004 ≈ 0.04706
+    const adjusted = calculateAdjustedLineCost(10, 85, 0.004);
+    expect(adjusted).toBeCloseTo(0.04706, 4);
+  });
+
+  it("cream cheese: 35 G, yield 98%, cost/G from 2 L @ $14.50", () => {
+    // std cost: $14.50 / 2000 mL = $0.00725/mL... but base is G, so let's use G
+    // If cream cheese 500g @ $5.00: stdCost = 5/500 = 0.01/G
+    // effectiveQty = 35 / 0.98 ≈ 35.714
+    // adjustedCost = 35.714 × 0.01 ≈ 0.35714
+    const adjusted = calculateAdjustedLineCost(35, 98, 0.01);
+    expect(adjusted).toBeCloseTo(0.35714, 4);
+  });
+});
+
+describe("Phase 4: adjusted total cost calculation", () => {
+  // Onion: 10 G, yield 85%, cost $0.004/G
+  // Cream Cheese: 35 G, yield 98%, cost $0.01/G
+  // Paper Bag: 1 EA, yield 100%, cost $0.15/EA
+
+  const onionDirectCost = calculateRecipeItemCost(10, 0.004); // 0.04
+  const onionAdjusted = calculateAdjustedLineCost(10, 85, 0.004); // ≈0.04706
+
+  const creamDirectCost = calculateRecipeItemCost(35, 0.01); // 0.35
+  const creamAdjusted = calculateAdjustedLineCost(35, 98, 0.01); // ≈0.35714
+
+  const bagDirectCost = calculateRecipeItemCost(1, 0.15); // 0.15
+  const bagAdjusted = calculateAdjustedLineCost(1, 100, 0.15); // 0.15
+
+  it("paper bag (yield=100): direct cost equals adjusted cost", () => {
+    expect(bagAdjusted).toBeCloseTo(bagDirectCost!, 6);
+    expect(bagAdjusted).toBeCloseTo(0.15, 5);
+  });
+
+  it("direct total cost sums all direct line costs", () => {
+    const total = calculateRecipeTotalCost([onionDirectCost, creamDirectCost, bagDirectCost]);
+    // 0.04 + 0.35 + 0.15 = 0.54
+    expect(total).toBeCloseTo(0.54, 5);
+  });
+
+  it("adjusted total cost is higher than direct when yield < 100", () => {
+    const directTotal = calculateRecipeTotalCost([onionDirectCost, creamDirectCost, bagDirectCost]);
+    const adjustedTotal = calculateRecipeTotalCost([onionAdjusted, creamAdjusted, bagAdjusted]);
+    expect(adjustedTotal).toBeGreaterThan(directTotal!);
+  });
+
+  it("adjusted total ≈ 0.04706 + 0.35714 + 0.15 ≈ 0.5542", () => {
+    const adjustedTotal = calculateRecipeTotalCost([onionAdjusted, creamAdjusted, bagAdjusted]);
+    expect(adjustedTotal).toBeCloseTo(0.5542, 3);
+  });
+
+  it("returns null from total if any line cost is null", () => {
+    const total = calculateRecipeTotalCost([onionAdjusted, null, bagAdjusted]);
+    expect(total).toBeNull();
+  });
+});
+
+describe("yieldPercent validation rules (business rules)", () => {
+  it("yield=100 is valid (no loss)", () => {
+    // 100 is the default — must be accepted
+    const effective = calculateEffectiveQuantity(100, 100);
+    expect(effective).toBe(100);
+  });
+
+  it("yield=85 is valid (15% loss)", () => {
+    const effective = calculateEffectiveQuantity(100, 85);
+    expect(effective).toBeCloseTo(117.647, 2);
+  });
+
+  it("yield must be > 0 — near zero yields very high effective quantity", () => {
+    // We do not test 0 here as that would divide by zero.
+    // Very small yield (e.g., 0.01) is technically valid per schema but unusual.
+    const effective = calculateEffectiveQuantity(100, 1);
+    expect(effective).toBeCloseTo(10000, 0);
+  });
+
+  it("yield=100 packaging item: direct cost === adjusted cost", () => {
+    const directCost = calculateRecipeItemCost(1, 0.25); // paper bag
+    const adjustedCost = calculateAdjustedLineCost(1, 100, 0.25);
+    expect(directCost).toBeCloseTo(adjustedCost!, 6);
   });
 });

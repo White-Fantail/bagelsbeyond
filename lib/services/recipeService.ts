@@ -6,6 +6,8 @@ import { calculateStandardUnitCost } from "@/lib/costing/ingredient-cost";
 import {
   calculateRecipeItemCost,
   calculateRecipeTotalCost,
+  calculateEffectiveQuantity,
+  calculateAdjustedLineCost,
 } from "@/lib/costing/recipe-cost";
 
 export { calculateRecipeItemCost, calculateRecipeTotalCost };
@@ -31,18 +33,30 @@ export type RecipeItemRow = {
   ingredientStandardUnitCost: string | null;
   quantity: string;
   unit: UnitType;
+  /** Yield percentage from the ingredient master (e.g. "85.00") */
+  yieldPercent: string;
+  /** Effective quantity after yield adjustment */
+  effectiveQuantity: string;
   notes: string | null;
   sortOrder: number;
   createdAt: string;
   updatedAt: string;
-  /** Derived: quantity × standardUnitCost, null if cost unavailable */
+  /** Derived: quantity × standardUnitCost (no yield), null if cost unavailable */
+  directLineCost: string | null;
+  /** Derived: effectiveQuantity × standardUnitCost (yield-adjusted), null if cost unavailable */
+  adjustedLineCost: string | null;
+  /** @deprecated Use directLineCost instead. Kept for backward compatibility. */
   lineCost: string | null;
 };
 
 export type RecipeCostSummary = {
   recipe: RecipeRow;
   items: RecipeItemRow[];
-  /** Sum of all line costs, null if any ingredient has no standard cost */
+  /** Sum of direct line costs (no yield adjustment), null if any ingredient has no standard cost */
+  directTotalCost: string | null;
+  /** Sum of yield-adjusted line costs, null if any ingredient has no standard cost */
+  adjustedTotalCost: string | null;
+  /** @deprecated Use directTotalCost instead. Kept for backward compatibility. */
   totalCost: string | null;
   /** true when every item has a valid standard unit cost */
   isFullyCosted: boolean;
@@ -57,6 +71,7 @@ type RawIngredient = {
   purchasePrice: Prisma.Decimal;
   purchaseQuantity: Prisma.Decimal;
   purchaseUnit: UnitType;
+  yieldPercent: Prisma.Decimal;
 };
 
 function getStandardUnitCost(ingredient: RawIngredient): number | null {
@@ -64,10 +79,6 @@ function getStandardUnitCost(ingredient: RawIngredient): number | null {
   const qty = parseFloat(ingredient.purchaseQuantity.toString());
   const result = calculateStandardUnitCost(price, qty, ingredient.purchaseUnit, ingredient.baseUnit);
   return result.isConvertible ? result.standardUnitCost : null;
-}
-
-function calculateLineCost(quantity: number, standardUnitCost: number | null): number | null {
-  return calculateRecipeItemCost(quantity, standardUnitCost);
 }
 
 type RawRecipeItem = {
@@ -85,8 +96,11 @@ type RawRecipeItem = {
 
 function toRecipeItemRow(r: RawRecipeItem): RecipeItemRow {
   const quantity = parseFloat(r.quantity.toString());
+  const yieldPct = parseFloat(r.ingredient.yieldPercent.toString());
   const standardUnitCost = getStandardUnitCost(r.ingredient);
-  const lineCost = calculateLineCost(quantity, standardUnitCost);
+  const effectiveQty = calculateEffectiveQuantity(quantity, yieldPct);
+  const directCost = calculateRecipeItemCost(quantity, standardUnitCost);
+  const adjustedCost = calculateAdjustedLineCost(quantity, yieldPct, standardUnitCost);
 
   return {
     id: r.id,
@@ -97,11 +111,15 @@ function toRecipeItemRow(r: RawRecipeItem): RecipeItemRow {
     ingredientStandardUnitCost: standardUnitCost !== null ? standardUnitCost.toFixed(6) : null,
     quantity: r.quantity.toFixed(3),
     unit: r.unit,
+    yieldPercent: yieldPct.toFixed(2),
+    effectiveQuantity: effectiveQty.toFixed(3),
     notes: r.notes,
     sortOrder: r.sortOrder,
     createdAt: r.createdAt.toISOString(),
     updatedAt: r.updatedAt.toISOString(),
-    lineCost: lineCost !== null ? lineCost.toFixed(4) : null,
+    directLineCost: directCost !== null ? directCost.toFixed(4) : null,
+    adjustedLineCost: adjustedCost !== null ? adjustedCost.toFixed(4) : null,
+    lineCost: directCost !== null ? directCost.toFixed(4) : null,
   };
 }
 
@@ -114,6 +132,7 @@ const recipeItemInclude = {
       purchasePrice: true,
       purchaseQuantity: true,
       purchaseUnit: true,
+      yieldPercent: true,
     },
   },
 } satisfies Prisma.RecipeItemInclude;
@@ -318,18 +337,26 @@ export async function getRecipeCostSummary(productId: string): Promise<RecipeCos
   if (!recipe) return null;
 
   const items = await listRecipeItems(recipe.id);
-  const isFullyCosted = items.every((item) => item.lineCost !== null);
+  const isFullyCosted = items.every((item) => item.directLineCost !== null);
 
-  const lineCosts = items.map((item) =>
-    item.lineCost !== null ? parseFloat(item.lineCost) : null
+  const directLineCosts = items.map((item) =>
+    item.directLineCost !== null ? parseFloat(item.directLineCost) : null
   );
-  const totalCostNum = calculateRecipeTotalCost(lineCosts);
-  const totalCost = totalCostNum !== null ? totalCostNum.toFixed(4) : null;
+  const adjustedLineCosts = items.map((item) =>
+    item.adjustedLineCost !== null ? parseFloat(item.adjustedLineCost) : null
+  );
+
+  const directTotalNum = calculateRecipeTotalCost(directLineCosts);
+  const adjustedTotalNum = calculateRecipeTotalCost(adjustedLineCosts);
+  const directTotalCost = directTotalNum !== null ? directTotalNum.toFixed(4) : null;
+  const adjustedTotalCost = adjustedTotalNum !== null ? adjustedTotalNum.toFixed(4) : null;
 
   return {
     recipe: toRecipeRow(recipe),
     items,
-    totalCost,
+    directTotalCost,
+    adjustedTotalCost,
+    totalCost: directTotalCost,
     isFullyCosted,
   };
 }
@@ -342,6 +369,8 @@ export type ProductRecipeSummary = {
   recipeName: string | null;
   ingredientCount: number;
   totalCost: string | null;
+  directTotalCost: string | null;
+  adjustedTotalCost: string | null;
 };
 
 /**
@@ -365,6 +394,7 @@ export async function getProductRecipeSummaries(
               purchasePrice: true,
               purchaseQuantity: true,
               purchaseUnit: true,
+              yieldPercent: true,
             },
           },
         },
@@ -376,11 +406,16 @@ export async function getProductRecipeSummaries(
 
   for (const recipe of recipes) {
     const items = recipe.items.map(toRecipeItemRow);
-    const allCosted = items.every((i) => i.lineCost !== null);
-    let totalCost: string | null = null;
+    const allCosted = items.every((i) => i.directLineCost !== null);
+
+    let directTotalCost: string | null = null;
+    let adjustedTotalCost: string | null = null;
+
     if (allCosted && items.length > 0) {
-      const sum = items.reduce((acc, i) => acc + parseFloat(i.lineCost!), 0);
-      totalCost = sum.toFixed(4);
+      const directSum = items.reduce((acc, i) => acc + parseFloat(i.directLineCost!), 0);
+      const adjustedSum = items.reduce((acc, i) => acc + parseFloat(i.adjustedLineCost!), 0);
+      directTotalCost = directSum.toFixed(4);
+      adjustedTotalCost = adjustedSum.toFixed(4);
     }
 
     summaryMap.set(recipe.productId, {
@@ -388,7 +423,9 @@ export async function getProductRecipeSummaries(
       hasActiveRecipe: true,
       recipeName: recipe.name,
       ingredientCount: items.length,
-      totalCost,
+      totalCost: directTotalCost,
+      directTotalCost,
+      adjustedTotalCost,
     });
   }
 
@@ -401,6 +438,8 @@ export async function getProductRecipeSummaries(
         recipeName: null,
         ingredientCount: 0,
         totalCost: null,
+        directTotalCost: null,
+        adjustedTotalCost: null,
       });
     }
   }

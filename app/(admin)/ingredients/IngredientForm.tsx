@@ -28,6 +28,7 @@ export default function IngredientForm({ ingredient, categories }: IngredientFor
     ingredient?.purchaseUnit ?? UnitType.KG
   );
   const [baseUnit, setBaseUnit] = useState<string>(ingredient?.baseUnit ?? UnitType.G);
+  const [yieldPercent, setYieldPercent] = useState(ingredient?.yieldPercent ?? "100.00");
   const [taxIncluded, setTaxIncluded] = useState(ingredient?.taxIncluded ?? true);
   const [isActive, setIsActive] = useState(ingredient?.isActive ?? true);
   const [notes, setNotes] = useState(ingredient?.notes ?? "");
@@ -59,6 +60,7 @@ export default function IngredientForm({ ingredient, categories }: IngredientFor
       purchaseQuantity: parseFloat(purchaseQuantity as string),
       purchaseUnit,
       baseUnit,
+      yieldPercent: parseFloat(yieldPercent as string),
       taxIncluded,
       isActive,
       notes: notes || null,
@@ -74,6 +76,10 @@ export default function IngredientForm({ ingredient, categories }: IngredientFor
     if (!payload.purchaseUnit) newErrors.purchaseUnit = "Purchase unit is required";
     if (!payload.baseUnit) newErrors.baseUnit = "Base unit is required";
     if (unitConversionHint) newErrors.baseUnit = unitConversionHint;
+    if (isNaN(payload.yieldPercent) || payload.yieldPercent <= 0)
+      newErrors.yieldPercent = "Yield % must be greater than 0";
+    else if (payload.yieldPercent > 100)
+      newErrors.yieldPercent = "Yield % must be 100 or less";
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -270,6 +276,27 @@ export default function IngredientForm({ ingredient, categories }: IngredientFor
               <p className="text-xs text-amber-600 mt-1">{unitConversionHint}</p>
             )}
             {errors.baseUnit && <p className={errorClass}>{errors.baseUnit}</p>}
+          </div>
+
+          <div>
+            <label className={labelClass}>
+              Yield % <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="number"
+              value={yieldPercent}
+              onChange={(e) => setYieldPercent(e.target.value)}
+              disabled={isPending}
+              step="0.01"
+              min="0.01"
+              max="100"
+              placeholder="100.00"
+              className={inputClass}
+            />
+            <p className="text-xs text-gray-400 mt-1">
+              100 means no loss · 85 means only 85% is usable after prep
+            </p>
+            {errors.yieldPercent && <p className={errorClass}>{errors.yieldPercent}</p>}
           </div>
         </div>
 
