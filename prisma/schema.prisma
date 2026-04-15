@@ -53,11 +53,66 @@ model Ingredient {
   updatedAt        DateTime            @updatedAt
 
   category         IngredientCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  recipeItems      RecipeItem[]
 
   @@index([name])
   @@index([categoryId])
   @@index([isActive])
   @@map("ingredients")
+}
+
+// ─── Menu Products & Recipes ──────────────────────────────────────────────────
+
+model MenuProduct {
+  id        String   @id @default(cuid())
+  name      String
+  sku       String?  @unique
+  isActive  Boolean  @default(true)
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  recipes   Recipe[]
+
+  @@index([name])
+  @@index([isActive])
+  @@map("menu_products")
+}
+
+model Recipe {
+  id        String      @id @default(cuid())
+  productId String
+  name      String
+  isActive  Boolean     @default(true)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  product   MenuProduct  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  items     RecipeItem[]
+
+  @@index([productId])
+  @@index([productId, isActive])
+  @@map("recipes")
+}
+
+model RecipeItem {
+  id           String   @id @default(cuid())
+  recipeId     String
+  ingredientId String
+  quantity     Decimal  @db.Decimal(10, 3)
+  unit         UnitType
+  notes        String?
+  sortOrder    Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  recipe     Recipe     @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  ingredient Ingredient @relation(fields: [ingredientId], references: [id])
+
+  @@unique([recipeId, ingredientId])
+  @@index([recipeId])
+  @@index([ingredientId])
+  @@map("recipe_items")
 }
 
 // ─── User & Role ──────────────────────────────────────────────────────────────
