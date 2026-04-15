@@ -120,6 +120,12 @@ export default function ProductTable({ products, recipeSummaries, pricingSummari
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-2">
                         <Link
+                          href={`/products/${product.id}/edit`}
+                          className="text-xs px-3 py-1.5 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
+                        >
+                          Edit
+                        </Link>
+                        <Link
                           href={`/products/${product.id}/recipe`}
                           className="text-xs px-3 py-1.5 rounded-md border border-amber-300 text-amber-700 hover:bg-amber-50 transition-colors"
                         >
@@ -194,6 +200,12 @@ export default function ProductTable({ products, recipeSummaries, pricingSummari
                 </div>
               )}
               <div className="flex items-center gap-2 pt-1">
+                <Link
+                  href={`/products/${product.id}/edit`}
+                  className="text-xs px-3 py-1.5 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50"
+                >
+                  Edit
+                </Link>
                 <Link
                   href={`/products/${product.id}/recipe`}
                   className="text-xs px-3 py-1.5 rounded-md border border-amber-300 text-amber-700 hover:bg-amber-50"
