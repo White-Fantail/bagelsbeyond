@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { UnitType } from "@/app/generated/prisma/enums";
+import { getConversionFactor } from "@/lib/costing/unit-conversion";
 
 export const salesFormSchema = z.object({
   date: z.string().min(1, "Please enter a date"),
@@ -86,7 +87,7 @@ export type IngredientCategorySchema = z.infer<typeof ingredientCategorySchema>;
 
 const UNIT_VALUES = Object.values(UnitType) as [string, ...string[]];
 
-export const ingredientSchema = z.object({
+const ingredientBaseSchema = z.object({
   name: z.string().min(1, "Name is required"),
   categoryId: z.string().optional().nullable(),
   description: z.string().optional().nullable(),
@@ -103,4 +104,19 @@ export const ingredientSchema = z.object({
   notes: z.string().optional().nullable(),
 });
 
-export type IngredientSchema = z.infer<typeof ingredientSchema>;
+export const ingredientSchema = ingredientBaseSchema.superRefine((data, ctx) => {
+  const purchaseUnit = data.purchaseUnit as UnitType | undefined;
+  const baseUnit = data.baseUnit as UnitType | undefined;
+  // Only validate if both units are present (full create or update with both fields)
+  if (!purchaseUnit || !baseUnit) return;
+  const check = getConversionFactor(purchaseUnit, baseUnit);
+  if (!check.canConvert) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: check.errorMessage,
+      path: ["baseUnit"],
+    });
+  }
+});
+
+export type IngredientSchema = z.infer<typeof ingredientBaseSchema>;

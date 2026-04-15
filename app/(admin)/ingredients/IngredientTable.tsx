@@ -78,6 +78,9 @@ export default function IngredientTable({ ingredients }: IngredientTableProps) {
                   <th className="text-right px-4 py-3 font-medium text-gray-600">Purchase Qty</th>
                   <th className="text-left px-4 py-3 font-medium text-gray-600">Purchase Unit</th>
                   <th className="text-left px-4 py-3 font-medium text-gray-600">Base Unit</th>
+                  <th className="text-right px-4 py-3 font-medium text-gray-600">Converted Base Qty</th>
+                  <th className="text-right px-4 py-3 font-medium text-gray-600">Standard Cost</th>
+                  <th className="text-center px-4 py-3 font-medium text-gray-600">Conversion</th>
                   <th className="text-center px-4 py-3 font-medium text-gray-600">Tax</th>
                   <th className="text-center px-4 py-3 font-medium text-gray-600">Active</th>
                   <th className="text-left px-4 py-3 font-medium text-gray-600">Updated</th>
@@ -113,6 +116,27 @@ export default function IngredientTable({ ingredients }: IngredientTableProps) {
                         <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-50 text-purple-700">
                           {ingredient.baseUnit}
                         </span>
+                      </td>
+                      <td className="px-4 py-3 text-right text-gray-700 font-mono text-xs">
+                        {ingredient.convertedBaseQuantity ?? (
+                          <span className="text-gray-400 italic">—</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-right text-gray-800 font-mono text-xs">
+                        {ingredient.standardUnitDisplay ?? (
+                          <span className="text-gray-400 italic">Unsupported</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        {ingredient.conversionStatus === "ok" ? (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                            OK
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
+                            Unsupported
+                          </span>
+                        )}
                       </td>
                       <td className="px-4 py-3 text-center">
                         {ingredient.taxIncluded ? (
@@ -201,6 +225,33 @@ export default function IngredientTable({ ingredients }: IngredientTableProps) {
                     <span className="ml-2 text-xs text-gray-400">
                       base: <span className="text-purple-600">{ingredient.baseUnit}</span>
                     </span>
+                  </div>
+                  <div className="text-xs text-gray-600 space-y-0.5">
+                    <div>
+                      <span className="text-gray-400">Converted base qty: </span>
+                      <span className="font-mono">
+                        {ingredient.convertedBaseQuantity ?? (
+                          <span className="italic text-gray-400">—</span>
+                        )}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-gray-400">Standard cost: </span>
+                      <span className="font-mono">
+                        {ingredient.standardUnitDisplay ?? (
+                          <span className="italic text-gray-400">Unsupported</span>
+                        )}
+                      </span>
+                      {ingredient.conversionStatus === "ok" ? (
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">
+                          OK
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-700">
+                          Unsupported
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <Link

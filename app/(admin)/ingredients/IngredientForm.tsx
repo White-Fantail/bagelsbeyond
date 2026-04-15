@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { UnitType } from "@/app/generated/prisma/enums";
 import type { IngredientRow, IngredientCategoryRow } from "@/lib/services/ingredientService";
+import { getConversionFactor } from "@/lib/costing/unit-conversion";
 
 interface IngredientFormProps {
   ingredient?: IngredientRow;
@@ -37,6 +38,14 @@ export default function IngredientForm({ ingredient, categories }: IngredientFor
 
   const isEditing = !!ingredient;
 
+  // Live unit-pair compatibility check for the form UI
+  const unitConversionHint = useMemo(() => {
+    if (!purchaseUnit || !baseUnit) return null;
+    const check = getConversionFactor(purchaseUnit as UnitType, baseUnit as UnitType);
+    if (check.canConvert) return null;
+    return check.errorMessage;
+  }, [purchaseUnit, baseUnit]);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setErrors({});
@@ -64,6 +73,7 @@ export default function IngredientForm({ ingredient, categories }: IngredientFor
       newErrors.purchaseQuantity = "Purchase quantity must be greater than 0";
     if (!payload.purchaseUnit) newErrors.purchaseUnit = "Purchase unit is required";
     if (!payload.baseUnit) newErrors.baseUnit = "Base unit is required";
+    if (unitConversionHint) newErrors.baseUnit = unitConversionHint;
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -255,6 +265,10 @@ export default function IngredientForm({ ingredient, categories }: IngredientFor
                 </option>
               ))}
             </select>
+            {/* Inline unit-pair compatibility hint */}
+            {unitConversionHint && !errors.baseUnit && (
+              <p className="text-xs text-amber-600 mt-1">{unitConversionHint}</p>
+            )}
             {errors.baseUnit && <p className={errorClass}>{errors.baseUnit}</p>}
           </div>
         </div>

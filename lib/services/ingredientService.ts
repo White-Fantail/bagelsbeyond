@@ -2,6 +2,10 @@ import "server-only";
 import { prisma } from "@/lib/db";
 import { UnitType } from "@/app/generated/prisma/enums";
 import type { Prisma } from "@/app/generated/prisma/client";
+import {
+  calculateStandardUnitCost,
+  formatConvertedBaseQuantity,
+} from "@/lib/costing/ingredient-cost";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -30,6 +34,11 @@ export type IngredientRow = {
   notes: string | null;
   createdAt: string;
   updatedAt: string;
+  // Derived costing fields (Phase 2)
+  convertedBaseQuantity: string | null;
+  standardUnitCost: string | null;
+  standardUnitDisplay: string | null;
+  conversionStatus: "ok" | "unsupported";
 };
 
 export type ListIngredientsFilter = {
@@ -123,6 +132,10 @@ function toIngredientRow(r: {
   updatedAt: Date;
   category: { name: string } | null;
 }): IngredientRow {
+  const price = parseFloat(r.purchasePrice.toString());
+  const qty = parseFloat(r.purchaseQuantity.toString());
+  const costResult = calculateStandardUnitCost(price, qty, r.purchaseUnit, r.baseUnit);
+
   return {
     id: r.id,
     name: r.name,
@@ -138,6 +151,14 @@ function toIngredientRow(r: {
     notes: r.notes,
     createdAt: r.createdAt.toISOString(),
     updatedAt: r.updatedAt.toISOString(),
+    convertedBaseQuantity: costResult.isConvertible
+      ? formatConvertedBaseQuantity(costResult.convertedBaseQuantity, r.baseUnit)
+      : null,
+    standardUnitCost: costResult.isConvertible
+      ? costResult.standardUnitCost.toFixed(6)
+      : null,
+    standardUnitDisplay: costResult.isConvertible ? costResult.displayLabel : null,
+    conversionStatus: costResult.isConvertible ? "ok" : "unsupported",
   };
 }
 
