@@ -334,26 +334,6 @@ export async function getRecipeCostSummary(productId: string): Promise<RecipeCos
   };
 }
 
-/**
- * Calculates the line cost for a single recipe item given quantity and standard unit cost.
- * Pure calculation helper — does not hit the database.
- */
-export function calculateRecipeItemCost(
-  quantity: number,
-  standardUnitCost: number | null
-): number | null {
-  return calculateLineCost(quantity, standardUnitCost);
-}
-
-/**
- * Calculates the total cost from an array of line costs.
- * Returns null if any line cost is null.
- */
-export function calculateRecipeTotalCost(lineCosts: (number | null)[]): number | null {
-  if (lineCosts.some((c) => c === null)) return null;
-  return (lineCosts as number[]).reduce((acc, c) => acc + c, 0);
-}
-
 // ─── Product List Summary ─────────────────────────────────────────────────────
 
 export type ProductRecipeSummary = {
