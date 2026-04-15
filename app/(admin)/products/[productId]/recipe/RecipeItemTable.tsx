@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { RecipeItemRow } from "@/lib/services/recipeService";
 import { RecipeItemSourceType } from "@/app/generated/prisma/enums";
 
@@ -8,18 +8,25 @@ interface RecipeItemTableProps {
   items: RecipeItemRow[];
   onDelete: (itemId: string) => Promise<void>;
   onUpdate: (itemId: string, quantity: number, notes: string | null, sortOrder: number) => Promise<void>;
+  onReorder: (orderedIds: string[]) => Promise<void>;
 }
 
-export default function RecipeItemTable({ items, onDelete, onUpdate }: RecipeItemTableProps) {
+export default function RecipeItemTable({ items, onDelete, onUpdate, onReorder }: RecipeItemTableProps) {
+  const [localItems, setLocalItems] = useState<RecipeItemRow[]>(items);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [editValues, setEditValues] = useState<{
     quantity: string;
     notes: string;
-    sortOrder: string;
-  }>({ quantity: "", notes: "", sortOrder: "" });
+  }>({ quantity: "", notes: "" });
   const [editError, setEditError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const draggedIndexRef = useRef<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+
+  useEffect(() => {
+    setLocalItems(items);
+  }, [items]);
 
   if (items.length === 0) {
     return (
@@ -37,7 +44,6 @@ export default function RecipeItemTable({ items, onDelete, onUpdate }: RecipeIte
     setEditValues({
       quantity: parseFloat(item.quantity).toString(),
       notes: item.notes ?? "",
-      sortOrder: item.sortOrder.toString(),
     });
     setEditError(null);
   }
@@ -54,10 +60,44 @@ export default function RecipeItemTable({ items, onDelete, onUpdate }: RecipeIte
       item.id,
       qty,
       editValues.notes.trim() || null,
-      parseInt(editValues.sortOrder) || 0
+      item.sortOrder
     );
     setSaving(false);
     setEditingId(null);
+  }
+
+  function handleDragStart(index: number) {
+    draggedIndexRef.current = index;
+  }
+
+  function handleDragOver(e: React.DragEvent, index: number) {
+    e.preventDefault();
+    setDragOverIndex(index);
+  }
+
+  function handleDragLeave() {
+    setDragOverIndex(null);
+  }
+
+  function handleDrop(index: number) {
+    const from = draggedIndexRef.current;
+    if (from === null || from === index) {
+      draggedIndexRef.current = null;
+      setDragOverIndex(null);
+      return;
+    }
+    const newItems = [...localItems];
+    const [moved] = newItems.splice(from, 1);
+    newItems.splice(index, 0, moved);
+    setLocalItems(newItems);
+    draggedIndexRef.current = null;
+    setDragOverIndex(null);
+    onReorder(newItems.map((item) => item.id));
+  }
+
+  function handleDragEnd() {
+    draggedIndexRef.current = null;
+    setDragOverIndex(null);
   }
 
   async function handleDelete(itemId: string) {
@@ -91,6 +131,7 @@ export default function RecipeItemTable({ items, onDelete, onUpdate }: RecipeIte
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-100 bg-gray-50">
+              <th className="w-8 px-2 py-3"></th>
               <th className="text-left px-4 py-3 font-medium text-gray-600">Item</th>
               <th className="text-right px-4 py-3 font-medium text-gray-600">Quantity</th>
               <th className="text-left px-4 py-3 font-medium text-gray-600">Unit</th>
@@ -100,19 +141,20 @@ export default function RecipeItemTable({ items, onDelete, onUpdate }: RecipeIte
               <th className="text-right px-4 py-3 font-medium text-gray-600">Direct Cost</th>
               <th className="text-right px-4 py-3 font-medium text-gray-600">Adjusted Cost</th>
               <th className="text-left px-4 py-3 font-medium text-gray-600">Notes</th>
-              <th className="text-right px-4 py-3 font-medium text-gray-600">Sort</th>
               <th className="text-right px-4 py-3 font-medium text-gray-600">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50">
-            {items.map((item) => {
+            {localItems.map((item, index) => {
               const isEditing = editingId === item.id;
               const isDeleting = deletingId === item.id;
               const isProductItem = item.sourceType === RecipeItemSourceType.PRODUCT;
+              const isDragOver = dragOverIndex === index;
 
               if (isEditing) {
                 return (
                   <tr key={item.id} className="bg-amber-50">
+                    <td className="px-2 py-3 text-gray-300 text-center">⠿</td>
                     <td className="px-4 py-3 font-medium text-gray-900">
                       {getItemDisplayName(item)}{getItemSourceBadge(item)}
                     </td>
@@ -172,16 +214,6 @@ export default function RecipeItemTable({ items, onDelete, onUpdate }: RecipeIte
                       />
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <input
-                        type="number"
-                        value={editValues.sortOrder}
-                        onChange={(e) =>
-                          setEditValues((v) => ({ ...v, sortOrder: e.target.value }))
-                        }
-                        className="w-16 px-2 py-1 border border-amber-300 rounded text-sm text-right focus:outline-none focus:ring-2 focus:ring-amber-500"
-                      />
-                    </td>
-                    <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-2">
                         {editError && (
                           <span className="text-xs text-red-600">{editError}</span>
@@ -209,8 +241,17 @@ export default function RecipeItemTable({ items, onDelete, onUpdate }: RecipeIte
               return (
                 <tr
                   key={item.id}
-                  className={`hover:bg-gray-50 transition-colors ${isDeleting ? "opacity-40" : ""}`}
+                  draggable
+                  onDragStart={() => handleDragStart(index)}
+                  onDragOver={(e) => handleDragOver(e, index)}
+                  onDragLeave={handleDragLeave}
+                  onDrop={() => handleDrop(index)}
+                  onDragEnd={handleDragEnd}
+                  className={`transition-colors ${isDeleting ? "opacity-40" : ""} ${isDragOver ? "bg-amber-50 border-t-2 border-amber-400" : "hover:bg-gray-50"}`}
                 >
+                  <td className="px-2 py-3 text-gray-300 text-center cursor-grab active:cursor-grabbing select-none">
+                    ⠿
+                  </td>
                   <td className="px-4 py-3 font-medium text-gray-900">
                     {getItemDisplayName(item)}{getItemSourceBadge(item)}
                   </td>
@@ -278,7 +319,6 @@ export default function RecipeItemTable({ items, onDelete, onUpdate }: RecipeIte
                   <td className="px-4 py-3 text-gray-500 text-xs">
                     {item.notes ?? <span className="italic text-gray-300">—</span>}
                   </td>
-                  <td className="px-4 py-3 text-right text-gray-400 text-xs">{item.sortOrder}</td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex items-center justify-end gap-2">
                       <button
@@ -305,34 +345,44 @@ export default function RecipeItemTable({ items, onDelete, onUpdate }: RecipeIte
 
       {/* Mobile cards */}
       <div className="lg:hidden divide-y divide-gray-100">
-        {items.map((item) => {
+        {localItems.map((item, index) => {
           const isDeleting = deletingId === item.id;
           const isProductItem = item.sourceType === RecipeItemSourceType.PRODUCT;
+          const isDragOver = dragOverIndex === index;
           return (
             <div
               key={item.id}
-              className={`p-4 space-y-2 ${isDeleting ? "opacity-40" : ""}`}
+              draggable
+              onDragStart={() => handleDragStart(index)}
+              onDragOver={(e) => handleDragOver(e, index)}
+              onDragLeave={handleDragLeave}
+              onDrop={() => handleDrop(index)}
+              onDragEnd={handleDragEnd}
+              className={`p-4 space-y-2 ${isDeleting ? "opacity-40" : ""} ${isDragOver ? "bg-amber-50 border-t-2 border-amber-400" : ""}`}
             >
               <div className="flex items-start justify-between gap-2">
-                <div>
-                  <p className="font-medium text-gray-900">
-                    {getItemDisplayName(item)}{getItemSourceBadge(item)}
-                  </p>
-                  <div className="flex items-center gap-1.5 mt-0.5">
-                    <span className="font-mono text-sm text-gray-800">
-                      {parseFloat(item.quantity).toLocaleString("en-NZ", {
-                        minimumFractionDigits: 0,
-                        maximumFractionDigits: 3,
-                      })}
-                    </span>
-                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-purple-50 text-purple-700">
-                      {item.unit}
-                    </span>
-                    {!isProductItem && item.yieldPercent && (
-                      <span className={`text-xs font-mono ${parseFloat(item.yieldPercent) < 100 ? "text-amber-700 font-medium" : "text-gray-400"}`}>
-                        yield {item.yieldPercent}%
+                <div className="flex items-start gap-2">
+                  <span className="text-gray-300 text-lg cursor-grab active:cursor-grabbing select-none mt-0.5">⠿</span>
+                  <div>
+                    <p className="font-medium text-gray-900">
+                      {getItemDisplayName(item)}{getItemSourceBadge(item)}
+                    </p>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <span className="font-mono text-sm text-gray-800">
+                        {parseFloat(item.quantity).toLocaleString("en-NZ", {
+                          minimumFractionDigits: 0,
+                          maximumFractionDigits: 3,
+                        })}
                       </span>
-                    )}
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-purple-50 text-purple-700">
+                        {item.unit}
+                      </span>
+                      {!isProductItem && item.yieldPercent && (
+                        <span className={`text-xs font-mono ${parseFloat(item.yieldPercent) < 100 ? "text-amber-700 font-medium" : "text-gray-400"}`}>
+                          yield {item.yieldPercent}%
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
                 <div className="text-right flex-shrink-0">

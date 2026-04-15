@@ -127,6 +127,23 @@ export default function RecipeManager({
     }
   }
 
+  async function handleReorderItems(orderedIds: string[]) {
+    try {
+      await Promise.all(
+        orderedIds.map((id, index) =>
+          fetch(`/api/admin/products/${product.id}/recipe/items/${id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ sortOrder: index }),
+          })
+        )
+      );
+      await refreshSummary();
+    } catch {
+      // silently fail
+    }
+  }
+
   async function handleAddItem(
     sourceType: string,
     ingredientId: string | null,
@@ -295,6 +312,7 @@ export default function RecipeManager({
         items={items}
         onDelete={handleDeleteItem}
         onUpdate={handleUpdateItem}
+        onReorder={handleReorderItems}
       />
 
       {/* Add item */}
