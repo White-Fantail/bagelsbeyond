@@ -25,6 +25,14 @@ enum PriceHistorySourceType {
   MANUAL
   CSV_IMPORT
   SYSTEM
+  API_SYNC
+}
+
+enum SupplierSyncStatus {
+  RUNNING
+  SUCCESS
+  PARTIAL
+  FAILED
 }
 
 enum PriceImportMode {
@@ -156,11 +164,72 @@ model Supplier {
   updatedAt       DateTime                  @updatedAt
 
   ingredientLinks IngredientSupplierLink[]
+  apiCredential   SupplierApiCredential?
+  syncLogs        SupplierSyncLog[]
 
   @@index([name])
   @@index([slug])
   @@index([isActive])
   @@map("suppliers")
+}
+
+model SupplierApiCredential {
+  id          String   @id @default(cuid())
+  supplierId  String   @unique
+  adapterKey  String
+  credentials String   // JSON-encoded API credentials (admin-only, never sent to client)
+  isActive    Boolean  @default(true)
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  supplier Supplier        @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  syncLogs SupplierSyncLog[]
+
+  @@index([supplierId])
+  @@map("supplier_api_credentials")
+}
+
+model SupplierSyncLog {
+  id                String             @id @default(cuid())
+  supplierId        String
+  credentialId      String?
+  status            SupplierSyncStatus
+  triggeredByUserId String?
+  startedAt         DateTime           @default(now())
+  finishedAt        DateTime?
+  totalLinks        Int                @default(0)
+  successLinks      Int                @default(0)
+  errorLinks        Int                @default(0)
+  skippedLinks      Int                @default(0)
+  errorSummary      String?
+  notes             String?
+  createdAt         DateTime           @default(now())
+
+  supplier        Supplier               @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  credential      SupplierApiCredential? @relation(fields: [credentialId], references: [id], onDelete: SetNull)
+  triggeredByUser User?                  @relation(fields: [triggeredByUserId], references: [id], onDelete: SetNull)
+  logEntries      SupplierSyncLogEntry[]
+
+  @@index([supplierId])
+  @@index([status])
+  @@index([startedAt])
+  @@map("supplier_sync_logs")
+}
+
+model SupplierSyncLogEntry {
+  id                       String          @id @default(cuid())
+  syncLogId                String
+  ingredientSupplierLinkId String?
+  ingredientId             String?
+  message                  String
+  level                    String          @default("info")
+  createdAt                DateTime        @default(now())
+
+  syncLog SupplierSyncLog @relation(fields: [syncLogId], references: [id], onDelete: Cascade)
+
+  @@index([syncLogId])
+  @@map("supplier_sync_log_entries")
 }
 
 model IngredientSupplierLink {
@@ -315,6 +384,7 @@ model User {
 
   ingredientPriceHistory IngredientPriceHistory[]
   priceImportBatches     PriceImportBatch[]
+  supplierSyncLogs       SupplierSyncLog[]
 
   @@map("users")
 }

@@ -35,11 +35,13 @@ function SourceBadge({ source }: { source: PriceHistorySourceType }) {
     [PriceHistorySourceType.MANUAL]: "bg-blue-50 text-blue-700",
     [PriceHistorySourceType.CSV_IMPORT]: "bg-purple-50 text-purple-700",
     [PriceHistorySourceType.SYSTEM]: "bg-gray-100 text-gray-600",
+    [PriceHistorySourceType.API_SYNC]: "bg-teal-50 text-teal-700",
   };
   const labels: Record<PriceHistorySourceType, string> = {
     [PriceHistorySourceType.MANUAL]: "Manual",
     [PriceHistorySourceType.CSV_IMPORT]: "CSV",
     [PriceHistorySourceType.SYSTEM]: "System",
+    [PriceHistorySourceType.API_SYNC]: "API Sync",
   };
   return (
     <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${colors[source]}`}>

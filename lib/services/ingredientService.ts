@@ -95,6 +95,8 @@ export type CreateIngredientInput = {
   createdByUserId?: string | null;
   // Phase 8 supplier link traceability
   ingredientSupplierLinkId?: string | null;
+  // Phase 9 API sync source tracking
+  sourceType?: PriceHistorySourceType;
 };
 
 export type UpdateIngredientInput = Partial<CreateIngredientInput>;
@@ -452,7 +454,7 @@ export async function updateIngredient(
         baseUnit: updated.baseUnit,
         taxIncluded: updated.taxIncluded,
         yieldPercent: parseFloat(updated.yieldPercent.toString()),
-        sourceType: PriceHistorySourceType.MANUAL,
+        sourceType: input.sourceType ?? PriceHistorySourceType.MANUAL,
         notes: input.changeNote ?? null,
         effectiveFrom,
         createdByUserId: input.createdByUserId ?? null,
