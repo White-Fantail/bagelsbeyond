@@ -89,7 +89,12 @@ export default function SupplierTable({ suppliers }: SupplierTableProps) {
                       className={`hover:bg-gray-50 transition-colors ${isActing ? "opacity-60" : ""}`}
                     >
                       <td className="px-4 py-3">
-                        <div className="font-medium text-gray-900">{supplier.name}</div>
+                        <Link
+                          href={`/suppliers/${supplier.id}`}
+                          className="block font-medium text-gray-900 hover:text-amber-600 transition-colors"
+                        >
+                          {supplier.name}
+                        </Link>
                         <div className="text-xs text-gray-400">{supplier.slug}</div>
                       </td>
                       <td className="px-4 py-3">
@@ -169,12 +174,17 @@ export default function SupplierTable({ suppliers }: SupplierTableProps) {
             {suppliers.map((supplier) => {
               const isActing = actionId === supplier.id;
               return (
-                <div key={supplier.id} className={`p-4 space-y-2 ${isActing ? "opacity-60" : ""}`}>
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <p className="font-medium text-gray-900">{supplier.name}</p>
-                      <p className="text-xs text-gray-400">{supplier.slug}</p>
-                    </div>
+                 <div key={supplier.id} className={`p-4 space-y-2 ${isActing ? "opacity-60" : ""}`}>
+                   <div className="flex items-start justify-between gap-2">
+                     <div>
+                       <Link
+                         href={`/suppliers/${supplier.id}`}
+                         className="font-medium text-gray-900 hover:text-amber-600 transition-colors"
+                       >
+                         {supplier.name}
+                       </Link>
+                       <p className="text-xs text-gray-400">{supplier.slug}</p>
+                     </div>
                     <span
                       className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium flex-shrink-0 ${
                         supplier.isActive

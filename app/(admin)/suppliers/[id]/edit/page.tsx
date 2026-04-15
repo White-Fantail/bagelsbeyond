@@ -29,6 +29,10 @@ export default async function EditSupplierPage({
             Suppliers
           </Link>
           <span>/</span>
+          <Link href={`/suppliers/${id}`} className="hover:text-amber-600 transition-colors">
+            {supplier.name}
+          </Link>
+          <span>/</span>
           <span className="text-gray-700 font-medium">Edit</span>
         </div>
         <h1 className="text-2xl font-bold text-gray-900">Edit Supplier</h1>
