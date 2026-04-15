@@ -34,5 +34,5 @@ export function inferUnit(raw: string): UnitType {
   )
     return UnitType.L;
   if (u === "ml" || u === "millilitre" || u === "millilitres") return UnitType.ML;
-  return UnitType.EACH;
+  return UnitType.EA;
 }
