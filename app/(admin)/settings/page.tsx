@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 
 import SettingsForm from "@/components/SettingsForm";
 import { prisma } from "@/lib/db";
+import { PricingTargetType, RecommendedPriceRounding } from "@/app/generated/prisma/enums";
 
 async function getSettings() {
   try {
@@ -26,17 +27,35 @@ export default async function SettingsPage() {
       </div>
       <SettingsForm
         initialData={
-          settings ?? {
-            shopName: "Bagels Beyond",
-            defaultTargetWasteRatio: 0.05,
-            defaultSafetyBuffer: 1.1,
-            defaultRegion: "Canterbury",
-            defaultCity: "Christchurch",
-            defaultCountry: "NZ",
-            defaultEventRegion: "Christchurch",
-            autoCollectExternalData: true,
-            predictionLookbackDays: 365,
-          }
+          settings
+            ? {
+                shopName: settings.shopName,
+                defaultTargetWasteRatio: settings.defaultTargetWasteRatio,
+                defaultSafetyBuffer: settings.defaultSafetyBuffer,
+                defaultRegion: settings.defaultRegion,
+                defaultCity: settings.defaultCity,
+                defaultCountry: settings.defaultCountry,
+                defaultEventRegion: settings.defaultEventRegion,
+                autoCollectExternalData: settings.autoCollectExternalData,
+                predictionLookbackDays: settings.predictionLookbackDays,
+                defaultPricingTargetType: settings.defaultPricingTargetType,
+                defaultPricingTargetPercent: parseFloat(settings.defaultPricingTargetPercent.toString()),
+                defaultPriceRounding: settings.defaultPriceRounding,
+              }
+            : {
+                shopName: "Bagels Beyond",
+                defaultTargetWasteRatio: 0.05,
+                defaultSafetyBuffer: 1.1,
+                defaultRegion: "Canterbury",
+                defaultCity: "Christchurch",
+                defaultCountry: "NZ",
+                defaultEventRegion: "Christchurch",
+                autoCollectExternalData: true,
+                predictionLookbackDays: 365,
+                defaultPricingTargetType: PricingTargetType.COST_PERCENT,
+                defaultPricingTargetPercent: 30,
+                defaultPriceRounding: RecommendedPriceRounding.NONE,
+              }
         }
       />
     </div>

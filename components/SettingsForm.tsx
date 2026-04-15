@@ -4,6 +4,7 @@ import { useForm, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { settingsSchema, type SettingsSchema } from "@/lib/validations";
+import { PricingTargetType, RecommendedPriceRounding } from "@/app/generated/prisma/enums";
 
 type Props = {
   initialData: {
@@ -16,6 +17,9 @@ type Props = {
     defaultEventRegion?: string;
     autoCollectExternalData?: boolean;
     predictionLookbackDays?: number;
+    defaultPricingTargetType?: PricingTargetType;
+    defaultPricingTargetPercent?: number;
+    defaultPriceRounding?: RecommendedPriceRounding;
   };
 };
 
@@ -193,6 +197,68 @@ export default function SettingsForm({ initialData }: Props) {
             <span className="text-sm font-medium text-gray-700">Automatic External Data Collection on Predictions/Sales Create</span>
           </label>
           <p className="mt-1 text-xs text-gray-400 ml-5">When activated, External Data is automatically collected on new Sales/Predictions.</p>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
+        <h2 className="text-base font-semibold text-gray-900 border-b border-gray-100 pb-2">
+          Pricing Target Settings
+        </h2>
+        <p className="text-xs text-gray-400">
+          Global defaults used when a product has no individual pricing override.
+        </p>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Default Pricing Target Type
+          </label>
+          <select
+            {...register("defaultPricingTargetType")}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+          >
+            <option value={PricingTargetType.COST_PERCENT}>Cost % (target cost as % of price)</option>
+            <option value={PricingTargetType.MARGIN_PERCENT}>Margin % (target profit margin)</option>
+          </select>
+          <p className="mt-1 text-xs text-gray-400">
+            Cost %: recommendedPrice = cost / (target% / 100). Margin %: recommendedPrice = cost / (1 - target% / 100).
+          </p>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Default Target Percent (%)
+          </label>
+          <input
+            type="number"
+            step="0.01"
+            min="0.01"
+            max="99.99"
+            {...register("defaultPricingTargetPercent")}
+            className={`w-full px-3 py-2 border rounded-md text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 ${
+              errors.defaultPricingTargetPercent ? "border-red-300 bg-red-50" : "border-gray-300"
+            }`}
+          />
+          <p className="mt-1 text-xs text-gray-400">
+            e.g. 30 = 30% food cost target, or 70 = 70% margin target
+          </p>
+          {errors.defaultPricingTargetPercent && (
+            <p className="mt-1 text-xs text-red-600">{errors.defaultPricingTargetPercent.message}</p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Recommended Price Rounding
+          </label>
+          <select
+            {...register("defaultPriceRounding")}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+          >
+            <option value={RecommendedPriceRounding.NONE}>No rounding</option>
+            <option value={RecommendedPriceRounding.NEAREST_0_10}>Nearest $0.10</option>
+            <option value={RecommendedPriceRounding.NEAREST_0_50}>Nearest $0.50</option>
+            <option value={RecommendedPriceRounding.NEAREST_1_00}>Nearest $1.00</option>
+          </select>
         </div>
       </div>
 

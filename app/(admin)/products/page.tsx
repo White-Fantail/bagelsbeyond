@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { requireAdmin } from "@/lib/auth/dal";
 import { listMenuProducts } from "@/lib/services/menuProductService";
 import { getProductRecipeSummaries } from "@/lib/services/recipeService";
+import { getGlobalPricingSettings, buildPricingSummaryForProduct } from "@/lib/services/pricingService";
 import Link from "next/link";
 import ProductTable from "./ProductTable";
 
@@ -22,13 +23,29 @@ export default async function ProductsPage({
   const isActiveFilter =
     sp.isActive === "true" ? true : sp.isActive === "false" ? false : undefined;
 
-  const products = await listMenuProducts({
-    search: sp.search?.trim(),
-    isActive: isActiveFilter,
-  });
+  const [products, globalPricingSettings] = await Promise.all([
+    listMenuProducts({
+      search: sp.search?.trim(),
+      isActive: isActiveFilter,
+    }),
+    getGlobalPricingSettings(),
+  ]);
 
   const productIds = products.map((p) => p.id);
   const recipeSummaries = await getProductRecipeSummaries(productIds);
+
+  // Build pricing summary for each product
+  const pricingSummaries = new Map(
+    products.map((product) => {
+      const recipeSummary = recipeSummaries.get(product.id);
+      const adjustedCost =
+        recipeSummary?.adjustedTotalCost != null
+          ? parseFloat(recipeSummary.adjustedTotalCost)
+          : null;
+      const summary = buildPricingSummaryForProduct(product, adjustedCost, globalPricingSettings);
+      return [product.id, summary];
+    })
+  );
 
   const activeCount = products.filter((p) => p.isActive).length;
   const withRecipeCount = [...recipeSummaries.values()].filter((s) => s.hasActiveRecipe).length;
@@ -75,7 +92,7 @@ export default async function ProductsPage({
       </div>
 
       {/* Table */}
-      <ProductTable products={products} recipeSummaries={recipeSummaries} />
+      <ProductTable products={products} recipeSummaries={recipeSummaries} pricingSummaries={pricingSummaries} />
     </div>
   );
 }

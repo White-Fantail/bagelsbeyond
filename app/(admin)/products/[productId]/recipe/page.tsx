@@ -4,9 +4,12 @@ import { requireAdmin } from "@/lib/auth/dal";
 import { getMenuProductById } from "@/lib/services/menuProductService";
 import { getRecipeCostSummary } from "@/lib/services/recipeService";
 import { listIngredients } from "@/lib/services/ingredientService";
+import { getGlobalPricingSettings, buildPricingSummaryForProduct } from "@/lib/services/pricingService";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import RecipeManager from "./RecipeManager";
+import RecipePricingSummary from "./RecipePricingSummary";
+import { PricingTargetType } from "@/app/generated/prisma/enums";
 
 export default async function RecipePage({
   params,
@@ -16,13 +19,29 @@ export default async function RecipePage({
   await requireAdmin();
   const { productId } = await params;
 
-  const [product, summary, activeIngredients] = await Promise.all([
+  const [product, summary, activeIngredients, globalPricingSettings] = await Promise.all([
     getMenuProductById(productId),
     getRecipeCostSummary(productId),
     listIngredients({ isActive: true }),
+    getGlobalPricingSettings(),
   ]);
 
   if (!product) notFound();
+
+  const adjustedCost =
+    summary?.adjustedTotalCost != null ? parseFloat(summary.adjustedTotalCost) : null;
+
+  const pricingSummary = buildPricingSummaryForProduct(product, adjustedCost, globalPricingSettings);
+
+  // Build human-readable target label
+  const effectiveTarget = pricingSummary.effectiveTarget;
+  let targetLabel = "No target";
+  if (effectiveTarget) {
+    const typeLabel =
+      effectiveTarget.targetType === PricingTargetType.COST_PERCENT ? "Cost %" : "Margin %";
+    const overrideNote = effectiveTarget.isOverride ? " (product override)" : " (global default)";
+    targetLabel = `${effectiveTarget.targetPercent}% ${typeLabel}${overrideNote}`;
+  }
 
   return (
     <div className="space-y-6">
@@ -50,6 +69,9 @@ export default async function RecipePage({
         initialSummary={summary}
         activeIngredients={activeIngredients}
       />
+
+      {/* Pricing summary — only show when there's something meaningful to display */}
+      <RecipePricingSummary pricing={pricingSummary} targetLabel={targetLabel} />
     </div>
   );
 }

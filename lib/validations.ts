@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { UnitType } from "@/app/generated/prisma/enums";
+import { UnitType, PricingTargetType, RecommendedPriceRounding } from "@/app/generated/prisma/enums";
 import { getConversionFactor } from "@/lib/costing/unit-conversion";
 
 export const salesFormSchema = z.object({
@@ -39,6 +39,13 @@ export const settingsSchema = z.object({
   defaultEventRegion: z.string().optional(),
   autoCollectExternalData: z.boolean().optional(),
   predictionLookbackDays: z.coerce.number().int().min(1, "Lookback period must be at least 1 day").optional(),
+  defaultPricingTargetType: z.nativeEnum(PricingTargetType).optional(),
+  defaultPricingTargetPercent: z.coerce
+    .number()
+    .gt(0, "Target percent must be greater than 0")
+    .lt(100, "Target percent must be less than 100")
+    .optional(),
+  defaultPriceRounding: z.nativeEnum(RecommendedPriceRounding).optional(),
 });
 
 export type SettingsSchema = z.infer<typeof settingsSchema>;
@@ -133,6 +140,20 @@ export const menuProductSchema = z.object({
   sku: z.string().optional().nullable(),
   isActive: z.boolean().default(true),
   notes: z.string().optional().nullable(),
+  sellingPrice: z.preprocess(
+    (v) => (v === "" || v === null || v === undefined ? null : v),
+    z.coerce.number().positive("Selling price must be greater than 0").nullable().optional()
+  ),
+  pricingTargetType: z.nativeEnum(PricingTargetType).nullable().optional(),
+  pricingTargetPercent: z.preprocess(
+    (v) => (v === "" || v === null || v === undefined ? null : v),
+    z.coerce
+      .number()
+      .gt(0, "Target percent must be greater than 0")
+      .lt(100, "Target percent must be less than 100")
+      .nullable()
+      .optional()
+  ),
 });
 
 export type MenuProductSchema = z.infer<typeof menuProductSchema>;
