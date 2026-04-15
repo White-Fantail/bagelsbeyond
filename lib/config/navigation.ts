@@ -151,12 +151,15 @@ export const ADMIN_NAV: RoleNavConfig = {
       id: "costing",
       label: "Menu Costing",
       items: [
+        { href: "/costing/dashboard", label: "Costing Dashboard" },
         { href: "/products", label: "Products & Recipes" },
         { href: "/ingredients", label: "Ingredients" },
         { href: "/ingredient-categories", label: "Ingredient Categories" },
         { href: "/suppliers", label: "Suppliers" },
         { href: "/costing/prices/bulk", label: "Bulk Price Update" },
         { href: "/costing/prices/import", label: "CSV Price Import" },
+        { href: "/costing/pricing-health", label: "Pricing Health" },
+        { href: "/costing/impact", label: "Cost Impact" },
       ],
     },
     {

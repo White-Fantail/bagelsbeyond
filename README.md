@@ -1188,3 +1188,45 @@ All successful price updates append an `IngredientPriceHistory` record with `sou
 
 ### Next recommended step
 Phase 9 — Supplier API sync: connect supplier links with `syncMode = API_READY` to live supplier product price endpoints and auto-update ingredient pricing.
+
+
+## Phase 11 – Costing Analysis Dashboards
+
+### New Analysis Pages
+
+| Route | Description |
+|---|---|
+| `/costing/dashboard` | Costing overview dashboard with summary cards, recently updated ingredients, biggest price increases/decreases, and stale ingredient alerts |
+| `/ingredients/[id]/comparison` | Per-ingredient supplier comparison table with normalized standard unit cost ranking, delta vs. primary, and sync health indicators |
+| `/costing/impact` | Cost impact analysis — select an ingredient to trace its price change to affected products, showing cost delta, margin effect, and recommended price delta |
+| `/costing/pricing-health` | Product-level pricing health: below-target products, largest price gaps, highest adjusted costs, and full product status table |
+
+### New Service Modules
+
+| File | Description |
+|---|---|
+| `lib/costing/analysis/ingredient-comparison.ts` | Pure supplier comparison helpers — standard unit cost normalization, delta vs. primary, sync health, cheaper-alternate detection |
+| `lib/costing/analysis/price-movements.ts` | Pure price movement helpers — delta computation, stale detection, sorting by biggest increase/decrease |
+| `lib/costing/analysis/menu-impact.ts` | Pure recipe impact helpers — per-item and per-product cost contribution delta, margin effect, recommended price delta |
+| `lib/costing/analysis/pricing-health.ts` | Pure pricing health helpers — below-target classification, price gap computation, sorting and filtering |
+| `lib/services/costingAnalysisService.ts` | Server-only DB orchestration layer exposing `getIngredientSupplierComparison`, `getRecentIngredientPriceMovements`, `getIngredientImpactOnRecipes`, `getProductPricingHealth`, `getFullPricingHealthSummary`, `getCostingDashboardSummary`, and more |
+
+### Key Design Decisions
+
+- All comparison is based on **normalized standard unit cost** ($/baseUnit), not raw purchase price
+- Supplier links prefer last-synced price history values over ingredient master data when available
+- Stale threshold: 30 days without a price check is flagged as stale
+- Cost impact analysis uses current ingredient standard unit cost vs. the previous history entry
+- Pricing health uses the same `buildProductPricingSummary` from Phase 5 — consistent with per-product views
+- Navigation sidebar now includes Costing Dashboard, Pricing Health, and Cost Impact links
+
+### Tests Added
+
+- `lib/__tests__/ingredient-comparison.test.ts` — 23 tests covering standard unit cost ranking, cheaper-alternate detection, stale/unavailable supplier handling, sync health classification
+- `lib/__tests__/price-movements.test.ts` — 18 tests covering delta calculations, stale detection, recent filtering, sorting
+- `lib/__tests__/menu-impact.test.ts` — 11 tests covering recipe item impact, product-level cost delta, margin effect, recommended price delta
+- `lib/__tests__/pricing-health.test.ts` — 13 tests covering pricing status classification, below-target detection, gap sorting
+
+### Next Recommended Step
+
+Phase 12 — Procurement recommendations: surface actionable "switch to cheaper supplier" recommendations based on Phase 11 comparison data, with estimated monthly savings projections based on recipe usage volumes. Also consider adding ingredient alert thresholds and notification hooks when prices exceed configured change limits.
