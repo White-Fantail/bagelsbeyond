@@ -5,7 +5,7 @@ import { useState } from "react";
 
 type Category = { id: string; name: string };
 
-interface IngredientFiltersProps {
+interface ProductFiltersProps {
   categories: Category[];
 }
 
@@ -15,7 +15,7 @@ const ACTIVE_OPTIONS = [
   { value: "false", label: "Inactive" },
 ];
 
-export default function IngredientFilters({ categories }: IngredientFiltersProps) {
+export default function ProductFilters({ categories }: ProductFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -33,7 +33,7 @@ export default function IngredientFilters({ categories }: IngredientFiltersProps
     if (s) params.set("search", s);
     if (c !== "ALL") params.set("categoryId", c);
     if (a !== "ALL") params.set("isActive", a);
-    router.push("/ingredients?" + params.toString());
+    router.push("/products?" + params.toString());
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -45,7 +45,7 @@ export default function IngredientFilters({ categories }: IngredientFiltersProps
     setSearch("");
     setCategoryId("ALL");
     setIsActive("ALL");
-    router.push("/ingredients");
+    router.push("/products");
   };
 
   return (

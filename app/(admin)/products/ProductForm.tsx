@@ -2,16 +2,17 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import type { MenuProductRow } from "@/lib/services/menuProductService";
+import type { MenuProductRow, ProductCategoryRow } from "@/lib/services/menuProductService";
 import { PricingTargetType } from "@/app/generated/prisma/enums";
 
 interface ProductFormProps {
   product?: MenuProductRow;
+  categories: ProductCategoryRow[];
 }
 
 type FormErrors = Record<string, string | undefined>;
 
-export default function ProductForm({ product }: ProductFormProps) {
+export default function ProductForm({ product, categories }: ProductFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -19,6 +20,7 @@ export default function ProductForm({ product }: ProductFormProps) {
   const [sku, setSku] = useState(product?.sku ?? "");
   const [notes, setNotes] = useState(product?.notes ?? "");
   const [isActive, setIsActive] = useState(product?.isActive ?? true);
+  const [categoryId, setCategoryId] = useState(product?.categoryId ?? "");
   const [canBeUsedAsRecipeComponent, setCanBeUsedAsRecipeComponent] = useState(
     product?.canBeUsedAsRecipeComponent ?? false
   );
@@ -72,6 +74,7 @@ export default function ProductForm({ product }: ProductFormProps) {
       notes: notes.trim() || null,
       isActive,
       canBeUsedAsRecipeComponent,
+      categoryId: categoryId || null,
       sellingPrice: sellingPrice !== "" ? parseFloat(String(sellingPrice)) : null,
       pricingTargetType: useOverride ? pricingTargetType : null,
       pricingTargetPercent: useOverride && pricingTargetPercent !== ""
@@ -147,6 +150,23 @@ export default function ProductForm({ product }: ProductFormProps) {
             className={inputClass}
           />
           {errors.name && <p className={errorClass}>{errors.name}</p>}
+        </div>
+
+        <div>
+          <label className={labelClass}>Category</label>
+          <select
+            value={categoryId}
+            onChange={(e) => setCategoryId(e.target.value)}
+            disabled={isPending}
+            className={inputClass}
+          >
+            <option value="">No Category</option>
+            {categories.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div>

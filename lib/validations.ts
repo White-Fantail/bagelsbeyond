@@ -146,6 +146,20 @@ export const ingredientUpdateSchema = ingredientBaseSchema
 
 export type IngredientSchema = z.infer<typeof ingredientBaseSchema>;
 
+// ─── Product Category ──────────────────────────────────────────────────────────
+
+export const productCategorySchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  slug: z
+    .string()
+    .min(1, "Slug is required")
+    .regex(/^[a-z0-9-]+$/, "Slug must contain only lowercase letters, numbers, and hyphens"),
+  sortOrder: z.coerce.number().int().min(0).default(0),
+  isActive: z.boolean().default(true),
+});
+
+export type ProductCategorySchema = z.infer<typeof productCategorySchema>;
+
 // ─── Menu Product ──────────────────────────────────────────────────────────────
 
 export const menuProductSchema = z.object({
@@ -168,6 +182,7 @@ export const menuProductSchema = z.object({
       .optional()
   ),
   canBeUsedAsRecipeComponent: z.boolean().default(false).optional(),
+  categoryId: z.string().nullable().optional(),
 });
 
 export type MenuProductSchema = z.infer<typeof menuProductSchema>;

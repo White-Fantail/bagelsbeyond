@@ -34,6 +34,7 @@ export default function ProductTable({ products, recipeSummaries, pricingSummari
             <thead>
               <tr className="border-b border-gray-100 bg-gray-50">
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Name</th>
+                <th className="text-left px-4 py-3 font-medium text-gray-600">Category</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">SKU</th>
                 <th className="text-center px-4 py-3 font-medium text-gray-600">Active</th>
                 <th className="text-center px-4 py-3 font-medium text-gray-600">Recipe</th>
@@ -52,6 +53,9 @@ export default function ProductTable({ products, recipeSummaries, pricingSummari
                 return (
                   <tr key={product.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-4 py-3 font-medium text-gray-900">{product.name}</td>
+                    <td className="px-4 py-3 text-gray-500 text-xs">
+                      {product.categoryName ?? <span className="italic text-gray-300">—</span>}
+                    </td>
                     <td className="px-4 py-3 text-gray-500 text-xs font-mono">
                       {product.sku ?? <span className="italic text-gray-400">—</span>}
                     </td>
