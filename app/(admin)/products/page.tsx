@@ -38,9 +38,10 @@ export default async function ProductsPage({
   const pricingSummaries = new Map(
     products.map((product) => {
       const recipeSummary = recipeSummaries.get(product.id);
+      // Use per-unit cost for pricing (not batch total)
       const adjustedCost =
-        recipeSummary?.adjustedTotalCost != null
-          ? parseFloat(recipeSummary.adjustedTotalCost)
+        recipeSummary?.adjustedCostPerOutputUnit != null
+          ? parseFloat(recipeSummary.adjustedCostPerOutputUnit)
           : null;
       const summary = buildPricingSummaryForProduct(product, adjustedCost, globalPricingSettings);
       return [product.id, summary];

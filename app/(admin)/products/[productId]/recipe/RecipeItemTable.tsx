@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { RecipeItemRow } from "@/lib/services/recipeService";
+import { RecipeItemSourceType } from "@/app/generated/prisma/enums";
 
 interface RecipeItemTableProps {
   items: RecipeItemRow[];
@@ -23,9 +24,9 @@ export default function RecipeItemTable({ items, onDelete, onUpdate }: RecipeIte
   if (items.length === 0) {
     return (
       <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
-        <p className="text-gray-400 text-sm">No ingredients in this recipe yet.</p>
+        <p className="text-gray-400 text-sm">No items in this recipe yet.</p>
         <p className="text-gray-400 text-xs mt-1">
-          Add ingredients below to calculate the total recipe cost.
+          Add ingredients or product components below to calculate the total recipe cost.
         </p>
       </div>
     );
@@ -65,6 +66,24 @@ export default function RecipeItemTable({ items, onDelete, onUpdate }: RecipeIte
     setDeletingId(null);
   }
 
+  function getItemDisplayName(item: RecipeItemRow): string {
+    if (item.sourceType === RecipeItemSourceType.INGREDIENT) {
+      return item.ingredientName ?? "Unknown Ingredient";
+    }
+    return item.componentProductName ?? "Unknown Product";
+  }
+
+  function getItemSourceBadge(item: RecipeItemRow) {
+    if (item.sourceType === RecipeItemSourceType.PRODUCT) {
+      return (
+        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-700 ml-1">
+          component
+        </span>
+      );
+    }
+    return null;
+  }
+
   return (
     <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
       {/* Desktop table */}
@@ -72,12 +91,12 @@ export default function RecipeItemTable({ items, onDelete, onUpdate }: RecipeIte
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-100 bg-gray-50">
-              <th className="text-left px-4 py-3 font-medium text-gray-600">Ingredient</th>
+              <th className="text-left px-4 py-3 font-medium text-gray-600">Item</th>
               <th className="text-right px-4 py-3 font-medium text-gray-600">Quantity</th>
               <th className="text-left px-4 py-3 font-medium text-gray-600">Unit</th>
               <th className="text-right px-4 py-3 font-medium text-gray-600">Yield %</th>
               <th className="text-right px-4 py-3 font-medium text-gray-600">Effective Qty</th>
-              <th className="text-right px-4 py-3 font-medium text-gray-600">Standard Cost</th>
+              <th className="text-right px-4 py-3 font-medium text-gray-600">Unit Cost</th>
               <th className="text-right px-4 py-3 font-medium text-gray-600">Direct Cost</th>
               <th className="text-right px-4 py-3 font-medium text-gray-600">Adjusted Cost</th>
               <th className="text-left px-4 py-3 font-medium text-gray-600">Notes</th>
@@ -89,11 +108,14 @@ export default function RecipeItemTable({ items, onDelete, onUpdate }: RecipeIte
             {items.map((item) => {
               const isEditing = editingId === item.id;
               const isDeleting = deletingId === item.id;
+              const isProductItem = item.sourceType === RecipeItemSourceType.PRODUCT;
 
               if (isEditing) {
                 return (
                   <tr key={item.id} className="bg-amber-50">
-                    <td className="px-4 py-3 font-medium text-gray-900">{item.ingredientName}</td>
+                    <td className="px-4 py-3 font-medium text-gray-900">
+                      {getItemDisplayName(item)}{getItemSourceBadge(item)}
+                    </td>
                     <td className="px-4 py-3 text-right">
                       <input
                         type="number"
@@ -112,15 +134,29 @@ export default function RecipeItemTable({ items, onDelete, onUpdate }: RecipeIte
                       </span>
                     </td>
                     <td className="px-4 py-3 text-right text-gray-500 font-mono text-xs">
-                      <span className={parseFloat(item.yieldPercent) < 100 ? "text-amber-700 font-medium" : ""}>
-                        {item.yieldPercent}%
-                      </span>
+                      {isProductItem ? (
+                        <span className="text-gray-400">—</span>
+                      ) : (
+                        <span className={item.yieldPercent && parseFloat(item.yieldPercent) < 100 ? "text-amber-700 font-medium" : ""}>
+                          {item.yieldPercent}%
+                        </span>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-right text-gray-500 font-mono text-xs">—</td>
                     <td className="px-4 py-3 text-right text-gray-500 font-mono text-xs">
-                      {item.ingredientStandardUnitCost
-                        ? `$${item.ingredientStandardUnitCost} / ${item.ingredientBaseUnit}`
-                        : <span className="text-amber-600">Unavailable</span>}
+                      {isProductItem ? (
+                        item.componentProductUnitCost ? (
+                          `$${item.componentProductUnitCost} / EA`
+                        ) : (
+                          <span className="text-amber-600">No cost</span>
+                        )
+                      ) : (
+                        item.ingredientStandardUnitCost ? (
+                          `$${item.ingredientStandardUnitCost} / ${item.ingredientBaseUnit}`
+                        ) : (
+                          <span className="text-amber-600">Unavailable</span>
+                        )
+                      )}
                     </td>
                     <td className="px-4 py-3 text-right text-gray-500 font-mono text-xs">—</td>
                     <td className="px-4 py-3 text-right text-gray-500 font-mono text-xs">—</td>
@@ -175,7 +211,9 @@ export default function RecipeItemTable({ items, onDelete, onUpdate }: RecipeIte
                   key={item.id}
                   className={`hover:bg-gray-50 transition-colors ${isDeleting ? "opacity-40" : ""}`}
                 >
-                  <td className="px-4 py-3 font-medium text-gray-900">{item.ingredientName}</td>
+                  <td className="px-4 py-3 font-medium text-gray-900">
+                    {getItemDisplayName(item)}{getItemSourceBadge(item)}
+                  </td>
                   <td className="px-4 py-3 text-right font-mono text-gray-800">
                     {parseFloat(item.quantity).toLocaleString("en-NZ", {
                       minimumFractionDigits: 0,
@@ -188,21 +226,37 @@ export default function RecipeItemTable({ items, onDelete, onUpdate }: RecipeIte
                     </span>
                   </td>
                   <td className="px-4 py-3 text-right font-mono text-xs">
-                    <span className={parseFloat(item.yieldPercent) < 100 ? "text-amber-700 font-medium" : "text-gray-600"}>
-                      {item.yieldPercent}%
-                    </span>
+                    {isProductItem ? (
+                      <span className="text-gray-400">—</span>
+                    ) : (
+                      <span className={item.yieldPercent && parseFloat(item.yieldPercent) < 100 ? "text-amber-700 font-medium" : "text-gray-600"}>
+                        {item.yieldPercent}%
+                      </span>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-right font-mono text-gray-700 text-xs">
-                    {parseFloat(item.effectiveQuantity).toLocaleString("en-NZ", {
-                      minimumFractionDigits: 0,
-                      maximumFractionDigits: 3,
-                    })}
+                    {item.effectiveQuantity ? (
+                      parseFloat(item.effectiveQuantity).toLocaleString("en-NZ", {
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 3,
+                      })
+                    ) : (
+                      <span className="text-gray-400">—</span>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-right font-mono text-gray-600 text-xs">
-                    {item.ingredientStandardUnitCost ? (
-                      `$${item.ingredientStandardUnitCost} / ${item.ingredientBaseUnit}`
+                    {isProductItem ? (
+                      item.componentProductUnitCost ? (
+                        `$${item.componentProductUnitCost} / EA`
+                      ) : (
+                        <span className="text-amber-600 font-sans">No cost</span>
+                      )
                     ) : (
-                      <span className="text-amber-600 font-sans">Unavailable</span>
+                      item.ingredientStandardUnitCost ? (
+                        `$${item.ingredientStandardUnitCost} / ${item.ingredientBaseUnit}`
+                      ) : (
+                        <span className="text-amber-600 font-sans">Unavailable</span>
+                      )
                     )}
                   </td>
                   <td className="px-4 py-3 text-right font-mono text-gray-700 text-xs">
@@ -214,7 +268,7 @@ export default function RecipeItemTable({ items, onDelete, onUpdate }: RecipeIte
                   </td>
                   <td className="px-4 py-3 text-right font-mono text-xs">
                     {item.adjustedLineCost ? (
-                      <span className={parseFloat(item.yieldPercent) < 100 ? "text-orange-700 font-medium" : "text-gray-700"}>
+                      <span className={!isProductItem && item.yieldPercent && parseFloat(item.yieldPercent) < 100 ? "text-orange-700 font-medium" : "text-gray-700"}>
                         ${item.adjustedLineCost}
                       </span>
                     ) : (
@@ -253,6 +307,7 @@ export default function RecipeItemTable({ items, onDelete, onUpdate }: RecipeIte
       <div className="lg:hidden divide-y divide-gray-100">
         {items.map((item) => {
           const isDeleting = deletingId === item.id;
+          const isProductItem = item.sourceType === RecipeItemSourceType.PRODUCT;
           return (
             <div
               key={item.id}
@@ -260,7 +315,9 @@ export default function RecipeItemTable({ items, onDelete, onUpdate }: RecipeIte
             >
               <div className="flex items-start justify-between gap-2">
                 <div>
-                  <p className="font-medium text-gray-900">{item.ingredientName}</p>
+                  <p className="font-medium text-gray-900">
+                    {getItemDisplayName(item)}{getItemSourceBadge(item)}
+                  </p>
                   <div className="flex items-center gap-1.5 mt-0.5">
                     <span className="font-mono text-sm text-gray-800">
                       {parseFloat(item.quantity).toLocaleString("en-NZ", {
@@ -271,21 +328,23 @@ export default function RecipeItemTable({ items, onDelete, onUpdate }: RecipeIte
                     <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-purple-50 text-purple-700">
                       {item.unit}
                     </span>
-                    <span className={`text-xs font-mono ${parseFloat(item.yieldPercent) < 100 ? "text-amber-700 font-medium" : "text-gray-400"}`}>
-                      yield {item.yieldPercent}%
-                    </span>
+                    {!isProductItem && item.yieldPercent && (
+                      <span className={`text-xs font-mono ${parseFloat(item.yieldPercent) < 100 ? "text-amber-700 font-medium" : "text-gray-400"}`}>
+                        yield {item.yieldPercent}%
+                      </span>
+                    )}
                   </div>
                 </div>
                 <div className="text-right flex-shrink-0">
                   {item.directLineCost ? (
                     <div>
                       <p className="font-mono text-gray-700 text-xs">Direct: ${item.directLineCost}</p>
-                      {item.adjustedLineCost && parseFloat(item.yieldPercent) < 100 && (
+                      {item.adjustedLineCost && !isProductItem && item.yieldPercent && parseFloat(item.yieldPercent) < 100 && (
                         <p className="font-mono font-semibold text-orange-700 text-sm">
                           Adj: ${item.adjustedLineCost}
                         </p>
                       )}
-                      {item.adjustedLineCost && parseFloat(item.yieldPercent) >= 100 && (
+                      {item.adjustedLineCost && (isProductItem || !item.yieldPercent || parseFloat(item.yieldPercent) >= 100) && (
                         <p className="font-mono font-semibold text-gray-900 text-sm">
                           ${item.adjustedLineCost}
                         </p>
@@ -294,9 +353,14 @@ export default function RecipeItemTable({ items, onDelete, onUpdate }: RecipeIte
                   ) : (
                     <p className="text-amber-600 text-xs">No cost</p>
                   )}
-                  {item.ingredientStandardUnitCost && (
+                  {!isProductItem && item.ingredientStandardUnitCost && (
                     <p className="text-xs text-gray-400 font-mono mt-0.5">
                       @${item.ingredientStandardUnitCost}/{item.ingredientBaseUnit}
+                    </p>
+                  )}
+                  {isProductItem && item.componentProductUnitCost && (
+                    <p className="text-xs text-gray-400 font-mono mt-0.5">
+                      @${item.componentProductUnitCost}/EA
                     </p>
                   )}
                 </div>

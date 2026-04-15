@@ -1,6 +1,6 @@
 import "server-only";
 import { prisma } from "@/lib/db";
-import { UnitType } from "@/app/generated/prisma/enums";
+import { UnitType, RecipeItemSourceType } from "@/app/generated/prisma/enums";
 import type { Prisma } from "@/app/generated/prisma/client";
 import { calculateStandardUnitCost } from "@/lib/costing/ingredient-cost";
 import {
@@ -8,6 +8,8 @@ import {
   calculateRecipeTotalCost,
   calculateEffectiveQuantity,
   calculateAdjustedLineCost,
+  calculateCostPerOutputUnit,
+  calculateComponentProductLineCost,
 } from "@/lib/costing/recipe-cost";
 
 export { calculateRecipeItemCost, calculateRecipeTotalCost };
@@ -19,6 +21,8 @@ export type RecipeRow = {
   productId: string;
   name: string;
   isActive: boolean;
+  outputQuantity: string;
+  outputUnit: UnitType;
   createdAt: string;
   updatedAt: string;
 };
@@ -26,24 +30,32 @@ export type RecipeRow = {
 export type RecipeItemRow = {
   id: string;
   recipeId: string;
-  ingredientId: string;
-  ingredientName: string;
-  ingredientBaseUnit: UnitType;
+  sourceType: RecipeItemSourceType;
+  // INGREDIENT source fields
+  ingredientId: string | null;
+  ingredientName: string | null;
+  ingredientBaseUnit: UnitType | null;
   /** Standard unit cost in $, null if costing not available */
   ingredientStandardUnitCost: string | null;
+  /** Yield percentage from the ingredient master (e.g. "85.00") */
+  yieldPercent: string | null;
+  /** Effective quantity after yield adjustment */
+  effectiveQuantity: string | null;
+  // PRODUCT source fields
+  componentProductId: string | null;
+  componentProductName: string | null;
+  /** Per-unit cost of the component product, null if unavailable */
+  componentProductUnitCost: string | null;
+  // Common fields
   quantity: string;
   unit: UnitType;
-  /** Yield percentage from the ingredient master (e.g. "85.00") */
-  yieldPercent: string;
-  /** Effective quantity after yield adjustment */
-  effectiveQuantity: string;
   notes: string | null;
   sortOrder: number;
   createdAt: string;
   updatedAt: string;
-  /** Derived: quantity × standardUnitCost (no yield), null if cost unavailable */
+  /** Derived: direct line cost (no yield for ingredients), null if cost unavailable */
   directLineCost: string | null;
-  /** Derived: effectiveQuantity × standardUnitCost (yield-adjusted), null if cost unavailable */
+  /** Derived: yield-adjusted line cost (same as directLineCost for product items), null if cost unavailable */
   adjustedLineCost: string | null;
   /** @deprecated Use directLineCost instead. Kept for backward compatibility. */
   lineCost: string | null;
@@ -53,13 +65,26 @@ export type RecipeCostSummary = {
   recipe: RecipeRow;
   items: RecipeItemRow[];
   /** Sum of direct line costs (no yield adjustment), null if any ingredient has no standard cost */
-  directTotalCost: string | null;
+  batchDirectTotalCost: string | null;
   /** Sum of yield-adjusted line costs, null if any ingredient has no standard cost */
-  adjustedTotalCost: string | null;
-  /** @deprecated Use directTotalCost instead. Kept for backward compatibility. */
-  totalCost: string | null;
+  batchAdjustedTotalCost: string | null;
+  /** Cost per output unit based on direct total cost */
+  directCostPerOutputUnit: string | null;
+  /** Cost per output unit based on adjusted total cost */
+  adjustedCostPerOutputUnit: string | null;
+  /** Output quantity for this batch */
+  outputQuantity: string;
+  /** Output unit for this batch */
+  outputUnit: UnitType;
   /** true when every item has a valid standard unit cost */
   isFullyCosted: boolean;
+  // Backward-compat aliases
+  /** @deprecated Use batchDirectTotalCost. */
+  directTotalCost: string | null;
+  /** @deprecated Use batchAdjustedTotalCost. */
+  adjustedTotalCost: string | null;
+  /** @deprecated Use batchDirectTotalCost. */
+  totalCost: string | null;
 };
 
 // ─── Internal helpers ─────────────────────────────────────────────────────────
@@ -84,41 +109,93 @@ function getStandardUnitCost(ingredient: RawIngredient): number | null {
 type RawRecipeItem = {
   id: string;
   recipeId: string;
-  ingredientId: string;
+  sourceType: RecipeItemSourceType;
+  ingredientId: string | null;
+  componentProductId: string | null;
   quantity: Prisma.Decimal;
   unit: UnitType;
   notes: string | null;
   sortOrder: number;
   createdAt: Date;
   updatedAt: Date;
-  ingredient: RawIngredient;
+  ingredient: RawIngredient | null;
+  componentProduct: {
+    id: string;
+    name: string;
+  } | null;
 };
 
-function toRecipeItemRow(r: RawRecipeItem): RecipeItemRow {
+/**
+ * Gets the per-unit recipe cost for a component product.
+ * Returns null if the product has no active recipe or costing is incomplete.
+ */
+async function getComponentProductUnitCost(productId: string): Promise<number | null> {
+  const summary = await getRecipeCostSummary(productId);
+  if (!summary) return null;
+  const adjustedCostPerUnit = summary.adjustedCostPerOutputUnit;
+  if (!adjustedCostPerUnit) return null;
+  return parseFloat(adjustedCostPerUnit);
+}
+
+function toRecipeItemRow(r: RawRecipeItem, componentUnitCost: number | null = null): RecipeItemRow {
   const quantity = parseFloat(r.quantity.toString());
-  const yieldPct = parseFloat(r.ingredient.yieldPercent.toString());
-  const standardUnitCost = getStandardUnitCost(r.ingredient);
-  const effectiveQty = calculateEffectiveQuantity(quantity, yieldPct);
-  const directCost = calculateRecipeItemCost(quantity, standardUnitCost);
-  const adjustedCost = calculateAdjustedLineCost(quantity, yieldPct, standardUnitCost);
+
+  if (r.sourceType === RecipeItemSourceType.INGREDIENT && r.ingredient) {
+    const yieldPct = parseFloat(r.ingredient.yieldPercent.toString());
+    const standardUnitCost = getStandardUnitCost(r.ingredient);
+    const effectiveQty = calculateEffectiveQuantity(quantity, yieldPct);
+    const directCost = calculateRecipeItemCost(quantity, standardUnitCost);
+    const adjustedCost = calculateAdjustedLineCost(quantity, yieldPct, standardUnitCost);
+
+    return {
+      id: r.id,
+      recipeId: r.recipeId,
+      sourceType: r.sourceType,
+      ingredientId: r.ingredientId,
+      ingredientName: r.ingredient.name,
+      ingredientBaseUnit: r.ingredient.baseUnit,
+      ingredientStandardUnitCost: standardUnitCost !== null ? standardUnitCost.toFixed(6) : null,
+      yieldPercent: yieldPct.toFixed(2),
+      effectiveQuantity: effectiveQty.toFixed(3),
+      componentProductId: null,
+      componentProductName: null,
+      componentProductUnitCost: null,
+      quantity: r.quantity.toFixed(3),
+      unit: r.unit,
+      notes: r.notes,
+      sortOrder: r.sortOrder,
+      createdAt: r.createdAt.toISOString(),
+      updatedAt: r.updatedAt.toISOString(),
+      directLineCost: directCost !== null ? directCost.toFixed(4) : null,
+      adjustedLineCost: adjustedCost !== null ? adjustedCost.toFixed(4) : null,
+      lineCost: directCost !== null ? directCost.toFixed(4) : null,
+    };
+  }
+
+  // PRODUCT source type
+  const directCost = calculateComponentProductLineCost(quantity, componentUnitCost);
 
   return {
     id: r.id,
     recipeId: r.recipeId,
-    ingredientId: r.ingredientId,
-    ingredientName: r.ingredient.name,
-    ingredientBaseUnit: r.ingredient.baseUnit,
-    ingredientStandardUnitCost: standardUnitCost !== null ? standardUnitCost.toFixed(6) : null,
+    sourceType: r.sourceType,
+    ingredientId: null,
+    ingredientName: null,
+    ingredientBaseUnit: null,
+    ingredientStandardUnitCost: null,
+    yieldPercent: null,
+    effectiveQuantity: null,
+    componentProductId: r.componentProductId,
+    componentProductName: r.componentProduct?.name ?? null,
+    componentProductUnitCost: componentUnitCost !== null ? componentUnitCost.toFixed(6) : null,
     quantity: r.quantity.toFixed(3),
     unit: r.unit,
-    yieldPercent: yieldPct.toFixed(2),
-    effectiveQuantity: effectiveQty.toFixed(3),
     notes: r.notes,
     sortOrder: r.sortOrder,
     createdAt: r.createdAt.toISOString(),
     updatedAt: r.updatedAt.toISOString(),
     directLineCost: directCost !== null ? directCost.toFixed(4) : null,
-    adjustedLineCost: adjustedCost !== null ? adjustedCost.toFixed(4) : null,
+    adjustedLineCost: directCost !== null ? directCost.toFixed(4) : null,
     lineCost: directCost !== null ? directCost.toFixed(4) : null,
   };
 }
@@ -135,6 +212,12 @@ const recipeItemInclude = {
       yieldPercent: true,
     },
   },
+  componentProduct: {
+    select: {
+      id: true,
+      name: true,
+    },
+  },
 } satisfies Prisma.RecipeItemInclude;
 
 // ─── Recipe CRUD ──────────────────────────────────────────────────────────────
@@ -144,6 +227,8 @@ function toRecipeRow(r: {
   productId: string;
   name: string;
   isActive: boolean;
+  outputQuantity: Prisma.Decimal;
+  outputUnit: UnitType;
   createdAt: Date;
   updatedAt: Date;
 }): RecipeRow {
@@ -152,6 +237,8 @@ function toRecipeRow(r: {
     productId: r.productId,
     name: r.name,
     isActive: r.isActive,
+    outputQuantity: r.outputQuantity.toFixed(3),
+    outputUnit: r.outputUnit,
     createdAt: r.createdAt.toISOString(),
     updatedAt: r.updatedAt.toISOString(),
   };
@@ -193,28 +280,45 @@ export async function createRecipeForProduct(
 
 /**
  * Gets or creates an active recipe for a product.
- * If an active recipe exists, updates the name if provided.
+ * If an active recipe exists, updates the name and output fields if provided.
  */
 export async function upsertRecipeForProduct(
   productId: string,
-  name: string
+  name: string,
+  outputQuantity?: number,
+  outputUnit?: UnitType
 ): Promise<RecipeRow> {
   // Validate product exists
   const product = await prisma.menuProduct.findUnique({ where: { id: productId } });
   if (!product) throw new Error("PRODUCT_NOT_FOUND");
 
+  // Validate output quantity
+  if (outputQuantity !== undefined && outputQuantity <= 0) throw new Error("INVALID_OUTPUT_QUANTITY");
+
   const existing = await prisma.recipe.findFirst({ where: { productId, isActive: true } });
+
+  const updateData = {
+    name,
+    ...(outputQuantity !== undefined ? { outputQuantity: String(outputQuantity) } : {}),
+    ...(outputUnit !== undefined ? { outputUnit } : {}),
+  };
 
   if (existing) {
     const row = await prisma.recipe.update({
       where: { id: existing.id },
-      data: { name },
+      data: updateData,
     });
     return toRecipeRow(row);
   }
 
   const row = await prisma.recipe.create({
-    data: { productId, name, isActive: true },
+    data: {
+      productId,
+      name,
+      isActive: true,
+      outputQuantity: outputQuantity !== undefined ? String(outputQuantity) : "1",
+      outputUnit: outputUnit ?? UnitType.EA,
+    },
   });
   return toRecipeRow(row);
 }
@@ -227,12 +331,36 @@ export async function listRecipeItems(recipeId: string): Promise<RecipeItemRow[]
     include: recipeItemInclude,
     orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
   });
-  return rows.map(toRecipeItemRow);
+
+  // Resolve component product unit costs in parallel
+  const componentProductIds = rows
+    .filter((r) => r.sourceType === RecipeItemSourceType.PRODUCT && r.componentProductId)
+    .map((r) => r.componentProductId as string);
+
+  const uniqueProductIds = [...new Set(componentProductIds)];
+  const unitCostMap = new Map<string, number | null>();
+
+  await Promise.all(
+    uniqueProductIds.map(async (productId) => {
+      const cost = await getComponentProductUnitCost(productId);
+      unitCostMap.set(productId, cost);
+    })
+  );
+
+  return rows.map((r) => {
+    const componentUnitCost =
+      r.sourceType === RecipeItemSourceType.PRODUCT && r.componentProductId
+        ? (unitCostMap.get(r.componentProductId) ?? null)
+        : null;
+    return toRecipeItemRow(r, componentUnitCost);
+  });
 }
 
 export type AddRecipeItemInput = {
   recipeId: string;
-  ingredientId: string;
+  sourceType?: RecipeItemSourceType;
+  ingredientId?: string | null;
+  componentProductId?: string | null;
   quantity: number;
   unit: UnitType;
   notes?: string | null;
@@ -240,40 +368,98 @@ export type AddRecipeItemInput = {
 };
 
 /**
- * Adds an ingredient to a recipe.
+ * Adds an ingredient or product component to a recipe.
  * Business rules:
  * - recipe must exist
- * - ingredient must exist and be active
+ * - sourceType determines which source fields are required
+ * - for INGREDIENT: ingredientId required, must exist and be active, unit must match baseUnit, no duplicate
+ * - for PRODUCT: componentProductId required, must exist and have canBeUsedAsRecipeComponent=true, no self-reference
  * - quantity must be > 0
- * - unit must match ingredient.baseUnit
- * - no duplicate ingredient in same recipe
  */
 export async function addRecipeItem(input: AddRecipeItemInput): Promise<RecipeItemRow> {
+  const sourceType = input.sourceType ?? RecipeItemSourceType.INGREDIENT;
+
   // Validate recipe exists
   const recipe = await prisma.recipe.findUnique({ where: { id: input.recipeId } });
   if (!recipe) throw new Error("RECIPE_NOT_FOUND");
 
-  // Validate ingredient exists and is active
-  const ingredient = await prisma.ingredient.findUnique({ where: { id: input.ingredientId } });
-  if (!ingredient) throw new Error("INGREDIENT_NOT_FOUND");
-  if (!ingredient.isActive) throw new Error("INGREDIENT_INACTIVE");
-
   // Validate quantity > 0
   if (input.quantity <= 0) throw new Error("INVALID_QUANTITY");
 
-  // Validate unit matches ingredient.baseUnit
-  if (input.unit !== ingredient.baseUnit) throw new Error("UNIT_MISMATCH");
+  if (sourceType === RecipeItemSourceType.INGREDIENT) {
+    if (!input.ingredientId) throw new Error("INGREDIENT_REQUIRED");
+    if (input.componentProductId) throw new Error("COMPONENT_PRODUCT_MUST_BE_NULL");
 
-  // Check for duplicate
-  const duplicate = await prisma.recipeItem.findUnique({
-    where: { recipeId_ingredientId: { recipeId: input.recipeId, ingredientId: input.ingredientId } },
+    // Validate ingredient exists and is active
+    const ingredient = await prisma.ingredient.findUnique({ where: { id: input.ingredientId } });
+    if (!ingredient) throw new Error("INGREDIENT_NOT_FOUND");
+    if (!ingredient.isActive) throw new Error("INGREDIENT_INACTIVE");
+
+    // Validate unit matches ingredient.baseUnit
+    if (input.unit !== ingredient.baseUnit) throw new Error("UNIT_MISMATCH");
+
+    // Check for duplicate ingredient in this recipe
+    const duplicate = await prisma.recipeItem.findFirst({
+      where: {
+        recipeId: input.recipeId,
+        sourceType: RecipeItemSourceType.INGREDIENT,
+        ingredientId: input.ingredientId,
+      },
+    });
+    if (duplicate) throw new Error("DUPLICATE_INGREDIENT");
+
+    const row = await prisma.recipeItem.create({
+      data: {
+        recipeId: input.recipeId,
+        sourceType: RecipeItemSourceType.INGREDIENT,
+        ingredientId: input.ingredientId,
+        componentProductId: null,
+        quantity: String(input.quantity),
+        unit: input.unit,
+        notes: input.notes ?? null,
+        sortOrder: input.sortOrder ?? 0,
+      },
+      include: recipeItemInclude,
+    });
+    return toRecipeItemRow(row, null);
+  }
+
+  // sourceType === PRODUCT
+  if (!input.componentProductId) throw new Error("COMPONENT_PRODUCT_REQUIRED");
+  if (input.ingredientId) throw new Error("INGREDIENT_ID_MUST_BE_NULL");
+
+  // Self-reference check: the component product cannot be the same as the recipe's product
+  if (input.componentProductId === recipe.productId) {
+    throw new Error("SELF_REFERENCE");
+  }
+
+  // Validate component product exists and is flagged
+  const componentProduct = await prisma.menuProduct.findUnique({
+    where: { id: input.componentProductId },
   });
-  if (duplicate) throw new Error("DUPLICATE_INGREDIENT");
+  if (!componentProduct) throw new Error("COMPONENT_PRODUCT_NOT_FOUND");
+  if (!componentProduct.canBeUsedAsRecipeComponent) throw new Error("COMPONENT_NOT_ALLOWED");
+
+  // TODO: Deep cycle detection (A->B->A) — guard point for Phase 9+.
+  // Currently we block direct self-reference only. For full cycle detection,
+  // implement a graph traversal across all component product recipes.
+
+  // Check for duplicate component product in this recipe
+  const duplicate = await prisma.recipeItem.findFirst({
+    where: {
+      recipeId: input.recipeId,
+      sourceType: RecipeItemSourceType.PRODUCT,
+      componentProductId: input.componentProductId,
+    },
+  });
+  if (duplicate) throw new Error("DUPLICATE_COMPONENT_PRODUCT");
 
   const row = await prisma.recipeItem.create({
     data: {
       recipeId: input.recipeId,
-      ingredientId: input.ingredientId,
+      sourceType: RecipeItemSourceType.PRODUCT,
+      ingredientId: null,
+      componentProductId: input.componentProductId,
       quantity: String(input.quantity),
       unit: input.unit,
       notes: input.notes ?? null,
@@ -281,7 +467,9 @@ export async function addRecipeItem(input: AddRecipeItemInput): Promise<RecipeIt
     },
     include: recipeItemInclude,
   });
-  return toRecipeItemRow(row);
+
+  const componentUnitCost = await getComponentProductUnitCost(input.componentProductId);
+  return toRecipeItemRow(row, componentUnitCost);
 }
 
 export type UpdateRecipeItemInput = {
@@ -305,7 +493,13 @@ export async function updateRecipeItem(
     },
     include: recipeItemInclude,
   });
-  return toRecipeItemRow(row);
+
+  let componentUnitCost: number | null = null;
+  if (row.sourceType === RecipeItemSourceType.PRODUCT && row.componentProductId) {
+    componentUnitCost = await getComponentProductUnitCost(row.componentProductId);
+  }
+
+  return toRecipeItemRow(row, componentUnitCost);
 }
 
 export async function removeRecipeItem(itemId: string): Promise<void> {
@@ -346,18 +540,35 @@ export async function getRecipeCostSummary(productId: string): Promise<RecipeCos
     item.adjustedLineCost !== null ? parseFloat(item.adjustedLineCost) : null
   );
 
-  const directTotalNum = calculateRecipeTotalCost(directLineCosts);
-  const adjustedTotalNum = calculateRecipeTotalCost(adjustedLineCosts);
-  const directTotalCost = directTotalNum !== null ? directTotalNum.toFixed(4) : null;
-  const adjustedTotalCost = adjustedTotalNum !== null ? adjustedTotalNum.toFixed(4) : null;
+  const batchDirectTotalNum = calculateRecipeTotalCost(directLineCosts);
+  const batchAdjustedTotalNum = calculateRecipeTotalCost(adjustedLineCosts);
+  const outputQty = parseFloat(recipe.outputQuantity.toString());
+
+  const batchDirectTotalCost = batchDirectTotalNum !== null ? batchDirectTotalNum.toFixed(4) : null;
+  const batchAdjustedTotalCost = batchAdjustedTotalNum !== null ? batchAdjustedTotalNum.toFixed(4) : null;
+
+  const directCostPerOutputUnitNum = calculateCostPerOutputUnit(batchDirectTotalNum, outputQty);
+  const adjustedCostPerOutputUnitNum = calculateCostPerOutputUnit(batchAdjustedTotalNum, outputQty);
+
+  const directCostPerOutputUnit =
+    directCostPerOutputUnitNum !== null ? directCostPerOutputUnitNum.toFixed(6) : null;
+  const adjustedCostPerOutputUnit =
+    adjustedCostPerOutputUnitNum !== null ? adjustedCostPerOutputUnitNum.toFixed(6) : null;
 
   return {
     recipe: toRecipeRow(recipe),
     items,
-    directTotalCost,
-    adjustedTotalCost,
-    totalCost: directTotalCost,
+    batchDirectTotalCost,
+    batchAdjustedTotalCost,
+    directCostPerOutputUnit,
+    adjustedCostPerOutputUnit,
+    outputQuantity: outputQty.toFixed(3),
+    outputUnit: recipe.outputUnit,
     isFullyCosted,
+    // Backward-compat aliases
+    directTotalCost: batchDirectTotalCost,
+    adjustedTotalCost: batchAdjustedTotalCost,
+    totalCost: batchDirectTotalCost,
   };
 }
 
@@ -371,6 +582,9 @@ export type ProductRecipeSummary = {
   totalCost: string | null;
   directTotalCost: string | null;
   adjustedTotalCost: string | null;
+  outputQuantity: string | null;
+  outputUnit: UnitType | null;
+  adjustedCostPerOutputUnit: string | null;
 };
 
 /**
@@ -397,25 +611,58 @@ export async function getProductRecipeSummaries(
               yieldPercent: true,
             },
           },
+          componentProduct: {
+            select: { id: true, name: true },
+          },
         },
       },
     },
   });
 
+  // Collect all component product IDs across all recipes
+  const allComponentProductIds = new Set<string>();
+  for (const recipe of recipes) {
+    for (const item of recipe.items) {
+      if (item.sourceType === RecipeItemSourceType.PRODUCT && item.componentProductId) {
+        allComponentProductIds.add(item.componentProductId);
+      }
+    }
+  }
+
+  // Resolve component unit costs
+  const componentUnitCostMap = new Map<string, number | null>();
+  await Promise.all(
+    [...allComponentProductIds].map(async (productId) => {
+      const cost = await getComponentProductUnitCost(productId);
+      componentUnitCostMap.set(productId, cost);
+    })
+  );
+
   const summaryMap = new Map<string, ProductRecipeSummary>();
 
   for (const recipe of recipes) {
-    const items = recipe.items.map(toRecipeItemRow);
+    const items = recipe.items.map((r) => {
+      const componentUnitCost =
+        r.sourceType === RecipeItemSourceType.PRODUCT && r.componentProductId
+          ? (componentUnitCostMap.get(r.componentProductId) ?? null)
+          : null;
+      return toRecipeItemRow(r, componentUnitCost);
+    });
+
     const allCosted = items.every((i) => i.directLineCost !== null);
+    const outputQty = parseFloat(recipe.outputQuantity.toString());
 
     let directTotalCost: string | null = null;
     let adjustedTotalCost: string | null = null;
+    let adjustedCostPerOutputUnit: string | null = null;
 
     if (allCosted && items.length > 0) {
       const directSum = items.reduce((acc, i) => acc + parseFloat(i.directLineCost!), 0);
       const adjustedSum = items.reduce((acc, i) => acc + parseFloat(i.adjustedLineCost!), 0);
       directTotalCost = directSum.toFixed(4);
       adjustedTotalCost = adjustedSum.toFixed(4);
+      const perUnit = calculateCostPerOutputUnit(adjustedSum, outputQty);
+      adjustedCostPerOutputUnit = perUnit !== null ? perUnit.toFixed(6) : null;
     }
 
     summaryMap.set(recipe.productId, {
@@ -426,6 +673,9 @@ export async function getProductRecipeSummaries(
       totalCost: directTotalCost,
       directTotalCost,
       adjustedTotalCost,
+      outputQuantity: outputQty.toFixed(3),
+      outputUnit: recipe.outputUnit,
+      adjustedCostPerOutputUnit,
     });
   }
 
@@ -440,6 +690,9 @@ export async function getProductRecipeSummaries(
         totalCost: null,
         directTotalCost: null,
         adjustedTotalCost: null,
+        outputQuantity: null,
+        outputUnit: null,
+        adjustedCostPerOutputUnit: null,
       });
     }
   }

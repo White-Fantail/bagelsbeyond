@@ -27,6 +27,11 @@ enum PriceHistorySourceType {
   SYSTEM
 }
 
+enum RecipeItemSourceType {
+  INGREDIENT
+  PRODUCT
+}
+
 // ─── Pricing Target ───────────────────────────────────────────────────────────
 
 enum PricingTargetType {
@@ -174,31 +179,36 @@ model IngredientSupplierLink {
 // ─── Menu Products & Recipes ──────────────────────────────────────────────────
 
 model MenuProduct {
-  id                  String               @id @default(cuid())
-  name                String
-  sku                 String?              @unique
-  isActive            Boolean              @default(true)
-  notes               String?
-  sellingPrice        Decimal?             @db.Decimal(10, 2)
-  pricingTargetType   PricingTargetType?
-  pricingTargetPercent Decimal?            @db.Decimal(5, 2)
-  createdAt           DateTime             @default(now())
-  updatedAt           DateTime             @updatedAt
+  id                         String               @id @default(cuid())
+  name                       String
+  sku                        String?              @unique
+  isActive                   Boolean              @default(true)
+  notes                      String?
+  sellingPrice               Decimal?             @db.Decimal(10, 2)
+  pricingTargetType          PricingTargetType?
+  pricingTargetPercent       Decimal?             @db.Decimal(5, 2)
+  canBeUsedAsRecipeComponent Boolean              @default(false)
+  createdAt                  DateTime             @default(now())
+  updatedAt                  DateTime             @updatedAt
 
-  recipes   Recipe[]
+  recipes              Recipe[]
+  componentRecipeItems RecipeItem[] @relation("ComponentProduct")
 
   @@index([name])
   @@index([isActive])
+  @@index([canBeUsedAsRecipeComponent])
   @@map("menu_products")
 }
 
 model Recipe {
-  id        String      @id @default(cuid())
-  productId String
-  name      String
-  isActive  Boolean     @default(true)
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
+  id             String      @id @default(cuid())
+  productId      String
+  name           String
+  isActive       Boolean     @default(true)
+  outputQuantity Decimal     @default(1) @db.Decimal(10, 3)
+  outputUnit     UnitType    @default(EA)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
 
   product   MenuProduct  @relation(fields: [productId], references: [id], onDelete: Cascade)
   items     RecipeItem[]
@@ -209,22 +219,25 @@ model Recipe {
 }
 
 model RecipeItem {
-  id           String   @id @default(cuid())
-  recipeId     String
-  ingredientId String
-  quantity     Decimal  @db.Decimal(10, 3)
-  unit         UnitType
-  notes        String?
-  sortOrder    Int      @default(0)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id                 String               @id @default(cuid())
+  recipeId           String
+  sourceType         RecipeItemSourceType @default(INGREDIENT)
+  ingredientId       String?
+  componentProductId String?
+  quantity           Decimal              @db.Decimal(10, 3)
+  unit               UnitType
+  notes              String?
+  sortOrder          Int                  @default(0)
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
 
-  recipe     Recipe     @relation(fields: [recipeId], references: [id], onDelete: Cascade)
-  ingredient Ingredient @relation(fields: [ingredientId], references: [id])
+  recipe           Recipe      @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  ingredient       Ingredient? @relation(fields: [ingredientId], references: [id])
+  componentProduct MenuProduct? @relation("ComponentProduct", fields: [componentProductId], references: [id])
 
-  @@unique([recipeId, ingredientId])
   @@index([recipeId])
   @@index([ingredientId])
+  @@index([componentProductId])
   @@map("recipe_items")
 }
 
