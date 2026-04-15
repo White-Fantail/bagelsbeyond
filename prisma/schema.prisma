@@ -21,6 +21,20 @@ enum UnitType {
   BOX
 }
 
+// ─── Pricing Target ───────────────────────────────────────────────────────────
+
+enum PricingTargetType {
+  COST_PERCENT
+  MARGIN_PERCENT
+}
+
+enum RecommendedPriceRounding {
+  NONE
+  NEAREST_0_10
+  NEAREST_0_50
+  NEAREST_1_00
+}
+
 model IngredientCategory {
   id          String       @id @default(cuid())
   name        String       @unique
@@ -65,13 +79,16 @@ model Ingredient {
 // ─── Menu Products & Recipes ──────────────────────────────────────────────────
 
 model MenuProduct {
-  id        String   @id @default(cuid())
-  name      String
-  sku       String?  @unique
-  isActive  Boolean  @default(true)
-  notes     String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                  String               @id @default(cuid())
+  name                String
+  sku                 String?              @unique
+  isActive            Boolean              @default(true)
+  notes               String?
+  sellingPrice        Decimal?             @db.Decimal(10, 2)
+  pricingTargetType   PricingTargetType?
+  pricingTargetPercent Decimal?            @db.Decimal(5, 2)
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
 
   recipes   Recipe[]
 
@@ -226,18 +243,21 @@ model WeightSetEntry {
 }
 
 model AppSetting {
-  id                      String   @id @default(cuid())
-  shopName                String   @default("Bagels Beyond")
-  defaultTargetWasteRatio Float    @default(0.05)
-  defaultSafetyBuffer     Float    @default(1.1)
-  defaultRegion           String   @default("Canterbury")
-  defaultCity             String   @default("Christchurch")
-  defaultCountry          String   @default("NZ")
-  defaultEventRegion      String   @default("Christchurch")
-  autoCollectExternalData Boolean  @default(true)
-  predictionLookbackDays  Int      @default(365)
-  createdAt               DateTime @default(now())
-  updatedAt               DateTime @updatedAt
+  id                          String                      @id @default(cuid())
+  shopName                    String                      @default("Bagels Beyond")
+  defaultTargetWasteRatio     Float                       @default(0.05)
+  defaultSafetyBuffer         Float                       @default(1.1)
+  defaultRegion               String                      @default("Canterbury")
+  defaultCity                 String                      @default("Christchurch")
+  defaultCountry              String                      @default("NZ")
+  defaultEventRegion          String                      @default("Christchurch")
+  autoCollectExternalData     Boolean                     @default(true)
+  predictionLookbackDays      Int                         @default(365)
+  defaultPricingTargetType    PricingTargetType           @default(COST_PERCENT)
+  defaultPricingTargetPercent Decimal                     @default(30.00) @db.Decimal(5, 2)
+  defaultPriceRounding        RecommendedPriceRounding    @default(NONE)
+  createdAt                   DateTime                    @default(now())
+  updatedAt                   DateTime                    @updatedAt
 
   @@map("app_settings")
 }

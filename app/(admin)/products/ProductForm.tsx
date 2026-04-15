@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { MenuProductRow } from "@/lib/services/menuProductService";
+import { PricingTargetType } from "@/app/generated/prisma/enums";
 
 interface ProductFormProps {
   product?: MenuProductRow;
@@ -18,6 +19,16 @@ export default function ProductForm({ product }: ProductFormProps) {
   const [sku, setSku] = useState(product?.sku ?? "");
   const [notes, setNotes] = useState(product?.notes ?? "");
   const [isActive, setIsActive] = useState(product?.isActive ?? true);
+  const [sellingPrice, setSellingPrice] = useState(product?.sellingPrice ?? "");
+  const [useOverride, setUseOverride] = useState(
+    product?.pricingTargetType != null && product?.pricingTargetPercent != null
+  );
+  const [pricingTargetType, setPricingTargetType] = useState<PricingTargetType>(
+    product?.pricingTargetType ?? PricingTargetType.COST_PERCENT
+  );
+  const [pricingTargetPercent, setPricingTargetPercent] = useState(
+    product?.pricingTargetPercent ?? ""
+  );
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [serverError, setServerError] = useState<string | null>(null);
@@ -37,6 +48,16 @@ export default function ProductForm({ product }: ProductFormProps) {
 
     const newErrors: FormErrors = {};
     if (!name.trim()) newErrors.name = "Name is required";
+    const sellingPriceNum = sellingPrice !== "" ? parseFloat(String(sellingPrice)) : null;
+    if (sellingPrice !== "" && (isNaN(sellingPriceNum!) || sellingPriceNum! <= 0)) {
+      newErrors.sellingPrice = "Selling price must be greater than 0";
+    }
+    if (useOverride) {
+      const pct = parseFloat(String(pricingTargetPercent));
+      if (isNaN(pct) || pct <= 0 || pct >= 100) {
+        newErrors.pricingTargetPercent = "Target percent must be between 0 and 100 (exclusive)";
+      }
+    }
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
@@ -47,6 +68,11 @@ export default function ProductForm({ product }: ProductFormProps) {
       sku: sku.trim() || null,
       notes: notes.trim() || null,
       isActive,
+      sellingPrice: sellingPrice !== "" ? parseFloat(String(sellingPrice)) : null,
+      pricingTargetType: useOverride ? pricingTargetType : null,
+      pricingTargetPercent: useOverride && pricingTargetPercent !== ""
+        ? parseFloat(String(pricingTargetPercent))
+        : null,
     };
 
     startTransition(async () => {
@@ -133,6 +159,24 @@ export default function ProductForm({ product }: ProductFormProps) {
         </div>
 
         <div>
+          <label className={labelClass}>Selling Price ($)</label>
+          <input
+            type="number"
+            step="0.01"
+            min="0.01"
+            value={sellingPrice}
+            onChange={(e) => setSellingPrice(e.target.value)}
+            disabled={isPending}
+            placeholder="e.g. 5.00"
+            className={inputClass}
+          />
+          <p className="mt-1 text-xs text-gray-400">
+            Current selling price for this product. Used to calculate cost %, margin %, and price gap.
+          </p>
+          {errors.sellingPrice && <p className={errorClass}>{errors.sellingPrice}</p>}
+        </div>
+
+        <div>
           <label className={labelClass}>Notes</label>
           <textarea
             value={notes}
@@ -157,6 +201,63 @@ export default function ProductForm({ product }: ProductFormProps) {
             Active
           </label>
         </div>
+      </div>
+
+      <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+        <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+          Pricing Target Override
+        </h2>
+        <p className="text-xs text-gray-400">
+          By default, the global pricing target from Settings is used. Enable the override to set a product-specific target.
+        </p>
+
+        <div className="flex items-center gap-3">
+          <input
+            id="useOverride"
+            type="checkbox"
+            checked={useOverride}
+            onChange={(e) => setUseOverride(e.target.checked)}
+            disabled={isPending}
+            className="w-4 h-4 rounded border-gray-300 text-amber-500 focus:ring-amber-500"
+          />
+          <label htmlFor="useOverride" className="text-sm text-gray-700">
+            Use product-specific pricing target
+          </label>
+        </div>
+
+        {useOverride && (
+          <div className="space-y-3 pl-7">
+            <div>
+              <label className={labelClass}>Target Type</label>
+              <select
+                value={pricingTargetType}
+                onChange={(e) => setPricingTargetType(e.target.value as PricingTargetType)}
+                disabled={isPending}
+                className={inputClass}
+              >
+                <option value={PricingTargetType.COST_PERCENT}>Cost % (food cost percentage)</option>
+                <option value={PricingTargetType.MARGIN_PERCENT}>Margin % (gross margin)</option>
+              </select>
+            </div>
+            <div>
+              <label className={labelClass}>Target Percent (%)</label>
+              <input
+                type="number"
+                step="0.01"
+                min="0.01"
+                max="99.99"
+                value={pricingTargetPercent}
+                onChange={(e) => setPricingTargetPercent(e.target.value)}
+                disabled={isPending}
+                placeholder="e.g. 30"
+                className={inputClass}
+              />
+              {errors.pricingTargetPercent && (
+                <p className={errorClass}>{errors.pricingTargetPercent}</p>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="flex items-center gap-3">

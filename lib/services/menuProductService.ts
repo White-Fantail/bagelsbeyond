@@ -1,5 +1,6 @@
 import "server-only";
 import { prisma } from "@/lib/db";
+import { PricingTargetType } from "@/app/generated/prisma/enums";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -9,6 +10,9 @@ export type MenuProductRow = {
   sku: string | null;
   isActive: boolean;
   notes: string | null;
+  sellingPrice: string | null;
+  pricingTargetType: PricingTargetType | null;
+  pricingTargetPercent: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -18,6 +22,9 @@ export type CreateMenuProductInput = {
   sku?: string | null;
   isActive?: boolean;
   notes?: string | null;
+  sellingPrice?: number | null;
+  pricingTargetType?: PricingTargetType | null;
+  pricingTargetPercent?: number | null;
 };
 
 export type UpdateMenuProductInput = Partial<CreateMenuProductInput>;
@@ -30,6 +37,9 @@ function toMenuProductRow(r: {
   sku: string | null;
   isActive: boolean;
   notes: string | null;
+  sellingPrice: { toString(): string } | null;
+  pricingTargetType: PricingTargetType | null;
+  pricingTargetPercent: { toString(): string } | null;
   createdAt: Date;
   updatedAt: Date;
 }): MenuProductRow {
@@ -39,6 +49,9 @@ function toMenuProductRow(r: {
     sku: r.sku,
     isActive: r.isActive,
     notes: r.notes,
+    sellingPrice: r.sellingPrice !== null ? r.sellingPrice.toString() : null,
+    pricingTargetType: r.pricingTargetType,
+    pricingTargetPercent: r.pricingTargetPercent !== null ? r.pricingTargetPercent.toString() : null,
     createdAt: r.createdAt.toISOString(),
     updatedAt: r.updatedAt.toISOString(),
   };
@@ -71,6 +84,9 @@ export async function createMenuProduct(input: CreateMenuProductInput): Promise<
       sku: input.sku ?? null,
       isActive: input.isActive ?? true,
       notes: input.notes ?? null,
+      sellingPrice: input.sellingPrice != null ? String(input.sellingPrice) : null,
+      pricingTargetType: input.pricingTargetType ?? null,
+      pricingTargetPercent: input.pricingTargetPercent != null ? String(input.pricingTargetPercent) : null,
     },
   });
   return toMenuProductRow(row);
@@ -87,6 +103,13 @@ export async function updateMenuProduct(
       ...(input.isActive !== undefined ? { isActive: input.isActive } : {}),
       ...(input.notes !== undefined ? { notes: input.notes } : {}),
       ...("sku" in input ? { sku: input.sku ?? null } : {}),
+      ...("sellingPrice" in input
+        ? { sellingPrice: input.sellingPrice != null ? String(input.sellingPrice) : null }
+        : {}),
+      ...("pricingTargetType" in input ? { pricingTargetType: input.pricingTargetType ?? null } : {}),
+      ...("pricingTargetPercent" in input
+        ? { pricingTargetPercent: input.pricingTargetPercent != null ? String(input.pricingTargetPercent) : null }
+        : {}),
     },
   });
   return toMenuProductRow(row);

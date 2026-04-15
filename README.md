@@ -811,16 +811,125 @@ Packaging items (e.g., paper bag, sandwich wrap, cup, sticker) are added through
 
 - No recipe-level yield overrides yet
 - No prepared component / sub-recipe support yet
-- No selling price recommendations yet
+- ~~No selling price recommendations yet~~ → Implemented in Phase 5
 - No channel-specific profitability yet
 - No supplier sync yet
 - No price history yet
 
 ### Next Recommended Step (Phase 5)
 
-- Add margin targets per product
-- Calculate recommended selling price based on adjustedTotalCost + target margin
+- ~~Add margin targets per product~~ → Implemented in Phase 5
+- ~~Calculate recommended selling price based on adjustedTotalCost + target margin~~ → Implemented in Phase 5
 - Add channel-specific profitability analysis
 - Consider recipe versioning for cost history tracking
 
+---
+
+## 💰 Phase 5: Pricing Targets & Recommended Selling Price
+
+### Overview
+
+Phase 5 adds pricing target logic so the system can compare each product's current selling price against its adjusted recipe cost, calculate actual cost and margin percentages, and recommend a selling price based on either a target cost percentage or a target margin percentage.
+
+### Schema Changes
+
+**New enums** added to `schema.prisma`:
+- `PricingTargetType`: `COST_PERCENT` | `MARGIN_PERCENT`
+- `RecommendedPriceRounding`: `NONE` | `NEAREST_0_10` | `NEAREST_0_50` | `NEAREST_1_00`
+
+**`MenuProduct` model** — new optional fields:
+| Field | Type | Purpose |
+|-------|------|---------|
+| `sellingPrice` | `Decimal?` | Current retail selling price |
+| `pricingTargetType` | `PricingTargetType?` | Product-level override target type |
+| `pricingTargetPercent` | `Decimal?` | Product-level override target percent (0–100 exclusive) |
+
+**`AppSetting` model** — new fields with defaults:
+| Field | Type | Default | Purpose |
+|-------|------|---------|---------|
+| `defaultPricingTargetType` | `PricingTargetType` | `COST_PERCENT` | Global default target type |
+| `defaultPricingTargetPercent` | `Decimal` | `30.00` | Global default target percent |
+| `defaultPriceRounding` | `RecommendedPriceRounding` | `NONE` | Global default price rounding |
+
+Migration: `prisma/migrations/20260415200000_phase5_pricing_targets/`
+
+### Pricing Calculations
+
+```
+actualCostPercent   = adjustedCost / sellingPrice × 100
+actualMarginPercent = (sellingPrice − adjustedCost) / sellingPrice × 100
+
+if targetType = COST_PERCENT:
+  recommendedPrice = adjustedCost / (targetPercent / 100)
+
+if targetType = MARGIN_PERCENT:
+  recommendedPrice = adjustedCost / (1 − targetPercent / 100)
+
+priceGap = sellingPrice − recommendedPrice
+```
+
+Rounding is applied to `recommendedPrice` per the configured rounding mode.
+
+### Pricing Status Values
+
+| Status | Meaning |
+|--------|---------|
+| `ON_TARGET` | Selling price is within 0.5% of recommended price |
+| `ABOVE_TARGET` | Selling price is above recommended price |
+| `BELOW_TARGET` | Selling price is below recommended price — consider a price increase |
+| `NO_SELLING_PRICE` | No selling price set on the product |
+| `NO_TARGET` | No pricing target configured (global or product level) |
+| `NO_RECIPE_COST` | Adjusted recipe cost is unavailable |
+
+### Pricing Utility Layer (`lib/costing/pricing.ts`)
+
+Pure, server-free helper functions (importable in tests):
+
+```typescript
+getEffectivePricingTarget(product, globalSettings)     // product override > global default
+calculateActualCostPercent(adjustedCost, sellingPrice)
+calculateActualMarginPercent(adjustedCost, sellingPrice)
+calculateRecommendedPrice(adjustedCost, target)
+roundRecommendedPrice(price, rounding)
+calculatePricingStatus(recommendedPrice, sellingPrice, adjustedCost, target)
+buildProductPricingSummary(opts)                       // full summary object
+```
+
+Server-side wrapper in `lib/services/pricingService.ts`:
+```typescript
+getGlobalPricingSettings()                             // reads AppSetting from DB
+buildPricingSummaryForProduct(product, adjustedCost, globalSettings)
+```
+
+### UI Changes
+
+- **Settings page** (`/settings`) — new "Pricing Target Settings" section for default target type, default percent, and rounding mode
+- **Product form** (`/products/new`, `/products/[id]`) — selling price field + optional product-level pricing target override
+- **Products list** (`/products`) — new columns: Adjusted Cost, Selling Price, Cost %, Recommended Price, Status badge
+- **Recipe page** (`/products/[id]/recipe`) — new "Pricing Summary" section showing all pricing metrics
+
+### Tests (`lib/__tests__/pricing.test.ts`)
+
+48 tests covering:
+- `getEffectivePricingTarget` — global default, product override, fallback edge cases
+- `calculateActualCostPercent` — normal, null price, zero price, negative price, cost > price
+- `calculateActualMarginPercent` — normal, null price, negative margin
+- `calculateRecommendedPrice` — COST_PERCENT target, MARGIN_PERCENT target, invalid targets
+- `roundRecommendedPrice` — all four rounding modes
+- `calculatePricingStatus` — all six status values
+- `buildProductPricingSummary` — full happy path, no cost, no price, no target, override, rounding
+
+### Phase 5 Limitations (deferred to Phase 6+)
+
+- No supplier sync / automatic cost updates
+- No price history or historical repricing
+- No channel-specific profitability
+- No prepared components / sub-recipes
+- No tax simulations beyond current cost comparison
+
+### Next Recommended Step (Phase 6)
+
+- Add price history tracking (store price change events on `MenuProduct`)
+- Add supplier-linked ingredient cost updates (when supplier invoice price changes, flag affected products)
+- Add channel-specific profitability (e.g., Uber Eats markup analysis)
 
