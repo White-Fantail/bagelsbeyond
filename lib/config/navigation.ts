@@ -163,6 +163,15 @@ export const ADMIN_NAV: RoleNavConfig = {
       ],
     },
     {
+      id: "planning",
+      label: "Production Planning",
+      items: [
+        { href: "/forecast/production-plan", label: "Production Plan" },
+        { href: "/forecast/ingredient-needs", label: "Ingredient Needs" },
+        { href: "/forecast/profitability", label: "Forecast Profitability" },
+      ],
+    },
+    {
       id: "admin",
       label: "Admin",
       items: [

@@ -74,6 +74,26 @@ enum SupplierIntegrationType {
   CSV
 }
 
+// ─── Production Planning ──────────────────────────────────────────────────────
+
+enum PlanningRoundingMode {
+  NONE
+  ROUND_UP
+  ROUND_DOWN
+  ROUND_NEAREST
+}
+
+enum PlanningBatchHandlingMode {
+  IGNORE
+  ROUND_UP
+  ROUND_NEAREST
+}
+
+enum ForecastOverrideSourceType {
+  MANUAL
+  SYSTEM
+}
+
 enum SupplierSyncMode {
   MANUAL_ONLY
   API_READY
@@ -332,15 +352,22 @@ model MenuProduct {
   pricingTargetType          PricingTargetType?
   pricingTargetPercent       Decimal?             @db.Decimal(5, 2)
   canBeUsedAsRecipeComponent Boolean              @default(false)
+  // Production Planning
+  isProductionPlannable      Boolean              @default(false)
+  productionBatchSize        Float?
+  productionBufferPercent    Float?
+  planningRoundingMode       PlanningRoundingMode?
   createdAt                  DateTime             @default(now())
   updatedAt                  DateTime             @updatedAt
 
   recipes              Recipe[]
   componentRecipeItems RecipeItem[] @relation("ComponentProduct")
+  forecastOverrides    ForecastOverride[]
 
   @@index([name])
   @@index([isActive])
   @@index([canBeUsedAsRecipeComponent])
+  @@index([isProductionPlannable])
   @@map("menu_products")
 }
 
@@ -512,6 +539,10 @@ model AppSetting {
   defaultPricingTargetType    PricingTargetType           @default(COST_PERCENT)
   defaultPricingTargetPercent Decimal                     @default(30.00) @db.Decimal(5, 2)
   defaultPriceRounding        RecommendedPriceRounding    @default(NONE)
+  // Production Planning
+  planningBufferPercent       Float                       @default(10.0)
+  planningRoundingMode        PlanningRoundingMode        @default(ROUND_UP)
+  planningBatchHandlingMode   PlanningBatchHandlingMode   @default(ROUND_UP)
   createdAt                   DateTime                    @default(now())
   updatedAt                   DateTime                    @updatedAt
 
@@ -656,3 +687,23 @@ model AdminActionLog {
   @@map("admin_action_logs")
 }
 
+
+// ─── Production Planning ──────────────────────────────────────────────────────
+
+model ForecastOverride {
+  id                String                     @id @default(cuid())
+  targetDate        DateTime                   @db.Date
+  productId         String
+  predictedSalesQty Float
+  sourceType        ForecastOverrideSourceType @default(MANUAL)
+  notes             String?
+  createdAt         DateTime                   @default(now())
+  updatedAt         DateTime                   @updatedAt
+
+  product MenuProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([targetDate, productId])
+  @@index([targetDate])
+  @@index([productId])
+  @@map("forecast_overrides")
+}
