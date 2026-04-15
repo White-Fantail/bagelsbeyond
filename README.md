@@ -676,7 +676,63 @@ CRON_SECRET=your-random-secret-here
 
 ### Next Recommended Step (Phase 2)
 
-- Add unit conversion table (e.g. 1 KG = 1000 G) so cost-per-base-unit can be calculated
-- Add `standardCostPerBaseUnit` computed/stored field on `Ingredient`
+- ~~Add unit conversion table (e.g. 1 KG = 1000 G) so cost-per-base-unit can be calculated~~ ✅ Done in Phase 2
+- ~~Add `standardCostPerBaseUnit` computed/stored field on `Ingredient`~~ ✅ Done in Phase 2 (derived, not stored)
 - Add recipe model linking ingredients to menu items with usage quantities
 - Add costing calculation engine: `recipe cost = Σ (usageQty × costPerBaseUnit)`
+
+---
+
+## 🧮 Phase 2: Unit Conversion & Standard Cost
+
+### What Was Added
+
+**Costing utility layer** (`lib/costing/`)
+
+| Module | Purpose |
+|--------|---------|
+| `unit-groups.ts` | Maps each `UnitType` to a group: `WEIGHT`, `VOLUME`, or `COUNT` |
+| `unit-conversion.ts` | Typed conversion helpers: `canConvertUnit`, `convertQuantity`, `getConversionFactor` |
+| `ingredient-cost.ts` | Cost calculation: `calculateStandardUnitCost`, `formatStandardUnitCost`, `formatConvertedBaseQuantity` |
+
+**Standard cost formula**: `purchasePrice / convertedBaseQuantity = standardUnitCost`
+
+### Conversion Rules
+
+| From | To | Valid? |
+|------|----|--------|
+| KG | G | ✅ |
+| G | KG | ✅ |
+| L | ML | ✅ |
+| ML | L | ✅ |
+| EA | EA | ✅ |
+| PACK | PACK | ✅ |
+| BOX | BOX | ✅ |
+| PACK | EA | ❌ Not supported yet |
+| BOX | EA | ❌ Not supported yet |
+| KG | ML | ❌ Cross-group |
+| EA | G | ❌ Cross-group |
+
+### Known Limitations (Phase 2)
+
+- **PACK/BOX → EA** is not supported yet. These COUNT units only support same-unit pairings for now. Support for PACK-to-EA conversion (e.g. 12 buns per pack) is deferred to a later phase when a custom conversion table is introduced.
+- No recipe costing yet (Phase 3).
+- No supplier sync, price history, or waste/yield tracking yet.
+- Standard costs are derived at read time; they are not stored as database columns.
+
+### Validation Updates
+
+`ingredientSchema` now validates that `purchaseUnit` and `baseUnit` form a compatible pair. Invalid combinations (e.g. `KG`/`ML`, `PACK`/`EA`) are rejected with a descriptive error on the `baseUnit` field.
+
+### UI Additions
+
+- **Ingredient list**: Added columns — *Converted Base Qty*, *Standard Cost*, *Conversion Status* (OK / Unsupported)
+- **Ingredient form**: Live inline warning when an incompatible unit pair is selected
+- **Edit page**: Added *Costing Summary* block showing purchase details, converted base quantity, and standard cost per base unit
+
+### Next Recommended Step (Phase 3)
+
+- Add `Recipe` and `RecipeIngredient` models
+- Link ingredients to menu items with usage quantities and base units
+- Implement recipe cost calculation: `cost = Σ (usageQty × standardUnitCost)`
+
