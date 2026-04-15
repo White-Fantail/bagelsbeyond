@@ -342,6 +342,22 @@ model PriceImportRow {
 
 // ─── Menu Products & Recipes ──────────────────────────────────────────────────
 
+model ProductCategory {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  slug      String   @unique
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  products MenuProduct[]
+
+  @@index([sortOrder])
+  @@index([isActive])
+  @@map("product_categories")
+}
+
 model MenuProduct {
   id                         String               @id @default(cuid())
   name                       String
@@ -352,6 +368,7 @@ model MenuProduct {
   pricingTargetType          PricingTargetType?
   pricingTargetPercent       Decimal?             @db.Decimal(5, 2)
   canBeUsedAsRecipeComponent Boolean              @default(false)
+  categoryId                 String?
   // Production Planning
   isProductionPlannable      Boolean              @default(false)
   productionBatchSize        Float?
@@ -360,12 +377,14 @@ model MenuProduct {
   createdAt                  DateTime             @default(now())
   updatedAt                  DateTime             @updatedAt
 
+  category             ProductCategory?     @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   recipes              Recipe[]
   componentRecipeItems RecipeItem[] @relation("ComponentProduct")
   forecastOverrides    ForecastOverride[]
 
   @@index([name])
   @@index([isActive])
+  @@index([categoryId])
   @@index([canBeUsedAsRecipeComponent])
   @@index([isProductionPlannable])
   @@map("menu_products")

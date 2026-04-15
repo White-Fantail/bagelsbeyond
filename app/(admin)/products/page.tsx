@@ -1,15 +1,18 @@
 export const dynamic = "force-dynamic";
 
 import { requireAdmin } from "@/lib/auth/dal";
-import { listMenuProducts } from "@/lib/services/menuProductService";
+import { listMenuProducts, listProductCategories } from "@/lib/services/menuProductService";
 import { getProductRecipeSummaries } from "@/lib/services/recipeService";
 import { getGlobalPricingSettings, buildPricingSummaryForProduct } from "@/lib/services/pricingService";
 import Link from "next/link";
+import { Suspense } from "react";
 import ProductTable from "./ProductTable";
+import ProductFilters from "./ProductFilters";
 
 type SearchParams = {
   search?: string;
   isActive?: string;
+  categoryId?: string;
 };
 
 export default async function ProductsPage({
@@ -23,12 +26,14 @@ export default async function ProductsPage({
   const isActiveFilter =
     sp.isActive === "true" ? true : sp.isActive === "false" ? false : undefined;
 
-  const [products, globalPricingSettings] = await Promise.all([
+  const [products, globalPricingSettings, categories] = await Promise.all([
     listMenuProducts({
       search: sp.search?.trim(),
       isActive: isActiveFilter,
+      categoryId: sp.categoryId,
     }),
     getGlobalPricingSettings(),
+    listProductCategories(),
   ]);
 
   const productIds = products.map((p) => p.id);
@@ -48,6 +53,7 @@ export default async function ProductsPage({
     })
   );
 
+  const hasFilters = !!(sp.search || sp.categoryId || sp.isActive);
   const activeCount = products.filter((p) => p.isActive).length;
   const withRecipeCount = [...recipeSummaries.values()].filter((s) => s.hasActiveRecipe).length;
 
@@ -68,12 +74,20 @@ export default async function ProductsPage({
             Manage menu products and their recipe costs
           </p>
         </div>
-        <Link
-          href="/products/new"
-          className="px-4 py-2 bg-amber-500 text-white rounded-md text-sm font-medium hover:bg-amber-600 transition-colors flex-shrink-0"
-        >
-          + Add Product
-        </Link>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <Link
+            href="/product-categories"
+            className="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors"
+          >
+            Categories
+          </Link>
+          <Link
+            href="/products/new"
+            className="px-4 py-2 bg-amber-500 text-white rounded-md text-sm font-medium hover:bg-amber-600 transition-colors"
+          >
+            + Add Product
+          </Link>
+        </div>
       </div>
 
       {/* Summary cards */}
@@ -90,6 +104,26 @@ export default async function ProductsPage({
           <p className="text-xs text-amber-600">With Recipe</p>
           <p className="text-2xl font-bold text-amber-700 mt-1">{withRecipeCount}</p>
         </div>
+      </div>
+
+      {/* Filters */}
+      <Suspense fallback={null}>
+        <ProductFilters categories={categories} />
+      </Suspense>
+
+      {/* Results info */}
+      <div className="flex items-center justify-between text-sm text-gray-500">
+        <span>
+          {hasFilters ? (
+            <>
+              Search results <strong className="text-gray-700">{products.length}</strong>
+            </>
+          ) : (
+            <>
+              All <strong className="text-gray-700">{products.length}</strong>
+            </>
+          )}
+        </span>
       </div>
 
       {/* Table */}

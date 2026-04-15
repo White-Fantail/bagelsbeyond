@@ -12,9 +12,10 @@ export async function GET(req: NextRequest) {
   const isActiveParam = sp.get("isActive");
   const isActive =
     isActiveParam === "true" ? true : isActiveParam === "false" ? false : undefined;
+  const categoryId = sp.get("categoryId") ?? undefined;
 
   try {
-    const products = await listMenuProducts({ search, isActive });
+    const products = await listMenuProducts({ search, isActive, categoryId });
     return NextResponse.json({ products });
   } catch {
     return NextResponse.json({ message: "Failed to fetch products" }, { status: 500 });

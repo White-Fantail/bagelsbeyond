@@ -238,7 +238,9 @@ export async function listIngredients(
   if (filter.search) {
     where.name = { contains: filter.search, mode: "insensitive" };
   }
-  if (filter.categoryId) {
+  if (filter.categoryId === "none") {
+    where.categoryId = null;
+  } else if (filter.categoryId) {
     where.categoryId = filter.categoryId;
   }
   if (filter.isActive !== undefined) {

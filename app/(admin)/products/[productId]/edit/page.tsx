@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { requireAdmin } from "@/lib/auth/dal";
-import { getMenuProductById } from "@/lib/services/menuProductService";
+import { getMenuProductById, listProductCategories } from "@/lib/services/menuProductService";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import ProductForm from "../../ProductForm";
@@ -14,7 +14,10 @@ export default async function EditProductPage({
   await requireAdmin();
   const { productId } = await params;
 
-  const product = await getMenuProductById(productId);
+  const [product, categories] = await Promise.all([
+    getMenuProductById(productId),
+    listProductCategories(),
+  ]);
   if (!product) notFound();
 
   return (
@@ -37,7 +40,7 @@ export default async function EditProductPage({
         <p className="text-gray-500 mt-0.5 text-sm">Update product details</p>
       </div>
 
-      <ProductForm product={product} />
+      <ProductForm product={product} categories={categories} />
     </div>
   );
 }

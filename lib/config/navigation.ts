@@ -153,6 +153,7 @@ export const ADMIN_NAV: RoleNavConfig = {
       items: [
         { href: "/costing/dashboard", label: "Costing Dashboard" },
         { href: "/products", label: "Products & Recipes" },
+        { href: "/product-categories", label: "Product Categories" },
         { href: "/ingredients", label: "Ingredients" },
         { href: "/ingredient-categories", label: "Ingredient Categories" },
         { href: "/suppliers", label: "Suppliers" },
