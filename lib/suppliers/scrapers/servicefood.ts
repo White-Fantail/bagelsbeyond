@@ -178,7 +178,7 @@ export class ServiceFoodScraperAdapter extends ScraperAdapterBase {
         .catch(() => null);
 
       let purchaseQuantity = 1;
-      let purchaseUnit: UnitType = UnitType.EACH;
+      let purchaseUnit: UnitType = UnitType.EA;
 
       if (packRaw) {
         const match = packRaw.match(/([0-9]+(?:\.[0-9]+)?)\s*([a-zA-Z]+)/);
