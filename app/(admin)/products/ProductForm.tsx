@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { MenuProductRow, ProductCategoryRow } from "@/lib/services/menuProductService";
-import { PricingTargetType } from "@/app/generated/prisma/enums";
+import { PricingTargetType, StorageType } from "@/app/generated/prisma/enums";
 
 interface ProductFormProps {
   product?: MenuProductRow;
@@ -25,6 +25,10 @@ export default function ProductForm({ product, categories }: ProductFormProps) {
     product?.canBeUsedAsRecipeComponent ?? false
   );
   const [sellingPrice, setSellingPrice] = useState(product?.sellingPrice ?? "");
+  const [shelfLifeDays, setShelfLifeDays] = useState(
+    product?.shelfLifeDays != null ? String(product.shelfLifeDays) : ""
+  );
+  const [storageType, setStorageType] = useState<string>(product?.storageType ?? "");
   const [useOverride, setUseOverride] = useState(
     product?.pricingTargetType != null && product?.pricingTargetPercent != null
   );
@@ -57,6 +61,10 @@ export default function ProductForm({ product, categories }: ProductFormProps) {
     if (sellingPriceNum !== null && (isNaN(sellingPriceNum) || sellingPriceNum <= 0)) {
       newErrors.sellingPrice = "Selling price must be greater than 0";
     }
+    const shelfLifeDaysNum = shelfLifeDays !== "" ? parseInt(shelfLifeDays, 10) : null;
+    if (shelfLifeDaysNum !== null && (isNaN(shelfLifeDaysNum) || shelfLifeDaysNum <= 0)) {
+      newErrors.shelfLifeDays = "Shelf life must be a positive number";
+    }
     if (useOverride) {
       const pct = parseFloat(String(pricingTargetPercent));
       if (isNaN(pct) || pct <= 0 || pct >= 100) {
@@ -80,6 +88,8 @@ export default function ProductForm({ product, categories }: ProductFormProps) {
       pricingTargetPercent: useOverride && pricingTargetPercent !== ""
         ? parseFloat(String(pricingTargetPercent))
         : null,
+      shelfLifeDays: shelfLifeDays !== "" ? parseInt(shelfLifeDays, 10) : null,
+      storageType: (storageType as StorageType) || null,
     };
 
     startTransition(async () => {
@@ -210,6 +220,41 @@ export default function ProductForm({ product, categories }: ProductFormProps) {
             placeholder="Internal notes..."
             className={inputClass + " resize-none"}
           />
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className={labelClass}>판매 가능 일수 (Shelf Life Days)</label>
+            <input
+              type="number"
+              min="1"
+              step="1"
+              value={shelfLifeDays}
+              onChange={(e) => setShelfLifeDays(e.target.value)}
+              disabled={isPending}
+              placeholder="예: 7"
+              className={inputClass}
+            />
+            <p className="mt-1 text-xs text-gray-400">
+              디스플레이 시작 후 판매 가능한 일수
+            </p>
+            {errors.shelfLifeDays && <p className={errorClass}>{errors.shelfLifeDays}</p>}
+          </div>
+
+          <div>
+            <label className={labelClass}>보관 방식 (Storage Type)</label>
+            <select
+              value={storageType}
+              onChange={(e) => setStorageType(e.target.value)}
+              disabled={isPending}
+              className={inputClass}
+            >
+              <option value="">미설정</option>
+              <option value={StorageType.FROZEN}>❄️ 냉동 (Frozen)</option>
+              <option value={StorageType.REFRIGERATED}>🧊 냉장 (Refrigerated)</option>
+              <option value={StorageType.AMBIENT}>🌡️ 상온 (Ambient)</option>
+            </select>
+          </div>
         </div>
 
         <div className="flex items-center gap-3">
