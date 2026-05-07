@@ -12,17 +12,17 @@ const STATUS_CONFIG: Record<
   { label: string; badgeClass: string; dotClass: string }
 > = {
   ok: {
-    label: "신선",
+    label: "Fresh",
     badgeClass: "bg-green-100 text-green-800 border border-green-200",
     dotClass: "bg-green-500",
   },
   warning: {
-    label: "주의",
+    label: "Warning",
     badgeClass: "bg-yellow-100 text-yellow-800 border border-yellow-200",
     dotClass: "bg-yellow-500",
   },
   expired: {
-    label: "기한초과",
+    label: "Expired",
     badgeClass: "bg-red-100 text-red-800 border border-red-200",
     dotClass: "bg-red-500",
   },
@@ -46,7 +46,7 @@ export default function FreshnessStatusBadge({
       </span>
       {daysElapsed != null && (
         <span className="text-xs text-gray-500">
-          {daysElapsed}일 경과
+          {daysElapsed} days elapsed
           {shelfLifeDays != null && daysRemaining != null && (
             <>
               {" "}
@@ -61,10 +61,10 @@ export default function FreshnessStatusBadge({
                 }
               >
                 {daysRemaining < 0
-                  ? `${Math.abs(daysRemaining)}일 초과`
+                  ? `${Math.abs(daysRemaining)} days overdue`
                   : daysRemaining === 0
-                  ? "오늘 만료"
-                  : `${daysRemaining}일 남음`}
+                  ? "Expires today"
+                  : `${daysRemaining} days left`}
               </span>
             </>
           )}

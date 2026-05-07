@@ -6,9 +6,9 @@ import FreshnessStatusBadge from "./FreshnessStatusBadge";
 import AddFreshnessLogDialog from "./AddFreshnessLogDialog";
 
 const STORAGE_TYPE_LABELS: Record<string, string> = {
-  FROZEN: "❄️ 냉동",
-  REFRIGERATED: "🧊 냉장",
-  AMBIENT: "🌡️ 상온",
+  FROZEN: "❄️ Frozen",
+  REFRIGERATED: "🧊 Refrigerated",
+  AMBIENT: "🌡️ Ambient",
 };
 
 function formatDate(isoString: string): string {
@@ -38,19 +38,19 @@ export default function FreshnessDashboard({
       {/* Summary cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="bg-red-50 rounded-xl border border-red-200 p-4">
-          <p className="text-xs text-red-600 font-medium">기한 초과</p>
+          <p className="text-xs text-red-600 font-medium">Expired</p>
           <p className="text-2xl font-bold text-red-700 mt-1">{expiredCount}</p>
         </div>
         <div className="bg-yellow-50 rounded-xl border border-yellow-200 p-4">
-          <p className="text-xs text-yellow-600 font-medium">주의 필요</p>
+          <p className="text-xs text-yellow-600 font-medium">Warning</p>
           <p className="text-2xl font-bold text-yellow-700 mt-1">{warningCount}</p>
         </div>
         <div className="bg-green-50 rounded-xl border border-green-200 p-4">
-          <p className="text-xs text-green-600 font-medium">신선</p>
+          <p className="text-xs text-green-600 font-medium">Fresh</p>
           <p className="text-2xl font-bold text-green-700 mt-1">{okCount}</p>
         </div>
         <div className="bg-gray-50 rounded-xl border border-gray-200 p-4">
-          <p className="text-xs text-gray-500 font-medium">로그 없음</p>
+          <p className="text-xs text-gray-500 font-medium">No Logs</p>
           <p className="text-2xl font-bold text-gray-700 mt-1">{noLogCount}</p>
         </div>
       </div>
@@ -59,7 +59,7 @@ export default function FreshnessDashboard({
       {items.length === 0 ? (
         <div className="text-center py-16 text-gray-400">
           <p className="text-4xl mb-3">📦</p>
-          <p className="text-sm">활성 제품이 없습니다.</p>
+          <p className="text-sm">No active products.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -111,14 +111,15 @@ function FreshnessDashboardCard({
               </span>
             )}
             {item.shelfLifeDays != null && (
-              <span className="text-xs text-gray-400">판매 기간: {item.shelfLifeDays}일</span>
+              <span className="text-xs text-gray-400">Shelf life: {item.shelfLifeDays} days</span>
             )}
           </div>
         </div>
         <AddFreshnessLogDialog
           products={products}
+          initialProductId={item.productId}
           onSubmit={onAddLog}
-          triggerLabel="+ 로그"
+          triggerLabel="+"
         />
       </div>
 
@@ -134,7 +135,7 @@ function FreshnessDashboardCard({
           <div className="text-xs text-gray-500 space-y-0.5">
             <p>
               <span className="font-medium">
-                {item.latestLog.logType === "DISPLAYED" ? "디스플레이 시작" : "제조"}:
+                {item.latestLog.logType === "DISPLAYED" ? "Displayed" : "Made"}:
               </span>{" "}
               {formatDate(item.latestLog.loggedAt)}
             </p>
@@ -144,7 +145,7 @@ function FreshnessDashboardCard({
           </div>
         </>
       ) : (
-        <p className="text-xs text-gray-400 italic">아직 로그가 없습니다.</p>
+        <p className="text-xs text-gray-400 italic">No logs yet.</p>
       )}
     </div>
   );

@@ -25,11 +25,11 @@ export default async function FreshnessPage() {
               Dashboard
             </Link>
             <span>/</span>
-            <span className="text-gray-700 font-medium">신선도 관리</span>
+            <span className="text-gray-700 font-medium">Freshness</span>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">신선도 관리</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Freshness Dashboard</h1>
           <p className="text-gray-500 mt-0.5 text-sm">
-            제품별 디스플레이 경과일 및 신선도 상태를 확인하세요.
+            Monitor displayed age and freshness status by product.
           </p>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
@@ -37,7 +37,7 @@ export default async function FreshnessPage() {
             href="/freshness/logs"
             className="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors"
           >
-            로그 이력
+            Log History
           </Link>
         </div>
       </div>
