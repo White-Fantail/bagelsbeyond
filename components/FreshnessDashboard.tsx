@@ -212,7 +212,7 @@ export default function FreshnessDashboard({
                     <CategoryActionButtons
                       category={category}
                       canMoveUp={categoryIndex > 0}
-                      canMoveDown={categoryIndex > -1 && categoryIndex < orderedCategories.length - 1}
+                      canMoveDown={categoryIndex < orderedCategories.length - 1}
                       onToggleCategoryManaged={onToggleCategoryManaged}
                       onMoveCategory={onMoveCategory}
                     />
