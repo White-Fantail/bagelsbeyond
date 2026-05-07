@@ -149,10 +149,10 @@ export const ADMIN_NAV: RoleNavConfig = {
     },
     {
       id: "freshness",
-      label: "신선도 관리",
+      label: "Freshness",
       items: [
-        { href: "/freshness", label: "신선도 대시보드" },
-        { href: "/freshness/logs", label: "로그 이력" },
+        { href: "/freshness", label: "Freshness Dashboard" },
+        { href: "/freshness/logs", label: "Log History" },
       ],
     },
     {

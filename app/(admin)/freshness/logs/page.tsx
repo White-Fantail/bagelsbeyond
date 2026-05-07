@@ -56,14 +56,14 @@ export default async function FreshnessLogsPage({
             </Link>
             <span>/</span>
             <Link href="/freshness" className="hover:text-amber-600 transition-colors">
-              신선도 관리
+              Freshness
             </Link>
             <span>/</span>
-            <span className="text-gray-700 font-medium">로그 이력</span>
+            <span className="text-gray-700 font-medium">Log History</span>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">신선도 로그 이력</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Freshness Log History</h1>
           <p className="text-gray-500 mt-0.5 text-sm">
-            제조 및 디스플레이 로그 전체 이력입니다.
+            View the complete history of made and displayed logs.
           </p>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
@@ -79,7 +79,7 @@ export default async function FreshnessLogsPage({
 
       {/* Result count */}
       <p className="text-sm text-gray-500">
-        총 <strong className="text-gray-700">{logs.length}</strong>건
+        Total <strong className="text-gray-700">{logs.length}</strong>
       </p>
 
       <FreshnessLogTable
@@ -107,7 +107,7 @@ function FreshnessLogsFilter({
         defaultValue={searchParams.productId ?? ""}
         className="px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500"
       >
-        <option value="">전체 제품</option>
+        <option value="">All products</option>
         {products.map((p) => (
           <option key={p.id} value={p.id}>
             {p.name}
@@ -121,9 +121,9 @@ function FreshnessLogsFilter({
         defaultValue={searchParams.logType ?? ""}
         className="px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500"
       >
-        <option value="">전체 유형</option>
-        <option value={FreshnessLogType.MADE}>제조</option>
-        <option value={FreshnessLogType.DISPLAYED}>디스플레이 시작</option>
+        <option value="">All types</option>
+        <option value={FreshnessLogType.MADE}>Made</option>
+        <option value={FreshnessLogType.DISPLAYED}>Displayed</option>
       </select>
 
       {/* Date range */}
@@ -131,14 +131,14 @@ function FreshnessLogsFilter({
         type="date"
         name="since"
         defaultValue={searchParams.since ?? ""}
-        placeholder="시작일"
+        placeholder="Start date"
         className="px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500"
       />
       <input
         type="date"
         name="until"
         defaultValue={searchParams.until ?? ""}
-        placeholder="종료일"
+        placeholder="End date"
         className="px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500"
       />
 
@@ -146,14 +146,14 @@ function FreshnessLogsFilter({
         type="submit"
         className="px-4 py-2 bg-gray-900 text-white rounded-md text-sm font-medium hover:bg-gray-700 transition-colors"
       >
-        필터 적용
+        Apply Filters
       </button>
       {(searchParams.productId || searchParams.logType || searchParams.since || searchParams.until) && (
         <Link
           href="/freshness/logs"
           className="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors"
         >
-          초기화
+          Reset
         </Link>
       )}
     </form>

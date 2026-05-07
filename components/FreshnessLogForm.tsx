@@ -8,6 +8,7 @@ import type { FreshnessLogRow } from "@/lib/services/freshnessService";
 interface FreshnessLogFormProps {
   products: MenuProductRow[];
   log?: FreshnessLogRow;
+  initialProductId?: string;
   onSubmit: (formData: FormData) => Promise<{ success?: boolean; message?: string; errors?: Record<string, string[]> }>;
   onCancel?: () => void;
 }
@@ -23,13 +24,14 @@ function nowLocalDatetime(): string {
 }
 
 const LOG_TYPE_LABELS: Record<FreshnessLogType, string> = {
-  MADE: "제조 (Made)",
-  DISPLAYED: "디스플레이 시작 (Displayed)",
+  MADE: "Made",
+  DISPLAYED: "Displayed",
 };
 
 export default function FreshnessLogForm({
   products,
   log,
+  initialProductId,
   onSubmit,
   onCancel,
 }: FreshnessLogFormProps) {
@@ -41,7 +43,7 @@ export default function FreshnessLogForm({
   const [isParsed, setIsParsed] = useState(false);
 
   // Form fields
-  const [productId, setProductId] = useState(log?.productId ?? "");
+  const [productId, setProductId] = useState(log?.productId ?? initialProductId ?? "");
   const [logType, setLogType] = useState<FreshnessLogType>(
     log?.logType ?? FreshnessLogType.DISPLAYED
   );
@@ -135,17 +137,17 @@ export default function FreshnessLogForm({
       )}
       {success && (
         <div className="px-4 py-3 rounded-lg text-sm bg-green-50 text-green-700 border border-green-200">
-          저장되었습니다.
+          Saved.
         </div>
       )}
 
       {/* Dictation section */}
       <div className="bg-amber-50 rounded-xl border border-amber-200 p-4 space-y-3">
         <h3 className="text-sm font-semibold text-amber-800">
-          🎙️ 빠른 입력 (딕테이션)
+          🎙️ Quick Input
         </h3>
         <p className="text-xs text-amber-700">
-          자유롭게 내용을 입력하면 아래 필드를 자동으로 채워드립니다.
+          Enter free-form text to auto-fill the fields below.
         </p>
         <textarea
           value={rawDictation}
@@ -154,7 +156,7 @@ export default function FreshnessLogForm({
             setIsParsed(false);
           }}
           rows={3}
-          placeholder="예: 크림치즈 베이글 오늘 냉장 디스플레이 시작"
+          placeholder="e.g. Cream Cheese Bagel today refrigerated displayed"
           disabled={isPending}
           className={inputClass + " resize-none"}
         />
@@ -164,11 +166,11 @@ export default function FreshnessLogForm({
           disabled={isPending || !rawDictation.trim()}
           className="px-3 py-1.5 bg-amber-500 text-white rounded-md text-xs font-medium hover:bg-amber-600 disabled:opacity-50"
         >
-          자동 파싱
+          Auto Fill
         </button>
         {isParsed && (
           <p className="text-xs text-green-700">
-            ✓ 아래 필드에 자동으로 채워졌습니다. 확인 후 수정하세요.
+            ✓ The fields below were auto-filled. Review and edit as needed.
           </p>
         )}
       </div>
@@ -176,7 +178,7 @@ export default function FreshnessLogForm({
       {/* Product */}
       <div>
         <label className={labelClass}>
-          제품 <span className="text-red-500">*</span>
+          Product <span className="text-red-500">*</span>
         </label>
         <select
           value={productId}
@@ -184,7 +186,7 @@ export default function FreshnessLogForm({
           disabled={isPending}
           className={inputClass}
         >
-          <option value="">제품 선택...</option>
+          <option value="">Select a product...</option>
           {products.map((p) => (
             <option key={p.id} value={p.id}>
               {p.name}
@@ -198,7 +200,7 @@ export default function FreshnessLogForm({
       {/* Log type */}
       <div>
         <label className={labelClass}>
-          유형 <span className="text-red-500">*</span>
+          Log Type <span className="text-red-500">*</span>
         </label>
         <select
           value={logType}
@@ -218,7 +220,7 @@ export default function FreshnessLogForm({
       {/* Logged at */}
       <div>
         <label className={labelClass}>
-          일시 <span className="text-red-500">*</span>
+          Timestamp <span className="text-red-500">*</span>
         </label>
         <input
           type="datetime-local"
@@ -232,13 +234,13 @@ export default function FreshnessLogForm({
 
       {/* Notes */}
       <div>
-        <label className={labelClass}>메모</label>
+        <label className={labelClass}>Notes</label>
         <textarea
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           rows={2}
           disabled={isPending}
-          placeholder="추가 메모..."
+          placeholder="Additional notes..."
           className={inputClass + " resize-none"}
         />
       </div>
@@ -249,7 +251,7 @@ export default function FreshnessLogForm({
           disabled={isPending || success}
           className="px-5 py-2.5 bg-amber-500 text-white rounded-md text-sm font-medium hover:bg-amber-600 disabled:opacity-50"
         >
-          {isPending ? "저장 중..." : isEditing ? "수정 저장" : "로그 추가"}
+          {isPending ? "Saving..." : isEditing ? "Save Changes" : "Add Log"}
         </button>
         {onCancel && (
           <button
@@ -258,7 +260,7 @@ export default function FreshnessLogForm({
             disabled={isPending}
             className="px-5 py-2.5 bg-white text-gray-700 border border-gray-300 rounded-md text-sm font-medium hover:bg-gray-50 disabled:opacity-50"
           >
-            취소
+            Cancel
           </button>
         )}
       </div>

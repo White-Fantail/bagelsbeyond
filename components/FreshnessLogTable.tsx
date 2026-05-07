@@ -6,8 +6,8 @@ import type { MenuProductRow } from "@/lib/services/menuProductService";
 import AddFreshnessLogDialog from "./AddFreshnessLogDialog";
 
 const LOG_TYPE_LABELS: Record<string, string> = {
-  MADE: "제조",
-  DISPLAYED: "디스플레이 시작",
+  MADE: "Made",
+  DISPLAYED: "Displayed",
 };
 
 function formatDate(isoString: string): string {
@@ -33,7 +33,7 @@ function DeleteButton({
   const [isPending, startTransition] = useTransition();
 
   function handleDelete() {
-    if (!confirm("이 로그를 삭제하시겠습니까?")) return;
+    if (!confirm("Delete this log?")) return;
     startTransition(async () => {
       await onDelete(id);
     });
@@ -45,7 +45,7 @@ function DeleteButton({
       disabled={isPending}
       className="text-xs px-2.5 py-1 rounded border border-red-200 text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
     >
-      {isPending ? "..." : "삭제"}
+      {isPending ? "..." : "Delete"}
     </button>
   );
 }
@@ -60,7 +60,7 @@ export default function FreshnessLogTable({
     return (
       <div className="text-center py-16 text-gray-400">
         <p className="text-4xl mb-3">📋</p>
-        <p className="text-sm">로그가 없습니다.</p>
+        <p className="text-sm">No logs found.</p>
       </div>
     );
   }
@@ -71,22 +71,22 @@ export default function FreshnessLogTable({
         <thead className="bg-gray-50 border-b border-gray-200">
           <tr>
             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
-              제품
+              Product
             </th>
             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
-              유형
+              Type
             </th>
             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
-              일시
+              Timestamp
             </th>
             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide hidden sm:table-cell">
-              메모
+              Notes
             </th>
             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide hidden md:table-cell">
-              작성자
+              Created By
             </th>
             <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wide">
-              관리
+              Actions
             </th>
           </tr>
         </thead>
@@ -124,7 +124,7 @@ export default function FreshnessLogTable({
                   <AddFreshnessLogDialog
                     products={products}
                     log={log}
-                    triggerLabel="수정"
+                    triggerLabel="Edit"
                     onSubmit={(fd) => onUpdate(log.id, fd)}
                   />
                   <DeleteButton id={log.id} onDelete={onDelete} />

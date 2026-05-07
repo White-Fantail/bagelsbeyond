@@ -224,7 +224,7 @@ export default function ProductForm({ product, categories }: ProductFormProps) {
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className={labelClass}>판매 가능 일수 (Shelf Life Days)</label>
+            <label className={labelClass}>Shelf Life Days</label>
             <input
               type="number"
               min="1"
@@ -232,27 +232,27 @@ export default function ProductForm({ product, categories }: ProductFormProps) {
               value={shelfLifeDays}
               onChange={(e) => setShelfLifeDays(e.target.value)}
               disabled={isPending}
-              placeholder="예: 7"
+              placeholder="e.g. 7"
               className={inputClass}
             />
             <p className="mt-1 text-xs text-gray-400">
-              디스플레이 시작 후 판매 가능한 일수
+              Number of days the product can be sold after display starts
             </p>
             {errors.shelfLifeDays && <p className={errorClass}>{errors.shelfLifeDays}</p>}
           </div>
 
           <div>
-            <label className={labelClass}>보관 방식 (Storage Type)</label>
+            <label className={labelClass}>Storage Type</label>
             <select
               value={storageType}
               onChange={(e) => setStorageType(e.target.value)}
               disabled={isPending}
               className={inputClass}
             >
-              <option value="">미설정</option>
-              <option value={StorageType.FROZEN}>❄️ 냉동 (Frozen)</option>
-              <option value={StorageType.REFRIGERATED}>🧊 냉장 (Refrigerated)</option>
-              <option value={StorageType.AMBIENT}>🌡️ 상온 (Ambient)</option>
+              <option value="">Not set</option>
+              <option value={StorageType.FROZEN}>❄️ Frozen</option>
+              <option value={StorageType.REFRIGERATED}>🧊 Refrigerated</option>
+              <option value={StorageType.AMBIENT}>🌡️ Ambient</option>
             </select>
           </div>
         </div>
