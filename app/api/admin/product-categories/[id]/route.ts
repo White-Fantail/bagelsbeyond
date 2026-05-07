@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { apiRequireAdmin, isNextResponse } from "@/lib/auth/dal";
 import { updateProductCategory } from "@/lib/services/menuProductService";
 import { productCategorySchema } from "@/lib/validations";
@@ -29,6 +30,8 @@ export async function PATCH(
 
   try {
     const category = await updateProductCategory(id, parsed.data);
+    revalidatePath("/product-categories");
+    revalidatePath("/freshness");
     return NextResponse.json({ category });
   } catch (err) {
     const msg =

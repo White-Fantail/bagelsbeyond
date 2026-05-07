@@ -356,18 +356,22 @@ model PriceImportRow {
 // ─── Menu Products & Recipes ──────────────────────────────────────────────────
 
 model ProductCategory {
-  id        String   @id @default(cuid())
-  name      String   @unique
-  slug      String   @unique
-  sortOrder Int      @default(0)
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                 String   @id @default(cuid())
+  name               String   @unique
+  slug               String   @unique
+  sortOrder          Int      @default(0)
+  isActive           Boolean  @default(true)
+  isFreshnessManaged Boolean  @default(false)
+  freshnessSortOrder Int      @default(0)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
   products MenuProduct[]
 
   @@index([sortOrder])
+  @@index([freshnessSortOrder])
   @@index([isActive])
+  @@index([isFreshnessManaged])
   @@map("product_categories")
 }
 

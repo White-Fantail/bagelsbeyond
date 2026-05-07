@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { apiRequireAdmin, isNextResponse } from "@/lib/auth/dal";
 import {
   listProductCategories,
@@ -39,6 +40,8 @@ export async function POST(req: NextRequest) {
 
   try {
     const category = await createProductCategory(parsed.data);
+    revalidatePath("/product-categories");
+    revalidatePath("/freshness");
     return NextResponse.json({ category }, { status: 201 });
   } catch (err) {
     const msg = err instanceof Error && err.message.includes("Unique constraint")

@@ -3,16 +3,21 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { requireAdmin } from "@/lib/auth/dal";
 import { getFreshnessDashboard } from "@/lib/services/freshnessService";
-import { listMenuProducts } from "@/lib/services/menuProductService";
+import { listMenuProducts, listProductCategories } from "@/lib/services/menuProductService";
 import FreshnessDashboard from "@/components/FreshnessDashboard";
-import { createFreshnessLogAction } from "@/app/actions/freshness";
+import {
+  createFreshnessLogAction,
+  moveFreshnessCategoryAction,
+  toggleFreshnessManagedCategoryAction,
+} from "@/app/actions/freshness";
 
 export default async function FreshnessPage() {
   await requireAdmin();
 
-  const [items, products] = await Promise.all([
+  const [groups, products, categories] = await Promise.all([
     getFreshnessDashboard(),
     listMenuProducts({ isActive: true }),
+    listProductCategories(),
   ]);
 
   return (
@@ -43,9 +48,12 @@ export default async function FreshnessPage() {
       </div>
 
       <FreshnessDashboard
-        items={items}
+        groups={groups}
+        categories={categories}
         products={products}
         onAddLog={createFreshnessLogAction}
+        onToggleCategoryManaged={toggleFreshnessManagedCategoryAction}
+        onMoveCategory={moveFreshnessCategoryAction}
       />
     </div>
   );
