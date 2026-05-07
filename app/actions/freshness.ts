@@ -61,8 +61,9 @@ export async function createFreshnessLogAction(
     revalidatePath("/freshness");
     revalidatePath("/freshness/logs");
     return { success: true };
-  } catch {
-    return { message: "Failed to create log entry" };
+  } catch (err) {
+    console.error("[createFreshnessLogAction]", err);
+    return { message: "Failed to create log entry. Please try again." };
   }
 }
 
@@ -102,8 +103,9 @@ export async function updateFreshnessLogAction(
     revalidatePath("/freshness");
     revalidatePath("/freshness/logs");
     return { success: true };
-  } catch {
-    return { message: "Failed to update log entry" };
+  } catch (err) {
+    console.error("[updateFreshnessLogAction]", err);
+    return { message: "Failed to update log entry. Please try again." };
   }
 }
 
@@ -114,7 +116,8 @@ export async function deleteFreshnessLogAction(id: string): Promise<FreshnessAct
     revalidatePath("/freshness");
     revalidatePath("/freshness/logs");
     return { success: true };
-  } catch {
-    return { message: "Failed to delete log entry" };
+  } catch (err) {
+    console.error("[deleteFreshnessLogAction]", err);
+    return { message: "Failed to delete log entry. Please try again." };
   }
 }

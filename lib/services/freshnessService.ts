@@ -62,7 +62,7 @@ export function computeFreshnessStatus(
 function computeDaysElapsed(loggedAt: Date): number {
   const now = new Date();
   const diffMs = now.getTime() - loggedAt.getTime();
-  return Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  return Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
 }
 
 function toFreshnessLogRow(r: {
