@@ -74,6 +74,19 @@ enum SupplierIntegrationType {
   CSV
 }
 
+// ─── Freshness Management ─────────────────────────────────────────────────────
+
+enum StorageType {
+  FROZEN
+  REFRIGERATED
+  AMBIENT
+}
+
+enum FreshnessLogType {
+  MADE
+  DISPLAYED
+}
+
 // ─── Production Planning ──────────────────────────────────────────────────────
 
 enum PlanningRoundingMode {
@@ -369,6 +382,9 @@ model MenuProduct {
   pricingTargetPercent       Decimal?             @db.Decimal(5, 2)
   canBeUsedAsRecipeComponent Boolean              @default(false)
   categoryId                 String?
+  // Freshness Management
+  shelfLifeDays              Int?
+  storageType                StorageType?
   // Production Planning
   isProductionPlannable      Boolean              @default(false)
   productionBatchSize        Float?
@@ -381,6 +397,7 @@ model MenuProduct {
   recipes              Recipe[]
   componentRecipeItems RecipeItem[] @relation("ComponentProduct")
   forecastOverrides    ForecastOverride[]
+  freshnessLogs        FreshnessLog[]
 
   @@index([name])
   @@index([isActive])
@@ -452,8 +469,31 @@ model User {
   ingredientPriceHistory IngredientPriceHistory[]
   priceImportBatches     PriceImportBatch[]
   supplierSyncLogs       SupplierSyncLog[]
+  freshnessLogs          FreshnessLog[]
 
   @@map("users")
+}
+
+// ─── Freshness Management ─────────────────────────────────────────────────────
+
+model FreshnessLog {
+  id                String           @id @default(cuid())
+  productId         String
+  logType           FreshnessLogType
+  loggedAt          DateTime
+  notes             String?
+  rawDictation      String?
+  createdByUserId   String?
+  createdAt         DateTime         @default(now())
+
+  product           MenuProduct      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdByUser     User?            @relation(fields: [createdByUserId], references: [id], onDelete: SetNull)
+
+  @@index([productId])
+  @@index([logType])
+  @@index([loggedAt])
+  @@index([createdByUserId])
+  @@map("freshness_logs")
 }
 
 model DailyRecord {

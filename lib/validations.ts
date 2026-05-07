@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { UnitType, PricingTargetType, RecommendedPriceRounding, SupplierIntegrationType, SupplierSyncMode, RecipeItemSourceType } from "@/app/generated/prisma/enums";
+import { UnitType, PricingTargetType, RecommendedPriceRounding, SupplierIntegrationType, SupplierSyncMode, RecipeItemSourceType, StorageType, FreshnessLogType } from "@/app/generated/prisma/enums";
 import { getConversionFactor } from "@/lib/costing/unit-conversion";
 
 export const salesFormSchema = z.object({
@@ -183,6 +183,11 @@ export const menuProductSchema = z.object({
   ),
   canBeUsedAsRecipeComponent: z.boolean().default(false).optional(),
   categoryId: z.string().nullable().optional(),
+  shelfLifeDays: z.preprocess(
+    (v) => (v === "" || v === null || v === undefined ? null : v),
+    z.coerce.number().int().positive("Shelf life must be a positive integer").nullable().optional()
+  ),
+  storageType: z.nativeEnum(StorageType).nullable().optional(),
 });
 
 export type MenuProductSchema = z.infer<typeof menuProductSchema>;
@@ -334,3 +339,19 @@ export const scraperSearchSchema = z.object({
 });
 
 export type ScraperSearchSchema = z.infer<typeof scraperSearchSchema>;
+
+// ─── Freshness Log ─────────────────────────────────────────────────────────────
+
+export const freshnessLogSchema = z.object({
+  productId: z.string().min(1, "Product is required"),
+  logType: z.nativeEnum(FreshnessLogType),
+  loggedAt: z.string().datetime({ offset: true }).or(z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/)),
+  notes: z.string().optional().nullable(),
+  rawDictation: z.string().optional().nullable(),
+});
+
+export type FreshnessLogSchema = z.infer<typeof freshnessLogSchema>;
+
+export const updateFreshnessLogSchema = freshnessLogSchema.partial().omit({ productId: true });
+
+export type UpdateFreshnessLogSchema = z.infer<typeof updateFreshnessLogSchema>;

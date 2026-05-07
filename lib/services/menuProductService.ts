@@ -1,6 +1,6 @@
 import "server-only";
 import { prisma } from "@/lib/db";
-import { PricingTargetType } from "@/app/generated/prisma/enums";
+import { PricingTargetType, StorageType } from "@/app/generated/prisma/enums";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -35,6 +35,8 @@ export type MenuProductRow = {
   canBeUsedAsRecipeComponent: boolean;
   categoryId: string | null;
   categoryName: string | null;
+  shelfLifeDays: number | null;
+  storageType: StorageType | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -49,6 +51,8 @@ export type CreateMenuProductInput = {
   pricingTargetPercent?: number | null;
   canBeUsedAsRecipeComponent?: boolean;
   categoryId?: string | null;
+  shelfLifeDays?: number | null;
+  storageType?: StorageType | null;
 };
 
 export type UpdateMenuProductInput = Partial<CreateMenuProductInput>;
@@ -105,6 +109,8 @@ function toMenuProductRow(r: {
   canBeUsedAsRecipeComponent: boolean;
   categoryId: string | null;
   category?: { name: string } | null;
+  shelfLifeDays: number | null;
+  storageType: StorageType | null;
   createdAt: Date;
   updatedAt: Date;
 }): MenuProductRow {
@@ -120,6 +126,8 @@ function toMenuProductRow(r: {
     canBeUsedAsRecipeComponent: r.canBeUsedAsRecipeComponent,
     categoryId: r.categoryId,
     categoryName: r.category?.name ?? null,
+    shelfLifeDays: r.shelfLifeDays,
+    storageType: r.storageType,
     createdAt: r.createdAt.toISOString(),
     updatedAt: r.updatedAt.toISOString(),
   };
@@ -172,6 +180,8 @@ export async function createMenuProduct(input: CreateMenuProductInput): Promise<
       pricingTargetPercent: input.pricingTargetPercent != null ? String(input.pricingTargetPercent) : null,
       canBeUsedAsRecipeComponent: input.canBeUsedAsRecipeComponent ?? false,
       categoryId: input.categoryId ?? null,
+      shelfLifeDays: input.shelfLifeDays ?? null,
+      storageType: input.storageType ?? null,
     },
     include: { category: { select: { name: true } } },
   });
@@ -200,6 +210,8 @@ export async function updateMenuProduct(
         ? { canBeUsedAsRecipeComponent: input.canBeUsedAsRecipeComponent ?? false }
         : {}),
       ...("categoryId" in input ? { categoryId: input.categoryId ?? null } : {}),
+      ...("shelfLifeDays" in input ? { shelfLifeDays: input.shelfLifeDays ?? null } : {}),
+      ...("storageType" in input ? { storageType: input.storageType ?? null } : {}),
     },
     include: { category: { select: { name: true } } },
   });
