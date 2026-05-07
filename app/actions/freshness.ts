@@ -22,6 +22,19 @@ export interface FreshnessActionResult {
   errors?: Record<string, string[]>;
 }
 
+function moveItemByDirection<T>(
+  items: T[],
+  currentIndex: number,
+  direction: "up" | "down"
+): T[] {
+  const next = [...items];
+  const targetIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
+  if (targetIndex < 0 || targetIndex >= next.length) return next;
+  const [moved] = next.splice(currentIndex, 1);
+  next.splice(targetIndex, 0, moved);
+  return next;
+}
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function parseLoggedAt(raw: string): Date | null {
@@ -178,14 +191,14 @@ export async function moveFreshnessCategoryAction(
       return { message: "Category not found" };
     }
 
-    const targetIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
-    if (targetIndex < 0 || targetIndex >= ordered.length) {
+    if (
+      (direction === "up" && currentIndex === 0) ||
+      (direction === "down" && currentIndex === ordered.length - 1)
+    ) {
       return { success: true };
     }
-
-    const [moved] = ordered.splice(currentIndex, 1);
-    ordered.splice(targetIndex, 0, moved);
-    await reorderFreshnessCategories(ordered.map((c) => c.id));
+    const reordered = moveItemByDirection(ordered, currentIndex, direction);
+    await reorderFreshnessCategories(reordered.map((c) => c.id));
     revalidatePath("/freshness");
     revalidatePath("/product-categories");
     return { success: true };

@@ -76,6 +76,7 @@ function CategoryActionButtons({
     <div className="flex items-center gap-1.5">
       <button
         type="button"
+        aria-label="Move category up"
         disabled={isPending || !canMoveUp}
         onClick={() => handleMove("up")}
         className="px-2 py-1 text-xs rounded border border-gray-300 text-gray-600 hover:bg-gray-50 disabled:opacity-40"
@@ -84,6 +85,7 @@ function CategoryActionButtons({
       </button>
       <button
         type="button"
+        aria-label="Move category down"
         disabled={isPending || !canMoveDown}
         onClick={() => handleMove("down")}
         className="px-2 py-1 text-xs rounded border border-gray-300 text-gray-600 hover:bg-gray-50 disabled:opacity-40"
@@ -204,9 +206,12 @@ export default function FreshnessDashboard({
                 <div className="px-4 py-3 border-b border-gray-100 bg-gray-50 flex items-center justify-between gap-3">
                   <div>
                     <h3 className="text-sm font-semibold text-gray-900">{group.categoryName}</h3>
-                    <p className="text-xs text-gray-500 mt-0.5">
-                      Expired {group.summary.expiredCount} · Warning {group.summary.warningCount} · Fresh {group.summary.okCount} · No Logs {group.summary.noLogCount}
-                    </p>
+                    <ul className="mt-1 flex flex-wrap gap-x-3 text-xs text-gray-500" aria-label={`${group.categoryName} status summary`}>
+                      <li>Expired {group.summary.expiredCount}</li>
+                      <li>Warning {group.summary.warningCount}</li>
+                      <li>Fresh {group.summary.okCount}</li>
+                      <li>No Logs {group.summary.noLogCount}</li>
+                    </ul>
                   </div>
                   {category && (
                     <CategoryActionButtons
