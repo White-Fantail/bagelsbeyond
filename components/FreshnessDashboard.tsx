@@ -207,10 +207,10 @@ export default function FreshnessDashboard({
                   <div>
                     <h3 className="text-sm font-semibold text-gray-900">{group.categoryName}</h3>
                     <ul className="mt-1 flex flex-wrap gap-x-3 text-xs text-gray-500" aria-label={`${group.categoryName} status summary`}>
-                      <li>Expired {group.summary.expiredCount}</li>
-                      <li>Warning {group.summary.warningCount}</li>
-                      <li>Fresh {group.summary.okCount}</li>
-                      <li>No Logs {group.summary.noLogCount}</li>
+                      <li>Expired: {group.summary.expiredCount}</li>
+                      <li>Warning: {group.summary.warningCount}</li>
+                      <li>Fresh: {group.summary.okCount}</li>
+                      <li>No Logs: {group.summary.noLogCount}</li>
                     </ul>
                   </div>
                   {category && (
