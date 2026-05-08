@@ -19,6 +19,7 @@ function formatDate(isoString: string): string {
 interface FreshnessLogTableProps {
   logs: FreshnessLogRow[];
   products: MenuProductRow[];
+  lastQuantities?: Record<string, number>;
   onUpdate: (id: string, formData: FormData) => Promise<{ success?: boolean; message?: string; errors?: Record<string, string[]> }>;
   onDelete: (id: string) => Promise<{ success?: boolean; message?: string }>;
 }
@@ -53,6 +54,7 @@ function DeleteButton({
 export default function FreshnessLogTable({
   logs,
   products,
+  lastQuantities,
   onUpdate,
   onDelete,
 }: FreshnessLogTableProps) {
@@ -78,6 +80,9 @@ export default function FreshnessLogTable({
             </th>
             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
               Timestamp
+            </th>
+            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
+              Qty
             </th>
             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide hidden sm:table-cell">
               Notes
@@ -113,6 +118,9 @@ export default function FreshnessLogTable({
               <td className="px-4 py-3 text-gray-700 whitespace-nowrap">
                 {formatDate(log.loggedAt)}
               </td>
+              <td className="px-4 py-3 text-gray-700">
+                {log.quantity != null ? log.quantity : <span className="text-gray-300">—</span>}
+              </td>
               <td className="px-4 py-3 text-gray-500 max-w-[200px] truncate hidden sm:table-cell">
                 {log.notes || <span className="text-gray-300">—</span>}
               </td>
@@ -125,6 +133,7 @@ export default function FreshnessLogTable({
                     products={products}
                     log={log}
                     triggerLabel="Edit"
+                    lastQuantities={lastQuantities}
                     onSubmit={(fd) => onUpdate(log.id, fd)}
                   />
                   <DeleteButton id={log.id} onDelete={onDelete} />

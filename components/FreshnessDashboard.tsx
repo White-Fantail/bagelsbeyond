@@ -29,6 +29,7 @@ interface FreshnessDashboardProps {
   groups: FreshnessDashboardCategoryGroup[];
   categories: ProductCategoryRow[];
   products: MenuProductRow[];
+  lastQuantities?: Record<string, number>;
   onAddLog: (
     formData: FormData
   ) => Promise<{ success?: boolean; message?: string; errors?: Record<string, string[]> }>;
@@ -37,10 +38,12 @@ interface FreshnessDashboardProps {
 function ProductRow({
   item,
   products,
+  lastQuantities,
   onAddLog,
 }: {
   item: FreshnessDashboardItem;
   products: MenuProductRow[];
+  lastQuantities?: Record<string, number>;
   onAddLog: FreshnessDashboardProps["onAddLog"];
 }) {
   return (
@@ -69,6 +72,7 @@ function ProductRow({
       <AddFreshnessLogDialog
         products={products}
         initialProductId={item.productId}
+        lastQuantities={lastQuantities}
         onSubmit={onAddLog}
         triggerLabel="+"
       />
@@ -80,6 +84,7 @@ export default function FreshnessDashboard({
   groups,
   categories,
   products,
+  lastQuantities,
   onAddLog,
 }: FreshnessDashboardProps) {
   const orderedCategories = [...categories].sort(
@@ -122,7 +127,7 @@ export default function FreshnessDashboard({
                 ) : (
                   <div>
                     {group.items.map((item) => (
-                      <ProductRow key={item.productId} item={item} products={products} onAddLog={onAddLog} />
+                      <ProductRow key={item.productId} item={item} products={products} lastQuantities={lastQuantities} onAddLog={onAddLog} />
                     ))}
                   </div>
                 )}

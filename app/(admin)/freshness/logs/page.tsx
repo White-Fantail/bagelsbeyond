@@ -2,7 +2,10 @@ export const dynamic = "force-dynamic";
 
 import Link from "next/link";
 import { requireAdmin } from "@/lib/auth/dal";
-import { listFreshnessLogs } from "@/lib/services/freshnessService";
+import {
+  listFreshnessLogs,
+  getLastQuantitiesByProduct,
+} from "@/lib/services/freshnessService";
 import { listMenuProducts } from "@/lib/services/menuProductService";
 import { FreshnessLogType } from "@/app/generated/prisma/enums";
 import FreshnessLogTable from "@/components/FreshnessLogTable";
@@ -35,7 +38,7 @@ export default async function FreshnessLogsPage({
       ? FreshnessLogType.DISPLAYED
       : undefined;
 
-  const [logs, products] = await Promise.all([
+  const [logs, products, lastQuantities] = await Promise.all([
     listFreshnessLogs({
       productId: sp.productId || undefined,
       logType: logTypeFilter,
@@ -43,6 +46,7 @@ export default async function FreshnessLogsPage({
       until: sp.until ? new Date(sp.until) : undefined,
     }),
     listMenuProducts({ isActive: true }),
+    getLastQuantitiesByProduct(),
   ]);
 
   return (
@@ -69,6 +73,7 @@ export default async function FreshnessLogsPage({
         <div className="flex items-center gap-2 flex-shrink-0">
           <AddFreshnessLogDialog
             products={products}
+            lastQuantities={lastQuantities}
             onSubmit={createFreshnessLogAction}
           />
         </div>
@@ -85,6 +90,7 @@ export default async function FreshnessLogsPage({
       <FreshnessLogTable
         logs={logs}
         products={products}
+        lastQuantities={lastQuantities}
         onUpdate={updateFreshnessLogAction}
         onDelete={deleteFreshnessLogAction}
       />
