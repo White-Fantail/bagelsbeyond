@@ -128,6 +128,15 @@ export const ADMIN_NAV: RoleNavConfig = {
       ],
     },
     {
+      id: "freshness",
+      label: "Freshness",
+      items: [
+        { href: "/freshness", label: "Freshness Dashboard" },
+        { href: "/freshness/logs", label: "Log History" },
+        { href: "/freshness/categories", label: "Category Settings" },
+      ],
+    },
+    {
       id: "analytics",
       label: "Analytics / Predictions",
       items: [
@@ -148,15 +157,6 @@ export const ADMIN_NAV: RoleNavConfig = {
       ],
     },
     {
-      id: "freshness",
-      label: "Freshness",
-      items: [
-        { href: "/freshness", label: "Freshness Dashboard" },
-        { href: "/freshness/logs", label: "Log History" },
-        { href: "/freshness/categories", label: "Category Settings" },
-      ],
-    },
-    {
       id: "costing",
       label: "Menu Costing",
       items: [
@@ -170,15 +170,6 @@ export const ADMIN_NAV: RoleNavConfig = {
         { href: "/costing/prices/import", label: "CSV Price Import" },
         { href: "/costing/pricing-health", label: "Pricing Health" },
         { href: "/costing/impact", label: "Cost Impact" },
-      ],
-    },
-    {
-      id: "planning",
-      label: "Production Planning",
-      items: [
-        { href: "/forecast/production-plan", label: "Production Plan" },
-        { href: "/forecast/ingredient-needs", label: "Ingredient Needs" },
-        { href: "/forecast/profitability", label: "Forecast Profitability" },
       ],
     },
     {
