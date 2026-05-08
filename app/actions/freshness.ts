@@ -65,12 +65,16 @@ export async function createFreshnessLogAction(
   if (!loggedAt) errors.loggedAt = ["Valid date/time is required"];
 
   const quantityValue = typeof quantityRaw === "string" ? quantityRaw.trim() : "";
+  let quantity: number | undefined;
   if (!quantityValue) {
     errors.quantity = ["Quantity is required"];
-  }
-  const quantity = quantityValue ? parseInt(quantityValue, 10) : NaN;
-  if (quantityValue && (isNaN(quantity) || quantity < 1)) {
-    errors.quantity = ["Quantity must be a positive number"];
+  } else {
+    const parsedQuantity = parseInt(quantityValue, 10);
+    if (isNaN(parsedQuantity) || parsedQuantity < 1) {
+      errors.quantity = ["Quantity must be a positive number"];
+    } else {
+      quantity = parsedQuantity;
+    }
   }
 
   if (Object.keys(errors).length > 0) {
@@ -82,7 +86,7 @@ export async function createFreshnessLogAction(
       productId,
       logType: logTypeRaw as FreshnessLogType,
       loggedAt: loggedAt!,
-      quantity,
+      quantity: quantity!,
       notes,
       rawDictation,
       createdByUserId: session.userId,
@@ -120,12 +124,16 @@ export async function updateFreshnessLogAction(
   }
 
   const quantityValue = typeof quantityRaw === "string" ? quantityRaw.trim() : "";
+  let quantity: number | undefined;
   if (!quantityValue) {
     errors.quantity = ["Quantity is required"];
-  }
-  const quantity = quantityValue ? parseInt(quantityValue, 10) : NaN;
-  if (quantityValue && (isNaN(quantity) || quantity < 1)) {
-    errors.quantity = ["Quantity must be a positive number"];
+  } else {
+    const parsedQuantity = parseInt(quantityValue, 10);
+    if (isNaN(parsedQuantity) || parsedQuantity < 1) {
+      errors.quantity = ["Quantity must be a positive number"];
+    } else {
+      quantity = parsedQuantity;
+    }
   }
 
   if (Object.keys(errors).length > 0) {
@@ -136,7 +144,7 @@ export async function updateFreshnessLogAction(
     await updateFreshnessLog(id, {
       ...(logTypeRaw ? { logType: logTypeRaw as FreshnessLogType } : {}),
       ...(loggedAt ? { loggedAt } : {}),
-      quantity,
+      quantity: quantity!,
       notes,
       rawDictation,
     });
