@@ -106,7 +106,6 @@ export default function FreshnessDashboard({
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {groups.map((group) => {
-            const categoryIndex = orderedCategories.findIndex((c) => c.id === group.categoryId);
             return (
               <section key={group.categoryId} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
                 <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
