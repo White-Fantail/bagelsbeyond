@@ -485,7 +485,7 @@ model FreshnessLog {
   productId         String
   logType           FreshnessLogType
   loggedAt          DateTime
-  quantity          Int?
+  quantity          Int
   notes             String?
   rawDictation      String?
   createdByUserId   String?

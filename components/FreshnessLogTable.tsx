@@ -1,7 +1,7 @@
 "use client";
 
 import { useTransition } from "react";
-import type { FreshnessLogRow } from "@/lib/services/freshnessService";
+import type { FreshnessLogRow, LastQuantityByProductAndType } from "@/lib/services/freshnessService";
 import type { MenuProductRow } from "@/lib/services/menuProductService";
 import AddFreshnessLogDialog from "./AddFreshnessLogDialog";
 
@@ -19,7 +19,7 @@ function formatDate(isoString: string): string {
 interface FreshnessLogTableProps {
   logs: FreshnessLogRow[];
   products: MenuProductRow[];
-  lastQuantities?: Record<string, number>;
+  lastQuantities?: LastQuantityByProductAndType;
   onUpdate: (id: string, formData: FormData) => Promise<{ success?: boolean; message?: string; errors?: Record<string, string[]> }>;
   onDelete: (id: string) => Promise<{ success?: boolean; message?: string }>;
 }
@@ -119,7 +119,7 @@ export default function FreshnessLogTable({
                 {formatDate(log.loggedAt)}
               </td>
               <td className="px-4 py-3 text-gray-700">
-                {log.quantity != null ? log.quantity : <span className="text-gray-300">—</span>}
+                {log.quantity}
               </td>
               <td className="px-4 py-3 text-gray-500 max-w-[200px] truncate hidden sm:table-cell">
                 {log.notes || <span className="text-gray-300">—</span>}

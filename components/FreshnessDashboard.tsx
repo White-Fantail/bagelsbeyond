@@ -5,6 +5,7 @@ import { useTransition } from "react";
 import type {
   FreshnessDashboardCategoryGroup,
   FreshnessDashboardItem,
+  LastQuantityByProductAndType,
 } from "@/lib/services/freshnessService";
 import type {
   MenuProductRow,
@@ -29,7 +30,7 @@ interface FreshnessDashboardProps {
   groups: FreshnessDashboardCategoryGroup[];
   categories: ProductCategoryRow[];
   products: MenuProductRow[];
-  lastQuantities?: Record<string, number>;
+  lastQuantities?: LastQuantityByProductAndType;
   onAddLog: (
     formData: FormData
   ) => Promise<{ success?: boolean; message?: string; errors?: Record<string, string[]> }>;
@@ -43,7 +44,7 @@ function ProductRow({
 }: {
   item: FreshnessDashboardItem;
   products: MenuProductRow[];
-  lastQuantities?: Record<string, number>;
+  lastQuantities?: LastQuantityByProductAndType;
   onAddLog: FreshnessDashboardProps["onAddLog"];
 }) {
   return (

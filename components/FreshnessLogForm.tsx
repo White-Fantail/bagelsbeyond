@@ -3,13 +3,13 @@
 import { useState, useTransition } from "react";
 import { FreshnessLogType } from "@/app/generated/prisma/enums";
 import type { MenuProductRow } from "@/lib/services/menuProductService";
-import type { FreshnessLogRow } from "@/lib/services/freshnessService";
+import type { FreshnessLogRow, LastQuantityByProductAndType } from "@/lib/services/freshnessService";
 
 interface FreshnessLogFormProps {
   products: MenuProductRow[];
   log?: FreshnessLogRow;
   initialProductId?: string;
-  lastQuantities?: Record<string, number>;
+  lastQuantities?: LastQuantityByProductAndType;
   onSubmit: (formData: FormData) => Promise<{ success?: boolean; message?: string; errors?: Record<string, string[]> }>;
   onCancel?: () => void;
 }
@@ -29,6 +29,15 @@ const LOG_TYPE_LABELS: Record<FreshnessLogType, string> = {
   DISPLAYED: "Displayed",
 };
 
+function getLastQuantity(
+  lastQuantities: LastQuantityByProductAndType | undefined,
+  productId: string,
+  logType: FreshnessLogType
+): number | null {
+  if (!productId || !lastQuantities) return null;
+  return lastQuantities[productId]?.[logType] ?? null;
+}
+
 export default function FreshnessLogForm({
   products,
   log,
@@ -39,18 +48,20 @@ export default function FreshnessLogForm({
 }: FreshnessLogFormProps) {
   const [isPending, startTransition] = useTransition();
   const isEditing = !!log;
+  const initialLogType = log?.logType ?? FreshnessLogType.DISPLAYED;
+  const initialSelectedProductId = log?.productId ?? initialProductId ?? "";
 
   // Form fields
-  const [productId, setProductId] = useState(log?.productId ?? initialProductId ?? "");
-  const [logType, setLogType] = useState<FreshnessLogType>(
-    log?.logType ?? FreshnessLogType.DISPLAYED
-  );
+  const [productId, setProductId] = useState(initialSelectedProductId);
+  const [logType, setLogType] = useState<FreshnessLogType>(initialLogType);
   const [loggedAt, setLoggedAt] = useState(
     log ? toLocalDatetimeValue(log.loggedAt) : nowLocalDatetime()
   );
-  const [quantity, setQuantity] = useState<string>(
-    log?.quantity != null ? String(log.quantity) : ""
-  );
+  const [quantity, setQuantity] = useState<string>(() => {
+    if (log) return String(log.quantity);
+    const lastQuantity = getLastQuantity(lastQuantities, initialSelectedProductId, initialLogType);
+    return lastQuantity != null ? String(lastQuantity) : "";
+  });
   const [notes, setNotes] = useState(log?.notes ?? "");
 
   const [errors, setErrors] = useState<Record<string, string[]>>({});
@@ -73,7 +84,7 @@ export default function FreshnessLogForm({
     // Convert local datetime to ISO for server
     const d = new Date(loggedAt);
     fd.set("loggedAt", d.toISOString());
-    if (quantity) fd.set("quantity", quantity);
+    fd.set("quantity", quantity);
     fd.set("notes", notes);
 
     startTransition(async () => {
@@ -111,8 +122,9 @@ export default function FreshnessLogForm({
           onChange={(e) => {
             const newProductId = e.target.value;
             setProductId(newProductId);
-            if (!isEditing && lastQuantities && newProductId in lastQuantities) {
-              setQuantity(String(lastQuantities[newProductId]));
+            if (!isEditing) {
+              const lastQuantity = getLastQuantity(lastQuantities, newProductId, logType);
+              setQuantity(lastQuantity != null ? String(lastQuantity) : "");
             }
           }}
           disabled={isPending}
@@ -136,7 +148,14 @@ export default function FreshnessLogForm({
         </label>
         <select
           value={logType}
-          onChange={(e) => setLogType(e.target.value as FreshnessLogType)}
+          onChange={(e) => {
+            const newLogType = e.target.value as FreshnessLogType;
+            setLogType(newLogType);
+            if (!isEditing) {
+              const lastQuantity = getLastQuantity(lastQuantities, productId, newLogType);
+              setQuantity(lastQuantity != null ? String(lastQuantity) : "");
+            }
+          }}
           disabled={isPending}
           className={inputClass}
         >
@@ -166,12 +185,15 @@ export default function FreshnessLogForm({
 
       {/* Quantity */}
       <div>
-        <label className={labelClass}>Quantity</label>
+        <label className={labelClass}>
+          Quantity <span className="text-red-500">*</span>
+        </label>
         <input
           type="number"
           min={1}
           value={quantity}
           onChange={(e) => setQuantity(e.target.value)}
+          required
           disabled={isPending}
           placeholder="How many were made/displayed?"
           className={inputClass}

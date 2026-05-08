@@ -4,7 +4,7 @@ import Link from "next/link";
 import { requireAdmin } from "@/lib/auth/dal";
 import {
   listFreshnessLogs,
-  getLastQuantitiesByProduct,
+  getLastQuantitiesByProductAndType,
 } from "@/lib/services/freshnessService";
 import { listMenuProducts } from "@/lib/services/menuProductService";
 import { FreshnessLogType } from "@/app/generated/prisma/enums";
@@ -46,7 +46,7 @@ export default async function FreshnessLogsPage({
       until: sp.until ? new Date(sp.until) : undefined,
     }),
     listMenuProducts({ isActive: true }),
-    getLastQuantitiesByProduct(),
+    getLastQuantitiesByProductAndType(),
   ]);
 
   return (
