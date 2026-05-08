@@ -13,7 +13,7 @@ export type FreshnessLogRow = {
   categoryName: string | null;
   logType: FreshnessLogType;
   loggedAt: string;
-  quantity: number | null;
+  quantity: number;
   notes: string | null;
   rawDictation: string | null;
   createdByUserId: string | null;
@@ -53,7 +53,7 @@ export type CreateFreshnessLogInput = {
   productId: string;
   logType: FreshnessLogType;
   loggedAt: Date;
-  quantity?: number | null;
+  quantity: number;
   notes?: string | null;
   rawDictation?: string | null;
   createdByUserId?: string | null;
@@ -62,10 +62,15 @@ export type CreateFreshnessLogInput = {
 export type UpdateFreshnessLogInput = {
   logType?: FreshnessLogType;
   loggedAt?: Date;
-  quantity?: number | null;
+  quantity: number;
   notes?: string | null;
   rawDictation?: string | null;
 };
+
+export type LastQuantityByProductAndType = Record<
+  string,
+  Partial<Record<FreshnessLogType, number>>
+>;
 
 // ─── Status calculation ───────────────────────────────────────────────────────
 
@@ -89,7 +94,7 @@ function toFreshnessLogRow(r: {
   productId: string;
   logType: FreshnessLogType;
   loggedAt: Date;
-  quantity: number | null;
+  quantity: number;
   notes: string | null;
   rawDictation: string | null;
   createdByUserId: string | null;
@@ -123,7 +128,7 @@ export async function addFreshnessLog(
       productId: input.productId,
       logType: input.logType,
       loggedAt: input.loggedAt,
-      quantity: input.quantity ?? null,
+      quantity: input.quantity,
       notes: input.notes ?? null,
       rawDictation: input.rawDictation ?? null,
       createdByUserId: input.createdByUserId ?? null,
@@ -145,7 +150,7 @@ export async function updateFreshnessLog(
     data: {
       ...(input.logType !== undefined ? { logType: input.logType } : {}),
       ...(input.loggedAt !== undefined ? { loggedAt: input.loggedAt } : {}),
-      ...("quantity" in input ? { quantity: input.quantity ?? null } : {}),
+      quantity: input.quantity,
       ...("notes" in input ? { notes: input.notes ?? null } : {}),
       ...("rawDictation" in input ? { rawDictation: input.rawDictation ?? null } : {}),
     },
@@ -201,21 +206,19 @@ export async function listFreshnessLogs(filter: {
 }
 
 /**
- * Returns the most recently logged quantity for each product (where quantity was recorded).
- * Used to pre-fill the quantity field when creating a new log for the same product.
+ * Returns the most recently logged quantity for each product and log type.
+ * Used to pre-fill quantity when creating a log with the same product and log type.
  */
-export async function getLastQuantitiesByProduct(): Promise<Record<string, number>> {
+export async function getLastQuantitiesByProductAndType(): Promise<LastQuantityByProductAndType> {
   const logs = await prisma.freshnessLog.findMany({
-    where: { quantity: { not: null } },
-    select: { productId: true, quantity: true },
+    select: { productId: true, logType: true, quantity: true },
     orderBy: { loggedAt: "desc" },
-    distinct: ["productId"],
+    distinct: ["productId", "logType"],
   });
-  const result: Record<string, number> = {};
+  const result: LastQuantityByProductAndType = {};
   for (const log of logs) {
-    if (log.quantity != null) {
-      result[log.productId] = log.quantity;
-    }
+    if (!result[log.productId]) result[log.productId] = {};
+    result[log.productId][log.logType] = log.quantity;
   }
   return result;
 }

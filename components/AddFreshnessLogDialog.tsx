@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import type { MenuProductRow } from "@/lib/services/menuProductService";
-import type { FreshnessLogRow } from "@/lib/services/freshnessService";
+import type { FreshnessLogRow, LastQuantityByProductAndType } from "@/lib/services/freshnessService";
 import FreshnessLogForm from "./FreshnessLogForm";
 
 interface AddFreshnessLogDialogProps {
@@ -10,7 +10,7 @@ interface AddFreshnessLogDialogProps {
   log?: FreshnessLogRow;
   triggerLabel?: string;
   initialProductId?: string;
-  lastQuantities?: Record<string, number>;
+  lastQuantities?: LastQuantityByProductAndType;
   onSubmit: (formData: FormData) => Promise<{ success?: boolean; message?: string; errors?: Record<string, string[]> }>;
 }
 

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { requireAdmin } from "@/lib/auth/dal";
 import {
   getFreshnessDashboard,
-  getLastQuantitiesByProduct,
+  getLastQuantitiesByProductAndType,
 } from "@/lib/services/freshnessService";
 import { listMenuProducts, listProductCategories } from "@/lib/services/menuProductService";
 import FreshnessDashboard from "@/components/FreshnessDashboard";
@@ -17,7 +17,7 @@ export default async function FreshnessPage() {
     getFreshnessDashboard(),
     listMenuProducts({ isActive: true }),
     listProductCategories(),
-    getLastQuantitiesByProduct(),
+    getLastQuantitiesByProductAndType(),
   ]);
 
   return (
@@ -57,4 +57,3 @@ export default async function FreshnessPage() {
     </div>
   );
 }
-
