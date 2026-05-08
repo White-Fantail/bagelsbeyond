@@ -57,6 +57,8 @@ export default function FreshnessStatusBadge({
                     ? "text-red-600 font-medium"
                     : daysRemaining === 0
                     ? "text-orange-600 font-medium"
+                    : daysRemaining === 1
+                    ? "text-yellow-600 font-medium"
                     : "text-gray-600"
                 }
               >
@@ -64,6 +66,8 @@ export default function FreshnessStatusBadge({
                   ? `${Math.abs(daysRemaining)} days overdue`
                   : daysRemaining === 0
                   ? "Expires today"
+                  : daysRemaining === 1
+                  ? "1 day left — Caution"
                   : `${daysRemaining} days left`}
               </span>
             </>

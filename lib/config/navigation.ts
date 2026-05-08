@@ -153,6 +153,7 @@ export const ADMIN_NAV: RoleNavConfig = {
       items: [
         { href: "/freshness", label: "Freshness Dashboard" },
         { href: "/freshness/logs", label: "Log History" },
+        { href: "/freshness/categories", label: "Category Settings" },
       ],
     },
     {

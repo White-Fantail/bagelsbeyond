@@ -71,7 +71,7 @@ export function computeFreshnessStatus(
   shelfLifeDays: number
 ): FreshnessStatus {
   if (daysElapsed >= shelfLifeDays) return "expired";
-  if (daysElapsed >= shelfLifeDays * 0.8) return "warning";
+  if (daysElapsed >= shelfLifeDays - 1 || daysElapsed >= shelfLifeDays * 0.8) return "warning";
   return "ok";
 }
 
