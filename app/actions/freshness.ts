@@ -116,7 +116,7 @@ export async function updateFreshnessLogAction(
   }
 
   const quantity = quantityRaw ? parseInt(quantityRaw, 10) : undefined;
-  if (quantityRaw && (quantity === undefined || isNaN(quantity) || quantity < 1)) {
+  if (quantityRaw && (isNaN(quantity!) || quantity! < 1)) {
     errors.quantity = ["Quantity must be a positive number"];
   }
 

@@ -207,12 +207,13 @@ export async function listFreshnessLogs(filter: {
 export async function getLastQuantitiesByProduct(): Promise<Record<string, number>> {
   const logs = await prisma.freshnessLog.findMany({
     where: { quantity: { not: null } },
-    select: { productId: true, quantity: true, loggedAt: true },
+    select: { productId: true, quantity: true },
     orderBy: { loggedAt: "desc" },
+    distinct: ["productId"],
   });
   const result: Record<string, number> = {};
   for (const log of logs) {
-    if (!(log.productId in result) && log.quantity != null) {
+    if (log.quantity != null) {
       result[log.productId] = log.quantity;
     }
   }
