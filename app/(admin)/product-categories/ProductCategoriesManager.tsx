@@ -23,6 +23,8 @@ export default function ProductCategoriesManager({ initialCategories }: Props) {
   const [slug, setSlug] = useState("");
   const [sortOrder, setSortOrder] = useState("0");
   const [isActive, setIsActive] = useState(true);
+  const [isFreshnessManaged, setIsFreshnessManaged] = useState(false);
+  const [freshnessSortOrder, setFreshnessSortOrder] = useState("0");
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   function openCreate() {
@@ -30,6 +32,8 @@ export default function ProductCategoriesManager({ initialCategories }: Props) {
     setSlug("");
     setSortOrder("0");
     setIsActive(true);
+    setIsFreshnessManaged(false);
+    setFreshnessSortOrder("0");
     setFormErrors({});
     setMessage(null);
     setMode({ type: "create" });
@@ -40,6 +44,8 @@ export default function ProductCategoriesManager({ initialCategories }: Props) {
     setSlug(category.slug);
     setSortOrder(String(category.sortOrder));
     setIsActive(category.isActive);
+    setIsFreshnessManaged(category.isFreshnessManaged);
+    setFreshnessSortOrder(String(category.freshnessSortOrder));
     setFormErrors({});
     setMessage(null);
     setMode({ type: "edit", category });
@@ -77,6 +83,8 @@ export default function ProductCategoriesManager({ initialCategories }: Props) {
       slug: slug.trim(),
       sortOrder: parseInt(sortOrder) || 0,
       isActive,
+      isFreshnessManaged,
+      freshnessSortOrder: parseInt(freshnessSortOrder) || 0,
     };
 
     startTransition(async () => {
@@ -126,6 +134,28 @@ export default function ProductCategoriesManager({ initialCategories }: Props) {
           setMessage({ type: "error", text: data.message ?? "Action failed" });
         } else {
           setMessage({ type: "success", text: "Status updated" });
+          router.refresh();
+        }
+      } catch {
+        setMessage({ type: "error", text: "Failed to connect to server" });
+      }
+    });
+  }
+
+  async function toggleCategoryFreshnessManaged(category: ProductCategoryRow) {
+    setMessage(null);
+    startTransition(async () => {
+      try {
+        const res = await fetch(`/api/admin/product-categories/${category.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ isFreshnessManaged: !category.isFreshnessManaged }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          setMessage({ type: "error", text: data.message ?? "Action failed" });
+        } else {
+          setMessage({ type: "success", text: "Freshness visibility updated" });
           router.refresh();
         }
       } catch {
@@ -199,7 +229,18 @@ export default function ProductCategoriesManager({ initialCategories }: Props) {
                   className={inputClass}
                 />
               </div>
-              <div className="flex items-end pb-1">
+              <div>
+                <label className={labelClass}>Freshness Dashboard Order</label>
+                <input
+                  type="number"
+                  value={freshnessSortOrder}
+                  onChange={(e) => setFreshnessSortOrder(e.target.value)}
+                  disabled={isPending}
+                  min="0"
+                  className={inputClass}
+                />
+              </div>
+              <div className="flex items-end pb-1 gap-5">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
@@ -209,6 +250,16 @@ export default function ProductCategoriesManager({ initialCategories }: Props) {
                     className="w-4 h-4 rounded border-gray-300 text-amber-500 focus:ring-amber-500"
                   />
                   <span className="text-sm text-gray-700">Active</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={isFreshnessManaged}
+                    onChange={(e) => setIsFreshnessManaged(e.target.checked)}
+                    disabled={isPending}
+                    className="w-4 h-4 rounded border-gray-300 text-amber-500 focus:ring-amber-500"
+                  />
+                  <span className="text-sm text-gray-700">Freshness Managed</span>
                 </label>
               </div>
             </div>
@@ -262,6 +313,8 @@ export default function ProductCategoriesManager({ initialCategories }: Props) {
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Name</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Slug</th>
                 <th className="text-center px-4 py-3 font-medium text-gray-600">Order</th>
+                <th className="text-center px-4 py-3 font-medium text-gray-600">Freshness</th>
+                <th className="text-center px-4 py-3 font-medium text-gray-600">Freshness Order</th>
                 <th className="text-center px-4 py-3 font-medium text-gray-600">Active</th>
                 <th className="text-right px-4 py-3 font-medium text-gray-600">Actions</th>
               </tr>
@@ -272,6 +325,18 @@ export default function ProductCategoriesManager({ initialCategories }: Props) {
                   <td className="px-4 py-3 font-medium text-gray-900">{cat.name}</td>
                   <td className="px-4 py-3 text-gray-500 font-mono text-xs">{cat.slug}</td>
                   <td className="px-4 py-3 text-center text-gray-600">{cat.sortOrder}</td>
+                  <td className="px-4 py-3 text-center">
+                    <span
+                      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                        cat.isFreshnessManaged
+                          ? "bg-blue-100 text-blue-700"
+                          : "bg-gray-100 text-gray-500"
+                      }`}
+                    >
+                      {cat.isFreshnessManaged ? "Managed" : "Hidden"}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-center text-gray-600">{cat.freshnessSortOrder}</td>
                   <td className="px-4 py-3 text-center">
                     <span
                       className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
@@ -291,6 +356,17 @@ export default function ProductCategoriesManager({ initialCategories }: Props) {
                         className="text-xs px-3 py-1.5 rounded-md border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50"
                       >
                         Edit
+                      </button>
+                      <button
+                        onClick={() => toggleCategoryFreshnessManaged(cat)}
+                        disabled={isPending}
+                        className={`text-xs px-3 py-1.5 rounded-md border font-medium transition-colors disabled:opacity-50 ${
+                          cat.isFreshnessManaged
+                            ? "border-gray-300 text-gray-600 hover:bg-gray-50"
+                            : "border-blue-300 text-blue-700 hover:bg-blue-50"
+                        }`}
+                      >
+                        {isPending ? "..." : cat.isFreshnessManaged ? "Hide from Freshness" : "Show in Freshness"}
                       </button>
                       <button
                         onClick={() => toggleCategoryActive(cat)}

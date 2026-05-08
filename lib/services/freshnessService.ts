@@ -23,6 +23,7 @@ export type FreshnessLogRow = {
 export type FreshnessDashboardItem = {
   productId: string;
   productName: string;
+  categoryId: string | null;
   categoryName: string | null;
   shelfLifeDays: number | null;
   storageType: string | null;
@@ -30,6 +31,21 @@ export type FreshnessDashboardItem = {
   daysElapsed: number | null;
   daysRemaining: number | null;
   status: FreshnessStatus;
+};
+
+export type FreshnessCategoryStatusSummary = {
+  expiredCount: number;
+  warningCount: number;
+  okCount: number;
+  noLogCount: number;
+};
+
+export type FreshnessDashboardCategoryGroup = {
+  categoryId: string;
+  categoryName: string;
+  freshnessSortOrder: number;
+  summary: FreshnessCategoryStatusSummary;
+  items: FreshnessDashboardItem[];
 };
 
 export type CreateFreshnessLogInput = {
@@ -183,11 +199,16 @@ export async function listFreshnessLogs(filter: {
  * Calculates days elapsed and remaining based on shelfLifeDays.
  * Results are sorted: expired first, then warning, then ok, then no-log products.
  */
-export async function getFreshnessDashboard(): Promise<FreshnessDashboardItem[]> {
+export async function getFreshnessDashboard(): Promise<FreshnessDashboardCategoryGroup[]> {
   const products = await prisma.menuProduct.findMany({
-    where: { isActive: true },
+    where: {
+      isActive: true,
+      category: {
+        isFreshnessManaged: true,
+      },
+    },
     include: {
-      category: { select: { name: true } },
+      category: { select: { id: true, name: true, freshnessSortOrder: true } },
       freshnessLogs: {
         where: { logType: FreshnessLogType.DISPLAYED },
         orderBy: { loggedAt: "desc" },
@@ -220,6 +241,7 @@ export async function getFreshnessDashboard(): Promise<FreshnessDashboardItem[]>
     return {
       productId: p.id,
       productName: p.name,
+      categoryId: p.category?.id ?? null,
       categoryName: p.category?.name ?? null,
       shelfLifeDays: p.shelfLifeDays,
       storageType: p.storageType,
@@ -232,7 +254,7 @@ export async function getFreshnessDashboard(): Promise<FreshnessDashboardItem[]>
 
   // Sort: expired → warning → ok (with log) → no log
   const statusOrder: Record<FreshnessStatus, number> = { expired: 0, warning: 1, ok: 2 };
-  return items.sort((a, b) => {
+  const sortedItems = items.sort((a, b) => {
     if (!a.latestLog && !b.latestLog) return 0;
     if (!a.latestLog) return 1;
     if (!b.latestLog) return -1;
@@ -245,4 +267,55 @@ export async function getFreshnessDashboard(): Promise<FreshnessDashboardItem[]>
     }
     return 0;
   });
+
+  const categorySortOrderMap = new Map<string, number>();
+  for (const p of products) {
+    if (p.category?.id) {
+      categorySortOrderMap.set(p.category.id, p.category.freshnessSortOrder);
+    }
+  }
+
+  const grouped = new Map<
+    string,
+    {
+      categoryId: string;
+      categoryName: string;
+      freshnessSortOrder: number;
+      items: FreshnessDashboardItem[];
+    }
+  >();
+
+  for (const item of sortedItems) {
+    if (!item.categoryId || !item.categoryName) continue;
+    if (!grouped.has(item.categoryId)) {
+      grouped.set(item.categoryId, {
+        categoryId: item.categoryId,
+        categoryName: item.categoryName,
+        freshnessSortOrder: categorySortOrderMap.get(item.categoryId) ?? 0,
+        items: [],
+      });
+    }
+    grouped.get(item.categoryId)!.items.push(item);
+  }
+
+  const toSummary = (groupItems: FreshnessDashboardItem[]): FreshnessCategoryStatusSummary => ({
+    expiredCount: groupItems.filter((i) => i.status === "expired").length,
+    warningCount: groupItems.filter((i) => i.status === "warning").length,
+    okCount: groupItems.filter((i) => i.status === "ok" && i.latestLog).length,
+    noLogCount: groupItems.filter((i) => !i.latestLog).length,
+  });
+
+  return Array.from(grouped.values())
+    .map((g) => ({
+      categoryId: g.categoryId,
+      categoryName: g.categoryName,
+      freshnessSortOrder: g.freshnessSortOrder,
+      summary: toSummary(g.items),
+      items: g.items,
+    }))
+    .sort(
+      (a, b) =>
+        a.freshnessSortOrder - b.freshnessSortOrder ||
+        a.categoryName.localeCompare(b.categoryName)
+    );
 }

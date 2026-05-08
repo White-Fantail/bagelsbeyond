@@ -7,6 +7,11 @@ import {
   updateFreshnessLog,
   deleteFreshnessLog,
 } from "@/lib/services/freshnessService";
+import {
+  listProductCategories,
+  reorderFreshnessCategories,
+  updateProductCategory,
+} from "@/lib/services/menuProductService";
 import { FreshnessLogType } from "@/app/generated/prisma/enums";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -15,6 +20,19 @@ export interface FreshnessActionResult {
   success?: boolean;
   message?: string;
   errors?: Record<string, string[]>;
+}
+
+function moveItemByDirection<T>(
+  items: T[],
+  currentIndex: number,
+  direction: "up" | "down"
+): T[] {
+  const next = [...items];
+  const targetIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
+  if (targetIndex < 0 || targetIndex >= next.length) return next;
+  const [moved] = next.splice(currentIndex, 1);
+  next.splice(targetIndex, 0, moved);
+  return next;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -119,5 +137,73 @@ export async function deleteFreshnessLogAction(id: string): Promise<FreshnessAct
   } catch (err) {
     console.error("[deleteFreshnessLogAction]", err);
     return { message: "Failed to delete log entry. Please try again." };
+  }
+}
+
+export async function toggleFreshnessManagedCategoryAction(
+  formData: FormData
+): Promise<FreshnessActionResult> {
+  await requireAdmin();
+  const categoryId = formData.get("categoryId");
+  const nextManaged = formData.get("isFreshnessManaged");
+
+  if (typeof categoryId !== "string" || !categoryId) {
+    return { message: "Category is required" };
+  }
+  if (typeof nextManaged !== "string") {
+    return { message: "Invalid managed value" };
+  }
+
+  try {
+    await updateProductCategory(categoryId, {
+      isFreshnessManaged: nextManaged === "true",
+    });
+    revalidatePath("/freshness");
+    revalidatePath("/product-categories");
+    return { success: true };
+  } catch (err) {
+    console.error("[toggleFreshnessManagedCategoryAction]", err);
+    return { message: "Failed to update category freshness setting." };
+  }
+}
+
+export async function moveFreshnessCategoryAction(
+  formData: FormData
+): Promise<FreshnessActionResult> {
+  await requireAdmin();
+  const categoryId = formData.get("categoryId");
+  const direction = formData.get("direction");
+
+  if (typeof categoryId !== "string" || !categoryId) {
+    return { message: "Category is required" };
+  }
+  if (direction !== "up" && direction !== "down") {
+    return { message: "Invalid direction" };
+  }
+
+  try {
+    const categories = await listProductCategories();
+    const ordered = [...categories].sort(
+      (a, b) => a.freshnessSortOrder - b.freshnessSortOrder || a.name.localeCompare(b.name)
+    );
+    const currentIndex = ordered.findIndex((c) => c.id === categoryId);
+    if (currentIndex === -1) {
+      return { message: "Category not found" };
+    }
+
+    if (
+      (direction === "up" && currentIndex === 0) ||
+      (direction === "down" && currentIndex === ordered.length - 1)
+    ) {
+      return { success: true };
+    }
+    const reordered = moveItemByDirection(ordered, currentIndex, direction);
+    await reorderFreshnessCategories(reordered.map((c) => c.id));
+    revalidatePath("/freshness");
+    revalidatePath("/product-categories");
+    return { success: true };
+  } catch (err) {
+    console.error("[moveFreshnessCategoryAction]", err);
+    return { message: "Failed to update category order." };
   }
 }

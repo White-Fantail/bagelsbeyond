@@ -10,6 +10,8 @@ export type ProductCategoryRow = {
   slug: string;
   sortOrder: number;
   isActive: boolean;
+  isFreshnessManaged: boolean;
+  freshnessSortOrder: number;
   createdAt: string;
   updatedAt: string;
 };
@@ -19,6 +21,8 @@ export type CreateProductCategoryInput = {
   slug: string;
   sortOrder?: number;
   isActive?: boolean;
+  isFreshnessManaged?: boolean;
+  freshnessSortOrder?: number;
 };
 
 export type UpdateProductCategoryInput = Partial<CreateProductCategoryInput>;
@@ -79,6 +83,8 @@ export async function createProductCategory(
       slug: input.slug,
       sortOrder: input.sortOrder ?? 0,
       isActive: input.isActive ?? true,
+      isFreshnessManaged: input.isFreshnessManaged ?? false,
+      freshnessSortOrder: input.freshnessSortOrder ?? 0,
     },
   });
   return { ...row, createdAt: row.createdAt.toISOString(), updatedAt: row.updatedAt.toISOString() };
@@ -93,6 +99,17 @@ export async function updateProductCategory(
     data: input,
   });
   return { ...row, createdAt: row.createdAt.toISOString(), updatedAt: row.updatedAt.toISOString() };
+}
+
+export async function reorderFreshnessCategories(orderedCategoryIds: string[]): Promise<void> {
+  await prisma.$transaction(
+    orderedCategoryIds.map((id, index) =>
+      prisma.productCategory.update({
+        where: { id },
+        data: { freshnessSortOrder: index },
+      })
+    )
+  );
 }
 
 // ─── CRUD ─────────────────────────────────────────────────────────────────────

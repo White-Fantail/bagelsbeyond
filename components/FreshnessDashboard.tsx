@@ -1,7 +1,14 @@
 "use client";
 
-import type { FreshnessDashboardItem } from "@/lib/services/freshnessService";
-import type { MenuProductRow } from "@/lib/services/menuProductService";
+import { useTransition } from "react";
+import type {
+  FreshnessDashboardCategoryGroup,
+  FreshnessDashboardItem,
+} from "@/lib/services/freshnessService";
+import type {
+  MenuProductRow,
+  ProductCategoryRow,
+} from "@/lib/services/menuProductService";
 import FreshnessStatusBadge from "./FreshnessStatusBadge";
 import AddFreshnessLogDialog from "./AddFreshnessLogDialog";
 
@@ -18,66 +25,90 @@ function formatDate(isoString: string): string {
 }
 
 interface FreshnessDashboardProps {
-  items: FreshnessDashboardItem[];
+  groups: FreshnessDashboardCategoryGroup[];
+  categories: ProductCategoryRow[];
   products: MenuProductRow[];
-  onAddLog: (formData: FormData) => Promise<{ success?: boolean; message?: string; errors?: Record<string, string[]> }>;
+  onAddLog: (
+    formData: FormData
+  ) => Promise<{ success?: boolean; message?: string; errors?: Record<string, string[]> }>;
+  onToggleCategoryManaged: (
+    formData: FormData
+  ) => Promise<{ success?: boolean; message?: string; errors?: Record<string, string[]> }>;
+  onMoveCategory: (
+    formData: FormData
+  ) => Promise<{ success?: boolean; message?: string; errors?: Record<string, string[]> }>;
 }
 
-export default function FreshnessDashboard({
-  items,
-  products,
-  onAddLog,
-}: FreshnessDashboardProps) {
-  const expiredCount = items.filter((i) => i.status === "expired").length;
-  const warningCount = items.filter((i) => i.status === "warning").length;
-  const okCount = items.filter((i) => i.status === "ok" && i.latestLog).length;
-  const noLogCount = items.filter((i) => !i.latestLog).length;
+function CategoryActionButtons({
+  category,
+  canMoveUp,
+  canMoveDown,
+  onToggleCategoryManaged,
+  onMoveCategory,
+}: {
+  category: Pick<ProductCategoryRow, "id" | "isFreshnessManaged">;
+  canMoveUp: boolean;
+  canMoveDown: boolean;
+  onToggleCategoryManaged: FreshnessDashboardProps["onToggleCategoryManaged"];
+  onMoveCategory: FreshnessDashboardProps["onMoveCategory"];
+}) {
+  const [isPending, startTransition] = useTransition();
+
+  function handleToggle() {
+    const formData = new FormData();
+    formData.set("categoryId", category.id);
+    formData.set("isFreshnessManaged", String(!category.isFreshnessManaged));
+    startTransition(async () => {
+      await onToggleCategoryManaged(formData);
+    });
+  }
+
+  function handleMove(direction: "up" | "down") {
+    const formData = new FormData();
+    formData.set("categoryId", category.id);
+    formData.set("direction", direction);
+    startTransition(async () => {
+      await onMoveCategory(formData);
+    });
+  }
 
   return (
-    <div className="space-y-6">
-      {/* Summary cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="bg-red-50 rounded-xl border border-red-200 p-4">
-          <p className="text-xs text-red-600 font-medium">Expired</p>
-          <p className="text-2xl font-bold text-red-700 mt-1">{expiredCount}</p>
-        </div>
-        <div className="bg-yellow-50 rounded-xl border border-yellow-200 p-4">
-          <p className="text-xs text-yellow-600 font-medium">Warning</p>
-          <p className="text-2xl font-bold text-yellow-700 mt-1">{warningCount}</p>
-        </div>
-        <div className="bg-green-50 rounded-xl border border-green-200 p-4">
-          <p className="text-xs text-green-600 font-medium">Fresh</p>
-          <p className="text-2xl font-bold text-green-700 mt-1">{okCount}</p>
-        </div>
-        <div className="bg-gray-50 rounded-xl border border-gray-200 p-4">
-          <p className="text-xs text-gray-500 font-medium">No Logs</p>
-          <p className="text-2xl font-bold text-gray-700 mt-1">{noLogCount}</p>
-        </div>
-      </div>
-
-      {/* Product cards */}
-      {items.length === 0 ? (
-        <div className="text-center py-16 text-gray-400">
-          <p className="text-4xl mb-3">📦</p>
-          <p className="text-sm">No active products.</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {items.map((item) => (
-            <FreshnessDashboardCard
-              key={item.productId}
-              item={item}
-              products={products}
-              onAddLog={onAddLog}
-            />
-          ))}
-        </div>
-      )}
+    <div className="flex items-center gap-1.5">
+      <button
+        type="button"
+        aria-label="Move category up"
+        disabled={isPending || !canMoveUp}
+        onClick={() => handleMove("up")}
+        className="px-2 py-1 text-xs rounded border border-gray-300 text-gray-600 hover:bg-gray-50 disabled:opacity-40"
+      >
+        ↑
+      </button>
+      <button
+        type="button"
+        aria-label="Move category down"
+        disabled={isPending || !canMoveDown}
+        onClick={() => handleMove("down")}
+        className="px-2 py-1 text-xs rounded border border-gray-300 text-gray-600 hover:bg-gray-50 disabled:opacity-40"
+      >
+        ↓
+      </button>
+      <button
+        type="button"
+        disabled={isPending}
+        onClick={handleToggle}
+        className={`px-2.5 py-1 text-xs rounded border font-medium disabled:opacity-50 ${
+          category.isFreshnessManaged
+            ? "border-green-300 text-green-700 hover:bg-green-50"
+            : "border-gray-300 text-gray-600 hover:bg-gray-50"
+        }`}
+      >
+        {category.isFreshnessManaged ? "Managed" : "Hidden"}
+      </button>
     </div>
   );
 }
 
-function FreshnessDashboardCard({
+function ProductRow({
   item,
   products,
   onAddLog,
@@ -86,66 +117,125 @@ function FreshnessDashboardCard({
   products: MenuProductRow[];
   onAddLog: FreshnessDashboardProps["onAddLog"];
 }) {
-  const cardBorderClass =
-    item.latestLog
-      ? item.status === "expired"
-        ? "border-red-300 bg-red-50"
-        : item.status === "warning"
-        ? "border-yellow-300 bg-yellow-50"
-        : "border-green-200 bg-white"
-      : "border-gray-200 bg-white";
+  return (
+    <div className="grid grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_auto] items-center gap-3 px-3 py-2 border-b border-gray-100 last:border-b-0">
+      <div className="min-w-0">
+        <p className="text-sm font-medium text-gray-900 truncate">{item.productName}</p>
+        <div className="flex items-center gap-2 flex-wrap text-xs text-gray-500 mt-0.5">
+          {item.storageType && (
+            <span>{STORAGE_TYPE_LABELS[item.storageType] ?? item.storageType}</span>
+          )}
+          {item.shelfLifeDays != null && <span>{item.shelfLifeDays} days</span>}
+          {item.latestLog && (
+            <span className="text-gray-400">
+              {item.latestLog.logType === "DISPLAYED" ? "Displayed" : "Made"}{" "}
+              {formatDate(item.latestLog.loggedAt)}
+            </span>
+          )}
+        </div>
+      </div>
+      <FreshnessStatusBadge
+        status={item.status}
+        daysElapsed={item.daysElapsed}
+        daysRemaining={item.daysRemaining}
+        shelfLifeDays={item.shelfLifeDays}
+      />
+      <AddFreshnessLogDialog
+        products={products}
+        initialProductId={item.productId}
+        onSubmit={onAddLog}
+        triggerLabel="+"
+      />
+    </div>
+  );
+}
+
+export default function FreshnessDashboard({
+  groups,
+  categories,
+  products,
+  onAddLog,
+  onToggleCategoryManaged,
+  onMoveCategory,
+}: FreshnessDashboardProps) {
+  const orderedCategories = [...categories].sort(
+    (a, b) => a.freshnessSortOrder - b.freshnessSortOrder || a.name.localeCompare(b.name)
+  );
 
   return (
-    <div className={`rounded-xl border p-4 space-y-3 ${cardBorderClass}`}>
-      {/* Header */}
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <p className="text-sm font-semibold text-gray-900 truncate">{item.productName}</p>
-          <div className="flex items-center gap-2 flex-wrap mt-0.5">
-            {item.categoryName && (
-              <span className="text-xs text-gray-500">{item.categoryName}</span>
-            )}
-            {item.storageType && (
-              <span className="text-xs text-gray-500">
-                {STORAGE_TYPE_LABELS[item.storageType] ?? item.storageType}
-              </span>
-            )}
-            {item.shelfLifeDays != null && (
-              <span className="text-xs text-gray-400">Shelf life: {item.shelfLifeDays} days</span>
-            )}
-          </div>
+    <div className="space-y-6">
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
+          <h2 className="text-sm font-semibold text-gray-700">Freshness Category Controls</h2>
         </div>
-        <AddFreshnessLogDialog
-          products={products}
-          initialProductId={item.productId}
-          onSubmit={onAddLog}
-          triggerLabel="+"
-        />
+        {orderedCategories.length === 0 ? (
+          <div className="px-4 py-8 text-sm text-gray-400">No categories found.</div>
+        ) : (
+          <div className="divide-y divide-gray-100">
+            {orderedCategories.map((category, index) => (
+              <div key={category.id} className="px-4 py-2.5 flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-medium text-gray-900">{category.name}</p>
+                  <p className="text-xs text-gray-500">Order: {category.freshnessSortOrder}</p>
+                </div>
+                <CategoryActionButtons
+                  category={category}
+                  canMoveUp={index > 0}
+                  canMoveDown={index < orderedCategories.length - 1}
+                  onToggleCategoryManaged={onToggleCategoryManaged}
+                  onMoveCategory={onMoveCategory}
+                />
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* Status */}
-      {item.latestLog ? (
-        <>
-          <FreshnessStatusBadge
-            status={item.status}
-            daysElapsed={item.daysElapsed}
-            daysRemaining={item.daysRemaining}
-            shelfLifeDays={item.shelfLifeDays}
-          />
-          <div className="text-xs text-gray-500 space-y-0.5">
-            <p>
-              <span className="font-medium">
-                {item.latestLog.logType === "DISPLAYED" ? "Displayed" : "Made"}:
-              </span>{" "}
-              {formatDate(item.latestLog.loggedAt)}
-            </p>
-            {item.latestLog.notes && (
-              <p className="text-gray-400 truncate">{item.latestLog.notes}</p>
-            )}
-          </div>
-        </>
+      {groups.length === 0 ? (
+        <div className="text-center py-16 text-gray-400">
+          <p className="text-4xl mb-3">📦</p>
+          <p className="text-sm">No freshness-managed categories or active products.</p>
+        </div>
       ) : (
-        <p className="text-xs text-gray-400 italic">No logs yet.</p>
+        <div className="space-y-4">
+          {groups.map((group) => {
+            const category = orderedCategories.find((c) => c.id === group.categoryId);
+            const categoryIndex = orderedCategories.findIndex((c) => c.id === group.categoryId);
+            return (
+              <section key={group.categoryId} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                <div className="px-4 py-3 border-b border-gray-100 bg-gray-50 flex items-center justify-between gap-3">
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-900">{group.categoryName}</h3>
+                    <ul className="mt-1 flex flex-wrap gap-x-3 text-xs text-gray-500" aria-label={`${group.categoryName} status summary`}>
+                      <li>Expired: {group.summary.expiredCount}</li>
+                      <li>Warning: {group.summary.warningCount}</li>
+                      <li>Fresh: {group.summary.okCount}</li>
+                      <li>No Logs: {group.summary.noLogCount}</li>
+                    </ul>
+                  </div>
+                  {category && (
+                    <CategoryActionButtons
+                      category={category}
+                      canMoveUp={categoryIndex > 0}
+                      canMoveDown={categoryIndex < orderedCategories.length - 1}
+                      onToggleCategoryManaged={onToggleCategoryManaged}
+                      onMoveCategory={onMoveCategory}
+                    />
+                  )}
+                </div>
+                {group.items.length === 0 ? (
+                  <div className="px-4 py-6 text-sm text-gray-400">No active products.</div>
+                ) : (
+                  <div>
+                    {group.items.map((item) => (
+                      <ProductRow key={item.productId} item={item} products={products} onAddLog={onAddLog} />
+                    ))}
+                  </div>
+                )}
+              </section>
+            );
+          })}
+        </div>
       )}
     </div>
   );
