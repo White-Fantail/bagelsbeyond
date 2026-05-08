@@ -38,10 +38,6 @@ export default function FreshnessLogForm({
   const [isPending, startTransition] = useTransition();
   const isEditing = !!log;
 
-  // Dictation state
-  const [rawDictation, setRawDictation] = useState(log?.rawDictation ?? "");
-  const [isParsed, setIsParsed] = useState(false);
-
   // Form fields
   const [productId, setProductId] = useState(log?.productId ?? initialProductId ?? "");
   const [logType, setLogType] = useState<FreshnessLogType>(
@@ -61,47 +57,6 @@ export default function FreshnessLogForm({
   const labelClass = "block text-sm font-medium text-gray-700 mb-1";
   const errorClass = "text-xs text-red-600 mt-1";
 
-  function parseDictation() {
-    if (!rawDictation.trim()) return;
-
-    const text = rawDictation.toLowerCase();
-
-    // Try to detect log type from Korean keywords
-    if (text.includes("만들") || text.includes("제조") || text.includes("제작") || text.includes("made")) {
-      setLogType(FreshnessLogType.MADE);
-    } else if (
-      text.includes("디스플레이") ||
-      text.includes("display") ||
-      text.includes("진열") ||
-      text.includes("냉장") ||
-      text.includes("꺼냄")
-    ) {
-      setLogType(FreshnessLogType.DISPLAYED);
-    }
-
-    // Try to detect product from text
-    const matched = products.find((p) =>
-      text.includes(p.name.toLowerCase())
-    );
-    if (matched) setProductId(matched.id);
-
-    // Try to detect "오늘" or "today"
-    if (text.includes("오늘") || text.includes("today")) {
-      setLoggedAt(nowLocalDatetime());
-    }
-    // Try to detect "어제" or "yesterday"
-    if (text.includes("어제") || text.includes("yesterday")) {
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-      setLoggedAt(toLocalDatetimeValue(yesterday.toISOString()));
-    }
-
-    // Copy dictation to notes if notes is empty
-    if (!notes.trim()) setNotes(rawDictation.trim());
-
-    setIsParsed(true);
-  }
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setErrors({});
@@ -114,7 +69,6 @@ export default function FreshnessLogForm({
     const d = new Date(loggedAt);
     fd.set("loggedAt", d.toISOString());
     fd.set("notes", notes);
-    fd.set("rawDictation", rawDictation);
 
     startTransition(async () => {
       const result = await onSubmit(fd);
@@ -140,40 +94,6 @@ export default function FreshnessLogForm({
           Saved.
         </div>
       )}
-
-      {/* Dictation section */}
-      <div className="bg-amber-50 rounded-xl border border-amber-200 p-4 space-y-3">
-        <h3 className="text-sm font-semibold text-amber-800">
-          🎙️ Quick Input
-        </h3>
-        <p className="text-xs text-amber-700">
-          Enter free-form text to auto-fill the fields below.
-        </p>
-        <textarea
-          value={rawDictation}
-          onChange={(e) => {
-            setRawDictation(e.target.value);
-            setIsParsed(false);
-          }}
-          rows={3}
-          placeholder="e.g. Cream Cheese Bagel today refrigerated displayed"
-          disabled={isPending}
-          className={inputClass + " resize-none"}
-        />
-        <button
-          type="button"
-          onClick={parseDictation}
-          disabled={isPending || !rawDictation.trim()}
-          className="px-3 py-1.5 bg-amber-500 text-white rounded-md text-xs font-medium hover:bg-amber-600 disabled:opacity-50"
-        >
-          Auto Fill
-        </button>
-        {isParsed && (
-          <p className="text-xs text-green-700">
-            ✓ The fields below were auto-filled. Review and edit as needed.
-          </p>
-        )}
-      </div>
 
       {/* Product */}
       <div>
