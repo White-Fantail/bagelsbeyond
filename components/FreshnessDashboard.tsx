@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useTransition } from "react";
 import type {
   FreshnessDashboardCategoryGroup,
@@ -31,81 +32,6 @@ interface FreshnessDashboardProps {
   onAddLog: (
     formData: FormData
   ) => Promise<{ success?: boolean; message?: string; errors?: Record<string, string[]> }>;
-  onToggleCategoryManaged: (
-    formData: FormData
-  ) => Promise<{ success?: boolean; message?: string; errors?: Record<string, string[]> }>;
-  onMoveCategory: (
-    formData: FormData
-  ) => Promise<{ success?: boolean; message?: string; errors?: Record<string, string[]> }>;
-}
-
-function CategoryActionButtons({
-  category,
-  canMoveUp,
-  canMoveDown,
-  onToggleCategoryManaged,
-  onMoveCategory,
-}: {
-  category: Pick<ProductCategoryRow, "id" | "isFreshnessManaged">;
-  canMoveUp: boolean;
-  canMoveDown: boolean;
-  onToggleCategoryManaged: FreshnessDashboardProps["onToggleCategoryManaged"];
-  onMoveCategory: FreshnessDashboardProps["onMoveCategory"];
-}) {
-  const [isPending, startTransition] = useTransition();
-
-  function handleToggle() {
-    const formData = new FormData();
-    formData.set("categoryId", category.id);
-    formData.set("isFreshnessManaged", String(!category.isFreshnessManaged));
-    startTransition(async () => {
-      await onToggleCategoryManaged(formData);
-    });
-  }
-
-  function handleMove(direction: "up" | "down") {
-    const formData = new FormData();
-    formData.set("categoryId", category.id);
-    formData.set("direction", direction);
-    startTransition(async () => {
-      await onMoveCategory(formData);
-    });
-  }
-
-  return (
-    <div className="flex items-center gap-1.5">
-      <button
-        type="button"
-        aria-label="Move category up"
-        disabled={isPending || !canMoveUp}
-        onClick={() => handleMove("up")}
-        className="px-2 py-1 text-xs rounded border border-gray-300 text-gray-600 hover:bg-gray-50 disabled:opacity-40"
-      >
-        ↑
-      </button>
-      <button
-        type="button"
-        aria-label="Move category down"
-        disabled={isPending || !canMoveDown}
-        onClick={() => handleMove("down")}
-        className="px-2 py-1 text-xs rounded border border-gray-300 text-gray-600 hover:bg-gray-50 disabled:opacity-40"
-      >
-        ↓
-      </button>
-      <button
-        type="button"
-        disabled={isPending}
-        onClick={handleToggle}
-        className={`px-2.5 py-1 text-xs rounded border font-medium disabled:opacity-50 ${
-          category.isFreshnessManaged
-            ? "border-green-300 text-green-700 hover:bg-green-50"
-            : "border-gray-300 text-gray-600 hover:bg-gray-50"
-        }`}
-      >
-        {category.isFreshnessManaged ? "Managed" : "Hidden"}
-      </button>
-    </div>
-  );
 }
 
 function ProductRow({
@@ -155,8 +81,6 @@ export default function FreshnessDashboard({
   categories,
   products,
   onAddLog,
-  onToggleCategoryManaged,
-  onMoveCategory,
 }: FreshnessDashboardProps) {
   const orderedCategories = [...categories].sort(
     (a, b) => a.freshnessSortOrder - b.freshnessSortOrder || a.name.localeCompare(b.name)
@@ -164,31 +88,14 @@ export default function FreshnessDashboard({
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
-          <h2 className="text-sm font-semibold text-gray-700">Freshness Category Controls</h2>
-        </div>
-        {orderedCategories.length === 0 ? (
-          <div className="px-4 py-8 text-sm text-gray-400">No categories found.</div>
-        ) : (
-          <div className="divide-y divide-gray-100">
-            {orderedCategories.map((category, index) => (
-              <div key={category.id} className="px-4 py-2.5 flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-sm font-medium text-gray-900">{category.name}</p>
-                  <p className="text-xs text-gray-500">Order: {category.freshnessSortOrder}</p>
-                </div>
-                <CategoryActionButtons
-                  category={category}
-                  canMoveUp={index > 0}
-                  canMoveDown={index < orderedCategories.length - 1}
-                  onToggleCategoryManaged={onToggleCategoryManaged}
-                  onMoveCategory={onMoveCategory}
-                />
-              </div>
-            ))}
-          </div>
-        )}
+      {/* Shortcut to category settings */}
+      <div className="flex justify-end">
+        <Link
+          href="/freshness/categories"
+          className="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors"
+        >
+          ⚙️ Category Settings
+        </Link>
       </div>
 
       {groups.length === 0 ? (
@@ -197,31 +104,19 @@ export default function FreshnessDashboard({
           <p className="text-sm">No freshness-managed categories or active products.</p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {groups.map((group) => {
-            const category = orderedCategories.find((c) => c.id === group.categoryId);
             const categoryIndex = orderedCategories.findIndex((c) => c.id === group.categoryId);
             return (
               <section key={group.categoryId} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                <div className="px-4 py-3 border-b border-gray-100 bg-gray-50 flex items-center justify-between gap-3">
-                  <div>
-                    <h3 className="text-sm font-semibold text-gray-900">{group.categoryName}</h3>
-                    <ul className="mt-1 flex flex-wrap gap-x-3 text-xs text-gray-500" aria-label={`${group.categoryName} status summary`}>
-                      <li>Expired: {group.summary.expiredCount}</li>
-                      <li>Warning: {group.summary.warningCount}</li>
-                      <li>Fresh: {group.summary.okCount}</li>
-                      <li>No Logs: {group.summary.noLogCount}</li>
-                    </ul>
-                  </div>
-                  {category && (
-                    <CategoryActionButtons
-                      category={category}
-                      canMoveUp={categoryIndex > 0}
-                      canMoveDown={categoryIndex < orderedCategories.length - 1}
-                      onToggleCategoryManaged={onToggleCategoryManaged}
-                      onMoveCategory={onMoveCategory}
-                    />
-                  )}
+                <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
+                  <h3 className="text-sm font-semibold text-gray-900">{group.categoryName}</h3>
+                  <ul className="mt-1 flex flex-wrap gap-x-3 text-xs text-gray-500" aria-label={`${group.categoryName} status summary`}>
+                    <li>Expired: {group.summary.expiredCount}</li>
+                    <li>Warning: {group.summary.warningCount}</li>
+                    <li>Fresh: {group.summary.okCount}</li>
+                    <li>No Logs: {group.summary.noLogCount}</li>
+                  </ul>
                 </div>
                 {group.items.length === 0 ? (
                   <div className="px-4 py-6 text-sm text-gray-400">No active products.</div>
