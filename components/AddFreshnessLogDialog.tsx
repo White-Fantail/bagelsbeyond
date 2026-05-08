@@ -10,6 +10,7 @@ interface AddFreshnessLogDialogProps {
   log?: FreshnessLogRow;
   triggerLabel?: string;
   initialProductId?: string;
+  lastQuantities?: Record<string, number>;
   onSubmit: (formData: FormData) => Promise<{ success?: boolean; message?: string; errors?: Record<string, string[]> }>;
 }
 
@@ -18,6 +19,7 @@ export default function AddFreshnessLogDialog({
   log,
   triggerLabel,
   initialProductId,
+  lastQuantities,
   onSubmit,
 }: AddFreshnessLogDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -89,6 +91,7 @@ export default function AddFreshnessLogDialog({
                 products={products}
                 log={log}
                 initialProductId={initialProductId}
+                lastQuantities={lastQuantities}
                 onSubmit={handleSubmit}
                 onCancel={() => setIsOpen(false)}
               />

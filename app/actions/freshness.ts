@@ -52,6 +52,7 @@ export async function createFreshnessLogAction(
   const productId = formData.get("productId") as string;
   const logTypeRaw = formData.get("logType") as string;
   const loggedAtRaw = formData.get("loggedAt") as string;
+  const quantityRaw = formData.get("quantity") as string;
   const notes = (formData.get("notes") as string) || null;
   const rawDictation = (formData.get("rawDictation") as string) || null;
 
@@ -63,6 +64,11 @@ export async function createFreshnessLogAction(
   const loggedAt = loggedAtRaw ? parseLoggedAt(loggedAtRaw) : null;
   if (!loggedAt) errors.loggedAt = ["Valid date/time is required"];
 
+  const quantity = quantityRaw ? parseInt(quantityRaw, 10) : null;
+  if (quantityRaw && (isNaN(quantity!) || quantity! < 1)) {
+    errors.quantity = ["Quantity must be a positive number"];
+  }
+
   if (Object.keys(errors).length > 0) {
     return { errors };
   }
@@ -72,6 +78,7 @@ export async function createFreshnessLogAction(
       productId,
       logType: logTypeRaw as FreshnessLogType,
       loggedAt: loggedAt!,
+      quantity,
       notes,
       rawDictation,
       createdByUserId: session.userId,
@@ -93,6 +100,7 @@ export async function updateFreshnessLogAction(
 
   const logTypeRaw = formData.get("logType") as string | null;
   const loggedAtRaw = formData.get("loggedAt") as string | null;
+  const quantityRaw = formData.get("quantity") as string | null;
   const notes = (formData.get("notes") as string) || null;
   const rawDictation = (formData.get("rawDictation") as string) || null;
 
@@ -107,6 +115,11 @@ export async function updateFreshnessLogAction(
     errors.logType = ["Invalid log type"];
   }
 
+  const quantity = quantityRaw ? parseInt(quantityRaw, 10) : undefined;
+  if (quantityRaw && (isNaN(quantity!) || quantity! < 1)) {
+    errors.quantity = ["Quantity must be a positive number"];
+  }
+
   if (Object.keys(errors).length > 0) {
     return { errors };
   }
@@ -115,6 +128,7 @@ export async function updateFreshnessLogAction(
     await updateFreshnessLog(id, {
       ...(logTypeRaw ? { logType: logTypeRaw as FreshnessLogType } : {}),
       ...(loggedAt ? { loggedAt } : {}),
+      quantity: quantity ?? null,
       notes,
       rawDictation,
     });

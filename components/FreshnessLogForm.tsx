@@ -9,6 +9,7 @@ interface FreshnessLogFormProps {
   products: MenuProductRow[];
   log?: FreshnessLogRow;
   initialProductId?: string;
+  lastQuantities?: Record<string, number>;
   onSubmit: (formData: FormData) => Promise<{ success?: boolean; message?: string; errors?: Record<string, string[]> }>;
   onCancel?: () => void;
 }
@@ -32,6 +33,7 @@ export default function FreshnessLogForm({
   products,
   log,
   initialProductId,
+  lastQuantities,
   onSubmit,
   onCancel,
 }: FreshnessLogFormProps) {
@@ -45,6 +47,9 @@ export default function FreshnessLogForm({
   );
   const [loggedAt, setLoggedAt] = useState(
     log ? toLocalDatetimeValue(log.loggedAt) : nowLocalDatetime()
+  );
+  const [quantity, setQuantity] = useState<string>(
+    log?.quantity != null ? String(log.quantity) : ""
   );
   const [notes, setNotes] = useState(log?.notes ?? "");
 
@@ -68,6 +73,7 @@ export default function FreshnessLogForm({
     // Convert local datetime to ISO for server
     const d = new Date(loggedAt);
     fd.set("loggedAt", d.toISOString());
+    if (quantity) fd.set("quantity", quantity);
     fd.set("notes", notes);
 
     startTransition(async () => {
@@ -102,7 +108,13 @@ export default function FreshnessLogForm({
         </label>
         <select
           value={productId}
-          onChange={(e) => setProductId(e.target.value)}
+          onChange={(e) => {
+            const newProductId = e.target.value;
+            setProductId(newProductId);
+            if (!isEditing && lastQuantities && newProductId in lastQuantities) {
+              setQuantity(String(lastQuantities[newProductId]));
+            }
+          }}
           disabled={isPending}
           className={inputClass}
         >
@@ -150,6 +162,21 @@ export default function FreshnessLogForm({
           className={inputClass}
         />
         {errors.loggedAt && <p className={errorClass}>{errors.loggedAt[0]}</p>}
+      </div>
+
+      {/* Quantity */}
+      <div>
+        <label className={labelClass}>Quantity</label>
+        <input
+          type="number"
+          min={1}
+          value={quantity}
+          onChange={(e) => setQuantity(e.target.value)}
+          disabled={isPending}
+          placeholder="How many were made/displayed?"
+          className={inputClass}
+        />
+        {errors.quantity && <p className={errorClass}>{errors.quantity[0]}</p>}
       </div>
 
       {/* Notes */}

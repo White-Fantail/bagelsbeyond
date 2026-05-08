@@ -2,7 +2,10 @@ export const dynamic = "force-dynamic";
 
 import Link from "next/link";
 import { requireAdmin } from "@/lib/auth/dal";
-import { getFreshnessDashboard } from "@/lib/services/freshnessService";
+import {
+  getFreshnessDashboard,
+  getLastQuantitiesByProduct,
+} from "@/lib/services/freshnessService";
 import { listMenuProducts, listProductCategories } from "@/lib/services/menuProductService";
 import FreshnessDashboard from "@/components/FreshnessDashboard";
 import { createFreshnessLogAction } from "@/app/actions/freshness";
@@ -10,10 +13,11 @@ import { createFreshnessLogAction } from "@/app/actions/freshness";
 export default async function FreshnessPage() {
   await requireAdmin();
 
-  const [groups, products, categories] = await Promise.all([
+  const [groups, products, categories, lastQuantities] = await Promise.all([
     getFreshnessDashboard(),
     listMenuProducts({ isActive: true }),
     listProductCategories(),
+    getLastQuantitiesByProduct(),
   ]);
 
   return (
@@ -47,6 +51,7 @@ export default async function FreshnessPage() {
         groups={groups}
         categories={categories}
         products={products}
+        lastQuantities={lastQuantities}
         onAddLog={createFreshnessLogAction}
       />
     </div>
