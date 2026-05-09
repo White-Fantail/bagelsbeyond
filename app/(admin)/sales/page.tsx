@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 import Link from "next/link";
 import { prisma } from "@/lib/db";
-import { getTotalSales, getSoldBagels, getChannelBreakdown, formatCurrency, formatDate } from "@/lib/utils";
+import { getTotalSales, getSoldBagels, getChannelBreakdown, formatCurrency, formatDateWithWeekday } from "@/lib/utils";
 import FilterBar from "@/components/FilterBar";
 import { Suspense } from "react";
 import type { DailyRecord } from "@/types";
@@ -94,7 +94,7 @@ export default async function SalesPage({
                   className="block bg-white rounded-lg border border-gray-200 p-4 hover:border-amber-300 hover:bg-amber-50 transition-colors"
                 >
                   <div className="flex justify-between items-start">
-                    <span className="font-medium text-gray-900">{formatDate(record.date)}</span>
+                    <span className="font-medium text-gray-900">{formatDateWithWeekday(record.date)}</span>
                     <span className="font-semibold text-amber-700">{formatCurrency(total)}</span>
                   </div>
                   <div className="mt-1 text-sm text-gray-500 flex gap-3">
@@ -128,7 +128,7 @@ export default async function SalesPage({
                     >
                       <td className="px-4 py-3 text-sm font-medium text-gray-900">
                         <Link href={`/sales/${record.id}`} className="hover:text-amber-700">
-                          {formatDate(record.date)}
+                          {formatDateWithWeekday(record.date)}
                         </Link>
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-900 text-right font-medium">
