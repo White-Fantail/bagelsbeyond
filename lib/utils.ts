@@ -46,6 +46,16 @@ export function formatDate(date: Date | string): string {
   });
 }
 
+export function formatDateWithWeekday(date: Date | string): string {
+  const d = typeof date === "string" ? new Date(date) : date;
+  return d.toLocaleDateString("ko-KR", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    weekday: "short",
+  });
+}
+
 export function slugify(text: string): string {
   return text
     .toLowerCase()

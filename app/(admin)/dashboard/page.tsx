@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
-import { getTotalSales, getSoldBagels, formatCurrency, formatDate } from "@/lib/utils";
+import { getTotalSales, getSoldBagels, formatCurrency, formatDate, formatDateWithWeekday } from "@/lib/utils";
 import { getWasteRate } from "@/lib/analytics";
 import { comparePredictedVsActual } from "@/lib/prediction-utils";
 import { formatTaskStatus, formatTaskType, getTaskStatusColor } from "@/lib/task-utils";
@@ -436,7 +436,7 @@ export default async function DashboardPage() {
                     <tr key={record.id} className="hover:bg-gray-50">
                       <td className="px-4 py-3 text-sm text-gray-900">
                         <Link href={`/sales/${record.id}`} className="hover:text-amber-700 font-medium">
-                          {formatDate(record.date)}
+                          {formatDateWithWeekday(record.date)}
                         </Link>
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-900 text-right">{formatCurrency(getTotalSales(record))}</td>
