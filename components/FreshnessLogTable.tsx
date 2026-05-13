@@ -8,6 +8,7 @@ import AddFreshnessLogDialog from "./AddFreshnessLogDialog";
 const LOG_TYPE_LABELS: Record<string, string> = {
   MADE: "Made",
   DISPLAYED: "Displayed",
+  DISCARDED: "Discarded",
 };
 
 function formatDate(isoString: string): string {
@@ -107,9 +108,11 @@ export default function FreshnessLogTable({
               <td className="px-4 py-3">
                 <span
                   className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                    log.logType === "DISPLAYED"
-                      ? "bg-blue-100 text-blue-700"
-                      : "bg-purple-100 text-purple-700"
+                      log.logType === "DISPLAYED"
+                        ? "bg-blue-100 text-blue-700"
+                        : log.logType === "DISCARDED"
+                        ? "bg-red-100 text-red-700"
+                        : "bg-purple-100 text-purple-700"
                   }`}
                 >
                   {LOG_TYPE_LABELS[log.logType] ?? log.logType}

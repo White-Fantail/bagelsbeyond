@@ -225,7 +225,7 @@ export async function getLastQuantitiesByProductAndType(): Promise<LastQuantityB
 
 /**
  * Builds the freshness dashboard data.
- * For each active product, finds the latest DISPLAYED log.
+ * For each active product, finds the latest DISPLAYED log unless a newer DISCARDED log exists.
  * Calculates days elapsed and remaining based on shelfLifeDays.
  * Results are sorted: expired first, then warning, then ok, then no-log products.
  */
@@ -239,21 +239,54 @@ export async function getFreshnessDashboard(): Promise<FreshnessDashboardCategor
     },
     include: {
       category: { select: { id: true, name: true, freshnessSortOrder: true } },
-      freshnessLogs: {
-        where: { logType: FreshnessLogType.DISPLAYED },
-        orderBy: { loggedAt: "desc" },
-        take: 1,
-        include: {
-          product: { include: { category: { select: { name: true } } } },
-          createdByUser: { select: { name: true } },
-        },
-      },
     },
     orderBy: { name: "asc" },
   });
 
+  const productIds = products.map((p) => p.id);
+  const [latestDisplayedLogs, latestDiscardedLogs] = await Promise.all([
+    prisma.freshnessLog.findMany({
+      where: {
+        productId: { in: productIds },
+        logType: FreshnessLogType.DISPLAYED,
+      },
+      include: {
+        product: { include: { category: { select: { name: true } } } },
+        createdByUser: { select: { name: true } },
+      },
+      orderBy: [{ loggedAt: "desc" }, { createdAt: "desc" }],
+      distinct: ["productId"],
+    }),
+    prisma.freshnessLog.findMany({
+      where: {
+        productId: { in: productIds },
+        logType: FreshnessLogType.DISCARDED,
+      },
+      select: {
+        productId: true,
+        loggedAt: true,
+      },
+      orderBy: [{ loggedAt: "desc" }, { createdAt: "desc" }],
+      distinct: ["productId"],
+    }),
+  ]);
+
+  const latestDisplayedLogByProductId = new Map(
+    latestDisplayedLogs.map((log) => [log.productId, log])
+  );
+  const latestDiscardedAtByProductId = new Map(
+    latestDiscardedLogs.map((log) => [log.productId, log.loggedAt.getTime()])
+  );
+
   const items: FreshnessDashboardItem[] = products.map((p) => {
-    const latestLogRaw = p.freshnessLogs[0] ?? null;
+    const latestDisplayedLog = latestDisplayedLogByProductId.get(p.id) ?? null;
+    const latestDiscardedAt = latestDiscardedAtByProductId.get(p.id) ?? null;
+    const latestLogRaw =
+      latestDisplayedLog &&
+      (latestDiscardedAt == null ||
+        latestDisplayedLog.loggedAt.getTime() > latestDiscardedAt)
+        ? latestDisplayedLog
+        : null;
     const latestLog = latestLogRaw ? toFreshnessLogRow(latestLogRaw) : null;
 
     let daysElapsed: number | null = null;
