@@ -85,6 +85,7 @@ enum StorageType {
 enum FreshnessLogType {
   MADE
   DISPLAYED
+  DISCARDED
 }
 
 // ─── Production Planning ──────────────────────────────────────────────────────

@@ -27,6 +27,7 @@ function nowLocalDatetime(): string {
 const LOG_TYPE_LABELS: Record<FreshnessLogType, string> = {
   MADE: "Made",
   DISPLAYED: "Displayed",
+  DISCARDED: "Discarded",
 };
 
 function getLastQuantity(
@@ -195,7 +196,7 @@ export default function FreshnessLogForm({
           onChange={(e) => setQuantity(e.target.value)}
           required
           disabled={isPending}
-          placeholder="How many were made/displayed?"
+          placeholder="How many were made/displayed/discarded?"
           className={inputClass}
         />
         {errors.quantity && <p className={errorClass}>{errors.quantity[0]}</p>}
