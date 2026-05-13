@@ -25,6 +25,17 @@ interface FreshnessLogTableProps {
   onDelete: (id: string) => Promise<{ success?: boolean; message?: string }>;
 }
 
+function getLogTypeBadgeClass(logType: string): string {
+  switch (logType) {
+    case "DISPLAYED":
+      return "bg-blue-100 text-blue-700";
+    case "DISCARDED":
+      return "bg-red-100 text-red-700";
+    default:
+      return "bg-purple-100 text-purple-700";
+  }
+}
+
 function DeleteButton({
   id,
   onDelete,
@@ -107,13 +118,7 @@ export default function FreshnessLogTable({
               </td>
               <td className="px-4 py-3">
                 <span
-                  className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                      log.logType === "DISPLAYED"
-                        ? "bg-blue-100 text-blue-700"
-                        : log.logType === "DISCARDED"
-                        ? "bg-red-100 text-red-700"
-                        : "bg-purple-100 text-purple-700"
-                  }`}
+                  className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getLogTypeBadgeClass(log.logType)}`}
                 >
                   {LOG_TYPE_LABELS[log.logType] ?? log.logType}
                 </span>

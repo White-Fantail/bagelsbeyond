@@ -255,7 +255,6 @@ export async function getFreshnessDashboard(): Promise<FreshnessDashboardCategor
         createdByUser: { select: { name: true } },
       },
       orderBy: [{ loggedAt: "desc" }, { createdAt: "desc" }],
-      distinct: ["productId"],
     }),
     prisma.freshnessLog.findMany({
       where: {
@@ -267,24 +266,30 @@ export async function getFreshnessDashboard(): Promise<FreshnessDashboardCategor
         loggedAt: true,
       },
       orderBy: [{ loggedAt: "desc" }, { createdAt: "desc" }],
-      distinct: ["productId"],
     }),
   ]);
 
-  const latestDisplayedLogByProductId = new Map(
-    latestDisplayedLogs.map((log) => [log.productId, log])
-  );
-  const latestDiscardedAtByProductId = new Map(
-    latestDiscardedLogs.map((log) => [log.productId, log.loggedAt.getTime()])
-  );
+  const latestDisplayedLogByProductId = new Map<string, (typeof latestDisplayedLogs)[number]>();
+  for (const log of latestDisplayedLogs) {
+    if (!latestDisplayedLogByProductId.has(log.productId)) {
+      latestDisplayedLogByProductId.set(log.productId, log);
+    }
+  }
+
+  const latestDiscardedTimestampByProductId = new Map<string, number>();
+  for (const log of latestDiscardedLogs) {
+    if (!latestDiscardedTimestampByProductId.has(log.productId)) {
+      latestDiscardedTimestampByProductId.set(log.productId, log.loggedAt.getTime());
+    }
+  }
 
   const items: FreshnessDashboardItem[] = products.map((p) => {
     const latestDisplayedLog = latestDisplayedLogByProductId.get(p.id) ?? null;
-    const latestDiscardedAt = latestDiscardedAtByProductId.get(p.id) ?? null;
+    const latestDiscardedTimestamp = latestDiscardedTimestampByProductId.get(p.id) ?? null;
     const latestLogRaw =
       latestDisplayedLog &&
-      (latestDiscardedAt == null ||
-        latestDisplayedLog.loggedAt.getTime() > latestDiscardedAt)
+      (latestDiscardedTimestamp == null ||
+        latestDisplayedLog.loggedAt.getTime() > latestDiscardedTimestamp)
         ? latestDisplayedLog
         : null;
     const latestLog = latestLogRaw ? toFreshnessLogRow(latestLogRaw) : null;
