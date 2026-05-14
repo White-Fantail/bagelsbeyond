@@ -51,7 +51,7 @@ function parseOptionalNonNegativeInteger(raw: FormDataEntryValue | null): {
   if (!value) return { value: 0 };
   const parsed = Number(value);
   if (!Number.isInteger(parsed) || parsed < 0) {
-    return { value: 0, error: "Remaining quantity must be a non-negative integer" };
+    return { value: 0, error: "Remaining quantity must be 0 or more" };
   }
   return { value: parsed };
 }
