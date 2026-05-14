@@ -276,20 +276,21 @@ export async function getFreshnessDashboard(): Promise<FreshnessDashboardCategor
     }
   }
 
-  const latestDiscardedTimestampByProductId = new Map<string, number>();
+  const latestDiscardedOrSoldTimestampByProductId = new Map<string, number>();
   for (const log of latestDiscardedOrSoldLogs) {
-    if (!latestDiscardedTimestampByProductId.has(log.productId)) {
-      latestDiscardedTimestampByProductId.set(log.productId, log.loggedAt.getTime());
+    if (!latestDiscardedOrSoldTimestampByProductId.has(log.productId)) {
+      latestDiscardedOrSoldTimestampByProductId.set(log.productId, log.loggedAt.getTime());
     }
   }
 
   const items: FreshnessDashboardItem[] = products.map((p) => {
     const latestDisplayedLog = latestDisplayedLogByProductId.get(p.id) ?? null;
-    const latestDiscardedTimestamp = latestDiscardedTimestampByProductId.get(p.id) ?? null;
+    const latestDiscardedOrSoldTimestamp =
+      latestDiscardedOrSoldTimestampByProductId.get(p.id) ?? null;
     const latestLogRaw =
       latestDisplayedLog &&
-      (latestDiscardedTimestamp == null ||
-        latestDisplayedLog.loggedAt.getTime() > latestDiscardedTimestamp)
+      (latestDiscardedOrSoldTimestamp == null ||
+        latestDisplayedLog.loggedAt.getTime() > latestDiscardedOrSoldTimestamp)
         ? latestDisplayedLog
         : null;
     const latestLog = latestLogRaw ? toFreshnessLogRow(latestLogRaw) : null;
