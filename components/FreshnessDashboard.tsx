@@ -72,7 +72,7 @@ function ProductRow({
           shelfLifeDays={item.shelfLifeDays}
         />
       ) : (
-        <div className="min-h-6" />
+        <div />
       )}
       <AddFreshnessLogDialog
         products={products}
