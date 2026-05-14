@@ -64,12 +64,16 @@ function ProductRow({
           )}
         </div>
       </div>
-      <FreshnessStatusBadge
-        status={item.status}
-        daysElapsed={item.daysElapsed}
-        daysRemaining={item.daysRemaining}
-        shelfLifeDays={item.shelfLifeDays}
-      />
+      {item.latestLog ? (
+        <FreshnessStatusBadge
+          status={item.status}
+          daysElapsed={item.daysElapsed}
+          daysRemaining={item.daysRemaining}
+          shelfLifeDays={item.shelfLifeDays}
+        />
+      ) : (
+        <div />
+      )}
       <AddFreshnessLogDialog
         products={products}
         initialProductId={item.productId}
