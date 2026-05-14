@@ -64,6 +64,10 @@ export default function FreshnessLogForm({
     const lastQuantity = getLastQuantity(lastQuantities, initialSelectedProductId, initialLogType);
     return lastQuantity != null ? String(lastQuantity) : "";
   });
+  const [remainingQuantity, setRemainingQuantity] = useState<string>(() => {
+    if (!log) return "";
+    return log.remainingQuantity > 0 ? String(log.remainingQuantity) : "";
+  });
   const [notes, setNotes] = useState(log?.notes ?? "");
 
   const [errors, setErrors] = useState<Record<string, string[]>>({});
@@ -87,6 +91,7 @@ export default function FreshnessLogForm({
     const d = new Date(loggedAt);
     fd.set("loggedAt", d.toISOString());
     fd.set("quantity", quantity);
+    fd.set("remainingQuantity", remainingQuantity);
     fd.set("notes", notes);
 
     startTransition(async () => {
@@ -201,6 +206,21 @@ export default function FreshnessLogForm({
           className={inputClass}
         />
         {errors.quantity && <p className={errorClass}>{errors.quantity[0]}</p>}
+      </div>
+
+      {/* Remaining quantity */}
+      <div>
+        <label className={labelClass}>Remaining Qty (optional)</label>
+        <input
+          type="number"
+          min={0}
+          value={remainingQuantity}
+          onChange={(e) => setRemainingQuantity(e.target.value)}
+          disabled={isPending}
+          placeholder="How many were still left before this log?"
+          className={inputClass}
+        />
+        {errors.remainingQuantity && <p className={errorClass}>{errors.remainingQuantity[0]}</p>}
       </div>
 
       {/* Notes */}

@@ -349,6 +349,10 @@ export const freshnessLogSchema = z.object({
   logType: z.nativeEnum(FreshnessLogType),
   loggedAt: z.string().datetime({ offset: true }).or(z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/)),
   quantity: z.coerce.number().int().min(1, "Quantity must be a positive integer"),
+  remainingQuantity: z.preprocess(
+    (v) => (v === "" || v === null || v === undefined ? undefined : v),
+    z.coerce.number().int().min(0, "Remaining quantity must be 0 or more").optional().default(0)
+  ),
   notes: z.string().optional().nullable(),
   rawDictation: z.string().optional().nullable(),
 });
@@ -363,6 +367,10 @@ export const updateFreshnessLogSchema = z.object({
     .or(z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/))
     .optional(),
   quantity: z.coerce.number().int().min(1, "Quantity must be a positive integer"),
+  remainingQuantity: z.preprocess(
+    (v) => (v === "" || v === null || v === undefined ? undefined : v),
+    z.coerce.number().int().min(0, "Remaining quantity must be 0 or more").optional().default(0)
+  ),
   notes: z.string().optional().nullable(),
   rawDictation: z.string().optional().nullable(),
 });

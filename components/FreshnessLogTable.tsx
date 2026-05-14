@@ -95,12 +95,15 @@ export default function FreshnessLogTable({
             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
               Timestamp
             </th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
-              Qty
-            </th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide hidden sm:table-cell">
-              Notes
-            </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
+                Qty
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
+                Remaining
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide hidden sm:table-cell">
+                Notes
+              </th>
             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide hidden md:table-cell">
               Created By
             </th>
@@ -130,6 +133,9 @@ export default function FreshnessLogTable({
               </td>
               <td className="px-4 py-3 text-gray-700">
                 {log.quantity}
+              </td>
+              <td className="px-4 py-3 text-gray-700">
+                {log.remainingQuantity}
               </td>
               <td className="px-4 py-3 text-gray-500 max-w-[200px] truncate hidden sm:table-cell">
                 {log.notes || <span className="text-gray-300">—</span>}

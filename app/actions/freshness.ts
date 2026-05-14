@@ -42,6 +42,20 @@ function parseLoggedAt(raw: string): Date | null {
   return isNaN(d.getTime()) ? null : d;
 }
 
+function parseOptionalNonNegativeInteger(raw: FormDataEntryValue | null): {
+  value: number;
+  error?: string;
+} {
+  if (typeof raw !== "string") return { value: 0 };
+  const value = raw.trim();
+  if (!value) return { value: 0 };
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed < 0) {
+    return { value: 0, error: "Remaining quantity must be a non-negative integer" };
+  }
+  return { value: parsed };
+}
+
 // ── Actions ───────────────────────────────────────────────────────────────────
 
 export async function createFreshnessLogAction(
@@ -53,6 +67,7 @@ export async function createFreshnessLogAction(
   const logTypeRaw = formData.get("logType") as string;
   const loggedAtRaw = formData.get("loggedAt") as string;
   const quantityRaw = formData.get("quantity");
+  const remainingQuantityRaw = formData.get("remainingQuantity");
   const notes = (formData.get("notes") as string) || null;
   const rawDictation = (formData.get("rawDictation") as string) || null;
 
@@ -77,6 +92,11 @@ export async function createFreshnessLogAction(
     }
   }
 
+  const remainingQuantityResult = parseOptionalNonNegativeInteger(remainingQuantityRaw);
+  if (remainingQuantityResult.error) {
+    errors.remainingQuantity = [remainingQuantityResult.error];
+  }
+
   if (Object.keys(errors).length > 0) {
     return { errors };
   }
@@ -87,6 +107,7 @@ export async function createFreshnessLogAction(
       logType: logTypeRaw as FreshnessLogType,
       loggedAt: loggedAt!,
       quantity: quantity!,
+      remainingQuantity: remainingQuantityResult.value,
       notes,
       rawDictation,
       createdByUserId: session.userId,
@@ -109,6 +130,7 @@ export async function updateFreshnessLogAction(
   const logTypeRaw = formData.get("logType") as string | null;
   const loggedAtRaw = formData.get("loggedAt") as string | null;
   const quantityRaw = formData.get("quantity");
+  const remainingQuantityRaw = formData.get("remainingQuantity");
   const notes = (formData.get("notes") as string) || null;
   const rawDictation = (formData.get("rawDictation") as string) || null;
 
@@ -136,6 +158,11 @@ export async function updateFreshnessLogAction(
     }
   }
 
+  const remainingQuantityResult = parseOptionalNonNegativeInteger(remainingQuantityRaw);
+  if (remainingQuantityResult.error) {
+    errors.remainingQuantity = [remainingQuantityResult.error];
+  }
+
   if (Object.keys(errors).length > 0) {
     return { errors };
   }
@@ -145,6 +172,7 @@ export async function updateFreshnessLogAction(
       ...(logTypeRaw ? { logType: logTypeRaw as FreshnessLogType } : {}),
       ...(loggedAt ? { loggedAt } : {}),
       quantity: quantity!,
+      remainingQuantity: remainingQuantityResult.value,
       notes,
       rawDictation,
     });

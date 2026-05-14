@@ -488,6 +488,7 @@ model FreshnessLog {
   logType           FreshnessLogType
   loggedAt          DateTime
   quantity          Int
+  remainingQuantity Int              @default(0)
   notes             String?
   rawDictation      String?
   createdByUserId   String?

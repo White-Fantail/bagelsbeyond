@@ -14,6 +14,7 @@ export type FreshnessLogRow = {
   logType: FreshnessLogType;
   loggedAt: string;
   quantity: number;
+  remainingQuantity: number;
   notes: string | null;
   rawDictation: string | null;
   createdByUserId: string | null;
@@ -54,6 +55,7 @@ export type CreateFreshnessLogInput = {
   logType: FreshnessLogType;
   loggedAt: Date;
   quantity: number;
+  remainingQuantity?: number;
   notes?: string | null;
   rawDictation?: string | null;
   createdByUserId?: string | null;
@@ -63,6 +65,7 @@ export type UpdateFreshnessLogInput = {
   logType?: FreshnessLogType;
   loggedAt?: Date;
   quantity: number;
+  remainingQuantity: number;
   notes?: string | null;
   rawDictation?: string | null;
 };
@@ -95,6 +98,7 @@ function toFreshnessLogRow(r: {
   logType: FreshnessLogType;
   loggedAt: Date;
   quantity: number;
+  remainingQuantity: number;
   notes: string | null;
   rawDictation: string | null;
   createdByUserId: string | null;
@@ -110,6 +114,7 @@ function toFreshnessLogRow(r: {
     logType: r.logType,
     loggedAt: r.loggedAt.toISOString(),
     quantity: r.quantity,
+    remainingQuantity: r.remainingQuantity,
     notes: r.notes,
     rawDictation: r.rawDictation,
     createdByUserId: r.createdByUserId,
@@ -129,6 +134,7 @@ export async function addFreshnessLog(
       logType: input.logType,
       loggedAt: input.loggedAt,
       quantity: input.quantity,
+      remainingQuantity: input.remainingQuantity ?? 0,
       notes: input.notes ?? null,
       rawDictation: input.rawDictation ?? null,
       createdByUserId: input.createdByUserId ?? null,
@@ -151,6 +157,7 @@ export async function updateFreshnessLog(
       ...(input.logType !== undefined ? { logType: input.logType } : {}),
       ...(input.loggedAt !== undefined ? { loggedAt: input.loggedAt } : {}),
       quantity: input.quantity,
+      remainingQuantity: input.remainingQuantity ?? 0,
       ...("notes" in input ? { notes: input.notes ?? null } : {}),
       ...("rawDictation" in input ? { rawDictation: input.rawDictation ?? null } : {}),
     },
