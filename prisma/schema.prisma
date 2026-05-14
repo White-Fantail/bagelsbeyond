@@ -86,6 +86,7 @@ enum FreshnessLogType {
   MADE
   DISPLAYED
   DISCARDED
+  SOLD
 }
 
 // ─── Production Planning ──────────────────────────────────────────────────────
