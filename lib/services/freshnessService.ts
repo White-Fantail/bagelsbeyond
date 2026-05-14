@@ -225,7 +225,7 @@ export async function getLastQuantitiesByProductAndType(): Promise<LastQuantityB
 
 /**
  * Builds the freshness dashboard data.
- * For each active product, finds the latest DISPLAYED log unless a newer DISCARDED log exists.
+ * For each active product, finds the latest DISPLAYED log unless a newer DISCARDED/SOLD log exists.
  * Calculates days elapsed and remaining based on shelfLifeDays.
  * Results are sorted: expired first, then warning, then ok, then no-log products.
  */
@@ -244,7 +244,7 @@ export async function getFreshnessDashboard(): Promise<FreshnessDashboardCategor
   });
 
   const productIds = products.map((p) => p.id);
-  const [latestDisplayedLogs, latestDiscardedLogs] = await Promise.all([
+  const [latestDisplayedLogs, latestDiscardedOrSoldLogs] = await Promise.all([
     prisma.freshnessLog.findMany({
       where: {
         productId: { in: productIds },
@@ -259,7 +259,7 @@ export async function getFreshnessDashboard(): Promise<FreshnessDashboardCategor
     prisma.freshnessLog.findMany({
       where: {
         productId: { in: productIds },
-        logType: FreshnessLogType.DISCARDED,
+        logType: { in: [FreshnessLogType.DISCARDED, FreshnessLogType.SOLD] },
       },
       select: {
         productId: true,
@@ -277,7 +277,7 @@ export async function getFreshnessDashboard(): Promise<FreshnessDashboardCategor
   }
 
   const latestDiscardedTimestampByProductId = new Map<string, number>();
-  for (const log of latestDiscardedLogs) {
+  for (const log of latestDiscardedOrSoldLogs) {
     if (!latestDiscardedTimestampByProductId.has(log.productId)) {
       latestDiscardedTimestampByProductId.set(log.productId, log.loggedAt.getTime());
     }

@@ -9,6 +9,7 @@ const LOG_TYPE_LABELS: Record<string, string> = {
   MADE: "Made",
   DISPLAYED: "Displayed",
   DISCARDED: "Discarded",
+  SOLD: "Sold",
 };
 
 function formatDate(isoString: string): string {
@@ -30,6 +31,7 @@ function getLogTypeBadgeClass(logType: string): string {
     case "DISPLAYED":
       return "bg-blue-100 text-blue-700";
     case "DISCARDED":
+    case "SOLD":
       return "bg-red-100 text-red-700";
     default:
       return "bg-purple-100 text-purple-700";
