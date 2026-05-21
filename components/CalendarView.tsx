@@ -81,10 +81,10 @@ export default function CalendarView({ year, month, records, predictions = [], e
         {cells.map((day, idx) => {
           const record = day ? recordMap.get(day) : undefined;
           const prediction = day ? predictionMap.get(day) : undefined;
+          const predictionOnly = !record ? prediction : undefined;
           const hasBoth = !!(record && prediction);
           const hasRecord = !!record;
-          const hasPrediction = !!prediction;
-          const hasPredictionOnly = !!(prediction && !record);
+          const hasPredictionOnly = !!predictionOnly;
 
           const isToday =
             day !== null &&
@@ -161,10 +161,10 @@ export default function CalendarView({ year, month, records, predictions = [], e
                   </div>
 
                   {/* Status dot */}
-                   {(hasRecord || hasPrediction) && (
+                   {(hasRecord || prediction) && (
                      <div className="flex gap-0.5 mb-1">
                        {hasRecord && <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />}
-                       {hasPrediction && <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />}
+                       {prediction && <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />}
                      </div>
                    )}
 
@@ -181,13 +181,13 @@ export default function CalendarView({ year, month, records, predictions = [], e
                   )}
 
                   {/* Prediction data (future or when no actual) */}
-                  {hasPredictionOnly && prediction && (
+                  {predictionOnly && (
                     <div>
                       <div className="text-[10px] font-semibold text-blue-600 leading-tight">
-                        ~{formatCurrency(prediction.predictedSales)}
+                        ~{formatCurrency(predictionOnly.predictedSales)}
                       </div>
                       <div className="text-[10px] text-blue-400">
-                        🔮{prediction.recommendedBagelsToBake} baked
+                        🔮{predictionOnly.recommendedBagelsToBake} baked
                       </div>
                     </div>
                   )}
