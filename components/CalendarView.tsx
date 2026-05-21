@@ -81,9 +81,10 @@ export default function CalendarView({ year, month, records, predictions = [], e
         {cells.map((day, idx) => {
           const record = day ? recordMap.get(day) : undefined;
           const prediction = day ? predictionMap.get(day) : undefined;
+          const predictionOnly = !record ? prediction : undefined;
           const hasBoth = !!(record && prediction);
           const hasRecord = !!record;
-          const hasPrediction = !!(prediction && !record);
+          const hasPredictionOnly = !!predictionOnly;
 
           const isToday =
             day !== null &&
@@ -102,9 +103,9 @@ export default function CalendarView({ year, month, records, predictions = [], e
           const weatherInfo = ef ? getWeatherIcon(ef.weatherSummary) : null;
 
           let bgClass = "";
-          if (hasBoth) bgClass = "hover:bg-purple-50";
+          if (hasBoth) bgClass = "hover:bg-amber-50";
           else if (hasRecord) bgClass = "hover:bg-amber-50";
-          else if (hasPrediction) bgClass = "hover:bg-blue-50";
+          else if (hasPredictionOnly) bgClass = "hover:bg-blue-50";
           else bgClass = "hover:bg-gray-50";
 
           return (
@@ -124,7 +125,7 @@ export default function CalendarView({ year, month, records, predictions = [], e
               }
               aria-label={
                 day
-                  ? `${year}/${month}/${day}${record ? " has actual data" : ""}${prediction ? " Has Prediction" : ""}`
+                  ? `${year}/${month}/${day}${record ? " has actual data" : ""}${prediction ? " has forecast data" : ""}`
                   : undefined
               }
               className={`min-h-[90px] p-1.5 border-b border-r border-gray-100 transition-colors relative ${
@@ -160,13 +161,12 @@ export default function CalendarView({ year, month, records, predictions = [], e
                   </div>
 
                   {/* Status dot */}
-                  {(hasBoth || hasRecord || hasPrediction) && (
-                    <div className="flex gap-0.5 mb-1">
-                      {hasRecord && <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />}
-                      {hasPrediction && <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />}
-                      {hasBoth && <span className="w-1.5 h-1.5 rounded-full bg-purple-400" />}
-                    </div>
-                  )}
+                   {(hasRecord || prediction) && (
+                     <div className="flex gap-0.5 mb-1">
+                       {hasRecord && <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />}
+                       {prediction && <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />}
+                     </div>
+                   )}
 
                   {/* Actual record data */}
                   {record && (
@@ -181,23 +181,17 @@ export default function CalendarView({ year, month, records, predictions = [], e
                   )}
 
                   {/* Prediction data (future or when no actual) */}
-                  {prediction && !record && (
+                  {predictionOnly && (
                     <div>
                       <div className="text-[10px] font-semibold text-blue-600 leading-tight">
-                        ~{formatCurrency(prediction.predictedSales)}
+                        ~{formatCurrency(predictionOnly.predictedSales)}
                       </div>
                       <div className="text-[10px] text-blue-400">
-                        🔮{prediction.recommendedBagelsToBake} baked
+                        🔮{predictionOnly.recommendedBagelsToBake} baked
                       </div>
                     </div>
                   )}
 
-                  {/* Both: show actual with prediction sub-text */}
-                  {hasBoth && (
-                    <div className="text-[10px] text-purple-500 mt-0.5">
-                      Has Prediction
-                    </div>
-                  )}
                 </>
               )}
             </div>
