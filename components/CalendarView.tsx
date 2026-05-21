@@ -84,6 +84,7 @@ export default function CalendarView({ year, month, records, predictions = [], e
           const hasBoth = !!(record && prediction);
           const hasRecord = !!record;
           const hasPrediction = !!prediction;
+          const hasPredictionOnly = !!(prediction && !record);
 
           const isToday =
             day !== null &&
@@ -104,7 +105,7 @@ export default function CalendarView({ year, month, records, predictions = [], e
           let bgClass = "";
           if (hasBoth) bgClass = "hover:bg-amber-50";
           else if (hasRecord) bgClass = "hover:bg-amber-50";
-          else if (hasPrediction) bgClass = "hover:bg-blue-50";
+          else if (hasPredictionOnly) bgClass = "hover:bg-blue-50";
           else bgClass = "hover:bg-gray-50";
 
           return (
@@ -160,7 +161,7 @@ export default function CalendarView({ year, month, records, predictions = [], e
                   </div>
 
                   {/* Status dot */}
-                   {(hasBoth || hasRecord || hasPrediction) && (
+                   {(hasRecord || hasPrediction) && (
                      <div className="flex gap-0.5 mb-1">
                        {hasRecord && <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />}
                        {hasPrediction && <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />}
@@ -180,7 +181,7 @@ export default function CalendarView({ year, month, records, predictions = [], e
                   )}
 
                   {/* Prediction data (future or when no actual) */}
-                  {prediction && !record && (
+                  {hasPredictionOnly && prediction && (
                     <div>
                       <div className="text-[10px] font-semibold text-blue-600 leading-tight">
                         ~{formatCurrency(prediction.predictedSales)}
