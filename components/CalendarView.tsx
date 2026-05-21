@@ -83,7 +83,7 @@ export default function CalendarView({ year, month, records, predictions = [], e
           const prediction = day ? predictionMap.get(day) : undefined;
           const hasBoth = !!(record && prediction);
           const hasRecord = !!record;
-          const hasPrediction = !!(prediction && !record);
+          const hasPrediction = !!prediction;
 
           const isToday =
             day !== null &&
@@ -102,7 +102,7 @@ export default function CalendarView({ year, month, records, predictions = [], e
           const weatherInfo = ef ? getWeatherIcon(ef.weatherSummary) : null;
 
           let bgClass = "";
-          if (hasBoth) bgClass = "hover:bg-purple-50";
+          if (hasBoth) bgClass = "hover:bg-amber-50";
           else if (hasRecord) bgClass = "hover:bg-amber-50";
           else if (hasPrediction) bgClass = "hover:bg-blue-50";
           else bgClass = "hover:bg-gray-50";
@@ -124,7 +124,7 @@ export default function CalendarView({ year, month, records, predictions = [], e
               }
               aria-label={
                 day
-                  ? `${year}/${month}/${day}${record ? " has actual data" : ""}${prediction ? " Has Prediction" : ""}`
+                  ? `${year}/${month}/${day}${record ? " has actual data" : ""}${prediction ? " has forecast data" : ""}`
                   : undefined
               }
               className={`min-h-[90px] p-1.5 border-b border-r border-gray-100 transition-colors relative ${
@@ -160,13 +160,12 @@ export default function CalendarView({ year, month, records, predictions = [], e
                   </div>
 
                   {/* Status dot */}
-                  {(hasBoth || hasRecord || hasPrediction) && (
-                    <div className="flex gap-0.5 mb-1">
-                      {hasRecord && <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />}
-                      {hasPrediction && <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />}
-                      {hasBoth && <span className="w-1.5 h-1.5 rounded-full bg-purple-400" />}
-                    </div>
-                  )}
+                   {(hasBoth || hasRecord || hasPrediction) && (
+                     <div className="flex gap-0.5 mb-1">
+                       {hasRecord && <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />}
+                       {hasPrediction && <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />}
+                     </div>
+                   )}
 
                   {/* Actual record data */}
                   {record && (
@@ -192,12 +191,6 @@ export default function CalendarView({ year, month, records, predictions = [], e
                     </div>
                   )}
 
-                  {/* Both: show actual with prediction sub-text */}
-                  {hasBoth && (
-                    <div className="text-[10px] text-purple-500 mt-0.5">
-                      Has Prediction
-                    </div>
-                  )}
                 </>
               )}
             </div>
