@@ -2,6 +2,7 @@ import "server-only";
 
 const LOYVERSE_API_BASE = "https://api.loyverse.com/v1.0";
 const DEFAULT_CURRENCY_CODE = "NZD";
+const LOYVERSE_ITEMS_PAGE_SIZE = "250";
 
 export type LoyverseOrderResult =
   | {
@@ -19,6 +20,7 @@ export type CartItemForLoyverse = {
   quantity: number;
   unitPrice: number;
   modifiers: Array<{
+    modifierId?: string | null;
     modifierGroupName: string;
     modifierOptionName: string;
     priceDelta: number;
@@ -42,10 +44,12 @@ type LoyverseReceiptPayload = {
   receipt_number: string;
   line_items: Array<{
     item_id?: string;
+    variant_id?: string;
     item_name: string;
     quantity: number;
     price: number;
     line_modifiers?: Array<{
+      modifier_id?: string;
       name: string;
       price: number;
     }>;
@@ -73,6 +77,16 @@ function buildFailure(code: string, detail: string): LoyverseOrderResult {
   };
 }
 
+function normalizeString(value: unknown): string {
+  if (typeof value !== "string") return "";
+  return value.trim();
+}
+
+function normalizeOptionalId(value: unknown): string | undefined {
+  const normalized = normalizeString(value);
+  return normalized.length > 0 ? normalized : undefined;
+}
+
 function buildOrderNote(input: CreateLoyversePickupOrderInput): string {
   const noteParts = [
     `Customer: ${input.customerName} (${input.customerPhone})`,
@@ -83,15 +97,20 @@ function buildOrderNote(input: CreateLoyversePickupOrderInput): string {
   return noteParts.join(" | ");
 }
 
-function mapLineItems(items: CartItemForLoyverse[]): LoyverseReceiptPayload["line_items"] {
+function mapLineItems(
+  items: CartItemForLoyverse[],
+  variantIdByItemId?: Map<string, string>
+): LoyverseReceiptPayload["line_items"] {
   return items.map((item) => ({
     item_id: item.itemId ?? undefined,
+    variant_id: item.itemId ? variantIdByItemId?.get(item.itemId) : undefined,
     item_name: item.itemNameSnapshot,
     quantity: item.quantity,
     price: toMoneyAmount(item.unitPrice),
     line_modifiers:
       item.modifiers.length > 0
         ? item.modifiers.map((modifier) => ({
+            modifier_id: normalizeOptionalId(modifier.modifierId),
             name: `${modifier.modifierGroupName}: ${modifier.modifierOptionName}`,
             price: toMoneyAmount(modifier.priceDelta),
           }))
@@ -101,18 +120,97 @@ function mapLineItems(items: CartItemForLoyverse[]): LoyverseReceiptPayload["lin
 
 export function mapCartToLoyversePayload(
   input: CreateLoyversePickupOrderInput,
-  storeId: string
+  storeId: string,
+  variantIdByItemId?: Map<string, string>
 ): LoyverseReceiptPayload {
   return {
     store_id: storeId,
     receipt_number: input.orderNumber,
-    line_items: mapLineItems(input.items),
+    line_items: mapLineItems(input.items, variantIdByItemId),
     total_money: {
       amount: toMoneyAmount(input.total),
       currency_code: DEFAULT_CURRENCY_CODE,
     },
     note: buildOrderNote(input),
   };
+}
+
+function extractVariantId(raw: unknown): string | null {
+  if (!raw || typeof raw !== "object") return null;
+  const row = raw as Record<string, unknown>;
+  const directCandidate = normalizeString(
+    row.variant_id ?? row.variantId ?? row.item_variant_id ?? row.itemVariantId
+  );
+  return directCandidate || null;
+}
+
+async function resolveVariantIdByItemId(
+  itemIds: string[],
+  accessToken: string
+): Promise<Map<string, string>> {
+  const targetIds = new Set(itemIds.filter((id) => normalizeString(id).length > 0));
+  const resolved = new Map<string, string>();
+  if (targetIds.size === 0) return resolved;
+
+  let cursor: string | null = null;
+
+  do {
+    const url = new URL(`${LOYVERSE_API_BASE}/items`);
+    url.searchParams.set("limit", LOYVERSE_ITEMS_PAGE_SIZE);
+    if (cursor) {
+      url.searchParams.set("cursor", cursor);
+    }
+
+    const response = await fetch(url.toString(), {
+      method: "GET",
+      headers: {
+        Authorization: ["Bearer", accessToken].join(" "),
+        Accept: "application/json",
+      },
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Failed to resolve Loyverse variants", response.status, errorText);
+      break;
+    }
+
+    let payload: unknown;
+    try {
+      payload = await response.json();
+    } catch {
+      break;
+    }
+
+    if (!payload || typeof payload !== "object") break;
+    const row = payload as Record<string, unknown>;
+    const items = Array.isArray(row.items) ? row.items : [];
+
+    for (const itemRaw of items) {
+      if (!itemRaw || typeof itemRaw !== "object") continue;
+      const item = itemRaw as Record<string, unknown>;
+      const itemId = normalizeString(item.id ?? item.item_id);
+      if (!itemId || !targetIds.has(itemId) || resolved.has(itemId)) continue;
+
+      const defaultVariantId = normalizeString(item.default_variant_id ?? item.defaultVariantId);
+      const variants = Array.isArray(item.variants) ? item.variants : [];
+      let variantId: string | null = null;
+      if (defaultVariantId) {
+        variantId = defaultVariantId;
+      } else if (variants.length > 0) {
+        variantId = extractVariantId(variants[0]);
+      }
+
+      if (variantId) {
+        resolved.set(itemId, variantId);
+      }
+    }
+
+    cursor = normalizeString(row.cursor) || null;
+  } while (cursor && resolved.size < targetIds.size);
+
+  return resolved;
 }
 
 async function parseLoyverseErrorResponse(response: Response): Promise<string> {
@@ -182,9 +280,42 @@ export async function createLoyversePickupOrder(
     return buildFailure("CONFIG_ERROR", "LOYVERSE_STORE_ID is not configured");
   }
 
-  const payload = mapCartToLoyversePayload(input, storeId);
+  const missingItemMappings = input.items.reduce(
+    (count, item) => count + (normalizeString(item.itemId).length === 0 ? 1 : 0),
+    0
+  );
+  if (missingItemMappings > 0) {
+    return buildFailure(
+      "MISSING_REQUIRED_MAPPING",
+      `Missing Loyverse item mapping for ${missingItemMappings} line item(s)`
+    );
+  }
+
+  const missingModifierMappings = input.items.reduce(
+    (count, item) =>
+      count +
+      item.modifiers.reduce(
+        (itemCount, modifier) => itemCount + (normalizeString(modifier.modifierId).length === 0 ? 1 : 0),
+        0
+      ),
+    0
+  );
+  if (missingModifierMappings > 0) {
+    return buildFailure(
+      "MISSING_REQUIRED_MAPPING",
+      `Missing Loyverse modifier mapping for ${missingModifierMappings} line modifier(s)`
+    );
+  }
 
   try {
+    const variantIdByItemId = await resolveVariantIdByItemId(
+      input.items
+        .map((item) => item.itemId)
+        .filter((value): value is string => typeof value === "string" && value.trim().length > 0),
+      accessToken
+    );
+    const payload = mapCartToLoyversePayload(input, storeId, variantIdByItemId);
+
     const response = await fetch(`${LOYVERSE_API_BASE}/receipts`, {
       method: "POST",
       headers: {
