@@ -344,11 +344,15 @@ async function fetchDefaultPaymentType(accessToken: string): Promise<LoyversePay
     const cashPaymentType = allPaymentTypes.find(
       (pt) => pt.name.toLowerCase() === "cash",
     );
-    const selected = cashPaymentType ?? allPaymentTypes[0] ?? null;
+    const selected: LoyversePaymentType | null =
+      cashPaymentType ?? allPaymentTypes[0] ?? null;
+    const ttl = selected
+      ? LOYVERSE_PAYMENT_TYPE_CACHE_TTL_MS
+      : LOYVERSE_EMPTY_PAYMENT_TYPE_CACHE_TTL_MS;
 
     paymentTypeCache = {
       value: selected,
-      expiresAt: Date.now() + (selected ? LOYVERSE_PAYMENT_TYPE_CACHE_TTL_MS : LOYVERSE_EMPTY_PAYMENT_TYPE_CACHE_TTL_MS),
+      expiresAt: Date.now() + ttl,
     };
     return selected;
   })();
