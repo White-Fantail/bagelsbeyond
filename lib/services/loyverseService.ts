@@ -3,6 +3,8 @@ import "server-only";
 const LOYVERSE_API_BASE = "https://api.loyverse.com/v1.0";
 const DEFAULT_CURRENCY_CODE = "NZD";
 const LOYVERSE_ITEMS_PAGE_SIZE = "250";
+const LOYVERSE_PAYMENT_TYPES_PAGE_SIZE = "250";
+const LOYVERSE_PAYMENT_TYPE_CACHE_TTL_MS = 10 * 60 * 1000;
 
 export type LoyverseOrderResult =
   | {
@@ -58,8 +60,24 @@ type LoyverseReceiptPayload = {
     amount: number;
     currency_code: string;
   };
+  payments: Array<{
+    payment_type_id: string;
+    money_amount: {
+      amount: number;
+      currency_code: string;
+    };
+  }>;
   note?: string;
 };
+
+type LoyversePaymentType = {
+  id: string;
+  name: string;
+};
+
+let cachedPaymentType: LoyversePaymentType | null = null;
+let cachedPaymentTypeExpiresAt = 0;
+let inflightPaymentTypePromise: Promise<LoyversePaymentType | null> | null = null;
 
 function toMoneyAmount(value: number): number {
   return Math.round((Number.isFinite(value) ? value : 0) * 100);
@@ -121,16 +139,27 @@ function mapLineItems(
 export function mapCartToLoyversePayload(
   input: CreateLoyversePickupOrderInput,
   storeId: string,
+  paymentTypeId: string,
   variantIdByItemId?: Map<string, string>
 ): LoyverseReceiptPayload {
+  const totalAmount = toMoneyAmount(input.total);
   return {
     store_id: storeId,
     receipt_number: input.orderNumber,
     line_items: mapLineItems(input.items, variantIdByItemId),
     total_money: {
-      amount: toMoneyAmount(input.total),
+      amount: totalAmount,
       currency_code: DEFAULT_CURRENCY_CODE,
     },
+    payments: [
+      {
+        payment_type_id: paymentTypeId,
+        money_amount: {
+          amount: totalAmount,
+          currency_code: DEFAULT_CURRENCY_CODE,
+        },
+      },
+    ],
     note: buildOrderNote(input),
   };
 }
@@ -233,6 +262,89 @@ async function parseLoyverseErrorResponse(response: Response): Promise<string> {
   return text.trim() || "No error body";
 }
 
+function normalizeBoolean(value: unknown): boolean {
+  return value === true || value === "true" || value === 1 || value === "1";
+}
+
+function extractPaymentType(raw: unknown): LoyversePaymentType | null {
+  if (!raw || typeof raw !== "object") return null;
+  const row = raw as Record<string, unknown>;
+  const id = normalizeString(row.id ?? row.payment_type_id ?? row.paymentTypeId);
+  const name = normalizeString(row.name ?? row.payment_type_name ?? row.paymentTypeName);
+  const isArchived = normalizeBoolean(row.is_archived ?? row.isArchived ?? row.archived);
+  if (!id || isArchived) return null;
+  return {
+    id,
+    name,
+  };
+}
+
+async function fetchDefaultPaymentType(accessToken: string): Promise<LoyversePaymentType | null> {
+  const now = Date.now();
+  if (cachedPaymentType && cachedPaymentTypeExpiresAt > now) {
+    return cachedPaymentType;
+  }
+
+  if (inflightPaymentTypePromise) {
+    return inflightPaymentTypePromise;
+  }
+
+  inflightPaymentTypePromise = (async () => {
+    let cursor: string | null = null;
+
+    do {
+      const url = new URL(`${LOYVERSE_API_BASE}/payment_types`);
+      url.searchParams.set("limit", LOYVERSE_PAYMENT_TYPES_PAGE_SIZE);
+      if (cursor) {
+        url.searchParams.set("cursor", cursor);
+      }
+
+      const response = await fetch(url.toString(), {
+        method: "GET",
+        headers: {
+          Authorization: ["Bearer", accessToken].join(" "),
+          Accept: "application/json",
+        },
+        cache: "no-store",
+      });
+
+      if (!response.ok) {
+        const detail = await parseLoyverseErrorResponse(response);
+        throw new Error(`Failed to fetch payment types: status ${response.status} - ${detail}`);
+      }
+
+      const payload = (await response.json()) as Record<string, unknown>;
+      const paymentTypesRaw = Array.isArray(payload.payment_types)
+        ? payload.payment_types
+        : Array.isArray(payload.items)
+          ? payload.items
+          : Array.isArray(payload.data)
+            ? payload.data
+            : [];
+
+      for (const paymentTypeRaw of paymentTypesRaw) {
+        const paymentType = extractPaymentType(paymentTypeRaw);
+        if (!paymentType) continue;
+        cachedPaymentType = paymentType;
+        cachedPaymentTypeExpiresAt = Date.now() + LOYVERSE_PAYMENT_TYPE_CACHE_TTL_MS;
+        return paymentType;
+      }
+
+      cursor = normalizeString(payload.cursor) || null;
+    } while (cursor);
+
+    cachedPaymentType = null;
+    cachedPaymentTypeExpiresAt = Date.now() + LOYVERSE_PAYMENT_TYPE_CACHE_TTL_MS;
+    return null;
+  })();
+
+  try {
+    return await inflightPaymentTypePromise;
+  } finally {
+    inflightPaymentTypePromise = null;
+  }
+}
+
 function extractReceiptId(payload: unknown): string | null {
   if (!payload || typeof payload !== "object") return null;
 
@@ -314,7 +426,11 @@ export async function createLoyversePickupOrder(
         .filter((value): value is string => typeof value === "string" && value.trim().length > 0),
       accessToken
     );
-    const payload = mapCartToLoyversePayload(input, storeId, variantIdByItemId);
+    const paymentType = await fetchDefaultPaymentType(accessToken);
+    if (!paymentType) {
+      return buildFailure("CONFIG_ERROR", "No active Loyverse payment type is available");
+    }
+    const payload = mapCartToLoyversePayload(input, storeId, paymentType.id, variantIdByItemId);
 
     const response = await fetch(`${LOYVERSE_API_BASE}/receipts`, {
       method: "POST",
