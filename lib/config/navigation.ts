@@ -119,6 +119,11 @@ export const ADMIN_NAV: RoleNavConfig = {
       items: [{ href: "/dashboard", label: "Operations Dashboard" }],
     },
     {
+      id: "orders",
+      label: "Online Orders",
+      items: [{ href: "/orders", label: "Customer Orders" }],
+    },
+    {
       id: "sales",
       label: "Sales",
       items: [
