@@ -85,7 +85,7 @@ let paymentTypeCache: PaymentTypeCacheEntry | null = null;
 let inflightPaymentTypePromise: Promise<LoyversePaymentType | null> | null = null;
 
 function toMoneyAmount(value: number): number {
-  return Math.round((Number.isFinite(value) ? value : 0) * 100);
+  return Math.round((Number.isFinite(value) ? value : 0) * 100) / 100;
 }
 
 function normalizeErrorCode(code: string): string {
