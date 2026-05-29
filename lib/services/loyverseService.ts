@@ -277,7 +277,10 @@ function extractPaymentType(raw: unknown): LoyversePaymentType | null {
   const id = normalizeString(row.id ?? row.payment_type_id ?? row.paymentTypeId);
   const name = normalizeString(row.name ?? row.payment_type_name ?? row.paymentTypeName);
   const isArchived = normalizeBoolean(row.is_archived ?? row.isArchived ?? row.archived);
-  if (!id || isArchived) return null;
+  const isIntegrated = normalizeBoolean(
+    row.is_integrated ?? row.isIntegrated ?? row.integrated,
+  );
+  if (!id || isArchived || isIntegrated) return null;
   return {
     id,
     name,
