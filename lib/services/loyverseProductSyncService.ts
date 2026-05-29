@@ -451,18 +451,21 @@ async function fetchLoyverseModifierGroups(accessToken: string): Promise<Loyvers
       const fallbackGroup = fallbackById.get(group.id);
       if (!fallbackGroup) return group;
 
-      const primaryOptionsById = new Set(group.options.map((option) => option.id));
-      const missingFallbackOptions = fallbackGroup.options.filter(
-        (option) => !primaryOptionsById.has(option.id)
-      );
+      const hasPrimaryOptions = group.options.length > 0;
+      const primaryOptionsById = hasPrimaryOptions
+        ? new Set(group.options.map((existing) => existing.id))
+        : null;
+      const missingFallbackOptions = hasPrimaryOptions
+        ? fallbackGroup.options.filter((option) => !primaryOptionsById?.has(option.id))
+        : [];
       const mergedOptions =
-        group.options.length > 0 ? [...group.options, ...missingFallbackOptions] : fallbackGroup.options;
+        hasPrimaryOptions ? [...group.options, ...missingFallbackOptions] : fallbackGroup.options;
 
       return {
         ...group,
-        isRequired: group.options.length > 0 ? group.isRequired : fallbackGroup.isRequired,
-        minSelections: group.options.length > 0 ? group.minSelections : fallbackGroup.minSelections,
-        maxSelections: group.options.length > 0 ? group.maxSelections : fallbackGroup.maxSelections,
+        isRequired: hasPrimaryOptions ? group.isRequired : fallbackGroup.isRequired,
+        minSelections: hasPrimaryOptions ? group.minSelections : fallbackGroup.minSelections,
+        maxSelections: hasPrimaryOptions ? group.maxSelections : fallbackGroup.maxSelections,
         options: mergedOptions,
       };
     });
@@ -480,7 +483,11 @@ async function fetchLoyverseModifierGroups(accessToken: string): Promise<Loyvers
     try {
       const modifierGroups = await fetchByPath("modifiers", "modifiers");
       return mergeGroupsWithFallbackOptions(modifierListGroups, modifierGroups);
-    } catch {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.warn(
+        `[Loyverse Sync] Failed to backfill modifier options from modifiers endpoint: ${message}`
+      );
       return modifierListGroups;
     }
   } catch (error) {
