@@ -435,30 +435,84 @@ async function loyverseGetCollection<T>(
 }
 
 async function fetchLoyverseModifierGroups(accessToken: string): Promise<LoyverseModifierGroup[]> {
-  const attempts = [
-    { path: "modifier_lists", collectionKey: "modifier_lists" },
-    { path: "modifiers", collectionKey: "modifiers" },
-  ] as const;
+  const fetchByPath = async (
+    path: "modifier_lists" | "modifiers",
+    collectionKey: "modifier_lists" | "modifiers"
+  ) =>
+    loyverseGetCollection(path, collectionKey, toLoyverseModifierGroup, accessToken);
 
-  let lastError: Error | null = null;
+  const mergeGroupsWithFallbackOptions = (
+    primaryGroups: LoyverseModifierGroup[],
+    fallbackGroups: LoyverseModifierGroup[]
+  ): LoyverseModifierGroup[] => {
+    const fallbackById = new Map(fallbackGroups.map((group) => [group.id, group]));
 
-  for (const attempt of attempts) {
-    try {
-      return await loyverseGetCollection(
-        attempt.path,
-        attempt.collectionKey,
-        toLoyverseModifierGroup,
-        accessToken
+    return primaryGroups.map((group) => {
+      const fallbackGroup = fallbackById.get(group.id);
+      if (!fallbackGroup) return group;
+
+      const hasPrimaryOptions = group.options.length > 0;
+      if (!hasPrimaryOptions) {
+        return {
+          ...group,
+          isRequired: fallbackGroup.isRequired,
+          minSelections: fallbackGroup.minSelections,
+          maxSelections: fallbackGroup.maxSelections,
+          options: fallbackGroup.options,
+        };
+      }
+
+      const primaryOptionsById = new Set(group.options.map((existing) => existing.id));
+      const missingFallbackOptions = fallbackGroup.options.filter(
+        (option) => !primaryOptionsById.has(option.id)
       );
-    } catch (error) {
-      lastError =
-        error instanceof Error
-          ? error
-          : new Error(`Unknown modifier fetch error for ${attempt.path}`);
+      const mergedOptions = [...group.options, ...missingFallbackOptions];
+
+      return {
+        ...group,
+        isRequired: group.isRequired,
+        minSelections: group.minSelections,
+        maxSelections: group.maxSelections,
+        options: mergedOptions,
+      };
+    });
+  };
+
+  let modifierListError: Error | null = null;
+  try {
+    const modifierListGroups = await fetchByPath("modifier_lists", "modifier_lists");
+    const groupsMissingOptions = modifierListGroups.some((group) => group.options.length === 0);
+
+    if (!groupsMissingOptions) {
+      return modifierListGroups;
     }
+
+    try {
+      const modifierGroups = await fetchByPath("modifiers", "modifiers");
+      return mergeGroupsWithFallbackOptions(modifierListGroups, modifierGroups);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.warn(
+        `[Loyverse Sync] Failed to backfill modifier options from modifiers endpoint: ${message}`
+      );
+      return modifierListGroups;
+    }
+  } catch (error) {
+    modifierListError =
+      error instanceof Error
+        ? error
+        : new Error("Unknown modifier fetch error for modifier_lists");
   }
 
-  throw lastError ?? new Error("Failed to fetch Loyverse modifiers");
+  try {
+    return await fetchByPath("modifiers", "modifiers");
+  } catch (error) {
+    const modifierError =
+      error instanceof Error
+        ? error
+        : new Error("Unknown modifier fetch error for modifiers");
+    throw modifierListError ?? modifierError;
+  }
 }
 
 async function createUniqueCategorySlug(baseName: string): Promise<string> {
