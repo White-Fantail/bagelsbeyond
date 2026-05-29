@@ -1323,3 +1323,56 @@ Recursive explosion traverses recipe items, expands component products into thei
 - **Product settings UI**: Add planning fields (isProductionPlannable, productionBatchSize, productionBufferPercent) to the existing product edit form.
 - **On-hand inventory**: Add simple on-hand quantity fields to ingredients and surface shortage indicators (required vs. available) in the Ingredient Needs page.
 - **Procurement recommendations**: Surface "you need to order X more of Y" based on shortage detection.
+
+---
+
+## Online Ordering System
+
+### Routes Added
+- `/order` — Public customer ordering page (mobile-first)
+- `/order/cart` — Cart and checkout
+- `/order/success/[orderNumber]` — Order confirmation
+- `/orders` (admin) — Order management (admin only)
+- `/orders/[orderId]` (admin) — Order detail
+
+### API Routes Added
+- `GET /api/public/stores/[storeSlug]/menu` — Public menu (no auth)
+- `POST /api/public/stores/[storeSlug]/orders` — Submit order (no auth)
+- `PATCH /api/admin/orders/[orderId]/status` — Update order status (admin)
+- `POST /api/admin/orders/[orderId]/retry-sync` — Retry Loyverse sync (admin)
+
+### Environment Variables
+```env
+# Loyverse Integration (optional — orders save locally if not set)
+LOYVERSE_ACCESS_TOKEN=your_loyverse_personal_token
+LOYVERSE_STORE_ID=your_loyverse_store_id
+```
+
+### Loyverse API Strategy
+**Current Status**: Orders are saved locally with status PENDING. Loyverse API integration is stubbed but not active.
+
+**Limitation**: Loyverse's API supports creating receipts (completed sales) but not open/unpaid tickets via the public API. Creating a receipt requires payment information.
+
+**Current approach (Option A)**: 
+- Customer places order → saved in local DB as PENDING
+- Staff see order in admin panel `/orders`  
+- Staff manually enter order in Loyverse POS when customer picks up and pays
+
+**Future option (Option B)**:
+- Set `LOYVERSE_ACCESS_TOKEN` env var
+- Implement `createPickupReceipt()` in `lib/services/loyverseService.ts`
+- When customer pays at pickup, create receipt via `POST https://api.loyverse.com/v1.0/receipts`
+
+### Testing Locally
+1. Create a Store record in DB: `INSERT INTO stores (id, slug, name, ...) VALUES (..., 'bagels-beyond', 'Bagel''s Beyond', ...)`
+   OR: Visit `/order` — it will auto-create a store from AppSetting if none exists.
+2. Add products and modifier groups via the admin `/products` page (or DB directly)
+3. Visit `/order` to test the customer flow
+4. Check `/orders` (admin) to see submitted orders
+
+### Known Limitations
+- Cart state is stored in localStorage (lost on browser clear)
+- No real-time stock/sold-out sync (manual flag via admin)
+- Loyverse receipt creation not yet implemented (orders stay PENDING)
+- No email confirmation sent to customers
+- No order cancellation from customer side

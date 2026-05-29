@@ -375,3 +375,31 @@ export const updateFreshnessLogSchema = z.object({
 });
 
 export type UpdateFreshnessLogSchema = z.infer<typeof updateFreshnessLogSchema>;
+
+// ─── Online Ordering ──────────────────────────────────────────────────────────
+
+export const orderItemModifierSchema = z.object({
+  modifierGroupId: z.string().min(1, "Modifier group ID is required"),
+  modifierOptionId: z.string().min(1, "Modifier option ID is required"),
+});
+
+export const orderItemSchema = z.object({
+  itemId: z.string().min(1, "Item ID is required"),
+  quantity: z.coerce.number().int().min(1, "Quantity must be at least 1"),
+  notes: z.string().optional(),
+  selectedModifiers: z.array(orderItemModifierSchema).default([]),
+});
+
+export const createOrderSchema = z.object({
+  customerName: z.string().min(1, "Customer name is required"),
+  customerPhone: z.string().min(1, "Customer phone is required"),
+  customerEmail: z.string().email("Invalid email").optional().or(z.literal("")),
+  pickupType: z.enum(["ASAP", "SCHEDULED"]),
+  pickupTime: z.string().datetime({ offset: true }).optional().nullable(),
+  notes: z.string().optional(),
+  items: z.array(orderItemSchema).min(1, "At least one item is required"),
+});
+
+export type CreateOrderSchema = z.infer<typeof createOrderSchema>;
+export type OrderItemSchema = z.infer<typeof orderItemSchema>;
+export type OrderItemModifierSchema = z.infer<typeof orderItemModifierSchema>;

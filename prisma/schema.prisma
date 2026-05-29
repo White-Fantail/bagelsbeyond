@@ -98,6 +98,23 @@ enum PlanningRoundingMode {
   ROUND_NEAREST
 }
 
+// ─── Ordering System ──────────────────────────────────────────────────────────
+
+enum CustomerOrderStatus {
+  DRAFT
+  PENDING
+  SENT_TO_LOYVERSE
+  FAILED_TO_SEND
+  ACCEPTED
+  COMPLETED
+  CANCELLED
+}
+
+enum PickupType {
+  ASAP
+  SCHEDULED
+}
+
 enum PlanningBatchHandlingMode {
   IGNORE
   ROUND_UP
@@ -396,6 +413,11 @@ model MenuProduct {
   productionBatchSize        Float?
   productionBufferPercent    Float?
   planningRoundingMode       PlanningRoundingMode?
+  // Online Ordering
+  description                String?
+  imageUrl                   String?
+  isPopular                  Boolean              @default(false)
+  isSoldOut                  Boolean              @default(false)
   createdAt                  DateTime             @default(now())
   updatedAt                  DateTime             @updatedAt
 
@@ -404,6 +426,7 @@ model MenuProduct {
   componentRecipeItems RecipeItem[] @relation("ComponentProduct")
   forecastOverrides    ForecastOverride[]
   freshnessLogs        FreshnessLog[]
+  modifierGroups       MenuModifierGroup[]
 
   @@index([name])
   @@index([isActive])
@@ -773,4 +796,124 @@ model ForecastOverride {
   @@index([targetDate])
   @@index([productId])
   @@map("forecast_overrides")
+}
+
+// ─── Online Ordering System ───────────────────────────────────────────────────
+
+model Store {
+  id             String   @id @default(cuid())
+  slug           String   @unique
+  name           String
+  address        String?
+  suburb         String?
+  city           String?
+  phone          String?
+  bannerImageUrl String?
+  logoImageUrl   String?
+  isOpen         Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  customerOrders CustomerOrder[]
+
+  @@map("stores")
+}
+
+model MenuModifierGroup {
+  id           String   @id @default(cuid())
+  productId    String
+  name         String
+  description  String?
+  isRequired   Boolean  @default(false)
+  minSelections Int     @default(0)
+  maxSelections Int     @default(1)
+  sortOrder    Int      @default(0)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  product  MenuProduct          @relation(fields: [productId], references: [id], onDelete: Cascade)
+  options  MenuModifierOption[]
+
+  @@index([productId])
+  @@index([sortOrder])
+  @@map("menu_modifier_groups")
+}
+
+model MenuModifierOption {
+  id           String   @id @default(cuid())
+  groupId      String
+  name         String
+  priceDelta   Decimal  @default(0) @db.Decimal(10, 2)
+  sortOrder    Int      @default(0)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  group MenuModifierGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@index([groupId])
+  @@index([sortOrder])
+  @@map("menu_modifier_options")
+}
+
+model CustomerOrder {
+  id                   String              @id @default(cuid())
+  orderNumber          String              @unique
+  storeId              String?
+  customerName         String
+  customerPhone        String
+  customerEmail        String?
+  pickupType           PickupType          @default(ASAP)
+  pickupTime           DateTime?
+  status               CustomerOrderStatus @default(PENDING)
+  subtotal             Decimal             @db.Decimal(10, 2)
+  total                Decimal             @db.Decimal(10, 2)
+  notes                String?
+  loyverseReceiptId    String?
+  loyverseSyncError    String?
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+
+  store Store?              @relation(fields: [storeId], references: [id], onDelete: SetNull)
+  items CustomerOrderItem[]
+
+  @@index([status])
+  @@index([createdAt])
+  @@index([storeId])
+  @@map("customer_orders")
+}
+
+model CustomerOrderItem {
+  id               String   @id @default(cuid())
+  orderId          String
+  itemId           String?
+  itemNameSnapshot String
+  quantity         Int
+  unitPrice        Decimal  @db.Decimal(10, 2)
+  totalPrice       Decimal  @db.Decimal(10, 2)
+  notes            String?
+  createdAt        DateTime @default(now())
+
+  order     CustomerOrder               @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  modifiers CustomerOrderItemModifier[]
+
+  @@index([orderId])
+  @@map("customer_order_items")
+}
+
+model CustomerOrderItemModifier {
+  id                  String   @id @default(cuid())
+  orderItemId         String
+  modifierGroupId     String?
+  modifierGroupName   String
+  modifierOptionId    String?
+  modifierOptionName  String
+  priceDelta          Decimal  @db.Decimal(10, 2) @default(0)
+  createdAt           DateTime @default(now())
+
+  orderItem CustomerOrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+
+  @@index([orderItemId])
+  @@map("customer_order_item_modifiers")
 }
