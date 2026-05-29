@@ -956,6 +956,8 @@ export async function previewLoyverseCatalog(): Promise<LoyverseCatalogPreview> 
     throw new Error("LOYVERSE_API_TOKEN is not configured.");
   }
 
+  type LocalModOption = { id: string; loyverseId: string | null; name: string; priceDelta: { toNumber(): number } | number };
+
   const [loyverseCategories, loyverseItems] = await Promise.all([
     loyverseGetCollection("categories", "categories", toLoyverseCategory, accessToken),
     loyverseGetCollection("items", "items", toLoyverseItem, accessToken),
@@ -1083,9 +1085,8 @@ export async function previewLoyverseCatalog(): Promise<LoyverseCatalogPreview> 
         seenGroupLocalIds.add(existingGroup.id);
 
         for (const option of group.options) {
-          const existingOption = existingGroup.options.find(
-            (o: { id: string; loyverseId: string | null; name: string; priceDelta: { toNumber(): number } | number }) =>
-              o.loyverseId === option.id
+          const existingOption = (existingGroup.options as LocalModOption[]).find(
+            (o) => o.loyverseId === option.id
           );
           if (existingOption) {
             seenOptionLocalIds.add(existingOption.id);
@@ -1114,7 +1115,7 @@ export async function previewLoyverseCatalog(): Promise<LoyverseCatalogPreview> 
         }
 
         // Options removed from Loyverse
-        for (const localOpt of existingGroup.options) {
+        for (const localOpt of existingGroup.options as LocalModOption[]) {
           if (localOpt.loyverseId && !seenOptionLocalIds.has(localOpt.id)) {
             optionPreviews.push({
               loyverseId: localOpt.loyverseId,
