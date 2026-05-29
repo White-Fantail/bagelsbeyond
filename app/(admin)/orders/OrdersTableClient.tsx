@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { Fragment, useMemo, useState, useTransition } from "react";
 
 type OrderStatus =
   | "PENDING"
@@ -25,11 +25,30 @@ type OrderRow = {
   orderNumber: string;
   customerName: string;
   customerPhone: string;
+  customerEmail: string | null;
+  pickupType: string;
+  pickupTimeLabel: string | null;
+  notes: string | null;
   createdAtLabel: string;
+  subtotalLabel: string;
   totalLabel: string;
   status: OrderStatus;
   loyverseReceiptId: string | null;
   loyverseSyncError: string | null;
+  items: Array<{
+    id: string;
+    itemNameSnapshot: string;
+    quantity: number;
+    unitPriceLabel: string;
+    totalPriceLabel: string;
+    notes: string | null;
+    modifiers: Array<{
+      id: string;
+      modifierGroupName: string;
+      modifierOptionName: string;
+      priceDeltaLabel: string;
+    }>;
+  }>;
 };
 
 const STATUS_OPTIONS: Array<{ value: EditableStatus; label: string }> = [
@@ -38,6 +57,7 @@ const STATUS_OPTIONS: Array<{ value: EditableStatus; label: string }> = [
   { value: "COMPLETED", label: "Completed" },
   { value: "CANCELLED", label: "Cancelled" },
 ];
+const TABLE_COLUMN_COUNT = 7;
 
 function getOrderStatusBadge(status: OrderStatus) {
   switch (status) {
@@ -69,8 +89,13 @@ function getSyncBadge(order: OrderRow) {
   return { text: "Pending", className: "bg-gray-100 text-gray-600" };
 }
 
+function getOrderDetailPanelId(orderId: string) {
+  return `order-detail-${orderId.replace(/[^a-zA-Z0-9_-]/g, "-")}`;
+}
+
 export default function OrdersTableClient({ orders }: { orders: OrderRow[] }) {
   const [rows, setRows] = useState<OrderRow[]>(orders);
+  const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
   const [statusDraft, setStatusDraft] = useState<Record<string, EditableStatus>>(
     Object.fromEntries(orders.map((order) => [order.id, toEditableStatus(order.status)]))
   );
@@ -206,11 +231,22 @@ export default function OrdersTableClient({ orders }: { orders: OrderRow[] }) {
             {rows.map((order) => {
               const syncBadge = getSyncBadge(order);
               const isBusy = busyOrderId === order.id;
+              const detailPanelId = getOrderDetailPanelId(order.id);
 
               return (
-                <tr key={order.id} className="align-top">
+                <Fragment key={order.id}>
+                <tr className="align-top">
                   <td className="px-4 py-3">
-                    <p className="text-sm font-semibold text-gray-900">{order.orderNumber}</p>
+                    <button
+                      type="button"
+                      onClick={() => setExpandedOrderId((prev) => (prev === order.id ? null : order.id))}
+                      aria-expanded={expandedOrderId === order.id}
+                      aria-controls={detailPanelId}
+                      aria-label={`${expandedOrderId === order.id ? "Collapse" : "Expand"} order details for ${order.orderNumber}`}
+                      className="text-left text-sm font-semibold text-indigo-700 underline decoration-dotted underline-offset-2 hover:text-indigo-900"
+                    >
+                      {order.orderNumber}
+                    </button>
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-700">
                     <p className="font-medium text-gray-900">{order.customerName}</p>
@@ -282,6 +318,82 @@ export default function OrdersTableClient({ orders }: { orders: OrderRow[] }) {
                     </div>
                   </td>
                 </tr>
+                {expandedOrderId === order.id ? (
+                  <tr>
+                    <td colSpan={TABLE_COLUMN_COUNT} className="bg-gray-50 px-4 py-4">
+                      <div id={detailPanelId} className="space-y-4 rounded-lg border border-gray-200 bg-white p-4">
+                        <div className="grid gap-3 text-sm text-gray-700 sm:grid-cols-2">
+                          <div>
+                            <p className="font-semibold text-gray-900">Customer</p>
+                            <p>{order.customerName}</p>
+                            <p>{order.customerPhone}</p>
+                            {order.customerEmail ? <p>{order.customerEmail}</p> : null}
+                          </div>
+                          <div>
+                            <p className="font-semibold text-gray-900">Pickup</p>
+                            <p>{order.pickupType}</p>
+                            <p>{order.pickupTimeLabel ?? "ASAP"}</p>
+                          </div>
+                        </div>
+
+                        <div className="text-sm text-gray-700">
+                          <p className="font-semibold text-gray-900">Order Notes</p>
+                          <p>{order.notes || "No notes"}</p>
+                        </div>
+
+                        <div className="space-y-2">
+                          <p className="text-sm font-semibold text-gray-900">Order Items ({order.items.length})</p>
+                          {order.items.length === 0 ? (
+                            <p className="text-sm text-gray-600">No order items found.</p>
+                          ) : (
+                            <div className="space-y-2">
+                              {order.items.map((item) => (
+                                <div key={item.id} className="rounded-md border border-gray-200 p-3 text-sm text-gray-700">
+                                  <div className="flex items-start justify-between gap-3">
+                                    <p className="font-medium text-gray-900">
+                                      {item.quantity} × {item.itemNameSnapshot}
+                                    </p>
+                                    <p className="font-semibold text-gray-900">{item.totalPriceLabel}</p>
+                                  </div>
+                                  <p className="text-xs text-gray-600">Unit Price: {item.unitPriceLabel}</p>
+                                  {item.modifiers.length > 0 ? (
+                                    <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-gray-700">
+                                      {item.modifiers.map((modifier) => (
+                                        <li key={modifier.id}>
+                                          {modifier.modifierGroupName}: {modifier.modifierOptionName} ({modifier.priceDeltaLabel})
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  ) : null}
+                                  {item.notes ? <p className="mt-2 text-xs text-gray-700">Item Notes: {item.notes}</p> : null}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="grid gap-3 text-sm text-gray-700 sm:grid-cols-2">
+                          <div>
+                            <p className="font-semibold text-gray-900">Totals</p>
+                            <p>Subtotal: {order.subtotalLabel}</p>
+                            <p>Total: {order.totalLabel}</p>
+                          </div>
+                          <div>
+                            <p className="font-semibold text-gray-900">Loyverse Error Detail</p>
+                            {order.loyverseSyncError ? (
+                              <pre className="whitespace-pre-wrap break-words rounded-md bg-red-50 p-2 text-xs text-red-700">
+                                {order.loyverseSyncError}
+                              </pre>
+                            ) : (
+                              <p>No sync error.</p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                ) : null}
+                </Fragment>
               );
             })}
           </tbody>

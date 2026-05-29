@@ -22,11 +22,34 @@ export default async function OrdersPage() {
       orderNumber: true,
       customerName: true,
       customerPhone: true,
+      customerEmail: true,
+      pickupType: true,
+      pickupTime: true,
+      notes: true,
       createdAt: true,
+      subtotal: true,
       total: true,
       status: true,
       loyverseReceiptId: true,
       loyverseSyncError: true,
+      items: {
+        select: {
+          id: true,
+          itemNameSnapshot: true,
+          quantity: true,
+          unitPrice: true,
+          totalPrice: true,
+          notes: true,
+          modifiers: {
+            select: {
+              id: true,
+              modifierGroupName: true,
+              modifierOptionName: true,
+              priceDelta: true,
+            },
+          },
+        },
+      },
     },
   });
 
@@ -61,11 +84,30 @@ export default async function OrdersPage() {
             orderNumber: order.orderNumber,
             customerName: order.customerName,
             customerPhone: order.customerPhone,
+            customerEmail: order.customerEmail,
+            pickupType: order.pickupType,
+            pickupTimeLabel: order.pickupTime ? order.pickupTime.toLocaleString("en-NZ") : null,
+            notes: order.notes,
             createdAtLabel: order.createdAt.toLocaleString("en-NZ"),
+            subtotalLabel: currencyFormatter.format(Number(order.subtotal)),
             totalLabel: currencyFormatter.format(Number(order.total)),
             status: order.status,
             loyverseReceiptId: order.loyverseReceiptId,
             loyverseSyncError: order.loyverseSyncError,
+            items: order.items.map((item) => ({
+              id: item.id,
+              itemNameSnapshot: item.itemNameSnapshot,
+              quantity: item.quantity,
+              unitPriceLabel: currencyFormatter.format(Number(item.unitPrice)),
+              totalPriceLabel: currencyFormatter.format(Number(item.totalPrice)),
+              notes: item.notes,
+              modifiers: item.modifiers.map((modifier) => ({
+                id: modifier.id,
+                modifierGroupName: modifier.modifierGroupName,
+                modifierOptionName: modifier.modifierOptionName,
+                priceDeltaLabel: currencyFormatter.format(Number(modifier.priceDelta)),
+              })),
+            })),
           }))}
         />
       )}
