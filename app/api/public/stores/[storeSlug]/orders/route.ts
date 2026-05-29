@@ -243,11 +243,19 @@ export async function POST(
         pickupTime: order.pickupTime,
         notes: order.notes,
         items: order.items.map((item) => ({
-          itemId: item.itemId,
+          itemId: productMap.get(item.itemId ?? "")?.loyverseId ?? null,
           itemNameSnapshot: item.itemNameSnapshot,
           quantity: item.quantity,
           unitPrice: Number(item.unitPrice),
           modifiers: item.modifiers.map((mod) => ({
+            modifierId:
+              mod.modifierOptionId != null
+                ? productMap
+                    .get(item.itemId ?? "")
+                    ?.modifierGroups.flatMap((group) => group.options)
+                    .find((option) => option.id === mod.modifierOptionId)
+                    ?.loyverseId ?? null
+                : null,
             modifierGroupName: mod.modifierGroupName,
             modifierOptionName: mod.modifierOptionName,
             priceDelta: Number(mod.priceDelta),

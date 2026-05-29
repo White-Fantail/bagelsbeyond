@@ -34,6 +34,36 @@ export async function POST(
       );
     }
 
+    const productIds = Array.from(
+      new Set(order.items.map((item) => item.itemId).filter((value): value is string => Boolean(value)))
+    );
+    const modifierOptionIds = Array.from(
+      new Set(
+        order.items
+          .flatMap((item) => item.modifiers)
+          .map((modifier) => modifier.modifierOptionId)
+          .filter((value): value is string => Boolean(value))
+      )
+    );
+
+    const [linkedProducts, linkedModifierOptions] = await Promise.all([
+      prisma.menuProduct.findMany({
+        where: { id: { in: productIds } },
+        select: { id: true, loyverseId: true },
+      }),
+      prisma.menuModifierOption.findMany({
+        where: { id: { in: modifierOptionIds } },
+        select: { id: true, loyverseId: true },
+      }),
+    ]);
+
+    const loyverseItemIdByProductId = new Map(
+      linkedProducts.map((product) => [product.id, product.loyverseId])
+    );
+    const loyverseModifierIdByOptionId = new Map(
+      linkedModifierOptions.map((option) => [option.id, option.loyverseId])
+    );
+
     const loyverseResult = await createLoyversePickupOrder({
       orderNumber: order.orderNumber,
       customerName: order.customerName,
@@ -42,11 +72,15 @@ export async function POST(
       pickupTime: order.pickupTime,
       notes: order.notes,
       items: order.items.map((item) => ({
-        itemId: item.itemId,
+        itemId: item.itemId ? loyverseItemIdByProductId.get(item.itemId) ?? null : null,
         itemNameSnapshot: item.itemNameSnapshot,
         quantity: item.quantity,
         unitPrice: Number(item.unitPrice),
         modifiers: item.modifiers.map((mod) => ({
+          modifierId:
+            mod.modifierOptionId != null
+              ? loyverseModifierIdByOptionId.get(mod.modifierOptionId) ?? null
+              : null,
           modifierGroupName: mod.modifierGroupName,
           modifierOptionName: mod.modifierOptionName,
           priceDelta: Number(mod.priceDelta),
