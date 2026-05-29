@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { apiRequireAdmin, isNextResponse } from "@/lib/auth/dal";
 import {
   previewLoyverseItemMatches,
+  previewLoyverseCatalog,
   syncLoyverseCatalog,
   type LoyverseSyncDecisions,
 } from "@/lib/services/loyverseProductSyncService";
@@ -38,7 +39,10 @@ export async function GET() {
   if (isNextResponse(authResult)) return authResult;
 
   try {
-    const items = await previewLoyverseItemMatches();
+    const [items, catalog] = await Promise.all([
+      previewLoyverseItemMatches(),
+      previewLoyverseCatalog(),
+    ]);
     const matchedCount = items.filter((item) => item.status === "matched").length;
     const unmatchedCount = items.length - matchedCount;
 
@@ -47,6 +51,8 @@ export async function GET() {
       matchedCount,
       unmatchedCount,
       total: items.length,
+      categories: catalog.categories,
+      modifiers: catalog.modifiers,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to load Loyverse preview";

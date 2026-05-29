@@ -830,40 +830,42 @@ model Store {
 }
 
 model MenuModifierGroup {
-  id           String   @id @default(cuid())
-  productId    String
-  loyverseId   String?  @unique
-  name         String
-  description  String?
-  isRequired   Boolean  @default(false)
-  minSelections Int     @default(0)
-  maxSelections Int     @default(1)
-  sortOrder    Int      @default(0)
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id            String   @id @default(cuid())
+  productId     String
+  loyverseId    String?
+  name          String
+  description   String?
+  isRequired    Boolean  @default(false)
+  minSelections Int      @default(0)
+  maxSelections Int      @default(1)
+  sortOrder     Int      @default(0)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   product  MenuProduct          @relation(fields: [productId], references: [id], onDelete: Cascade)
   options  MenuModifierOption[]
 
+  @@unique([productId, loyverseId])
   @@index([productId])
   @@index([sortOrder])
   @@map("menu_modifier_groups")
 }
 
 model MenuModifierOption {
-  id           String   @id @default(cuid())
-  groupId      String
-  loyverseId   String?  @unique
-  name         String
-  priceDelta   Decimal  @default(0) @db.Decimal(10, 2)
-  sortOrder    Int      @default(0)
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id         String   @id @default(cuid())
+  groupId    String
+  loyverseId String?
+  name       String
+  priceDelta Decimal  @default(0) @db.Decimal(10, 2)
+  sortOrder  Int      @default(0)
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   group MenuModifierGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
 
+  @@unique([groupId, loyverseId])
   @@index([groupId])
   @@index([sortOrder])
   @@map("menu_modifier_options")
