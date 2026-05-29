@@ -640,6 +640,8 @@ async function syncCategories(
 ): Promise<Map<string, string>> {
   const categoryMap = new Map<string, string>();
   const incomingLoyverseIds = new Set(categories.map((c) => c.id));
+  let nextSortOrderForNewCategories =
+    ((await prisma.productCategory.aggregate({ _max: { sortOrder: true } }))._max.sortOrder ?? -1) + 1;
 
   // Deactivate local categories linked to Loyverse IDs that no longer exist
   const localLinked = await prisma.productCategory.findMany({
@@ -669,7 +671,6 @@ async function syncCategories(
         where: { id: linked.id },
         data: {
           name: category.name,
-          sortOrder: i,
           isActive: true,
         },
       });
@@ -693,7 +694,6 @@ async function syncCategories(
         data: {
           loyverseId: category.id,
           name: category.name,
-          sortOrder: i,
           isActive: true,
         },
         select: { id: true },
@@ -708,11 +708,12 @@ async function syncCategories(
         loyverseId: category.id,
         name: category.name,
         slug: await createUniqueCategorySlug(category.name),
-        sortOrder: i,
+        sortOrder: nextSortOrderForNewCategories,
         isActive: true,
       },
       select: { id: true },
     });
+    nextSortOrderForNewCategories += 1;
     counters.categoriesAdded += 1;
     categoryMap.set(category.id, created.id);
   }

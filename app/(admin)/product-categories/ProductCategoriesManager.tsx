@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { ProductCategoryRow } from "@/lib/services/menuProductService";
 import { slugify } from "@/lib/utils";
@@ -18,19 +18,24 @@ export default function ProductCategoriesManager({ initialCategories }: Props) {
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(
     null
   );
+  const [categories, setCategories] = useState(initialCategories);
+  const [draggedCategoryId, setDraggedCategoryId] = useState<string | null>(null);
+  const [dragOverCategoryId, setDragOverCategoryId] = useState<string | null>(null);
 
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
-  const [sortOrder, setSortOrder] = useState("0");
   const [isActive, setIsActive] = useState(true);
   const [isFreshnessManaged, setIsFreshnessManaged] = useState(false);
   const [freshnessSortOrder, setFreshnessSortOrder] = useState("0");
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
+  useEffect(() => {
+    setCategories(initialCategories);
+  }, [initialCategories]);
+
   function openCreate() {
     setName("");
     setSlug("");
-    setSortOrder("0");
     setIsActive(true);
     setIsFreshnessManaged(false);
     setFreshnessSortOrder("0");
@@ -42,7 +47,6 @@ export default function ProductCategoriesManager({ initialCategories }: Props) {
   function openEdit(category: ProductCategoryRow) {
     setName(category.name);
     setSlug(category.slug);
-    setSortOrder(String(category.sortOrder));
     setIsActive(category.isActive);
     setIsFreshnessManaged(category.isFreshnessManaged);
     setFreshnessSortOrder(String(category.freshnessSortOrder));
@@ -81,7 +85,6 @@ export default function ProductCategoriesManager({ initialCategories }: Props) {
     const payload = {
       name: name.trim(),
       slug: slug.trim(),
-      sortOrder: parseInt(sortOrder) || 0,
       isActive,
       isFreshnessManaged,
       freshnessSortOrder: parseInt(freshnessSortOrder) || 0,
@@ -118,6 +121,90 @@ export default function ProductCategoriesManager({ initialCategories }: Props) {
         setMessage({ type: "error", text: "Failed to connect to server" });
       }
     });
+  }
+
+  function reorderCategoryList(
+    list: ProductCategoryRow[],
+    draggedId: string,
+    targetId: string
+  ): ProductCategoryRow[] {
+    const from = list.findIndex((cat) => cat.id === draggedId);
+    const to = list.findIndex((cat) => cat.id === targetId);
+    if (from < 0 || to < 0 || from === to) return list;
+
+    const next = [...list];
+    const [moved] = next.splice(from, 1);
+    next.splice(to, 0, moved);
+    return next;
+  }
+
+  function handleDragStart(categoryId: string) {
+    setDraggedCategoryId(categoryId);
+    setDragOverCategoryId(categoryId);
+  }
+
+  function handleDragOver(e: React.DragEvent, categoryId: string) {
+    e.preventDefault();
+    if (draggedCategoryId && draggedCategoryId !== categoryId) {
+      setDragOverCategoryId(categoryId);
+    }
+  }
+
+  function handleDragEnd() {
+    setDraggedCategoryId(null);
+    setDragOverCategoryId(null);
+  }
+
+  function submitReorderedCategories(previous: ProductCategoryRow[], reordered: ProductCategoryRow[]) {
+    startTransition(async () => {
+      try {
+        const res = await fetch("/api/admin/product-categories/reorder", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ categoryIds: reordered.map((category) => category.id) }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          setCategories(previous);
+          setMessage({ type: "error", text: data.message ?? "Failed to reorder categories" });
+          return;
+        }
+        setMessage({ type: "success", text: "Display order updated" });
+        router.refresh();
+      } catch {
+        setCategories(previous);
+        setMessage({ type: "error", text: "Failed to connect to server" });
+      }
+    });
+  }
+
+  function handleDrop(targetCategoryId: string) {
+    if (!draggedCategoryId || draggedCategoryId === targetCategoryId) {
+      handleDragEnd();
+      return;
+    }
+
+    const previous = categories;
+    const reordered = reorderCategoryList(previous, draggedCategoryId, targetCategoryId);
+    setCategories(reordered);
+    setMessage(null);
+    handleDragEnd();
+    submitReorderedCategories(previous, reordered);
+  }
+
+  function moveCategory(index: number, direction: "up" | "down") {
+    const targetIndex = direction === "up" ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= categories.length) {
+      return;
+    }
+
+    const previous = categories;
+    const reordered = [...previous];
+    const [moved] = reordered.splice(index, 1);
+    reordered.splice(targetIndex, 0, moved);
+    setCategories(reordered);
+    setMessage(null);
+    submitReorderedCategories(previous, reordered);
   }
 
   async function toggleCategoryActive(category: ProductCategoryRow) {
@@ -219,17 +306,6 @@ export default function ProductCategoriesManager({ initialCategories }: Props) {
                 {formErrors.slug && <p className={errorClass}>{formErrors.slug}</p>}
               </div>
               <div>
-                <label className={labelClass}>Sort Order</label>
-                <input
-                  type="number"
-                  value={sortOrder}
-                  onChange={(e) => setSortOrder(e.target.value)}
-                  disabled={isPending}
-                  min="0"
-                  className={inputClass}
-                />
-              </div>
-              <div>
                 <label className={labelClass}>Freshness Dashboard Order</label>
                 <input
                   type="number"
@@ -239,6 +315,9 @@ export default function ProductCategoriesManager({ initialCategories }: Props) {
                   min="0"
                   className={inputClass}
                 />
+              </div>
+              <div className="sm:col-span-2 text-xs text-gray-500">
+                Display order on customer screens is managed by dragging rows in the category list.
               </div>
               <div className="flex items-end pb-1 gap-5">
                 <label className="flex items-center gap-2 cursor-pointer">
@@ -286,9 +365,12 @@ export default function ProductCategoriesManager({ initialCategories }: Props) {
 
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-gray-50">
-          <span className="text-sm font-medium text-gray-600">
-            {initialCategories.length} categories
-          </span>
+          <div>
+            <span className="text-sm font-medium text-gray-600">{categories.length} categories</span>
+            <p className="text-xs text-gray-500 mt-0.5">
+              Drag rows to change display order (or use ↑ / ↓ buttons).
+            </p>
+          </div>
           {!mode && (
             <button
               onClick={openCreate}
@@ -299,7 +381,7 @@ export default function ProductCategoriesManager({ initialCategories }: Props) {
           )}
         </div>
 
-        {initialCategories.length === 0 ? (
+        {categories.length === 0 ? (
           <div className="p-12 text-center">
             <p className="text-gray-400 text-sm">No categories yet.</p>
             <p className="text-gray-400 text-xs mt-1">
@@ -308,8 +390,13 @@ export default function ProductCategoriesManager({ initialCategories }: Props) {
           </div>
         ) : (
           <table className="w-full text-sm">
+            <caption className="sr-only">
+              Product categories list. Drag rows or use move up and move down buttons to change
+              customer display order.
+            </caption>
             <thead>
               <tr className="border-b border-gray-100">
+                <th className="text-center px-2 py-3 font-medium text-gray-600 w-10">↕</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Name</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Slug</th>
                 <th className="text-center px-4 py-3 font-medium text-gray-600">Loyverse</th>
@@ -321,8 +408,23 @@ export default function ProductCategoriesManager({ initialCategories }: Props) {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {initialCategories.map((cat) => (
-                <tr key={cat.id} className="hover:bg-gray-50 transition-colors">
+              {categories.map((cat, index) => (
+                <tr
+                  key={cat.id}
+                  draggable={!isPending}
+                  onDragStart={() => handleDragStart(cat.id)}
+                  onDragOver={(e) => handleDragOver(e, cat.id)}
+                  onDrop={() => handleDrop(cat.id)}
+                  onDragEnd={handleDragEnd}
+                  className={`transition-colors ${
+                    dragOverCategoryId === cat.id && draggedCategoryId !== cat.id
+                      ? "bg-amber-50"
+                      : "hover:bg-gray-50"
+                  } ${isPending ? "cursor-not-allowed" : "cursor-grab active:cursor-grabbing"}`}
+                >
+                  <td className="px-2 py-3 text-center text-gray-400 select-none" aria-hidden>
+                    ⋮⋮
+                  </td>
                   <td className="px-4 py-3 font-medium text-gray-900">{cat.name}</td>
                   <td className="px-4 py-3 text-gray-500 font-mono text-xs">{cat.slug}</td>
                   <td className="px-4 py-3 text-center">
@@ -336,7 +438,7 @@ export default function ProductCategoriesManager({ initialCategories }: Props) {
                       {cat.loyverseId ? "Linked" : "Manual"}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-center text-gray-600">{cat.sortOrder}</td>
+                  <td className="px-4 py-3 text-center text-gray-600">{index}</td>
                   <td className="px-4 py-3 text-center">
                     <span
                       className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
@@ -362,6 +464,24 @@ export default function ProductCategoriesManager({ initialCategories }: Props) {
                   </td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex items-center justify-end gap-2">
+                      <button
+                        type="button"
+                        onClick={() => moveCategory(index, "up")}
+                        disabled={isPending || index === 0}
+                        aria-label={`Move ${cat.name} up`}
+                        className="text-xs px-2 py-1 rounded-md border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-40"
+                      >
+                        ↑
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => moveCategory(index, "down")}
+                        disabled={isPending || index === categories.length - 1}
+                        aria-label={`Move ${cat.name} down`}
+                        className="text-xs px-2 py-1 rounded-md border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-40"
+                      >
+                        ↓
+                      </button>
                       <button
                         onClick={() => openEdit(cat)}
                         disabled={isPending}
