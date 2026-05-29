@@ -362,6 +362,36 @@ function extractModifierGroupIds(source: Record<string, unknown>): string[] {
   return Array.from(new Set(ids));
 }
 
+function mergeModifierOptions(
+  existingOptions: LoyverseModifierOption[],
+  hydratedOptions: LoyverseModifierOption[]
+): LoyverseModifierOption[] {
+  if (existingOptions.length === 0) return hydratedOptions;
+  if (hydratedOptions.length === 0) return existingOptions;
+
+  const mergedById = new Map(existingOptions.map((option) => [option.id, option]));
+  for (const option of hydratedOptions) {
+    mergedById.set(option.id, option);
+  }
+
+  return Array.from(mergedById.values());
+}
+
+function mergeModifierGroup(
+  existingGroup: LoyverseModifierGroup | undefined,
+  hydratedGroup: LoyverseModifierGroup | undefined
+): LoyverseModifierGroup | null {
+  if (!existingGroup && !hydratedGroup) return null;
+  if (!existingGroup) return hydratedGroup ?? null;
+  if (!hydratedGroup) return existingGroup;
+
+  return {
+    ...existingGroup,
+    ...hydratedGroup,
+    options: mergeModifierOptions(existingGroup.options, hydratedGroup.options),
+  };
+}
+
 function toLoyverseItem(raw: unknown): LoyverseItem | null {
   if (!raw || typeof raw !== "object") return null;
   const row = raw as Record<string, unknown>;
@@ -396,7 +426,7 @@ function toLoyverseItem(raw: unknown): LoyverseItem | null {
   };
 }
 
-function hydrateItemsWithModifierGroups(
+export function hydrateItemsWithModifierGroups(
   items: LoyverseItem[],
   modifierGroups: LoyverseModifierGroup[]
 ): LoyverseItem[] {
@@ -405,18 +435,24 @@ function hydrateItemsWithModifierGroups(
   const groupsById = new Map(modifierGroups.map((group) => [group.id, group]));
 
   return items.map((item) => {
-    if (item.modifierGroups.length > 0 || item.modifierGroupIds.length === 0) {
+    const groupIds = Array.from(
+      new Set([...item.modifierGroupIds, ...item.modifierGroups.map((group) => group.id)])
+    );
+
+    if (groupIds.length === 0) {
       return item;
     }
 
-    const resolvedGroups = item.modifierGroupIds
-      .map((groupId) => groupsById.get(groupId))
-      .filter((group): group is LoyverseModifierGroup => group !== undefined);
+    const existingGroupsById = new Map(item.modifierGroups.map((group) => [group.id, group]));
+    const resolvedGroups = groupIds
+      .map((groupId) => mergeModifierGroup(existingGroupsById.get(groupId), groupsById.get(groupId)))
+      .filter((group): group is LoyverseModifierGroup => group !== null);
 
     if (resolvedGroups.length === 0) return item;
 
     return {
       ...item,
+      modifierGroupIds: groupIds,
       modifierGroups: resolvedGroups,
     };
   });
