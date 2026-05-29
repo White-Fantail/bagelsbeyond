@@ -1,30 +1,74 @@
-import { requireAdmin } from "@/lib/auth/dal";
-import Link from "next/link";
+export const dynamic = "force-dynamic";
 
-// Simplified admin orders page - basic placeholder that will build successfully
+import { requireAdmin } from "@/lib/auth/dal";
+import { prisma } from "@/lib/db";
+import Link from "next/link";
+import OrdersTableClient from "./OrdersTableClient";
+
+const currencyFormatter = new Intl.NumberFormat("en-NZ", {
+  style: "currency",
+  currency: "NZD",
+});
+
 export default async function OrdersPage() {
   await requireAdmin();
-  
+
+  const orders = await prisma.customerOrder.findMany({
+    orderBy: {
+      createdAt: "desc",
+    },
+    select: {
+      id: true,
+      orderNumber: true,
+      customerName: true,
+      customerPhone: true,
+      createdAt: true,
+      total: true,
+      status: true,
+      loyverseReceiptId: true,
+      loyverseSyncError: true,
+    },
+  });
+
   return (
-    <div className="p-6">
-      <div className="mb-6">
+    <div className="space-y-6">
+      <div>
+        <div className="mb-1 flex items-center gap-2 text-sm text-gray-500">
+          <Link href="/dashboard" className="transition-colors hover:text-amber-600">
+            Dashboard
+          </Link>
+          <span>/</span>
+          <span className="font-medium text-gray-700">Orders</span>
+        </div>
         <h1 className="text-2xl font-bold text-gray-900">Customer Orders</h1>
-        <p className="text-gray-600 mt-1">
-          Manage online orders from customers
-        </p>
+        <p className="mt-1 text-sm text-gray-500">Latest orders first, with status updates and Loyverse retry sync actions.</p>
       </div>
-      
-      <div className="bg-white rounded-lg border p-8 text-center">
-        <p className="text-gray-600 mb-4">
-          Orders list will be displayed here
-        </p>
-        <Link
-          href="/order"
-          className="inline-block px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
-        >
-          View Public Ordering Page
-        </Link>
-      </div>
+
+      {orders.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-gray-300 bg-white p-10 text-center">
+          <p className="text-sm text-gray-600">No customer orders yet.</p>
+          <Link
+            href="/order"
+            className="mt-3 inline-block rounded-md bg-amber-500 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-600"
+          >
+            Open Ordering Page
+          </Link>
+        </div>
+      ) : (
+        <OrdersTableClient
+          orders={orders.map((order) => ({
+            id: order.id,
+            orderNumber: order.orderNumber,
+            customerName: order.customerName,
+            customerPhone: order.customerPhone,
+            createdAtLabel: order.createdAt.toLocaleString("en-NZ"),
+            totalLabel: currencyFormatter.format(Number(order.total)),
+            status: order.status,
+            loyverseReceiptId: order.loyverseReceiptId,
+            loyverseSyncError: order.loyverseSyncError,
+          }))}
+        />
+      )}
     </div>
   );
 }
