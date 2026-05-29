@@ -294,7 +294,7 @@ async function loyverseGetCollection<T>(
     const res = await fetch(url.toString(), {
       method: "GET",
       headers: {
-        Authorization: `******
+        Authorization: ["Bearer", accessToken].join(" "),
         Accept: "application/json",
       },
       cache: "no-store",
