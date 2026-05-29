@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { apiRequireAdmin, isNextResponse } from "@/lib/auth/dal";
-import { createLoyversePickupOrder } from "@/lib/services/loyverseService";
+import {
+  createLoyversePickupOrder,
+  getOrderSyncUpdateFromLoyverseResult,
+} from "@/lib/services/loyverseService";
 
 export async function POST(
   _request: NextRequest,
@@ -53,26 +56,28 @@ export async function POST(
       total: Number(order.total),
     });
 
-    if (loyverseResult.success && loyverseResult.receiptId) {
-      await prisma.customerOrder.update({
-        where: { id: order.id },
-        data: {
-          status: "SENT_TO_LOYVERSE",
-          loyverseReceiptId: loyverseResult.receiptId,
-          loyverseSyncError: null,
-        },
+    const updateData = getOrderSyncUpdateFromLoyverseResult(loyverseResult);
+
+    await prisma.customerOrder.update({
+      where: { id: order.id },
+      data: updateData,
+    });
+
+    if (loyverseResult.success) {
+      return NextResponse.json({
+        success: true,
+        receiptId: loyverseResult.receiptId,
+        status: updateData.status,
+        loyverseSyncError: null,
       });
-      return NextResponse.json({ success: true, receiptId: loyverseResult.receiptId });
-    } else {
-      await prisma.customerOrder.update({
-        where: { id: order.id },
-        data: {
-          status: "FAILED_TO_SEND",
-          loyverseSyncError: loyverseResult.error,
-        },
-      });
-      return NextResponse.json({ success: false, error: loyverseResult.error });
     }
+
+    return NextResponse.json({
+      success: false,
+      error: loyverseResult.error,
+      status: updateData.status,
+      loyverseSyncError: loyverseResult.error,
+    });
   } catch (error) {
     console.error("Failed to retry Loyverse sync:", error);
     return NextResponse.json(

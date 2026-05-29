@@ -1,35 +1,17 @@
 import "server-only";
 
-/**
- * Loyverse Integration Service
- *
- * IMPORTANT: Loyverse's public API does not support creating open/unpaid receipts directly.
- * The available options are:
- *
- * Option A (Current Implementation): Skip Loyverse receipt creation entirely.
- *   Orders are stored locally in CustomerOrder with status PENDING.
- *   Staff manually enter the order in Loyverse POS when the customer picks up.
- *   This is the safest approach for now.
- *
- * Option B (Future): Use Loyverse Receipts API to create a completed receipt
- *   when staff confirm payment at POS pickup. Requires LOYVERSE_API_TOKEN.
- *   Endpoint: POST https://api.loyverse.com/v1.0/receipts
- *
- * Option C (Future): Integrate Loyverse Open Ticket API if available on the plan.
- *
- * TODO: When Loyverse API integration is ready, implement createPickupReceipt()
- * using the Loyverse Receipts API with the store's access token.
- *
- * Required env vars (when implementing B/C):
- *   LOYVERSE_API_TOKEN=your_token_here
- *   LOYVERSE_STORE_ID=your_store_id_here
- */
+const LOYVERSE_API_BASE = "https://api.loyverse.com/v1.0";
+const DEFAULT_CURRENCY_CODE = "NZD";
 
-export type LoyverseOrderResult = {
-  success: boolean;
-  receiptId?: string;
-  error?: string;
-};
+export type LoyverseOrderResult =
+  | {
+      success: true;
+      receiptId: string;
+    }
+  | {
+      success: false;
+      error: string;
+    };
 
 export type CartItemForLoyverse = {
   itemId: string | null;
@@ -55,68 +37,190 @@ export type CreateLoyversePickupOrderInput = {
   total: number;
 };
 
-/**
- * Maps cart items to Loyverse receipt line items format.
- * Currently returns a stub payload for future use.
- */
-export function mapCartToLoyversePayload(input: CreateLoyversePickupOrderInput) {
-  // TODO: Map to actual Loyverse Receipts API format when implementing integration
+type LoyverseReceiptPayload = {
+  store_id: string;
+  receipt_number: string;
+  line_items: Array<{
+    item_id?: string;
+    item_name: string;
+    quantity: number;
+    price: number;
+    line_modifiers?: Array<{
+      name: string;
+      price: number;
+    }>;
+  }>;
+  total_money: {
+    amount: number;
+    currency_code: string;
+  };
+  note?: string;
+};
+
+function toMoneyAmount(value: number): number {
+  return Math.round((Number.isFinite(value) ? value : 0) * 100);
+}
+
+function normalizeErrorCode(code: string): string {
+  return code.replace(/[^A-Z0-9_]/g, "_");
+}
+
+function buildFailure(code: string, detail: string): LoyverseOrderResult {
+  const normalizedCode = normalizeErrorCode(code.toUpperCase());
   return {
-    order_number: input.orderNumber,
-    customer_name: input.customerName,
-    items: input.items.map((item) => ({
-      item_name: item.itemNameSnapshot,
-      quantity: item.quantity,
-      price: item.unitPrice,
-      modifiers: item.modifiers,
-    })),
+    success: false,
+    error: `${normalizedCode}: ${detail}`,
+  };
+}
+
+function buildOrderNote(input: CreateLoyversePickupOrderInput): string {
+  const noteParts = [
+    `Customer: ${input.customerName} (${input.customerPhone})`,
+    `Pickup: ${input.pickupType}${input.pickupTime ? ` @ ${input.pickupTime.toISOString()}` : ""}`,
+    input.notes?.trim() ? `Note: ${input.notes.trim()}` : "",
+  ].filter(Boolean);
+
+  return noteParts.join(" | ");
+}
+
+function mapLineItems(items: CartItemForLoyverse[]): LoyverseReceiptPayload["line_items"] {
+  return items.map((item) => ({
+    item_id: item.itemId ?? undefined,
+    item_name: item.itemNameSnapshot,
+    quantity: item.quantity,
+    price: toMoneyAmount(item.unitPrice),
+    line_modifiers:
+      item.modifiers.length > 0
+        ? item.modifiers.map((modifier) => ({
+            name: `${modifier.modifierGroupName}: ${modifier.modifierOptionName}`,
+            price: toMoneyAmount(modifier.priceDelta),
+          }))
+        : undefined,
+  }));
+}
+
+export function mapCartToLoyversePayload(
+  input: CreateLoyversePickupOrderInput,
+  storeId: string
+): LoyverseReceiptPayload {
+  return {
+    store_id: storeId,
+    receipt_number: input.orderNumber,
+    line_items: mapLineItems(input.items),
     total_money: {
-      amount: Math.round(input.total * 100),
-      currency_code: "NZD",
+      amount: toMoneyAmount(input.total),
+      currency_code: DEFAULT_CURRENCY_CODE,
     },
-    note: input.notes ?? undefined,
+    note: buildOrderNote(input),
+  };
+}
+
+async function parseLoyverseErrorResponse(response: Response): Promise<string> {
+  const contentType = response.headers.get("content-type") ?? "";
+
+  if (contentType.includes("application/json")) {
+    try {
+      const payload = (await response.json()) as Record<string, unknown>;
+      const reasonCandidate = payload.message ?? payload.error ?? payload.detail;
+      if (typeof reasonCandidate === "string" && reasonCandidate.trim()) {
+        return reasonCandidate.trim();
+      }
+      return JSON.stringify(payload);
+    } catch {
+      return "Invalid JSON error response";
+    }
+  }
+
+  const text = await response.text();
+  return text.trim() || "No error body";
+}
+
+function extractReceiptId(payload: unknown): string | null {
+  if (!payload || typeof payload !== "object") return null;
+
+  const row = payload as Record<string, unknown>;
+  const candidate = row.id ?? row.receipt_id ?? row.receipt_number;
+
+  if (typeof candidate === "string" && candidate.trim().length > 0) {
+    return candidate.trim();
+  }
+
+  return null;
+}
+
+export function getOrderSyncUpdateFromLoyverseResult(result: LoyverseOrderResult) {
+  if (result.success) {
+    return {
+      status: "SENT_TO_LOYVERSE" as const,
+      loyverseReceiptId: result.receiptId,
+      loyverseSyncError: null,
+    };
+  }
+
+  return {
+    status: "FAILED_TO_SEND" as const,
+    loyverseReceiptId: null,
+    loyverseSyncError: result.error,
   };
 }
 
 /**
- * Attempts to create a pickup order in Loyverse.
- *
- * Currently: Returns a stub success without calling Loyverse API.
- * See file-level comment for future implementation options.
+ * Sync policy: transmit to Loyverse immediately after customer order creation.
+ * Admin retry endpoint is used for manual resend of failed orders.
  */
 export async function createLoyversePickupOrder(
   input: CreateLoyversePickupOrderInput
 ): Promise<LoyverseOrderResult> {
-  const accessToken = process.env.LOYVERSE_API_TOKEN;
-  
+  const accessToken = process.env.LOYVERSE_API_TOKEN?.trim();
+  const storeId = process.env.LOYVERSE_STORE_ID?.trim();
+
   if (!accessToken) {
-    // No token configured — skip Loyverse sync, order stays PENDING
-    // Staff will manually handle in POS
-    return {
-      success: false,
-      error: "LOYVERSE_API_TOKEN not configured. Order saved locally. Staff to process manually.",
-    };
+    return buildFailure("CONFIG_ERROR", "LOYVERSE_API_TOKEN is not configured");
   }
 
-  // TODO: Implement actual Loyverse API call when token is available
-  // const payload = mapCartToLoyversePayload(input);
-  // const response = await fetch("https://api.loyverse.com/v1.0/receipts", {
-  //   method: "POST",
-  //   headers: {
-  //     "Authorization": `******  // accessToken from LOYVERSE_API_TOKEN env var
-  //     "Content-Type": "application/json",
-  //   },
-  //   body: JSON.stringify(payload),
-  // });
-  // if (!response.ok) {
-  //   const err = await response.text();
-  //   return { success: false, error: err };
-  // }
-  // const data = await response.json();
-  // return { success: true, receiptId: data.id };
+  if (!storeId) {
+    return buildFailure("CONFIG_ERROR", "LOYVERSE_STORE_ID is not configured");
+  }
 
-  return {
-    success: false,
-    error: "Loyverse integration not yet implemented. Order saved locally.",
-  };
+  const payload = mapCartToLoyversePayload(input, storeId);
+
+  try {
+    const response = await fetch(`${LOYVERSE_API_BASE}/receipts`, {
+      method: "POST",
+      headers: {
+        Authorization: ["Bearer", accessToken].join(" "),
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify(payload),
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      const parsedError = await parseLoyverseErrorResponse(response);
+      return buildFailure("HTTP_ERROR", `status ${response.status} - ${parsedError}`);
+    }
+
+    let responsePayload: unknown;
+    try {
+      responsePayload = await response.json();
+    } catch {
+      return buildFailure("RESPONSE_PARSE_ERROR", "Loyverse success response is not valid JSON");
+    }
+
+    const receiptId = extractReceiptId(responsePayload);
+    if (!receiptId) {
+      return buildFailure("RESPONSE_PARSE_ERROR", "Receipt ID missing in Loyverse response");
+    }
+
+    return {
+      success: true,
+      receiptId,
+    };
+  } catch (error) {
+    if (error instanceof Error) {
+      return buildFailure("NETWORK_ERROR", error.message);
+    }
+    return buildFailure("NETWORK_ERROR", "Unknown network error");
+  }
 }

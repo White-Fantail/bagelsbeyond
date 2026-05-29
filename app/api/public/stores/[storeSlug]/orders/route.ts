@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { createOrderSchema } from "@/lib/validations";
-import { createLoyversePickupOrder } from "@/lib/services/loyverseService";
+import {
+  createLoyversePickupOrder,
+  getOrderSyncUpdateFromLoyverseResult,
+} from "@/lib/services/loyverseService";
 import { Decimal } from "decimal.js";
 
 /**
@@ -254,23 +257,10 @@ export async function POST(
         total: Number(order.total),
       });
 
-      if (loyverseResult.success && loyverseResult.receiptId) {
-        await prisma.customerOrder.update({
-          where: { id: order.id },
-          data: {
-            status: "SENT_TO_LOYVERSE",
-            loyverseReceiptId: loyverseResult.receiptId,
-          },
-        });
-      } else if (loyverseResult.error) {
-        await prisma.customerOrder.update({
-          where: { id: order.id },
-          data: {
-            status: "FAILED_TO_SEND",
-            loyverseSyncError: loyverseResult.error,
-          },
-        });
-      }
+      await prisma.customerOrder.update({
+        where: { id: order.id },
+        data: getOrderSyncUpdateFromLoyverseResult(loyverseResult),
+      });
     } catch (loyverseError) {
       console.error("Loyverse sync error:", loyverseError);
       // Don't fail the order if Loyverse sync fails
@@ -278,10 +268,11 @@ export async function POST(
         where: { id: order.id },
         data: {
           status: "FAILED_TO_SEND",
+          loyverseReceiptId: null,
           loyverseSyncError:
             loyverseError instanceof Error
-              ? loyverseError.message
-              : "Unknown error",
+              ? `UNEXPECTED_SYNC_ERROR: ${loyverseError.message}`
+              : "UNEXPECTED_SYNC_ERROR: Unknown error",
         },
       });
     }

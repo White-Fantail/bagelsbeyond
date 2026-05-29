@@ -1343,25 +1343,26 @@ Recursive explosion traverses recipe items, expands component products into thei
 
 ### Environment Variables
 ```env
-# Loyverse Integration (optional — orders save locally if not set)
+# Required for Loyverse order transmission
 LOYVERSE_API_TOKEN=your_loyverse_personal_token
 LOYVERSE_STORE_ID=your_loyverse_store_id
 ```
 
-### Loyverse API Strategy
-**Current Status**: Orders are saved locally with status PENDING. Loyverse API integration is stubbed but not active.
+### Loyverse Order Sync Policy
+- **Single trigger policy**: Loyverse transmission is attempted immediately after customer order creation (`POST /api/public/stores/[storeSlug]/orders`).
+- **Manual resend**: Admin can retry failed sync from `/orders` using `POST /api/admin/orders/[orderId]/retry-sync`.
+- **Non-blocking order creation**: Customer order save never fails because of Loyverse API errors.
 
-**Limitation**: Loyverse's API supports creating receipts (completed sales) but not open/unpaid tickets via the public API. Creating a receipt requires payment information.
+### Loyverse Sync Result Handling
+- **Success**: `CustomerOrder.status = SENT_TO_LOYVERSE`, `loyverseReceiptId` saved, `loyverseSyncError` cleared.
+- **Failure**: `CustomerOrder.status = FAILED_TO_SEND`, `loyverseSyncError` saved with standardized reason (`CONFIG_ERROR`, `HTTP_ERROR`, `RESPONSE_PARSE_ERROR`, `NETWORK_ERROR`), `loyverseReceiptId` cleared.
+- **Status updates** (`PATCH /api/admin/orders/[orderId]/status`) are operational order flow changes only, and do not trigger Loyverse transmission.
 
-**Current approach (Option A)**: 
-- Customer places order → saved in local DB as PENDING
-- Staff see order in admin panel `/orders`  
-- Staff manually enter order in Loyverse POS when customer picks up and pays
-
-**Future option (Option B)**:
-- Set `LOYVERSE_API_TOKEN` env var
-- Implement `createPickupReceipt()` in `lib/services/loyverseService.ts`
-- When customer pays at pickup, create receipt via `POST https://api.loyverse.com/v1.0/receipts`
+### Admin Verification Path
+- Open `/orders` (admin) to review latest orders.
+- Check per-order badges for order status and Loyverse sync status.
+- Review receipt ID on synced orders or error summary on failed sync orders.
+- Use **Retry Sync** for failed orders after resolving config/API issues.
 
 ### Testing Locally
 1. Create a Store record in DB: `INSERT INTO stores (id, slug, name, ...) VALUES (..., 'bagels-beyond', 'Bagel''s Beyond', ...)`
