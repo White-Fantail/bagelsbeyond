@@ -95,7 +95,7 @@ export default function NewPredictionPage() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <div className="w-full space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Create New Prediction</h1>
         <p className="text-gray-500 mt-1">External factors will be automatically collected when you enter a date. You can also enter them manually if needed.</p>
