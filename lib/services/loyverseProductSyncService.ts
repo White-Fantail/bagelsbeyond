@@ -452,20 +452,27 @@ async function fetchLoyverseModifierGroups(accessToken: string): Promise<Loyvers
       if (!fallbackGroup) return group;
 
       const hasPrimaryOptions = group.options.length > 0;
-      const primaryOptionsById = hasPrimaryOptions
-        ? new Set(group.options.map((existing) => existing.id))
-        : null;
-      const missingFallbackOptions = hasPrimaryOptions
-        ? fallbackGroup.options.filter((option) => !primaryOptionsById?.has(option.id))
-        : [];
-      const mergedOptions =
-        hasPrimaryOptions ? [...group.options, ...missingFallbackOptions] : fallbackGroup.options;
+      if (!hasPrimaryOptions) {
+        return {
+          ...group,
+          isRequired: fallbackGroup.isRequired,
+          minSelections: fallbackGroup.minSelections,
+          maxSelections: fallbackGroup.maxSelections,
+          options: fallbackGroup.options,
+        };
+      }
+
+      const primaryOptionsById = new Set(group.options.map((existing) => existing.id));
+      const missingFallbackOptions = fallbackGroup.options.filter(
+        (option) => !primaryOptionsById.has(option.id)
+      );
+      const mergedOptions = [...group.options, ...missingFallbackOptions];
 
       return {
         ...group,
-        isRequired: hasPrimaryOptions ? group.isRequired : fallbackGroup.isRequired,
-        minSelections: hasPrimaryOptions ? group.minSelections : fallbackGroup.minSelections,
-        maxSelections: hasPrimaryOptions ? group.maxSelections : fallbackGroup.maxSelections,
+        isRequired: group.isRequired,
+        minSelections: group.minSelections,
+        maxSelections: group.maxSelections,
         options: mergedOptions,
       };
     });
