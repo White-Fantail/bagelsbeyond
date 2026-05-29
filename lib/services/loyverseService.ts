@@ -299,6 +299,7 @@ async function fetchDefaultPaymentType(accessToken: string): Promise<LoyversePay
 
   inflightPaymentTypePromise = (async () => {
     let paginationCursor: string | null = null;
+    const allPaymentTypes: LoyversePaymentType[] = [];
 
     do {
       const url = new URL(`${LOYVERSE_API_BASE}/payment_types`);
@@ -334,21 +335,26 @@ async function fetchDefaultPaymentType(accessToken: string): Promise<LoyversePay
       for (const paymentTypeRaw of paymentTypesRaw) {
         const paymentType = extractPaymentType(paymentTypeRaw);
         if (!paymentType) continue;
-        paymentTypeCache = {
-          value: paymentType,
-          expiresAt: Date.now() + LOYVERSE_PAYMENT_TYPE_CACHE_TTL_MS,
-        };
-        return paymentType;
+        allPaymentTypes.push(paymentType);
       }
 
       paginationCursor = normalizeString(payload.cursor) || null;
     } while (paginationCursor);
 
+    const cashPaymentType = allPaymentTypes.find(
+      (pt) => pt.name.toLowerCase() === "cash",
+    );
+    const selected: LoyversePaymentType | null =
+      cashPaymentType ?? allPaymentTypes[0] ?? null;
+    const ttl = selected
+      ? LOYVERSE_PAYMENT_TYPE_CACHE_TTL_MS
+      : LOYVERSE_EMPTY_PAYMENT_TYPE_CACHE_TTL_MS;
+
     paymentTypeCache = {
-      value: null,
-      expiresAt: Date.now() + LOYVERSE_EMPTY_PAYMENT_TYPE_CACHE_TTL_MS,
+      value: selected,
+      expiresAt: Date.now() + ttl,
     };
-    return null;
+    return selected;
   })();
 
   try {
