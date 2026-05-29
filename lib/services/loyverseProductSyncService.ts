@@ -298,6 +298,8 @@ function extractModifierGroupIds(source: Record<string, unknown>): string[] {
   const values: unknown[] = [];
 
   const arrayCandidates = [
+    source.modifier_ids,
+    source.modifiers_ids,
     source.modifier_list_ids,
     source.modifier_lists_ids,
     source.modifier_group_ids,
