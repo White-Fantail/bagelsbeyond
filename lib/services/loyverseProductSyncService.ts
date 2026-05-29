@@ -435,27 +435,27 @@ export function hydrateItemsWithModifierGroups(
   const groupsById = new Map(modifierGroups.map((group) => [group.id, group]));
 
   return items.map((item) => {
-   const groupIds = Array.from(
-     new Set([...item.modifierGroupIds, ...item.modifierGroups.map((group) => group.id)])
-   );
+    const groupIds = Array.from(
+      new Set([...item.modifierGroupIds, ...item.modifierGroups.map((group) => group.id)])
+    );
 
-   if (groupIds.length === 0) {
-     return item;
-   }
+    if (groupIds.length === 0) {
+      return item;
+    }
 
-   const existingGroupsById = new Map(item.modifierGroups.map((group) => [group.id, group]));
-   const resolvedGroups = groupIds
-     .map((groupId) => mergeModifierGroup(existingGroupsById.get(groupId), groupsById.get(groupId)))
-     .filter((group): group is LoyverseModifierGroup => group !== null);
+    const existingGroupsById = new Map(item.modifierGroups.map((group) => [group.id, group]));
+    const resolvedGroups = groupIds
+      .map((groupId) => mergeModifierGroup(existingGroupsById.get(groupId), groupsById.get(groupId)))
+      .filter((group): group is LoyverseModifierGroup => group !== null);
 
-   if (resolvedGroups.length === 0) return item;
+    if (resolvedGroups.length === 0) return item;
 
-   return {
-     ...item,
-     modifierGroupIds: groupIds,
-     modifierGroups: resolvedGroups,
-   };
- });
+    return {
+      ...item,
+      modifierGroupIds: groupIds,
+      modifierGroups: resolvedGroups,
+    };
+  });
 }
 
 async function loyverseGetCollection<T>(
