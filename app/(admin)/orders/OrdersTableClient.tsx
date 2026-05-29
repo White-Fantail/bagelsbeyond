@@ -242,6 +242,7 @@ export default function OrdersTableClient({ orders }: { orders: OrderRow[] }) {
                     <div className="flex flex-col gap-2">
                       <div className="flex items-center gap-2">
                         <select
+                          aria-label={`Order status for ${order.orderNumber}`}
                           value={statusDraft[order.id] ?? toEditableStatus(order.status)}
                           onChange={(event) =>
                             setStatusDraft((prev) => ({
@@ -260,6 +261,7 @@ export default function OrdersTableClient({ orders }: { orders: OrderRow[] }) {
                         </select>
                         <button
                           type="button"
+                          aria-label={`Update status for order ${order.orderNumber}`}
                           onClick={() => handleStatusUpdate(order.id)}
                           disabled={isPending || isBusy}
                           className="rounded-md border border-gray-300 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
@@ -270,6 +272,7 @@ export default function OrdersTableClient({ orders }: { orders: OrderRow[] }) {
 
                       <button
                         type="button"
+                        aria-label={`Retry Loyverse sync for order ${order.orderNumber}`}
                         onClick={() => handleRetrySync(order.id)}
                         disabled={isPending || isBusy}
                         className="rounded-md bg-amber-500 px-2 py-1 text-xs font-semibold text-white hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-60"

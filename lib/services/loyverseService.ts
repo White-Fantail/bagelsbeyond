@@ -76,7 +76,7 @@ function buildFailure(code: string, detail: string): LoyverseOrderResult {
 function buildOrderNote(input: CreateLoyversePickupOrderInput): string {
   const noteParts = [
     `Customer: ${input.customerName} (${input.customerPhone})`,
-    `Pickup: ${input.pickupType}${input.pickupTime ? ` @ ${input.pickupTime.toISOString()}` : ""}`,
+    `Pickup: ${input.pickupType}${input.pickupTime ? ` @ ${input.pickupTime.toLocaleString("en-NZ", { timeZone: "Pacific/Auckland" })}` : ""}`,
     input.notes?.trim() ? `Note: ${input.notes.trim()}` : "",
   ].filter(Boolean);
 
