@@ -341,11 +341,11 @@ async function fetchDefaultPaymentType(accessToken: string): Promise<LoyversePay
       paginationCursor = normalizeString(payload.cursor) || null;
     } while (paginationCursor);
 
-    const cashPaymentType = allPaymentTypes.find(
-      (pt) => pt.name.toLowerCase() === "cash",
+    const onlinePaymentType = allPaymentTypes.find(
+      (pt) => pt.name.toLowerCase() === "online",
     );
     const selected: LoyversePaymentType | null =
-      cashPaymentType ?? allPaymentTypes[0] ?? null;
+      onlinePaymentType ?? allPaymentTypes[0] ?? null;
     const ttl = selected
       ? LOYVERSE_PAYMENT_TYPE_CACHE_TTL_MS
       : LOYVERSE_EMPTY_PAYMENT_TYPE_CACHE_TTL_MS;
