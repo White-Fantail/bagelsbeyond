@@ -59,12 +59,12 @@ export default function ProductCard({
             <img
               src={product.imageUrl}
               alt={product.name}
-              className="w-16 h-16 object-cover rounded-lg"
+              className="w-24 h-24 object-cover rounded-lg"
             />
           ) : (
-            <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center">
+            <div className="w-24 h-24 bg-gray-200 rounded-lg flex items-center justify-center">
               <svg
-                className="w-8 h-8 text-gray-400"
+                className="w-10 h-10 text-gray-400"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
