@@ -79,11 +79,15 @@ export async function listProductCategories(): Promise<ProductCategoryRow[]> {
 export async function createProductCategory(
   input: CreateProductCategoryInput
 ): Promise<ProductCategoryRow> {
+  const sortOrder =
+    input.sortOrder ??
+    (((await prisma.productCategory.aggregate({ _max: { sortOrder: true } }))._max.sortOrder ?? -1) + 1);
+
   const row = await prisma.productCategory.create({
     data: {
       name: input.name,
       slug: input.slug,
-      sortOrder: input.sortOrder ?? 0,
+      sortOrder,
       isActive: input.isActive ?? true,
       isFreshnessManaged: input.isFreshnessManaged ?? false,
       freshnessSortOrder: input.freshnessSortOrder ?? 0,
@@ -109,6 +113,17 @@ export async function reorderFreshnessCategories(orderedCategoryIds: string[]): 
       prisma.productCategory.update({
         where: { id },
         data: { freshnessSortOrder: index },
+      })
+    )
+  );
+}
+
+export async function reorderProductCategories(orderedCategoryIds: string[]): Promise<void> {
+  await prisma.$transaction(
+    orderedCategoryIds.map((id, index) =>
+      prisma.productCategory.update({
+        where: { id },
+        data: { sortOrder: index },
       })
     )
   );

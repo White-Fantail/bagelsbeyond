@@ -154,7 +154,7 @@ export const productCategorySchema = z.object({
     .string()
     .min(1, "Slug is required")
     .regex(/^[a-z0-9-]+$/, "Slug must contain only lowercase letters, numbers, and hyphens"),
-  sortOrder: z.coerce.number().int().min(0).default(0),
+  sortOrder: z.coerce.number().int().min(0).optional(),
   isActive: z.boolean().default(true),
   isFreshnessManaged: z.boolean().default(false),
   freshnessSortOrder: z.coerce.number().int().min(0).default(0),
