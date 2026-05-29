@@ -312,6 +312,7 @@ export default function ProductCategoriesManager({ initialCategories }: Props) {
               <tr className="border-b border-gray-100">
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Name</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Slug</th>
+                <th className="text-center px-4 py-3 font-medium text-gray-600">Loyverse</th>
                 <th className="text-center px-4 py-3 font-medium text-gray-600">Order</th>
                 <th className="text-center px-4 py-3 font-medium text-gray-600">Freshness</th>
                 <th className="text-center px-4 py-3 font-medium text-gray-600">Freshness Order</th>
@@ -324,6 +325,17 @@ export default function ProductCategoriesManager({ initialCategories }: Props) {
                 <tr key={cat.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-4 py-3 font-medium text-gray-900">{cat.name}</td>
                   <td className="px-4 py-3 text-gray-500 font-mono text-xs">{cat.slug}</td>
+                  <td className="px-4 py-3 text-center">
+                    <span
+                      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                        cat.loyverseId
+                          ? "bg-purple-100 text-purple-700"
+                          : "bg-gray-100 text-gray-500"
+                      }`}
+                    >
+                      {cat.loyverseId ? "Linked" : "Manual"}
+                    </span>
+                  </td>
                   <td className="px-4 py-3 text-center text-gray-600">{cat.sortOrder}</td>
                   <td className="px-4 py-3 text-center">
                     <span

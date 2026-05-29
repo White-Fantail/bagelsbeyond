@@ -135,6 +135,12 @@ export default function ProductTable({ products, recipeSummaries, pricingSummari
                         >
                           Recipe
                         </Link>
+                        <Link
+                          href={`/products/${product.id}/modifiers`}
+                          className="text-xs px-3 py-1.5 rounded-md border border-purple-300 text-purple-700 hover:bg-purple-50 transition-colors"
+                        >
+                          Modifiers
+                        </Link>
                       </div>
                     </td>
                   </tr>
@@ -215,6 +221,12 @@ export default function ProductTable({ products, recipeSummaries, pricingSummari
                   className="text-xs px-3 py-1.5 rounded-md border border-amber-300 text-amber-700 hover:bg-amber-50"
                 >
                   Manage Recipe
+                </Link>
+                <Link
+                  href={`/products/${product.id}/modifiers`}
+                  className="text-xs px-3 py-1.5 rounded-md border border-purple-300 text-purple-700 hover:bg-purple-50"
+                >
+                  Modifiers
                 </Link>
               </div>
             </div>

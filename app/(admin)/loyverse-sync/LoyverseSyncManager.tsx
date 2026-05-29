@@ -14,11 +14,56 @@ type PreviewItem = {
   candidateProducts: Array<{ id: string; name: string; sku: string | null; isActive: boolean }>;
 };
 
+type CategoryPreviewStatus =
+  | "linked_match"
+  | "linked_changed"
+  | "name_match"
+  | "new"
+  | "local_only";
+
+type CategoryPreviewItem = {
+  loyverseId: string | null;
+  loyverseName: string | null;
+  localId: string | null;
+  localName: string | null;
+  status: CategoryPreviewStatus;
+};
+
+type ModifierOptionPreviewStatus = "unchanged" | "changed" | "new" | "removed";
+type ModifierGroupPreviewStatus = "unchanged" | "changed" | "new" | "removed";
+
+type ModifierOptionPreview = {
+  loyverseId: string | null;
+  localId: string | null;
+  name: string;
+  newName: string | null;
+  priceDelta: number;
+  newPriceDelta: number | null;
+  status: ModifierOptionPreviewStatus;
+};
+
+type ModifierGroupPreview = {
+  loyverseId: string | null;
+  localId: string | null;
+  name: string;
+  newName: string | null;
+  status: ModifierGroupPreviewStatus;
+  options: ModifierOptionPreview[];
+};
+
+type ProductModifierPreview = {
+  productId: string;
+  productName: string;
+  groups: ModifierGroupPreview[];
+};
+
 type PreviewResponse = {
   items: PreviewItem[];
   matchedCount: number;
   unmatchedCount: number;
   total: number;
+  categories: CategoryPreviewItem[];
+  modifiers: ProductModifierPreview[];
 };
 
 type SyncLogRow = {
@@ -46,6 +91,47 @@ function statusClass(status: string) {
   if (status === "PARTIAL") return "bg-amber-100 text-amber-700";
   if (status === "FAILED") return "bg-red-100 text-red-700";
   return "bg-blue-100 text-blue-700";
+}
+
+function categoryStatusBadge(status: CategoryPreviewStatus) {
+  switch (status) {
+    case "linked_match":
+      return <span className="px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">연결됨 (변경 없음)</span>;
+    case "linked_changed":
+      return <span className="px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-700">이름 변경 예정</span>;
+    case "name_match":
+      return <span className="px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-700">이름 매칭 → 링크</span>;
+    case "new":
+      return <span className="px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700">신규 생성</span>;
+    case "local_only":
+      return <span className="px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-700">삭제됨 → 비활성화</span>;
+  }
+}
+
+function modifierGroupStatusBadge(status: ModifierGroupPreviewStatus) {
+  switch (status) {
+    case "unchanged":
+      return <span className="px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">변경 없음</span>;
+    case "changed":
+      return <span className="px-1.5 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-700">변경 예정</span>;
+    case "new":
+      return <span className="px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700">신규</span>;
+    case "removed":
+      return <span className="px-1.5 py-0.5 rounded text-xs font-medium bg-red-100 text-red-700">비활성화</span>;
+  }
+}
+
+function modifierOptionStatusBadge(status: ModifierOptionPreviewStatus) {
+  switch (status) {
+    case "unchanged":
+      return <span className="px-1.5 py-0.5 rounded text-xs font-medium bg-green-50 text-green-600">변경 없음</span>;
+    case "changed":
+      return <span className="px-1.5 py-0.5 rounded text-xs font-medium bg-yellow-50 text-yellow-600">변경</span>;
+    case "new":
+      return <span className="px-1.5 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-600">신규</span>;
+    case "removed":
+      return <span className="px-1.5 py-0.5 rounded text-xs font-medium bg-red-50 text-red-600">비활성화</span>;
+  }
 }
 
 export default function LoyverseSyncManager({ initialLogs }: { initialLogs: SyncLogRow[] }) {
@@ -268,6 +354,126 @@ export default function LoyverseSyncManager({ initialLogs }: { initialLogs: Sync
               </button>
             </div>
           </>
+        )}
+      </div>
+
+      {/* ── Categories Preview ── */}
+      <div className="bg-white border border-gray-200 rounded-xl p-4 space-y-3">
+        <h2 className="text-base font-semibold text-gray-800">Categories Preview</h2>
+        {loadingPreview ? (
+          <p className="text-sm text-gray-500">Loading...</p>
+        ) : !preview || preview.categories.length === 0 ? (
+          <p className="text-sm text-gray-500">No category changes detected.</p>
+        ) : (
+          <div className="overflow-x-auto border border-gray-100 rounded-lg">
+            <table className="min-w-full text-sm">
+              <thead className="bg-gray-50 border-b border-gray-100">
+                <tr>
+                  <th className="text-left px-3 py-2 text-gray-600 font-medium">Loyverse 카테고리</th>
+                  <th className="text-left px-3 py-2 text-gray-600 font-medium">로컬 카테고리</th>
+                  <th className="text-left px-3 py-2 text-gray-600 font-medium">싱크 후 상태</th>
+                </tr>
+              </thead>
+              <tbody>
+                {preview.categories.map((cat, idx) => (
+                  <tr key={cat.loyverseId ?? cat.localId ?? idx} className="border-b border-gray-100">
+                    <td className="px-3 py-2 text-gray-800">{cat.loyverseName ?? <span className="text-gray-400 italic">삭제됨</span>}</td>
+                    <td className="px-3 py-2">
+                      {cat.status === "linked_changed" ? (
+                        <span>
+                          <span className="line-through text-gray-400">{cat.localName}</span>
+                          {" → "}
+                          <span className="text-gray-800 font-medium">{cat.loyverseName}</span>
+                        </span>
+                      ) : (
+                        <span className="text-gray-700">{cat.localName ?? <span className="text-gray-400 italic">없음 (신규)</span>}</span>
+                      )}
+                    </td>
+                    <td className="px-3 py-2">{categoryStatusBadge(cat.status)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* ── Modifiers Preview ── */}
+      <div className="bg-white border border-gray-200 rounded-xl p-4 space-y-3">
+        <h2 className="text-base font-semibold text-gray-800">Modifiers Preview</h2>
+        {loadingPreview ? (
+          <p className="text-sm text-gray-500">Loading...</p>
+        ) : !preview || preview.modifiers.length === 0 ? (
+          <p className="text-sm text-gray-500">No modifier changes for linked products.</p>
+        ) : (
+          <div className="space-y-4">
+            {preview.modifiers.map((prod) => {
+              const hasChanges = prod.groups.some((g) => g.status !== "unchanged");
+              return (
+                <div key={prod.productId} className="border border-gray-100 rounded-lg overflow-hidden">
+                  <div className="bg-gray-50 px-3 py-2 flex items-center gap-2 border-b border-gray-100">
+                    <span className="font-medium text-gray-800 text-sm">{prod.productName}</span>
+                    {!hasChanges && (
+                      <span className="px-1.5 py-0.5 rounded text-xs bg-green-100 text-green-700">변경 없음</span>
+                    )}
+                  </div>
+                  <div className="divide-y divide-gray-50">
+                    {prod.groups.map((group, gi) => (
+                      <div key={group.loyverseId ?? group.localId ?? gi} className="px-3 py-2 space-y-1.5">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-gray-700 text-sm">
+                            {group.status === "removed"
+                              ? group.name
+                              : group.newName
+                              ? (
+                                <span>
+                                  <span className="line-through text-gray-400">{group.name}</span>
+                                  {" → "}
+                                  <span>{group.newName}</span>
+                                </span>
+                              )
+                              : group.name}
+                          </span>
+                          {modifierGroupStatusBadge(group.status)}
+                        </div>
+                        {group.options.length > 0 && (
+                          <div className="ml-4 space-y-1">
+                            {group.options.map((opt, oi) => (
+                              <div key={opt.loyverseId ?? opt.localId ?? oi} className="flex items-center gap-2 text-xs text-gray-600">
+                                <span>
+                                  {opt.newName ? (
+                                    <span>
+                                      <span className="line-through text-gray-400">{opt.name}</span>
+                                      {" → "}
+                                      <span>{opt.newName}</span>
+                                    </span>
+                                  ) : (
+                                    opt.name
+                                  )}
+                                </span>
+                                <span className="text-gray-400">
+                                  {opt.newPriceDelta !== null ? (
+                                    <span>
+                                      <span className="line-through">{opt.priceDelta >= 0 ? `+$${opt.priceDelta.toFixed(2)}` : `-$${Math.abs(opt.priceDelta).toFixed(2)}`}</span>
+                                      {" → "}
+                                      {opt.newPriceDelta >= 0 ? `+$${opt.newPriceDelta.toFixed(2)}` : `-$${Math.abs(opt.newPriceDelta).toFixed(2)}`}
+                                    </span>
+                                  ) : (
+                                    opt.priceDelta >= 0 ? `+$${opt.priceDelta.toFixed(2)}` : `-$${Math.abs(opt.priceDelta).toFixed(2)}`
+                                  )}
+                                </span>
+                                {modifierOptionStatusBadge(opt.status)}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         )}
       </div>
 
