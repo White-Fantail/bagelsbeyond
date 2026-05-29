@@ -33,6 +33,7 @@ type LoyverseItem = {
   categoryId: string | null;
   sellingPrice: number | null;
   isActive: boolean;
+  modifierGroupIds: string[];
   modifierGroups: LoyverseModifierGroup[];
 };
 
@@ -252,44 +253,79 @@ function extractModifierOptions(raw: unknown): LoyverseModifierOption[] {
     .filter((row): row is LoyverseModifierOption => row !== null);
 }
 
+function toLoyverseModifierGroup(raw: unknown): LoyverseModifierGroup | null {
+  if (!raw || typeof raw !== "object") return null;
+  const row = raw as Record<string, unknown>;
+  const id =
+    normalizeString(row.id) ||
+    normalizeString(row.modifier_list_id) ||
+    normalizeString(row.group_id);
+  const name =
+    normalizeString(row.name) ||
+    normalizeString(row.modifier_list_name) ||
+    normalizeString(row.group_name);
+  if (!id || !name) return null;
+
+  const options = extractModifierOptions(
+    row.options ?? row.modifiers ?? row.items ?? row.variants ?? []
+  );
+  const minSelections = normalizeInt(row.min_selections, 0);
+  const maxSelections = normalizeInt(
+    row.max_selections,
+    options.length > 0 ? options.length : 1
+  );
+  const isRequired = Boolean(row.required ?? row.is_required) || minSelections > 0;
+
+  return {
+    id,
+    name,
+    isRequired,
+    minSelections,
+    maxSelections: maxSelections > 0 ? maxSelections : 1,
+    options,
+  };
+}
+
 function extractModifierGroups(raw: unknown): LoyverseModifierGroup[] {
   if (!Array.isArray(raw)) return [];
 
   return raw
-    .map((groupRaw) => {
-      if (!groupRaw || typeof groupRaw !== "object") return null;
-      const row = groupRaw as Record<string, unknown>;
-      const id =
+    .map((groupRaw) => toLoyverseModifierGroup(groupRaw))
+    .filter((row): row is LoyverseModifierGroup => row !== null);
+}
+
+function extractModifierGroupIds(source: Record<string, unknown>): string[] {
+  const values: unknown[] = [];
+
+  const arrayCandidates = [
+    source.modifier_list_ids,
+    source.modifier_lists_ids,
+    source.modifier_group_ids,
+    source.option_group_ids,
+  ];
+  for (const candidate of arrayCandidates) {
+    if (Array.isArray(candidate)) {
+      values.push(...candidate);
+    }
+  }
+
+  const singleCandidates = [source.modifier_list_id, source.modifier_group_id];
+  values.push(...singleCandidates);
+
+  const ids = values
+    .map((value) => {
+      if (typeof value === "string") return normalizeString(value);
+      if (!value || typeof value !== "object") return "";
+      const row = value as Record<string, unknown>;
+      return (
         normalizeString(row.id) ||
         normalizeString(row.modifier_list_id) ||
-        normalizeString(row.group_id);
-      const name =
-        normalizeString(row.name) ||
-        normalizeString(row.modifier_list_name) ||
-        normalizeString(row.group_name);
-      if (!id || !name) return null;
-
-      const options = extractModifierOptions(
-        row.options ?? row.modifiers ?? row.items ?? row.variants ?? []
+        normalizeString(row.group_id)
       );
-      const minSelections = normalizeInt(row.min_selections, 0);
-      const maxSelections = normalizeInt(
-        row.max_selections,
-        options.length > 0 ? options.length : 1
-      );
-      const isRequired =
-        Boolean(row.required ?? row.is_required) || minSelections > 0;
-
-      return {
-        id,
-        name,
-        isRequired,
-        minSelections,
-        maxSelections: maxSelections > 0 ? maxSelections : 1,
-        options,
-      };
     })
-    .filter((row): row is LoyverseModifierGroup => row !== null);
+    .filter((value) => value.length > 0);
+
+  return Array.from(new Set(ids));
 }
 
 function toLoyverseItem(raw: unknown): LoyverseItem | null {
@@ -309,6 +345,7 @@ function toLoyverseItem(raw: unknown): LoyverseItem | null {
   const modifierGroups = extractModifierGroups(
     row.modifier_groups ?? row.option_groups ?? row.modifier_lists ?? []
   );
+  const modifierGroupIds = extractModifierGroupIds(row);
 
   return {
     id,
@@ -319,8 +356,36 @@ function toLoyverseItem(raw: unknown): LoyverseItem | null {
     categoryId: normalizeOptionalString(row.category_id),
     sellingPrice: pickFirstPrice(row) ?? variantPrice,
     isActive: !Boolean(row.deleted_at ?? row.is_deleted),
+    modifierGroupIds:
+      modifierGroupIds.length > 0 ? modifierGroupIds : modifierGroups.map((group) => group.id),
     modifierGroups,
   };
+}
+
+function hydrateItemsWithModifierGroups(
+  items: LoyverseItem[],
+  modifierGroups: LoyverseModifierGroup[]
+): LoyverseItem[] {
+  if (modifierGroups.length === 0) return items;
+
+  const groupsById = new Map(modifierGroups.map((group) => [group.id, group]));
+
+  return items.map((item) => {
+    if (item.modifierGroups.length > 0 || item.modifierGroupIds.length === 0) {
+      return item;
+    }
+
+    const resolvedGroups = item.modifierGroupIds
+      .map((groupId) => groupsById.get(groupId))
+      .filter((group): group is LoyverseModifierGroup => group !== undefined);
+
+    if (resolvedGroups.length === 0) return item;
+
+    return {
+      ...item,
+      modifierGroups: resolvedGroups,
+    };
+  });
 }
 
 async function loyverseGetCollection<T>(
@@ -365,6 +430,33 @@ async function loyverseGetCollection<T>(
   } while (cursor);
 
   return result;
+}
+
+async function fetchLoyverseModifierGroups(accessToken: string): Promise<LoyverseModifierGroup[]> {
+  const attempts = [
+    { path: "modifier_lists", collectionKey: "modifier_lists" },
+    { path: "modifiers", collectionKey: "modifiers" },
+  ] as const;
+
+  let lastError: Error | null = null;
+
+  for (const attempt of attempts) {
+    try {
+      return await loyverseGetCollection(
+        attempt.path,
+        attempt.collectionKey,
+        toLoyverseModifierGroup,
+        accessToken
+      );
+    } catch (error) {
+      lastError =
+        error instanceof Error
+          ? error
+          : new Error(`Unknown modifier fetch error for ${attempt.path}`);
+    }
+  }
+
+  throw lastError ?? new Error("Failed to fetch Loyverse modifiers");
 }
 
 async function createUniqueCategorySlug(baseName: string): Promise<string> {
@@ -805,13 +897,12 @@ export async function syncLoyverseCatalog(
   let productsFetched = 0;
 
   try {
-    const categories = await loyverseGetCollection(
-      "categories",
-      "categories",
-      toLoyverseCategory,
-      accessToken
-    );
-    const items = await loyverseGetCollection("items", "items", toLoyverseItem, accessToken);
+    const [categories, rawItems, modifierGroups] = await Promise.all([
+      loyverseGetCollection("categories", "categories", toLoyverseCategory, accessToken),
+      loyverseGetCollection("items", "items", toLoyverseItem, accessToken),
+      fetchLoyverseModifierGroups(accessToken),
+    ]);
+    const items = hydrateItemsWithModifierGroups(rawItems, modifierGroups);
 
     categoriesFetched = categories.length;
     productsFetched = items.length;
@@ -1007,10 +1098,12 @@ export async function previewLoyverseCatalog(): Promise<LoyverseCatalogPreview> 
 
   type LocalModOption = { id: string; loyverseId: string | null; name: string; priceDelta: { toNumber(): number } | number };
 
-  const [loyverseCategories, loyverseItems] = await Promise.all([
+  const [loyverseCategories, rawLoyverseItems, modifierGroups] = await Promise.all([
     loyverseGetCollection("categories", "categories", toLoyverseCategory, accessToken),
     loyverseGetCollection("items", "items", toLoyverseItem, accessToken),
+    fetchLoyverseModifierGroups(accessToken),
   ]);
+  const loyverseItems = hydrateItemsWithModifierGroups(rawLoyverseItems, modifierGroups);
 
   // ── Category preview ──────────────────────────────────────────────────────
 
