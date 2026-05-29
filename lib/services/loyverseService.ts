@@ -103,7 +103,7 @@ export async function createLoyversePickupOrder(
   // const response = await fetch("https://api.loyverse.com/v1.0/receipts", {
   //   method: "POST",
   //   headers: {
-  //     "Authorization": `******
+  //     "Authorization": `******  // accessToken from LOYVERSE_ACCESS_TOKEN env var
   //     "Content-Type": "application/json",
   //   },
   //   body: JSON.stringify(payload),

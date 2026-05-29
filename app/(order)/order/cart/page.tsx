@@ -58,6 +58,7 @@ export default function CartPage() {
           ? {
               ...item,
               quantity: newQuantity,
+              // unitPrice already includes all modifier priceDelta adjustments
               itemTotal: item.unitPrice * newQuantity,
             }
           : item
