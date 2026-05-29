@@ -253,21 +253,31 @@ function extractModifierOptions(raw: unknown): LoyverseModifierOption[] {
     .filter((row): row is LoyverseModifierOption => row !== null);
 }
 
+function isModifierOptionLikeRow(row: Record<string, unknown>): boolean {
+  return Boolean(
+    normalizeString(row.modifier_list_id) &&
+      (normalizeString(row.modifier_list_name) ||
+        normalizeString(row.modifier_name) ||
+        normalizeString(row.option_name))
+  );
+}
+
 function toLoyverseModifierGroup(raw: unknown): LoyverseModifierGroup | null {
   if (!raw || typeof raw !== "object") return null;
   const row = raw as Record<string, unknown>;
   const id =
-    normalizeString(row.id) ||
     normalizeString(row.modifier_list_id) ||
+    normalizeString(row.id) ||
     normalizeString(row.group_id);
   const name =
-    normalizeString(row.name) ||
     normalizeString(row.modifier_list_name) ||
+    normalizeString(row.name) ||
     normalizeString(row.group_name);
   if (!id || !name) return null;
 
+  const optionRows = row.options ?? row.modifiers ?? row.items ?? row.variants;
   const options = extractModifierOptions(
-    row.options ?? row.modifiers ?? row.items ?? row.variants ?? []
+    optionRows ?? (isModifierOptionLikeRow(row) ? [row] : [])
   );
   const minSelections = normalizeInt(row.min_selections, 0);
   const maxSelections = normalizeInt(
@@ -284,6 +294,28 @@ function toLoyverseModifierGroup(raw: unknown): LoyverseModifierGroup | null {
     maxSelections: maxSelections > 0 ? maxSelections : 1,
     options,
   };
+}
+
+function mergeDuplicateModifierGroups(groups: LoyverseModifierGroup[]): LoyverseModifierGroup[] {
+  const mergedById = new Map<string, LoyverseModifierGroup>();
+
+  for (const group of groups) {
+    const existing = mergedById.get(group.id);
+    if (!existing) {
+      mergedById.set(group.id, group);
+      continue;
+    }
+
+    const existingOptionIds = new Set(existing.options.map((option) => option.id));
+    const missingOptions = group.options.filter((option) => !existingOptionIds.has(option.id));
+
+    mergedById.set(group.id, {
+      ...existing,
+      options: [...existing.options, ...missingOptions],
+    });
+  }
+
+  return Array.from(mergedById.values());
 }
 
 function extractModifierGroups(raw: unknown): LoyverseModifierGroup[] {
@@ -480,7 +512,9 @@ async function fetchLoyverseModifierGroups(accessToken: string): Promise<Loyvers
 
   let modifierListError: Error | null = null;
   try {
-    const modifierListGroups = await fetchByPath("modifier_lists", "modifier_lists");
+    const modifierListGroups = mergeDuplicateModifierGroups(
+      await fetchByPath("modifier_lists", "modifier_lists")
+    );
     const groupsMissingOptions = modifierListGroups.some((group) => group.options.length === 0);
 
     if (!groupsMissingOptions) {
@@ -488,7 +522,9 @@ async function fetchLoyverseModifierGroups(accessToken: string): Promise<Loyvers
     }
 
     try {
-      const modifierGroups = await fetchByPath("modifiers", "modifiers");
+      const modifierGroups = mergeDuplicateModifierGroups(
+        await fetchByPath("modifiers", "modifiers")
+      );
       return mergeGroupsWithFallbackOptions(modifierListGroups, modifierGroups);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
@@ -505,7 +541,7 @@ async function fetchLoyverseModifierGroups(accessToken: string): Promise<Loyvers
   }
 
   try {
-    return await fetchByPath("modifiers", "modifiers");
+    return mergeDuplicateModifierGroups(await fetchByPath("modifiers", "modifiers"));
   } catch (error) {
     const modifierError =
       error instanceof Error
