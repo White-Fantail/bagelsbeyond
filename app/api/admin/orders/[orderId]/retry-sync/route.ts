@@ -64,6 +64,40 @@ export async function POST(
       linkedModifierOptions.map((option) => [option.id, option.loyverseId])
     );
 
+    const loyverseItems = order.items.map((item) => ({
+      itemId: item.itemId ? loyverseItemIdByProductId.get(item.itemId) ?? null : null,
+      itemNameSnapshot: item.itemNameSnapshot,
+      quantity: item.quantity,
+      unitPrice: Number(item.unitPrice),
+      modifiers: item.modifiers.map((mod) => ({
+        modifierId:
+          mod.modifierOptionId != null
+            ? loyverseModifierIdByOptionId.get(mod.modifierOptionId) ?? null
+            : null,
+        modifierGroupName: mod.modifierGroupName,
+        modifierOptionName: mod.modifierOptionName,
+        priceDelta: Number(mod.priceDelta),
+      })),
+    }));
+    const missingLoyverseItems = loyverseItems.filter((item) => item.itemId == null).length;
+    if (missingLoyverseItems > 0) {
+      const missingMappingError = `MISSING_REQUIRED_MAPPING: Missing Loyverse item mapping for ${missingLoyverseItems} line item(s)`;
+      await prisma.customerOrder.update({
+        where: { id: order.id },
+        data: {
+          status: "FAILED_TO_SEND",
+          loyverseReceiptId: null,
+          loyverseSyncError: missingMappingError,
+        },
+      });
+      return NextResponse.json({
+        success: false,
+        error: missingMappingError,
+        status: "FAILED_TO_SEND",
+        loyverseSyncError: missingMappingError,
+      });
+    }
+
     const loyverseResult = await createLoyversePickupOrder({
       orderNumber: order.orderNumber,
       customerName: order.customerName,
@@ -71,21 +105,7 @@ export async function POST(
       pickupType: order.pickupType,
       pickupTime: order.pickupTime,
       notes: order.notes,
-      items: order.items.map((item) => ({
-        itemId: item.itemId ? loyverseItemIdByProductId.get(item.itemId) ?? null : null,
-        itemNameSnapshot: item.itemNameSnapshot,
-        quantity: item.quantity,
-        unitPrice: Number(item.unitPrice),
-        modifiers: item.modifiers.map((mod) => ({
-          modifierId:
-            mod.modifierOptionId != null
-              ? loyverseModifierIdByOptionId.get(mod.modifierOptionId) ?? null
-              : null,
-          modifierGroupName: mod.modifierGroupName,
-          modifierOptionName: mod.modifierOptionName,
-          priceDelta: Number(mod.priceDelta),
-        })),
-      })),
+      items: loyverseItems,
       subtotal: Number(order.subtotal),
       total: Number(order.total),
     });

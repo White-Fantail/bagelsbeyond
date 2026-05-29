@@ -235,40 +235,61 @@ export async function POST(
 
     // Attempt Loyverse sync (non-blocking)
     try {
-      const loyverseResult = await createLoyversePickupOrder({
-        orderNumber: order.orderNumber,
-        customerName: order.customerName,
-        customerPhone: order.customerPhone,
-        pickupType: order.pickupType,
-        pickupTime: order.pickupTime,
-        notes: order.notes,
-        items: order.items.map((item) => ({
-          itemId: productMap.get(item.itemId ?? "")?.loyverseId ?? null,
+      const loyverseModifierIdByOptionId = new Map(
+        products.flatMap((product) =>
+          product.modifierGroups.flatMap((group) =>
+            group.options.map((option) => [option.id, option.loyverseId] as const)
+          )
+        )
+      );
+
+      const loyverseItems = order.items.map((item) => {
+        const product = item.itemId ? productMap.get(item.itemId) : undefined;
+        return {
+          itemId: product?.loyverseId ?? null,
           itemNameSnapshot: item.itemNameSnapshot,
           quantity: item.quantity,
           unitPrice: Number(item.unitPrice),
           modifiers: item.modifiers.map((mod) => ({
             modifierId:
               mod.modifierOptionId != null
-                ? productMap
-                    .get(item.itemId ?? "")
-                    ?.modifierGroups.flatMap((group) => group.options)
-                    .find((option) => option.id === mod.modifierOptionId)
-                    ?.loyverseId ?? null
+                ? loyverseModifierIdByOptionId.get(mod.modifierOptionId) ?? null
                 : null,
             modifierGroupName: mod.modifierGroupName,
             modifierOptionName: mod.modifierOptionName,
             priceDelta: Number(mod.priceDelta),
           })),
-        })),
-        subtotal: Number(order.subtotal),
-        total: Number(order.total),
+        };
       });
 
-      await prisma.customerOrder.update({
-        where: { id: order.id },
-        data: getOrderSyncUpdateFromLoyverseResult(loyverseResult),
-      });
+      const missingLoyverseItems = loyverseItems.filter((item) => item.itemId == null).length;
+      if (missingLoyverseItems > 0) {
+        await prisma.customerOrder.update({
+          where: { id: order.id },
+          data: {
+            status: "FAILED_TO_SEND",
+            loyverseReceiptId: null,
+            loyverseSyncError: `MISSING_REQUIRED_MAPPING: Missing Loyverse item mapping for ${missingLoyverseItems} line item(s)`,
+          },
+        });
+      } else {
+        const loyverseResult = await createLoyversePickupOrder({
+          orderNumber: order.orderNumber,
+          customerName: order.customerName,
+          customerPhone: order.customerPhone,
+          pickupType: order.pickupType,
+          pickupTime: order.pickupTime,
+          notes: order.notes,
+          items: loyverseItems,
+          subtotal: Number(order.subtotal),
+          total: Number(order.total),
+        });
+
+        await prisma.customerOrder.update({
+          where: { id: order.id },
+          data: getOrderSyncUpdateFromLoyverseResult(loyverseResult),
+        });
+      }
     } catch (loyverseError) {
       console.error("Loyverse sync error:", loyverseError);
       // Don't fail the order if Loyverse sync fails
