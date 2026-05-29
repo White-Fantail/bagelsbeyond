@@ -113,7 +113,7 @@ export default function OrdersTableClient({ orders }: { orders: OrderRow[] }) {
           updateRow(orderId, (row) => ({
             ...row,
             status: payload.status ?? "SENT_TO_LOYVERSE",
-            loyverseReceiptId: payload.receiptId,
+            loyverseReceiptId: payload.receiptId ?? null,
             loyverseSyncError: null,
           }));
           return;
