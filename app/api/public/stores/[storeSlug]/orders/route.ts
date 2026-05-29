@@ -184,7 +184,7 @@ export async function POST(
     const total = subtotal; // No tax/fees for now
 
     // Generate order number: BB-timestamp-random4chars
-    // crypto.randomUUID() guarantees a well-distributed 4-char hex suffix (no padding issues)
+    // Take 4 hex chars from a UUID to build a short, well-distributed order number suffix
     const timestamp = Date.now();
     const randomSuffix = crypto.randomUUID().replace(/-/g, "").slice(0, 4).toUpperCase();
     const orderNumber = `BB-${timestamp}-${randomSuffix}`;

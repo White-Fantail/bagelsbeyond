@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { CART_STORAGE_KEY } from "../../constants";
 
 type SuccessPageProps = {
   params: Promise<{ orderNumber: string }>;
@@ -17,7 +18,7 @@ export default function SuccessPage({ params }: SuccessPageProps) {
 
   // Clear cart from localStorage on success
   useEffect(() => {
-    localStorage.removeItem("bagelsbeyond-cart");
+    localStorage.removeItem(CART_STORAGE_KEY);
   }, []);
 
   return (

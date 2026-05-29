@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { CART_STORAGE_KEY } from "../constants";
 import ProductCard from "./ProductCard";
 import ProductDetailModal from "./ProductDetailModal";
 import CategoryModal from "./CategoryModal";
@@ -100,7 +101,7 @@ export default function OrderingPage({ initialData }: OrderingPageProps) {
 
   // Load cart from localStorage
   useEffect(() => {
-    const saved = localStorage.getItem("bagelsbeyond-cart");
+    const saved = localStorage.getItem(CART_STORAGE_KEY);
     if (saved) {
       try {
         setCart(JSON.parse(saved));
@@ -112,7 +113,7 @@ export default function OrderingPage({ initialData }: OrderingPageProps) {
 
   // Save cart to localStorage
   useEffect(() => {
-    localStorage.setItem("bagelsbeyond-cart", JSON.stringify(cart));
+    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
   }, [cart]);
 
   // Handle scroll for sticky header

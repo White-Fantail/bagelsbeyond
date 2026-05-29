@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { CART_STORAGE_KEY } from "../constants";
 import CheckoutModal from "./components/CheckoutModal";
 
 type CartItem = {
@@ -28,7 +29,7 @@ export default function CartPage() {
 
   // Load cart from localStorage
   useEffect(() => {
-    const saved = localStorage.getItem("bagelsbeyond-cart");
+    const saved = localStorage.getItem(CART_STORAGE_KEY);
     if (saved) {
       try {
         setCart(JSON.parse(saved));
@@ -40,7 +41,7 @@ export default function CartPage() {
 
   // Save cart to localStorage
   useEffect(() => {
-    localStorage.setItem("bagelsbeyond-cart", JSON.stringify(cart));
+    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
   }, [cart]);
 
   const cartTotal = cart.reduce((sum, item) => sum + item.itemTotal, 0);
