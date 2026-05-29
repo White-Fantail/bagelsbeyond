@@ -57,6 +57,7 @@ const STATUS_OPTIONS: Array<{ value: EditableStatus; label: string }> = [
   { value: "COMPLETED", label: "Completed" },
   { value: "CANCELLED", label: "Cancelled" },
 ];
+const TABLE_COLUMN_COUNT = 7;
 
 function getOrderStatusBadge(status: OrderStatus) {
   switch (status) {
@@ -86,6 +87,10 @@ function getSyncBadge(order: OrderRow) {
   }
 
   return { text: "Pending", className: "bg-gray-100 text-gray-600" };
+}
+
+function getOrderDetailPanelId(orderId: string) {
+  return `order-detail-${orderId.replace(/[^a-zA-Z0-9_-]/g, "-")}`;
 }
 
 export default function OrdersTableClient({ orders }: { orders: OrderRow[] }) {
@@ -226,6 +231,7 @@ export default function OrdersTableClient({ orders }: { orders: OrderRow[] }) {
             {rows.map((order) => {
               const syncBadge = getSyncBadge(order);
               const isBusy = busyOrderId === order.id;
+              const detailPanelId = getOrderDetailPanelId(order.id);
 
               return (
                 <Fragment key={order.id}>
@@ -235,6 +241,8 @@ export default function OrdersTableClient({ orders }: { orders: OrderRow[] }) {
                       type="button"
                       onClick={() => setExpandedOrderId((prev) => (prev === order.id ? null : order.id))}
                       aria-expanded={expandedOrderId === order.id}
+                      aria-controls={detailPanelId}
+                      aria-label={`${expandedOrderId === order.id ? "Collapse" : "Expand"} order details for ${order.orderNumber}`}
                       className="text-left text-sm font-semibold text-indigo-700 underline decoration-dotted underline-offset-2 hover:text-indigo-900"
                     >
                       {order.orderNumber}
@@ -312,8 +320,8 @@ export default function OrdersTableClient({ orders }: { orders: OrderRow[] }) {
                 </tr>
                 {expandedOrderId === order.id ? (
                   <tr>
-                    <td colSpan={7} className="bg-gray-50 px-4 py-4">
-                      <div className="space-y-4 rounded-lg border border-gray-200 bg-white p-4">
+                    <td colSpan={TABLE_COLUMN_COUNT} className="bg-gray-50 px-4 py-4">
+                      <div id={detailPanelId} className="space-y-4 rounded-lg border border-gray-200 bg-white p-4">
                         <div className="grid gap-3 text-sm text-gray-700 sm:grid-cols-2">
                           <div>
                             <p className="font-semibold text-gray-900">Customer</p>
