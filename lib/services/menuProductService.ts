@@ -12,6 +12,7 @@ export type ProductCategoryRow = {
   isActive: boolean;
   isFreshnessManaged: boolean;
   freshnessSortOrder: number;
+  loyverseId: string | null;
   createdAt: string;
   updatedAt: string;
 };

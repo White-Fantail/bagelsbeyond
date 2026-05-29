@@ -403,3 +403,25 @@ export const createOrderSchema = z.object({
 export type CreateOrderSchema = z.infer<typeof createOrderSchema>;
 export type OrderItemSchema = z.infer<typeof orderItemSchema>;
 export type OrderItemModifierSchema = z.infer<typeof orderItemModifierSchema>;
+
+// ─── Menu Modifier Management ─────────────────────────────────────────────────
+
+export const menuModifierGroupSchema = z.object({
+  name: z.string().min(1, "Name is required").max(100),
+  description: z.string().max(500).optional().nullable(),
+  isRequired: z.boolean().default(false),
+  minSelections: z.coerce.number().int().min(0).default(0),
+  maxSelections: z.coerce.number().int().min(1).default(1),
+  sortOrder: z.coerce.number().int().min(0).default(0),
+  isActive: z.boolean().default(true),
+});
+
+export const menuModifierOptionSchema = z.object({
+  name: z.string().min(1, "Name is required").max(100),
+  priceDelta: z.coerce.number().multipleOf(0.01).default(0),
+  sortOrder: z.coerce.number().int().min(0).default(0),
+  isActive: z.boolean().default(true),
+});
+
+export type MenuModifierGroupSchema = z.infer<typeof menuModifierGroupSchema>;
+export type MenuModifierOptionSchema = z.infer<typeof menuModifierOptionSchema>;
