@@ -52,6 +52,31 @@ export type LoyverseSyncSummary = SyncCounters & {
   warnings: string[];
 };
 
+export type LoyverseItemMatchAction = "skip" | "match" | "create";
+
+export type LoyverseSyncDecision = {
+  action: LoyverseItemMatchAction;
+  localProductId?: string;
+};
+
+export type LoyverseSyncDecisions = Record<string, LoyverseSyncDecision>;
+
+type PreviewProductCandidate = {
+  id: string;
+  name: string;
+  sku: string | null;
+  isActive: boolean;
+};
+
+export type LoyverseItemMatchPreview = {
+  loyverseItemId: string;
+  loyverseItemName: string;
+  loyverseSku: string | null;
+  status: "matched" | "unmatched";
+  matchedProduct: PreviewProductCandidate | null;
+  candidateProducts: PreviewProductCandidate[];
+};
+
 const LOYVERSE_API_BASE = "https://api.loyverse.com/v1.0";
 
 function normalizeString(value: unknown): string {
@@ -534,7 +559,9 @@ async function syncModifierGroups(
 async function syncProducts(
   items: LoyverseItem[],
   categoryMap: Map<string, string>,
-  counters: SyncCounters
+  counters: SyncCounters,
+  warnings: string[],
+  decisions: LoyverseSyncDecisions
 ): Promise<void> {
   for (const item of items) {
     const categoryId = item.categoryId ? (categoryMap.get(item.categoryId) ?? null) : null;
@@ -565,6 +592,51 @@ async function syncProducts(
       counters.productsUpdated += 1;
       productId = updated.id;
     } else {
+      const decision = decisions[item.id];
+      if (decision?.action === "skip") {
+        warnings.push(`Skipped unmatched Loyverse item: ${item.name} (${item.id})`);
+        continue;
+      }
+
+      if (decision?.action === "match" && decision.localProductId) {
+        const explicitMatch = await prisma.menuProduct.findUnique({
+          where: { id: decision.localProductId },
+          select: { id: true, loyverseId: true },
+        });
+        if (explicitMatch && explicitMatch.loyverseId === null) {
+          await createProductBackup(explicitMatch.id);
+          const updated = await prisma.menuProduct.update({
+            where: { id: explicitMatch.id },
+            data: payload,
+            select: { id: true },
+          });
+          counters.productsUpdated += 1;
+          productId = updated.id;
+
+          if (item.modifierGroups.length > 0) {
+            await syncModifierGroups(productId, item.modifierGroups, counters);
+          }
+          continue;
+        }
+        warnings.push(
+          `Invalid explicit match ignored for item ${item.id}: local product not found or already linked`
+        );
+      }
+
+      if (decision?.action === "create") {
+        const created = await prisma.menuProduct.create({
+          data: payload,
+          select: { id: true },
+        });
+        counters.productsAdded += 1;
+        productId = created.id;
+
+        if (item.modifierGroups.length > 0) {
+          await syncModifierGroups(productId, item.modifierGroups, counters);
+        }
+        continue;
+      }
+
       const orFilters: Array<Record<string, unknown>> = [
         { name: { equals: item.name, mode: "insensitive" } },
       ];
@@ -606,7 +678,8 @@ async function syncProducts(
 }
 
 export async function syncLoyverseCatalog(
-  triggeredByUserId?: string
+  triggeredByUserId?: string,
+  decisions: LoyverseSyncDecisions = {}
 ): Promise<LoyverseSyncSummary> {
   const accessToken = process.env.LOYVERSE_ACCESS_TOKEN;
   if (!accessToken) {
@@ -647,7 +720,7 @@ export async function syncLoyverseCatalog(
     productsFetched = items.length;
 
     const categoryMap = await syncCategories(categories, counters);
-    await syncProducts(items, categoryMap, counters);
+    await syncProducts(items, categoryMap, counters, warnings, decisions);
 
     const status = warnings.length > 0 ? LoyverseSyncStatus.PARTIAL : LoyverseSyncStatus.SUCCESS;
 
@@ -719,4 +792,61 @@ export async function listLoyverseSyncLogs(limit = 20) {
       },
     },
   });
+}
+
+export async function previewLoyverseItemMatches(): Promise<LoyverseItemMatchPreview[]> {
+  const accessToken = process.env.LOYVERSE_ACCESS_TOKEN;
+  if (!accessToken) {
+    throw new Error("LOYVERSE_ACCESS_TOKEN is not configured.");
+  }
+
+  const items = await loyverseGetCollection("items", "items", toLoyverseItem, accessToken);
+  const previews: LoyverseItemMatchPreview[] = [];
+
+  for (const item of items) {
+    const matched = await prisma.menuProduct.findUnique({
+      where: { loyverseId: item.id },
+      select: { id: true, name: true, sku: true, isActive: true },
+    });
+
+    if (matched) {
+      previews.push({
+        loyverseItemId: item.id,
+        loyverseItemName: item.name,
+        loyverseSku: item.sku,
+        status: "matched",
+        matchedProduct: matched,
+        candidateProducts: [],
+      });
+      continue;
+    }
+
+    const candidateWhere: Record<string, unknown>[] = [
+      { name: { equals: item.name, mode: "insensitive" } },
+    ];
+    if (item.sku) {
+      candidateWhere.push({ sku: item.sku });
+    }
+
+    const candidates = await prisma.menuProduct.findMany({
+      where: {
+        loyverseId: null,
+        OR: candidateWhere,
+      },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true, sku: true, isActive: true },
+      take: 10,
+    });
+
+    previews.push({
+      loyverseItemId: item.id,
+      loyverseItemName: item.name,
+      loyverseSku: item.sku,
+      status: "unmatched",
+      matchedProduct: null,
+      candidateProducts: candidates,
+    });
+  }
+
+  return previews;
 }

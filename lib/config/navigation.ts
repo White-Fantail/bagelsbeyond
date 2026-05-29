@@ -158,6 +158,7 @@ export const ADMIN_NAV: RoleNavConfig = {
       items: [
         { href: "/imports", label: "Imports" },
         { href: "/external-factors", label: "External Data" },
+        { href: "/loyverse-sync", label: "Loyverse Sync" },
         { href: "/tasks", label: "Automation" },
       ],
     },
