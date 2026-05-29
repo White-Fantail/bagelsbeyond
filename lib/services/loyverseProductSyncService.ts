@@ -782,15 +782,24 @@ async function syncModifierGroups(
   for (let groupIndex = 0; groupIndex < groups.length; groupIndex += 1) {
     const group = groups[groupIndex];
 
-    const existingGroup = await prisma.menuModifierGroup.findFirst({
+    // Primary lookup by loyverseId; fallback to name-match for orphan groups that
+    // were created manually before the first sync (mirrors old catalog-sync.ts behaviour).
+    let existingGroup = await prisma.menuModifierGroup.findFirst({
       where: { productId, loyverseId: group.id },
       select: { id: true },
     });
+    if (!existingGroup) {
+      existingGroup = await prisma.menuModifierGroup.findFirst({
+        where: { productId, loyverseId: null, name: group.name },
+        select: { id: true },
+      }) ?? null;
+    }
 
     const groupRecord = existingGroup
       ? await prisma.menuModifierGroup.update({
           where: { id: existingGroup.id },
           data: {
+            loyverseId: group.id,
             name: group.name,
             isRequired: group.isRequired,
             minSelections: group.minSelections,
@@ -840,15 +849,24 @@ async function syncModifierGroups(
     for (let optionIndex = 0; optionIndex < group.options.length; optionIndex += 1) {
       const option = group.options[optionIndex];
 
-      const existingOption = await prisma.menuModifierOption.findFirst({
+      // Primary lookup by loyverseId; fallback to name-match for orphan options that
+      // were created manually before the first sync (mirrors old catalog-sync.ts behaviour).
+      let existingOption = await prisma.menuModifierOption.findFirst({
         where: { groupId: groupRecord.id, loyverseId: option.id },
         select: { id: true },
       });
+      if (!existingOption) {
+        existingOption = await prisma.menuModifierOption.findFirst({
+          where: { groupId: groupRecord.id, loyverseId: null, name: option.name },
+          select: { id: true },
+        }) ?? null;
+      }
 
       if (existingOption) {
         await prisma.menuModifierOption.update({
           where: { id: existingOption.id },
           data: {
+            loyverseId: option.id,
             name: option.name,
             priceDelta: String(option.priceDelta),
             sortOrder: optionIndex,
