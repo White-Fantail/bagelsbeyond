@@ -93,6 +93,7 @@ export default function ProductTable({ products, recipeSummaries, pricingSummari
                       {summary?.hasActiveRecipe ? (
                         <Link
                           href={`/products/${product.id}/recipe`}
+                          aria-label={`${product.name} recipe`}
                           className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 hover:bg-amber-200 transition-colors"
                         >
                           {summary.recipeName ?? "Recipe"}
@@ -100,7 +101,8 @@ export default function ProductTable({ products, recipeSummaries, pricingSummari
                       ) : (
                         <Link
                           href={`/products/${product.id}/recipe`}
-                          className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500 hover:bg-gray-200 transition-colors"
+                          aria-label={`Create recipe for ${product.name}`}
+                          className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
                         >
                           No recipe
                         </Link>
@@ -208,6 +210,7 @@ export default function ProductTable({ products, recipeSummaries, pricingSummari
                   <>
                     <Link
                       href={`/products/${product.id}/recipe`}
+                      aria-label={`${product.name} recipe`}
                       className="inline-flex items-center px-2 py-0.5 rounded-full font-medium bg-amber-100 text-amber-700 hover:bg-amber-200 transition-colors"
                     >
                       {summary.recipeName ?? "Recipe"}
@@ -224,6 +227,7 @@ export default function ProductTable({ products, recipeSummaries, pricingSummari
                 ) : (
                   <Link
                     href={`/products/${product.id}/recipe`}
+                    aria-label={`Create recipe for ${product.name}`}
                     className="text-gray-500 hover:text-gray-700 hover:underline"
                   >
                     No recipe

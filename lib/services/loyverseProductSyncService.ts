@@ -147,7 +147,12 @@ function normalizeUrl(value: unknown): string | null {
   if (typeof value !== "string") return null;
   const trimmed = value.trim();
   if (!trimmed) return null;
-  return /^https?:\/\//i.test(trimmed) ? trimmed : null;
+  try {
+    const parsed = new URL(trimmed);
+    return parsed.protocol === "http:" || parsed.protocol === "https:" ? parsed.toString() : null;
+  } catch {
+    return null;
+  }
 }
 
 function pickFirstImageUrl(source: Record<string, unknown>): string | null {
