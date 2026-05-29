@@ -23,7 +23,7 @@ export default async function NewIngredientSupplierLinkPage({
   if (!ingredient) notFound();
 
   return (
-    <div className="space-y-6 max-w-2xl">
+    <div className="space-y-6 w-full">
       <div>
         <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
           <Link href="/dashboard" className="hover:text-amber-600 transition-colors">

@@ -38,7 +38,7 @@ export default async function SupplierScraperPage({
   );
 
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div className="space-y-6 w-full">
       {/* Header */}
       <div>
         <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
