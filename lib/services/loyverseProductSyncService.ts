@@ -966,11 +966,19 @@ export async function previewLoyverseCatalog(): Promise<LoyverseCatalogPreview> 
   const categoryPreviews: CategoryPreviewItem[] = [];
   const seenLocalIds = new Set<string>();
 
+  // Fetch all local categories upfront to avoid N+1 queries
+  const allLocalCategories = await prisma.productCategory.findMany({
+    select: { id: true, name: true, loyverseId: true, isActive: true },
+  });
+  const localCatByLoyverseId = new Map(
+    allLocalCategories.filter((c) => c.loyverseId).map((c) => [c.loyverseId!, c])
+  );
+  const localCatByNameLower = new Map(
+    allLocalCategories.filter((c) => !c.loyverseId).map((c) => [c.name.toLowerCase(), c])
+  );
+
   for (const cat of loyverseCategories) {
-    const linked = await prisma.productCategory.findUnique({
-      where: { loyverseId: cat.id },
-      select: { id: true, name: true },
-    });
+    const linked = localCatByLoyverseId.get(cat.id);
 
     if (linked) {
       seenLocalIds.add(linked.id);
@@ -984,13 +992,7 @@ export async function previewLoyverseCatalog(): Promise<LoyverseCatalogPreview> 
       continue;
     }
 
-    const nameMatch = await prisma.productCategory.findFirst({
-      where: {
-        loyverseId: null,
-        name: { equals: cat.name, mode: "insensitive" },
-      },
-      select: { id: true, name: true },
-    });
+    const nameMatch = localCatByNameLower.get(cat.name.toLowerCase());
 
     if (nameMatch) {
       seenLocalIds.add(nameMatch.id);
@@ -1013,12 +1015,8 @@ export async function previewLoyverseCatalog(): Promise<LoyverseCatalogPreview> 
   }
 
   // Find local-only categories (linked but not in Loyverse anymore)
-  const localLinked = await prisma.productCategory.findMany({
-    where: { loyverseId: { not: null }, isActive: true },
-    select: { id: true, name: true, loyverseId: true },
-  });
-  for (const local of localLinked) {
-    if (!seenLocalIds.has(local.id)) {
+  for (const local of allLocalCategories) {
+    if (local.loyverseId && local.isActive && !seenLocalIds.has(local.id)) {
       categoryPreviews.push({
         loyverseId: local.loyverseId,
         loyverseName: null,
@@ -1033,25 +1031,50 @@ export async function previewLoyverseCatalog(): Promise<LoyverseCatalogPreview> 
 
   const modifierPreviews: ProductModifierPreview[] = [];
 
-  for (const item of loyverseItems) {
-    if (item.modifierGroups.length === 0) continue;
+  // Fetch all linked products and their modifier groups upfront
+  const itemsWithModifiers = loyverseItems.filter((i) => i.modifierGroups.length > 0);
+  const loyverseItemIds = itemsWithModifiers.map((i) => i.id);
 
-    const localProduct = await prisma.menuProduct.findUnique({
-      where: { loyverseId: item.id },
-      select: { id: true, name: true },
-    });
+  const linkedProducts = await prisma.menuProduct.findMany({
+    where: { loyverseId: { in: loyverseItemIds } },
+    select: { id: true, name: true, loyverseId: true },
+  });
+  const localProductByLoyverseId = new Map(linkedProducts.map((p) => [p.loyverseId!, p]));
 
-    // Only preview modifiers for products already linked (not yet created ones)
+  const linkedProductIds = linkedProducts.map((p) => p.id);
+  const allLocalGroups = await prisma.menuModifierGroup.findMany({
+    where: { productId: { in: linkedProductIds } },
+    select: {
+      id: true,
+      productId: true,
+      loyverseId: true,
+      name: true,
+      isActive: true,
+      options: { select: { id: true, loyverseId: true, name: true, priceDelta: true } },
+    },
+  });
+  // Index: productId → loyverseId → group
+  const groupsByProduct = new Map<string, Map<string, (typeof allLocalGroups)[0]>>();
+  const allGroupsByProduct = new Map<string, (typeof allLocalGroups)[0][]>();
+  for (const g of allLocalGroups) {
+    if (!allGroupsByProduct.has(g.productId)) allGroupsByProduct.set(g.productId, []);
+    allGroupsByProduct.get(g.productId)!.push(g);
+    if (g.loyverseId) {
+      if (!groupsByProduct.has(g.productId)) groupsByProduct.set(g.productId, new Map());
+      groupsByProduct.get(g.productId)!.set(g.loyverseId, g);
+    }
+  }
+
+  for (const item of itemsWithModifiers) {
+    const localProduct = localProductByLoyverseId.get(item.id);
     if (!localProduct) continue;
 
     const groupPreviews: ModifierGroupPreview[] = [];
     const seenGroupLocalIds = new Set<string>();
+    const groupMap = groupsByProduct.get(localProduct.id) ?? new Map();
 
     for (const group of item.modifierGroups) {
-      const existingGroup = await prisma.menuModifierGroup.findFirst({
-        where: { productId: localProduct.id, loyverseId: group.id },
-        select: { id: true, name: true, options: { select: { id: true, loyverseId: true, name: true, priceDelta: true } } },
-      });
+      const existingGroup = groupMap.get(group.id);
 
       const optionPreviews: ModifierOptionPreview[] = [];
       const seenOptionLocalIds = new Set<string>();
@@ -1060,7 +1083,10 @@ export async function previewLoyverseCatalog(): Promise<LoyverseCatalogPreview> 
         seenGroupLocalIds.add(existingGroup.id);
 
         for (const option of group.options) {
-          const existingOption = existingGroup.options.find((o) => o.loyverseId === option.id);
+          const existingOption = existingGroup.options.find(
+            (o: { id: string; loyverseId: string | null; name: string; priceDelta: { toNumber(): number } | number }) =>
+              o.loyverseId === option.id
+          );
           if (existingOption) {
             seenOptionLocalIds.add(existingOption.id);
             const nameChanged = existingOption.name !== option.name;
@@ -1136,12 +1162,8 @@ export async function previewLoyverseCatalog(): Promise<LoyverseCatalogPreview> 
     }
 
     // Modifier groups removed from Loyverse
-    const localGroups = await prisma.menuModifierGroup.findMany({
-      where: { productId: localProduct.id, loyverseId: { not: null }, isActive: true },
-      select: { id: true, loyverseId: true, name: true, options: { select: { id: true, loyverseId: true, name: true, priceDelta: true } } },
-    });
-    for (const local of localGroups) {
-      if (!seenGroupLocalIds.has(local.id)) {
+    for (const local of allGroupsByProduct.get(localProduct.id) ?? []) {
+      if (local.loyverseId && local.isActive && !seenGroupLocalIds.has(local.id)) {
         groupPreviews.push({
           loyverseId: local.loyverseId,
           localId: local.id,
