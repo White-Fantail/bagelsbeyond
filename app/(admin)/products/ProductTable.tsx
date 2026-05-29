@@ -36,6 +36,7 @@ export default function ProductTable({ products, recipeSummaries, pricingSummari
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Name</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Category</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">SKU</th>
+                <th className="text-center px-4 py-3 font-medium text-gray-600">Loyverse</th>
                 <th className="text-center px-4 py-3 font-medium text-gray-600">Active</th>
                 <th className="text-center px-4 py-3 font-medium text-gray-600">Recipe</th>
                 <th className="text-right px-4 py-3 font-medium text-gray-600">Adj. Cost</th>
@@ -52,12 +53,30 @@ export default function ProductTable({ products, recipeSummaries, pricingSummari
                 const pricing = pricingSummaries.get(product.id);
                 return (
                   <tr key={product.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-3 font-medium text-gray-900">{product.name}</td>
+                    <td className="px-4 py-3 font-medium">
+                      <Link
+                        href={`/products/${product.id}/edit`}
+                        className="text-gray-900 hover:text-amber-700 hover:underline"
+                      >
+                        {product.name}
+                      </Link>
+                    </td>
                     <td className="px-4 py-3 text-gray-500 text-xs">
                       {product.categoryName ?? <span className="italic text-gray-300">—</span>}
                     </td>
                     <td className="px-4 py-3 text-gray-500 text-xs font-mono">
                       {product.sku ?? <span className="italic text-gray-400">—</span>}
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <span
+                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                          product.loyverseId
+                            ? "bg-purple-100 text-purple-700"
+                            : "bg-gray-100 text-gray-500"
+                        }`}
+                      >
+                        {product.loyverseId ? "Linked" : "Internal"}
+                      </span>
                     </td>
                     <td className="px-4 py-3 text-center">
                       <span
@@ -72,13 +91,19 @@ export default function ProductTable({ products, recipeSummaries, pricingSummari
                     </td>
                     <td className="px-4 py-3 text-center">
                       {summary?.hasActiveRecipe ? (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
+                        <Link
+                          href={`/products/${product.id}/recipe`}
+                          className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 hover:bg-amber-200 transition-colors"
+                        >
                           {summary.recipeName ?? "Recipe"}
-                        </span>
+                        </Link>
                       ) : (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-400">
+                        <Link
+                          href={`/products/${product.id}/recipe`}
+                          className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500 hover:bg-gray-200 transition-colors"
+                        >
                           No recipe
-                        </span>
+                        </Link>
                       )}
                     </td>
                     <td className="px-4 py-3 text-right font-mono text-xs">
@@ -124,18 +149,6 @@ export default function ProductTable({ products, recipeSummaries, pricingSummari
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-2">
                         <Link
-                          href={`/products/${product.id}/edit`}
-                          className="text-xs px-3 py-1.5 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
-                        >
-                          Edit
-                        </Link>
-                        <Link
-                          href={`/products/${product.id}/recipe`}
-                          className="text-xs px-3 py-1.5 rounded-md border border-amber-300 text-amber-700 hover:bg-amber-50 transition-colors"
-                        >
-                          Recipe
-                        </Link>
-                        <Link
                           href={`/products/${product.id}/modifiers`}
                           className="text-xs px-3 py-1.5 rounded-md border border-purple-300 text-purple-700 hover:bg-purple-50 transition-colors"
                         >
@@ -159,27 +172,46 @@ export default function ProductTable({ products, recipeSummaries, pricingSummari
             <div key={product.id} className="p-4 space-y-2">
               <div className="flex items-start justify-between gap-2">
                 <div>
-                  <p className="font-medium text-gray-900">{product.name}</p>
+                  <Link
+                    href={`/products/${product.id}/edit`}
+                    className="font-medium text-gray-900 hover:text-amber-700 hover:underline"
+                  >
+                    {product.name}
+                  </Link>
                   {product.sku && (
                     <p className="text-xs text-gray-500 mt-0.5 font-mono">{product.sku}</p>
                   )}
                 </div>
-                <span
-                  className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium flex-shrink-0 ${
-                    product.isActive
-                      ? "bg-green-100 text-green-700"
-                      : "bg-gray-100 text-gray-500"
-                  }`}
-                >
-                  {product.isActive ? "Active" : "Inactive"}
-                </span>
+                <div className="flex flex-col items-end gap-1">
+                  <span
+                    className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium flex-shrink-0 ${
+                      product.isActive
+                        ? "bg-green-100 text-green-700"
+                        : "bg-gray-100 text-gray-500"
+                    }`}
+                  >
+                    {product.isActive ? "Active" : "Inactive"}
+                  </span>
+                  <span
+                    className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                      product.loyverseId
+                        ? "bg-purple-100 text-purple-700"
+                        : "bg-gray-100 text-gray-500"
+                    }`}
+                  >
+                    {product.loyverseId ? "Linked" : "Internal"}
+                  </span>
+                </div>
               </div>
               <div className="flex items-center gap-2 text-xs">
                 {summary?.hasActiveRecipe ? (
                   <>
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full font-medium bg-amber-100 text-amber-700">
+                    <Link
+                      href={`/products/${product.id}/recipe`}
+                      className="inline-flex items-center px-2 py-0.5 rounded-full font-medium bg-amber-100 text-amber-700 hover:bg-amber-200 transition-colors"
+                    >
                       {summary.recipeName ?? "Recipe"}
-                    </span>
+                    </Link>
                     <span className="text-gray-500">{summary.ingredientCount} items</span>
                     {summary.adjustedCostPerOutputUnit ? (
                       <span className="font-mono text-gray-600 ml-auto text-xs">
@@ -190,7 +222,12 @@ export default function ProductTable({ products, recipeSummaries, pricingSummari
                     )}
                   </>
                 ) : (
-                  <span className="text-gray-400">No recipe yet</span>
+                  <Link
+                    href={`/products/${product.id}/recipe`}
+                    className="text-gray-500 hover:text-gray-700 hover:underline"
+                  >
+                    No recipe
+                  </Link>
                 )}
               </div>
               {pricing && (
@@ -210,18 +247,6 @@ export default function ProductTable({ products, recipeSummaries, pricingSummari
                 </div>
               )}
               <div className="flex items-center gap-2 pt-1">
-                <Link
-                  href={`/products/${product.id}/edit`}
-                  className="text-xs px-3 py-1.5 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50"
-                >
-                  Edit
-                </Link>
-                <Link
-                  href={`/products/${product.id}/recipe`}
-                  className="text-xs px-3 py-1.5 rounded-md border border-amber-300 text-amber-700 hover:bg-amber-50"
-                >
-                  Manage Recipe
-                </Link>
                 <Link
                   href={`/products/${product.id}/modifiers`}
                   className="text-xs px-3 py-1.5 rounded-md border border-purple-300 text-purple-700 hover:bg-purple-50"

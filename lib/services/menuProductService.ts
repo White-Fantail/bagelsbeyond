@@ -32,6 +32,7 @@ export type MenuProductRow = {
   id: string;
   name: string;
   sku: string | null;
+  loyverseId: string | null;
   isActive: boolean;
   notes: string | null;
   sellingPrice: string | null;
@@ -119,6 +120,7 @@ function toMenuProductRow(r: {
   id: string;
   name: string;
   sku: string | null;
+  loyverseId: string | null;
   isActive: boolean;
   notes: string | null;
   sellingPrice: { toString(): string } | null;
@@ -136,6 +138,7 @@ function toMenuProductRow(r: {
     id: r.id,
     name: r.name,
     sku: r.sku,
+    loyverseId: r.loyverseId,
     isActive: r.isActive,
     notes: r.notes,
     sellingPrice: r.sellingPrice !== null ? r.sellingPrice.toString() : null,
@@ -155,6 +158,7 @@ export async function listMenuProducts(filter: {
   search?: string;
   isActive?: boolean;
   categoryId?: string;
+  loyverseLink?: "linked" | "internal";
 } = {}): Promise<MenuProductRow[]> {
   const where: Record<string, unknown> = {};
   if (filter.search) {
@@ -167,6 +171,11 @@ export async function listMenuProducts(filter: {
     where.categoryId = null;
   } else if (filter.categoryId) {
     where.categoryId = filter.categoryId;
+  }
+  if (filter.loyverseLink === "linked") {
+    where.loyverseId = { not: null };
+  } else if (filter.loyverseLink === "internal") {
+    where.loyverseId = null;
   }
 
   const rows = await prisma.menuProduct.findMany({
