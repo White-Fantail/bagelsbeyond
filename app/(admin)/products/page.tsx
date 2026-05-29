@@ -13,6 +13,7 @@ type SearchParams = {
   search?: string;
   isActive?: string;
   categoryId?: string;
+  loyverseLink?: string;
 };
 
 export default async function ProductsPage({
@@ -31,6 +32,10 @@ export default async function ProductsPage({
       search: sp.search?.trim(),
       isActive: isActiveFilter,
       categoryId: sp.categoryId,
+      loyverseLink:
+        sp.loyverseLink === "linked" || sp.loyverseLink === "internal"
+          ? sp.loyverseLink
+          : undefined,
     }),
     getGlobalPricingSettings(),
     listProductCategories(),
@@ -53,7 +58,7 @@ export default async function ProductsPage({
     })
   );
 
-  const hasFilters = !!(sp.search || sp.categoryId || sp.isActive);
+  const hasFilters = !!(sp.search || sp.categoryId || sp.isActive || sp.loyverseLink);
   const activeCount = products.filter((p) => p.isActive).length;
   const withRecipeCount = [...recipeSummaries.values()].filter((s) => s.hasActiveRecipe).length;
 

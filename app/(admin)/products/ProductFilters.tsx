@@ -15,6 +15,12 @@ const ACTIVE_OPTIONS = [
   { value: "false", label: "Inactive" },
 ];
 
+const LOYVERSE_LINK_OPTIONS = [
+  { value: "ALL", label: "All Sources" },
+  { value: "linked", label: "Linked" },
+  { value: "internal", label: "Internal" },
+];
+
 export default function ProductFilters({ categories }: ProductFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -22,17 +28,20 @@ export default function ProductFilters({ categories }: ProductFiltersProps) {
   const [search, setSearch] = useState(searchParams.get("search") ?? "");
   const [categoryId, setCategoryId] = useState(searchParams.get("categoryId") ?? "ALL");
   const [isActive, setIsActive] = useState(searchParams.get("isActive") ?? "ALL");
+  const [loyverseLink, setLoyverseLink] = useState(searchParams.get("loyverseLink") ?? "ALL");
 
   const applyFilters = (
-    overrides?: Partial<{ search: string; categoryId: string; isActive: string }>
+    overrides?: Partial<{ search: string; categoryId: string; isActive: string; loyverseLink: string }>
   ) => {
     const params = new URLSearchParams();
     const s = overrides?.search ?? search;
     const c = overrides?.categoryId ?? categoryId;
     const a = overrides?.isActive ?? isActive;
+    const l = overrides?.loyverseLink ?? loyverseLink;
     if (s) params.set("search", s);
     if (c !== "ALL") params.set("categoryId", c);
     if (a !== "ALL") params.set("isActive", a);
+    if (l !== "ALL") params.set("loyverseLink", l);
     router.push("/products?" + params.toString());
   };
 
@@ -45,6 +54,7 @@ export default function ProductFilters({ categories }: ProductFiltersProps) {
     setSearch("");
     setCategoryId("ALL");
     setIsActive("ALL");
+    setLoyverseLink("ALL");
     router.push("/products");
   };
 
@@ -96,6 +106,25 @@ export default function ProductFilters({ categories }: ProductFiltersProps) {
             className="px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500"
           >
             {ACTIVE_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Loyverse link filter */}
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-medium text-gray-600">Loyverse</label>
+          <select
+            value={loyverseLink}
+            onChange={(e) => {
+              setLoyverseLink(e.target.value);
+              applyFilters({ loyverseLink: e.target.value });
+            }}
+            className="px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+          >
+            {LOYVERSE_LINK_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>
                 {o.label}
               </option>

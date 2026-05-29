@@ -29,6 +29,7 @@ type LoyverseItem = {
   name: string;
   sku: string | null;
   description: string | null;
+  imageUrl: string | null;
   categoryId: string | null;
   sellingPrice: number | null;
   isActive: boolean;
@@ -139,6 +140,52 @@ function normalizePrice(value: unknown): number | null {
     const amount = (value as { amount?: unknown }).amount;
     return normalizePrice(amount);
   }
+  return null;
+}
+
+function normalizeUrl(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  try {
+    const parsed = new URL(trimmed);
+    return parsed.protocol === "http:" || parsed.protocol === "https:" ? parsed.toString() : null;
+  } catch {
+    return null;
+  }
+}
+
+function pickFirstImageUrl(source: Record<string, unknown>): string | null {
+  const directCandidates = ["image_url", "imageUrl", "image", "thumbnail_url", "thumbnailUrl"];
+  for (const key of directCandidates) {
+    const url = normalizeUrl(source[key]);
+    if (url) return url;
+  }
+
+  const imageObjectCandidates = ["image_data", "imageData", "thumbnail", "main_image"];
+  for (const key of imageObjectCandidates) {
+    const value = source[key];
+    if (!value || typeof value !== "object") continue;
+    const row = value as Record<string, unknown>;
+    const nestedCandidates = ["url", "image_url", "imageUrl", "src"];
+    for (const nestedKey of nestedCandidates) {
+      const url = normalizeUrl(row[nestedKey]);
+      if (url) return url;
+    }
+  }
+
+  const imageArrayCandidates = ["images", "photos"];
+  for (const key of imageArrayCandidates) {
+    const value = source[key];
+    if (!Array.isArray(value)) continue;
+    for (const item of value) {
+      if (!item || typeof item !== "object") continue;
+      const row = item as Record<string, unknown>;
+      const url = normalizeUrl(row.url ?? row.image_url ?? row.imageUrl ?? row.src);
+      if (url) return url;
+    }
+  }
+
   return null;
 }
 
@@ -268,6 +315,7 @@ function toLoyverseItem(raw: unknown): LoyverseItem | null {
     name,
     sku: normalizeOptionalString(row.sku),
     description: normalizeOptionalString(row.description),
+    imageUrl: pickFirstImageUrl(row),
     categoryId: normalizeOptionalString(row.category_id),
     sellingPrice: pickFirstPrice(row) ?? variantPrice,
     isActive: !Boolean(row.deleted_at ?? row.is_deleted),
@@ -620,6 +668,7 @@ async function syncProducts(
       sku: item.sku,
       isActive: item.isActive,
       description: item.description,
+      imageUrl: item.imageUrl,
       sellingPrice: item.sellingPrice !== null ? String(item.sellingPrice) : null,
       categoryId,
     };

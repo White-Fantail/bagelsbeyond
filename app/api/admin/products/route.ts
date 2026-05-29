@@ -13,9 +13,14 @@ export async function GET(req: NextRequest) {
   const isActive =
     isActiveParam === "true" ? true : isActiveParam === "false" ? false : undefined;
   const categoryId = sp.get("categoryId") ?? undefined;
+  const loyverseLinkParam = sp.get("loyverseLink");
+  const loyverseLink =
+    loyverseLinkParam === "linked" || loyverseLinkParam === "internal"
+      ? loyverseLinkParam
+      : undefined;
 
   try {
-    const products = await listMenuProducts({ search, isActive, categoryId });
+    const products = await listMenuProducts({ search, isActive, categoryId, loyverseLink });
     return NextResponse.json({ products });
   } catch {
     return NextResponse.json({ message: "Failed to fetch products" }, { status: 500 });
