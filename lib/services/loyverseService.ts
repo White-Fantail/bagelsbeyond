@@ -5,6 +5,7 @@ const DEFAULT_CURRENCY_CODE = "NZD";
 const LOYVERSE_ITEMS_PAGE_SIZE = "250";
 const LOYVERSE_PAYMENT_TYPES_PAGE_SIZE = "250";
 const LOYVERSE_PAYMENT_TYPE_CACHE_TTL_MS = 10 * 60 * 1000;
+const LOYVERSE_EMPTY_PAYMENT_TYPE_CACHE_TTL_MS = 60 * 1000;
 
 export type LoyverseOrderResult =
   | {
@@ -75,8 +76,12 @@ type LoyversePaymentType = {
   name: string;
 };
 
-let cachedPaymentType: LoyversePaymentType | null = null;
-let cachedPaymentTypeExpiresAt = 0;
+type PaymentTypeCacheEntry = {
+  value: LoyversePaymentType | null;
+  expiresAt: number;
+};
+
+let paymentTypeCache: PaymentTypeCacheEntry | null = null;
 let inflightPaymentTypePromise: Promise<LoyversePaymentType | null> | null = null;
 
 function toMoneyAmount(value: number): number {
@@ -281,8 +286,8 @@ function extractPaymentType(raw: unknown): LoyversePaymentType | null {
 
 async function fetchDefaultPaymentType(accessToken: string): Promise<LoyversePaymentType | null> {
   const now = Date.now();
-  if (cachedPaymentType && cachedPaymentTypeExpiresAt > now) {
-    return cachedPaymentType;
+  if (paymentTypeCache && paymentTypeCache.expiresAt > now) {
+    return paymentTypeCache.value;
   }
 
   if (inflightPaymentTypePromise) {
@@ -290,13 +295,13 @@ async function fetchDefaultPaymentType(accessToken: string): Promise<LoyversePay
   }
 
   inflightPaymentTypePromise = (async () => {
-    let cursor: string | null = null;
+    let paginationCursor: string | null = null;
 
     do {
       const url = new URL(`${LOYVERSE_API_BASE}/payment_types`);
       url.searchParams.set("limit", LOYVERSE_PAYMENT_TYPES_PAGE_SIZE);
-      if (cursor) {
-        url.searchParams.set("cursor", cursor);
+      if (paginationCursor) {
+        url.searchParams.set("cursor", paginationCursor);
       }
 
       const response = await fetch(url.toString(), {
@@ -314,27 +319,32 @@ async function fetchDefaultPaymentType(accessToken: string): Promise<LoyversePay
       }
 
       const payload = (await response.json()) as Record<string, unknown>;
-      const paymentTypesRaw = Array.isArray(payload.payment_types)
-        ? payload.payment_types
-        : Array.isArray(payload.items)
-          ? payload.items
-          : Array.isArray(payload.data)
-            ? payload.data
-            : [];
+      let paymentTypesRaw: unknown[] = [];
+      if (Array.isArray(payload.payment_types)) {
+        paymentTypesRaw = payload.payment_types;
+      } else if (Array.isArray(payload.items)) {
+        paymentTypesRaw = payload.items;
+      } else if (Array.isArray(payload.data)) {
+        paymentTypesRaw = payload.data;
+      }
 
       for (const paymentTypeRaw of paymentTypesRaw) {
         const paymentType = extractPaymentType(paymentTypeRaw);
         if (!paymentType) continue;
-        cachedPaymentType = paymentType;
-        cachedPaymentTypeExpiresAt = Date.now() + LOYVERSE_PAYMENT_TYPE_CACHE_TTL_MS;
+        paymentTypeCache = {
+          value: paymentType,
+          expiresAt: Date.now() + LOYVERSE_PAYMENT_TYPE_CACHE_TTL_MS,
+        };
         return paymentType;
       }
 
-      cursor = normalizeString(payload.cursor) || null;
-    } while (cursor);
+      paginationCursor = normalizeString(payload.cursor) || null;
+    } while (paginationCursor);
 
-    cachedPaymentType = null;
-    cachedPaymentTypeExpiresAt = Date.now() + LOYVERSE_PAYMENT_TYPE_CACHE_TTL_MS;
+    paymentTypeCache = {
+      value: null,
+      expiresAt: Date.now() + LOYVERSE_EMPTY_PAYMENT_TYPE_CACHE_TTL_MS,
+    };
     return null;
   })();
 
