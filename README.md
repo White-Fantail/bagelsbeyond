@@ -1344,7 +1344,7 @@ Recursive explosion traverses recipe items, expands component products into thei
 ### Environment Variables
 ```env
 # Loyverse Integration (optional — orders save locally if not set)
-LOYVERSE_ACCESS_TOKEN=your_loyverse_personal_token
+LOYVERSE_API_TOKEN=your_loyverse_personal_token
 LOYVERSE_STORE_ID=your_loyverse_store_id
 ```
 
@@ -1359,7 +1359,7 @@ LOYVERSE_STORE_ID=your_loyverse_store_id
 - Staff manually enter order in Loyverse POS when customer picks up and pays
 
 **Future option (Option B)**:
-- Set `LOYVERSE_ACCESS_TOKEN` env var
+- Set `LOYVERSE_API_TOKEN` env var
 - Implement `createPickupReceipt()` in `lib/services/loyverseService.ts`
 - When customer pays at pickup, create receipt via `POST https://api.loyverse.com/v1.0/receipts`
 

@@ -12,7 +12,7 @@ import "server-only";
  *   This is the safest approach for now.
  *
  * Option B (Future): Use Loyverse Receipts API to create a completed receipt
- *   when staff confirm payment at POS pickup. Requires LOYVERSE_ACCESS_TOKEN.
+ *   when staff confirm payment at POS pickup. Requires LOYVERSE_API_TOKEN.
  *   Endpoint: POST https://api.loyverse.com/v1.0/receipts
  *
  * Option C (Future): Integrate Loyverse Open Ticket API if available on the plan.
@@ -21,7 +21,7 @@ import "server-only";
  * using the Loyverse Receipts API with the store's access token.
  *
  * Required env vars (when implementing B/C):
- *   LOYVERSE_ACCESS_TOKEN=your_token_here
+ *   LOYVERSE_API_TOKEN=your_token_here
  *   LOYVERSE_STORE_ID=your_store_id_here
  */
 
@@ -87,14 +87,14 @@ export function mapCartToLoyversePayload(input: CreateLoyversePickupOrderInput) 
 export async function createLoyversePickupOrder(
   input: CreateLoyversePickupOrderInput
 ): Promise<LoyverseOrderResult> {
-  const accessToken = process.env.LOYVERSE_ACCESS_TOKEN;
+  const accessToken = process.env.LOYVERSE_API_TOKEN;
   
   if (!accessToken) {
     // No token configured — skip Loyverse sync, order stays PENDING
     // Staff will manually handle in POS
     return {
       success: false,
-      error: "LOYVERSE_ACCESS_TOKEN not configured. Order saved locally. Staff to process manually.",
+      error: "LOYVERSE_API_TOKEN not configured. Order saved locally. Staff to process manually.",
     };
   }
 
@@ -103,7 +103,7 @@ export async function createLoyversePickupOrder(
   // const response = await fetch("https://api.loyverse.com/v1.0/receipts", {
   //   method: "POST",
   //   headers: {
-  //     "Authorization": `******  // accessToken from LOYVERSE_ACCESS_TOKEN env var
+  //     "Authorization": `******  // accessToken from LOYVERSE_API_TOKEN env var
   //     "Content-Type": "application/json",
   //   },
   //   body: JSON.stringify(payload),

@@ -681,9 +681,9 @@ export async function syncLoyverseCatalog(
   triggeredByUserId?: string,
   decisions: LoyverseSyncDecisions = {}
 ): Promise<LoyverseSyncSummary> {
-  const accessToken = process.env.LOYVERSE_ACCESS_TOKEN;
+  const accessToken = process.env.LOYVERSE_API_TOKEN;
   if (!accessToken) {
-    throw new Error("LOYVERSE_ACCESS_TOKEN is not configured.");
+    throw new Error("LOYVERSE_API_TOKEN is not configured.");
   }
 
   const log = await prisma.loyverseSyncLog.create({
@@ -795,9 +795,9 @@ export async function listLoyverseSyncLogs(limit = 20) {
 }
 
 export async function previewLoyverseItemMatches(): Promise<LoyverseItemMatchPreview[]> {
-  const accessToken = process.env.LOYVERSE_ACCESS_TOKEN;
+  const accessToken = process.env.LOYVERSE_API_TOKEN;
   if (!accessToken) {
-    throw new Error("LOYVERSE_ACCESS_TOKEN is not configured.");
+    throw new Error("LOYVERSE_API_TOKEN is not configured.");
   }
 
   const items = await loyverseGetCollection("items", "items", toLoyverseItem, accessToken);
