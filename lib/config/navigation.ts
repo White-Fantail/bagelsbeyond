@@ -1,10 +1,4 @@
-/**
- * Role-based navigation configuration.
- *
- * BagelsBeyond now focuses on freshness / shelf-life operations. Sales data is
- * retained for now, but analytics, predictions, external-factor automation and
- * menu-costing navigation have been removed.
- */
+/** Role-based navigation configuration. */
 
 import type { Role } from "@/app/generated/prisma/enums";
 
@@ -39,10 +33,14 @@ export const ADMIN_NAV: RoleNavConfig = {
   dashboardLabel: "Operations Dashboard",
   groups: [
     { id: "dashboard", label: "Dashboard", items: [{ href: "/dashboard", label: "Operations Dashboard" }] },
-    { id: "freshness", label: "Freshness", items: [{ href: "/freshness", label: "Freshness Dashboard" }, { href: "/freshness/logs", label: "Log History" }, { href: "/freshness/categories", label: "Category Settings" }] },
-    { id: "orders", label: "Online Orders", items: [{ href: "/orders", label: "Customer Orders" }] },
+    { id: "freshness", label: "Freshness", items: [
+      { href: "/freshness", label: "Freshness Dashboard" },
+      { href: "/freshness/logs", label: "Log History" },
+      { href: "/freshness/categories", label: "Category Settings" },
+      { href: "/products", label: "Products" },
+      { href: "/product-categories", label: "Product Categories" },
+    ] },
     { id: "sales", label: "Sales", items: [{ href: "/calendar", label: "Calendar" }, { href: "/sales/new", label: "Enter Sales" }, { href: "/sales", label: "Sales List" }] },
-    { id: "data", label: "Sales Data", items: [{ href: "/imports", label: "Imports" }, { href: "/loyverse-sync", label: "Loyverse Sync" }] },
     { id: "admin", label: "Admin", items: [{ href: "/admin/users", label: "Users" }] },
   ],
 };
