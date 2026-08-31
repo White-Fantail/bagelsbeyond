@@ -190,51 +190,59 @@ export default function FreshnessLogForm({
         {errors.loggedAt && <p className={errorClass}>{errors.loggedAt[0]}</p>}
       </div>
 
-      {/* Quantity */}
-      <div>
-        <label className={labelClass}>
-          Quantity <span className="text-red-500">*</span>
-        </label>
-        <input
-          type="number"
-          min={1}
-          value={quantity}
-          onChange={(e) => setQuantity(e.target.value)}
-          required
-          disabled={isPending}
-          placeholder="How many were made/displayed/discarded/sold?"
-          className={inputClass}
-        />
-        {errors.quantity && <p className={errorClass}>{errors.quantity[0]}</p>}
-      </div>
+      {/* Quantities */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div>
+          <label className={labelClass}>
+            Quantity <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="number"
+            min={1}
+            value={quantity}
+            onChange={(e) => setQuantity(e.target.value)}
+            required
+            disabled={isPending}
+            placeholder="Qty"
+            className={inputClass}
+          />
+          {errors.quantity && <p className={errorClass}>{errors.quantity[0]}</p>}
+        </div>
 
-      {/* Remaining quantity */}
-      <div>
-        <label className={labelClass}>Remaining Qty (optional)</label>
-        <input
-          type="number"
-          min={0}
-          value={remainingQuantity}
-          onChange={(e) => setRemainingQuantity(e.target.value)}
-          disabled={isPending}
-          placeholder="How many were still left before this log?"
-          className={inputClass}
-        />
-        {errors.remainingQuantity && <p className={errorClass}>{errors.remainingQuantity[0]}</p>}
+        <div>
+          <label className={labelClass}>Remaining Qty (optional)</label>
+          <input
+            type="number"
+            min={0}
+            value={remainingQuantity}
+            onChange={(e) => setRemainingQuantity(e.target.value)}
+            disabled={isPending}
+            placeholder="Remaining"
+            className={inputClass}
+          />
+          {errors.remainingQuantity && <p className={errorClass}>{errors.remainingQuantity[0]}</p>}
+        </div>
       </div>
 
       {/* Notes */}
-      <div>
-        <label className={labelClass}>Notes</label>
-        <textarea
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          rows={2}
-          disabled={isPending}
-          placeholder="Additional notes..."
-          className={inputClass + " resize-none"}
-        />
-      </div>
+      <details className="group rounded-md border border-gray-200 bg-gray-50/60">
+        <summary className="flex cursor-pointer list-none items-center justify-between px-3 py-2.5 text-sm font-medium text-gray-700 select-none [&::-webkit-details-marker]:hidden">
+          <span>Notes (optional)</span>
+          <span className="text-gray-400 transition-transform group-open:rotate-180" aria-hidden="true">
+            ▾
+          </span>
+        </summary>
+        <div className="border-t border-gray-200 p-3">
+          <textarea
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            rows={2}
+            disabled={isPending}
+            placeholder="Additional notes..."
+            className={inputClass + " resize-none"}
+          />
+        </div>
+      </details>
 
       <div className="flex items-center gap-3 pt-1">
         <button
