@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { StorageType } from "@/app/generated/prisma/enums";
 
 export const salesFormSchema = z
   .object({
@@ -18,29 +19,28 @@ export const salesFormSchema = z
 
 export type SalesFormSchema = z.infer<typeof salesFormSchema>;
 
-// Online ordering is retained and shares this validation module with Sales.
-export const orderItemModifierSchema = z.object({
-  modifierGroupId: z.string().min(1, "Modifier group ID is required"),
-  modifierOptionId: z.string().min(1, "Modifier option ID is required"),
+export const productCategorySchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  slug: z.string().min(1, "Slug is required").regex(/^[a-z0-9-]+$/, "Slug must contain only lowercase letters, numbers, and hyphens"),
+  sortOrder: z.coerce.number().int().min(0).optional(),
+  isActive: z.boolean().default(true),
+  isFreshnessManaged: z.boolean().default(false),
+  freshnessSortOrder: z.coerce.number().int().min(0).default(0),
 });
 
-export const orderItemSchema = z.object({
-  itemId: z.string().min(1, "Item ID is required"),
-  quantity: z.coerce.number().int().min(1, "Quantity must be at least 1"),
-  notes: z.string().optional(),
-  selectedModifiers: z.array(orderItemModifierSchema).default([]),
+export type ProductCategorySchema = z.infer<typeof productCategorySchema>;
+
+export const menuProductSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  sku: z.string().optional().nullable(),
+  isActive: z.boolean().default(true),
+  notes: z.string().optional().nullable(),
+  categoryId: z.string().nullable().optional(),
+  shelfLifeDays: z.preprocess(
+    (value) => value === "" || value === null || value === undefined ? null : value,
+    z.coerce.number().int().positive("Shelf life must be a positive integer").nullable().optional()
+  ),
+  storageType: z.nativeEnum(StorageType).nullable().optional(),
 });
 
-export const createOrderSchema = z.object({
-  customerName: z.string().min(1, "Customer name is required"),
-  customerPhone: z.string().min(1, "Customer phone is required"),
-  customerEmail: z.string().email("Invalid email").optional().or(z.literal("")),
-  pickupType: z.enum(["ASAP", "SCHEDULED"]),
-  pickupTime: z.string().datetime({ offset: true }).optional().nullable(),
-  notes: z.string().optional(),
-  items: z.array(orderItemSchema).min(1, "At least one item is required"),
-});
-
-export type CreateOrderSchema = z.infer<typeof createOrderSchema>;
-export type OrderItemSchema = z.infer<typeof orderItemSchema>;
-export type OrderItemModifierSchema = z.infer<typeof orderItemModifierSchema>;
+export type MenuProductSchema = z.infer<typeof menuProductSchema>;
