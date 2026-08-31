@@ -1,6 +1,9 @@
 name: Branch Build
 
 on:
+  push:
+    branches:
+      - cleanup/remove-analytics-menu-costing
   pull_request:
     branches:
       - main
