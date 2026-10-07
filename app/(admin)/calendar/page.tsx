@@ -31,12 +31,6 @@ export default async function CalendarPage({
         <p className="text-gray-500 mt-1">Monthly sales performance</p>
       </div>
       <CalendarView year={year} month={month} records={records} />
-      <div className="flex flex-wrap gap-4 text-xs text-gray-500">
-        <div className="flex items-center gap-1.5">
-          <span className="w-3 h-3 rounded bg-amber-400 inline-block"></span>
-          Sales record
-        </div>
-      </div>
     </div>
   );
 }
