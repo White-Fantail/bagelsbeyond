@@ -2,29 +2,17 @@
 
 import { useRouter } from "next/navigation";
 import { getTotalSales, formatCurrency } from "@/lib/utils";
-import { getWeatherIcon } from "@/lib/utils/weather-icon";
-import type { DailyRecord, DailyExternalFactor, SalesPrediction } from "@/types";
+import type { DailyRecord } from "@/types";
 
 type Props = {
   year: number;
   month: number;
   records: DailyRecord[];
-  predictions?: SalesPrediction[];
-  /** Map of day-of-month → DailyExternalFactor for weather icon display */
-  externalFactors?: Map<number, DailyExternalFactor>;
 };
 
-export default function CalendarView({ year, month, records, predictions = [], externalFactors }: Props) {
+export default function CalendarView({ year, month, records }: Props) {
   const router = useRouter();
-
-  const recordMap = new Map(
-    records.map((r) => [new Date(r.date).getDate(), r])
-  );
-
-  const predictionMap = new Map(
-    predictions.map((p) => [new Date(p.targetDate).getDate(), p])
-  );
-
+  const recordMap = new Map(records.map((r) => [new Date(r.date).getDate(), r]));
   const today = new Date();
   const firstDay = new Date(year, month - 1, 1).getDay();
   const daysInMonth = new Date(year, month, 0).getDate();
@@ -40,158 +28,60 @@ export default function CalendarView({ year, month, records, predictions = [], e
   };
 
   const dayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-
   const cells: (number | null)[] = [
     ...Array(firstDay).fill(null),
     ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
   ];
   while (cells.length % 7 !== 0) cells.push(null);
 
-  const handleDayClick = (day: number, record: DailyRecord | undefined, prediction: SalesPrediction | undefined) => {
-    if (record) {
-      router.push(`/sales/${record.id}`);
-    } else if (prediction) {
-      router.push(`/predictions/${prediction.id}`);
-    }
-  };
-
   return (
     <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-      {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
         <button onClick={prevMonth} className="p-2 hover:bg-gray-100 rounded-md text-gray-600">←</button>
         <h2 className="text-lg font-semibold text-gray-900">{year}/{month}</h2>
         <button onClick={nextMonth} className="p-2 hover:bg-gray-100 rounded-md text-gray-600">→</button>
       </div>
 
-      {/* Day labels */}
       <div className="grid grid-cols-7 border-b border-gray-200">
         {dayLabels.map((d, i) => (
-          <div
-            key={d}
-            className={`py-2 text-center text-xs font-medium ${i === 0 ? "text-red-500" : i === 6 ? "text-blue-500" : "text-gray-500"}`}
-          >
+          <div key={d} className={`py-2 text-center text-xs font-medium ${i === 0 ? "text-red-500" : i === 6 ? "text-blue-500" : "text-gray-500"}`}>
             {d}
           </div>
         ))}
       </div>
 
-      {/* Calendar grid */}
       <div className="grid grid-cols-7">
         {cells.map((day, idx) => {
           const record = day ? recordMap.get(day) : undefined;
-          const prediction = day ? predictionMap.get(day) : undefined;
-          const predictionOnly = !record ? prediction : undefined;
-          const hasBoth = !!(record && prediction);
-          const hasRecord = !!record;
-          const hasPredictionOnly = !!predictionOnly;
-
-          const isToday =
-            day !== null &&
-            today.getFullYear() === year &&
-            today.getMonth() + 1 === month &&
-            today.getDate() === day;
-
-          const isFuture =
-            day !== null &&
-            new Date(year, month - 1, day) > today;
-
-          const isClickable = !!(record || prediction);
-
-          // Weather icon for this day
-          const ef = day ? externalFactors?.get(day) : undefined;
-          const weatherInfo = ef ? getWeatherIcon(ef.weatherSummary) : null;
-
-          let bgClass = "";
-          if (hasBoth) bgClass = "hover:bg-amber-50";
-          else if (hasRecord) bgClass = "hover:bg-amber-50";
-          else if (hasPredictionOnly) bgClass = "hover:bg-blue-50";
-          else bgClass = "hover:bg-gray-50";
+          const isToday = day !== null && today.getFullYear() === year && today.getMonth() + 1 === month && today.getDate() === day;
+          const isFuture = day !== null && new Date(year, month - 1, day) > today;
 
           return (
             <div
               key={idx}
-              onClick={() => day && isClickable && handleDayClick(day, record, prediction)}
-              role={isClickable ? "button" : undefined}
-              tabIndex={isClickable ? 0 : undefined}
-              onKeyDown={
-                isClickable
-                  ? (e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        if (day) handleDayClick(day, record, prediction);
-                      }
-                    }
-                  : undefined
-              }
-              aria-label={
-                day
-                  ? `${year}/${month}/${day}${record ? " has actual data" : ""}${prediction ? " has forecast data" : ""}`
-                  : undefined
-              }
-              className={`min-h-[90px] p-1.5 border-b border-r border-gray-100 transition-colors relative ${
-                day === null ? "bg-gray-50" : isClickable ? `cursor-pointer focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-400 ${bgClass}` : bgClass
-              } ${isFuture ? "bg-slate-50" : ""}`}
+              onClick={() => record && router.push(`/sales/${record.id}`)}
+              role={record ? "button" : undefined}
+              tabIndex={record ? 0 : undefined}
+              onKeyDown={record ? (e) => {
+                if (e.key === "Enter" || e.key === " ") router.push(`/sales/${record.id}`);
+              } : undefined}
+              aria-label={day ? `${year}/${month}/${day}${record ? " has sales data" : ""}` : undefined}
+              className={`min-h-[90px] p-1.5 border-b border-r border-gray-100 transition-colors ${day === null ? "bg-gray-50" : record ? "cursor-pointer hover:bg-amber-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-amber-400" : "hover:bg-gray-50"} ${isFuture ? "bg-slate-50" : ""}`}
             >
               {day !== null && (
                 <>
-                  {/* Weather icon — top-right corner */}
-                  {weatherInfo && (
-                    <span
-                      className="absolute top-1 right-1 text-[11px] leading-none select-none"
-                      title={ef?.weatherSummary ?? weatherInfo.label}
-                      aria-label={weatherInfo.label}
-                    >
-                      {weatherInfo.icon}
-                    </span>
-                  )}
-
-                  {/* Day number */}
-                  <div
-                    className={`text-xs font-medium mb-1 w-5 h-5 flex items-center justify-center rounded-full ${
-                      isToday
-                        ? "bg-amber-500 text-white"
-                        : idx % 7 === 0
-                        ? "text-red-500"
-                        : idx % 7 === 6
-                        ? "text-blue-500"
-                        : "text-gray-700"
-                    }`}
-                  >
+                  <div className={`text-xs font-medium mb-1 w-5 h-5 flex items-center justify-center rounded-full ${isToday ? "bg-amber-500 text-white" : idx % 7 === 0 ? "text-red-500" : idx % 7 === 6 ? "text-blue-500" : "text-gray-700"}`}>
                     {day}
                   </div>
-
-                  {/* Status dot */}
-                   {(hasRecord || prediction) && (
-                     <div className="flex gap-0.5 mb-1">
-                       {hasRecord && <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />}
-                       {prediction && <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />}
-                     </div>
-                   )}
-
-                  {/* Actual record data */}
                   {record && (
                     <div>
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block mb-1" />
                       <div className="text-[10px] font-semibold text-amber-700 leading-tight">
                         {formatCurrency(getTotalSales(record))}
                       </div>
-                      <div className="text-[10px] text-gray-400">
-                        🥯{record.bagelsBaked - record.bagelsLeft}
-                      </div>
+                      <div className="text-[10px] text-gray-400">🥯{record.bagelsBaked - record.bagelsLeft}</div>
                     </div>
                   )}
-
-                  {/* Prediction data (future or when no actual) */}
-                  {predictionOnly && (
-                    <div>
-                      <div className="text-[10px] font-semibold text-blue-600 leading-tight">
-                        ~{formatCurrency(predictionOnly.predictedSales)}
-                      </div>
-                      <div className="text-[10px] text-blue-400">
-                        🔮{predictionOnly.recommendedBagelsToBake} baked
-                      </div>
-                    </div>
-                  )}
-
                 </>
               )}
             </div>
