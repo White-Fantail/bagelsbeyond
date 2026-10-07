@@ -14,26 +14,13 @@ async function getSalesData(searchParams: SearchParams): Promise<DailyRecord[]> 
     const { startDate, endDate, keyword } = searchParams;
     return await prisma.dailyRecord.findMany({
       orderBy: { date: "desc" },
-      include: { externalFactor: true },
       where: {
         date: {
           gte: startDate ? new Date(startDate) : undefined,
           lte: endDate ? new Date(endDate) : undefined,
         },
-        OR: keyword
-          ? [
-              { notes: { contains: keyword, mode: "insensitive" } },
-              {
-                externalFactor: {
-                  is: { localEventName: { contains: keyword, mode: "insensitive" } },
-                },
-              },
-              {
-                externalFactor: {
-                  is: { holidayName: { contains: keyword, mode: "insensitive" } },
-                },
-              },
-            ]
+        notes: keyword
+          ? { contains: keyword, mode: "insensitive" }
           : undefined,
       },
     });
