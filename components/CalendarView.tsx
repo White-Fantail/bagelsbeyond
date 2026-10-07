@@ -75,7 +75,6 @@ export default function CalendarView({ year, month, records }: Props) {
                   </div>
                   {record && (
                     <div>
-                      <span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block mb-1" />
                       <div className="text-[10px] font-semibold text-amber-700 leading-tight">
                         {formatCurrency(getTotalSales(record))}
                       </div>
