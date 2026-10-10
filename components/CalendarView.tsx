@@ -1,5 +1,6 @@
 "use client";
 
+import { Fragment } from "react";
 import { useRouter } from "next/navigation";
 import { getTotalSales, formatCurrency } from "@/lib/utils";
 import type { DailyRecord } from "@/types";
@@ -12,7 +13,11 @@ type Props = {
 
 export default function CalendarView({ year, month, records }: Props) {
   const router = useRouter();
-  const recordMap = new Map(records.map((r) => [new Date(r.date).getDate(), r]));
+  const recordMap = new Map(records.map((r) => [new Date(r.date).toISOString().slice(0, 10), r]));
+  const dateKey = (day: number) => {
+    const date = new Date(Date.UTC(year, month - 1, day));
+    return date.toISOString().slice(0, 10);
+  };
   const today = new Date();
   const firstDay = new Date(year, month - 1, 1).getDay();
   const daysInMonth = new Date(year, month, 0).getDate();
@@ -34,6 +39,8 @@ export default function CalendarView({ year, month, records }: Props) {
   ];
   while (cells.length % 7 !== 0) cells.push(null);
 
+  const weeks = Array.from({ length: cells.length / 7 }, (_, i) => cells.slice(i * 7, i * 7 + 7));
+
   return (
     <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
       <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
@@ -42,17 +49,31 @@ export default function CalendarView({ year, month, records }: Props) {
         <button onClick={nextMonth} className="p-2 hover:bg-gray-100 rounded-md text-gray-600">→</button>
       </div>
 
-      <div className="grid grid-cols-7 border-b border-gray-200">
+      <div className="overflow-x-auto">
+      <div className="min-w-[760px]">
+      <div className="grid grid-cols-9 border-b border-gray-200">
         {dayLabels.map((d, i) => (
           <div key={d} className={`py-2 text-center text-xs font-medium ${i === 0 ? "text-red-500" : i === 6 ? "text-blue-500" : "text-gray-500"}`}>
             {d}
           </div>
         ))}
+        <div className="py-2 text-center text-xs font-medium text-gray-600 bg-amber-50">Weekly Total</div>
+        <div className="py-2 text-center text-xs font-medium text-gray-600 bg-amber-50">Daily Average</div>
       </div>
 
-      <div className="grid grid-cols-7">
-        {cells.map((day, idx) => {
-          const record = day ? recordMap.get(day) : undefined;
+      <div className="grid grid-cols-9">
+        {weeks.map((week, weekIndex) => {
+          const weekRecords = week.flatMap((_, dayIndex) => {
+            const day = weekIndex * 7 + dayIndex - firstDay + 1;
+            const record = recordMap.get(dateKey(day));
+            return record ? [record] : [];
+          });
+          const total = weekRecords.reduce((sum, record) => sum + getTotalSales(record), 0);
+          return (
+            <Fragment key={weekIndex}>
+        {week.map((day, dayIndex) => {
+          const idx = weekIndex * 7 + dayIndex;
+          const record = day ? recordMap.get(dateKey(day)) : undefined;
           const isToday = day !== null && today.getFullYear() === year && today.getMonth() + 1 === month && today.getDate() === day;
           const isFuture = day !== null && new Date(year, month - 1, day) > today;
 
@@ -86,7 +107,22 @@ export default function CalendarView({ year, month, records }: Props) {
             </div>
           );
         })}
+              <div className="min-h-[90px] p-2 border-b border-r border-gray-100 bg-amber-50 flex items-center justify-center text-xs font-semibold text-amber-800">
+                {weekRecords.length ? formatCurrency(total) : "—"}
+              </div>
+              <div className="min-h-[90px] p-2 border-b border-gray-100 bg-amber-50 flex flex-col items-center justify-center gap-1">
+                <span className="text-xs font-semibold text-amber-800">
+                  {weekRecords.length ? formatCurrency(total / weekRecords.length) : "—"}
+                </span>
+                {weekRecords.length > 0 && <span className="text-[10px] text-gray-500">{weekRecords.length} recorded days</span>}
+              </div>
+            </Fragment>
+          );
+        })}
       </div>
+      </div>
+      </div>
+      <p className="px-4 py-3 text-xs text-gray-500 border-t border-gray-200">Weekly figures cover Sunday–Saturday, including dates in adjacent months. Daily averages use recorded days, including days with zero sales.</p>
     </div>
   );
 }

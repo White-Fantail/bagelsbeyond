@@ -5,10 +5,12 @@ import CalendarView from "@/components/CalendarView";
 
 async function getCalendarData(year: number, month: number) {
   const start = new Date(year, month - 1, 1);
-  const end = new Date(year, month, 0, 23, 59, 59);
+  start.setDate(start.getDate() - start.getDay());
+  const end = new Date(year, month, 0);
+  end.setDate(end.getDate() + 7 - end.getDay());
 
   return prisma.dailyRecord.findMany({
-    where: { date: { gte: start, lte: end } },
+    where: { date: { gte: start, lt: end } },
     orderBy: { date: "asc" },
   });
 }
